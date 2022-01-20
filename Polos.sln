@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Senaz", "Senaz\Senaz.vcxproj", "{7D572113-5A96-4478-9B8D-9B420DECE3CD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Polos", "Polos\Polos.vcxproj", "{613269F4-9E0D-4492-96E5-0A9274FE61D3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{613269F4-9E0D-4492-96E5-0A9274FE61D3}.Debug|x64.ActiveCfg = Debug|x64
+		{613269F4-9E0D-4492-96E5-0A9274FE61D3}.Debug|x64.Build.0 = Debug|x64
+		{613269F4-9E0D-4492-96E5-0A9274FE61D3}.Release|x64.ActiveCfg = Release|x64
+		{613269F4-9E0D-4492-96E5-0A9274FE61D3}.Release|x64.Build.0 = Release|x64
+		{7D572113-5A96-4478-9B8D-9B420DECE3CD}.Debug|x64.ActiveCfg = Debug|x64
+		{7D572113-5A96-4478-9B8D-9B420DECE3CD}.Debug|x64.Build.0 = Debug|x64
+		{7D572113-5A96-4478-9B8D-9B420DECE3CD}.Release|x64.ActiveCfg = Release|x64
+		{7D572113-5A96-4478-9B8D-9B420DECE3CD}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A34A9063-48D0-475A-8C8F-CBA59EF804E0}
+	EndGlobalSection
+EndGlobal
