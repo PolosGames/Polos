@@ -15,21 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Engine\core.h">
+    <ClInclude Include="engine\core\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\application.h">
+    <ClInclude Include="engine\core\application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="polos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\entry_point.h">
+    <ClInclude Include="engine\core\entry_point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\utils\logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Engine\application.cpp">
+    <ClCompile Include="engine\core\application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\utils\logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

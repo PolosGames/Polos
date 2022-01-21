@@ -1,4 +1,6 @@
 #pragma once
 
-#include "Engine/application.h"
-#include "Engine/entry_point.h"
+#include "core/application.h"
+#include "utils/logger.h"
+
+#include "core/entry_point.h"
