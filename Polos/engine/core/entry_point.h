@@ -1,6 +1,8 @@
 #pragma once
+#ifndef POLOS_CORE_ENTRYPOINT_H
+#define POLOS_CORE_ENTRYPOINT_H
 
-#include "core.h"
+#include "utils/platform_defines.h"
 #include "application.h"
 #include "utils/logger.h"
 
@@ -16,3 +18,5 @@ int main(int argc, char **argv)
 }
 
 #endif
+
+#endif /* POLOS_CORE_ENTRYPOINT_H */

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "core.h"
+#ifndef POLOS_CORE_APPLICATION_H
+#define POLOS_CORE_APPLICATION_H
 
 namespace polos
 {
-	class POLOSAPI application
+	class application
 	{
 	public:
 		application();
@@ -15,4 +16,6 @@ namespace polos
 
 	application *create_application();
 }
+
+#endif /* POLOS_CORE_APPLICATION_H */
 

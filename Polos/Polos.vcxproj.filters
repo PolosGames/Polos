@@ -4,6 +4,9 @@
     <Filter Include="core">
       <UniqueIdentifier>{4E40957C-3A77-960D-E363-7C10CF79120F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="events">
+      <UniqueIdentifier>{5A9D08FC-463F-33D2-2FFA-46261B3BBA22}</UniqueIdentifier>
+    </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
     </Filter>
@@ -12,21 +15,33 @@
     <ClInclude Include="engine\core\application.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\core\core.h">
-      <Filter>core</Filter>
-    </ClInclude>
     <ClInclude Include="engine\core\entry_point.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="engine\events\event.h">
+      <Filter>events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\events\event_bus.h">
+      <Filter>events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
+    <ClInclude Include="engine\utils\platform_defines.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="engine\utils\logger.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="engine\utils\types.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\containers\delegate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\core\application.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="engine\plpch.cpp" />
     <ClCompile Include="engine\utils\logger.cpp">
       <Filter>utils</Filter>
     </ClCompile>

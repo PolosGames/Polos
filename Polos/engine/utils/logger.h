@@ -1,13 +1,14 @@
 #pragma once
+#ifndef POLOS_UTILS_LOGGER_H
+#define POLOS_UTILS_LOGGER_H
 
-#include "core/core.h"
-
-#include <memory>
 #include <spdlog/spdlog.h>
 
-namespace polos 
+#include "utils/platform_defines.h"
+
+namespace polos
 {
-	class POLOSAPI logger
+	class logger
 	{
 	public:
 		enum logger_type
@@ -57,7 +58,7 @@ namespace polos
 		std::shared_ptr<spdlog::logger> pick_logger(logger_type type);
 
 		logger();
-		logger(const logger&);
+		logger(const logger &);
 	private:
 		static logger &_instance;
 
@@ -75,3 +76,5 @@ namespace polos
 #define PL_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
 #define PL_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
 #define PL_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+
+#endif /* POLOS_UTILS_LOGGER_H */

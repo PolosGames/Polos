@@ -1,5 +1,4 @@
 #include <polos.h>
-#include <core/entry_point.h>
 
 class senaz_app : public polos::application
 {

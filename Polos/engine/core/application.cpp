@@ -1,3 +1,4 @@
+#include "plpch.h"
 #include "application.h"
 
 namespace polos
@@ -9,7 +10,5 @@ namespace polos
 	{}
 
 	void application::run()
-	{
-		while (true);
-	}
+	{}
 }
