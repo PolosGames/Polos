@@ -1,12 +1,13 @@
+include "external_depends.lua"
+
 workspace "Polos"
-	architecture "x86_64"
+	architecture "x64"
 	startproject "Senaz"
 
 	configurations
 	{
 		"Debug",
-		"Release",
-		"Dist"
+		"Release"
 	}
 
 output_dir  = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"

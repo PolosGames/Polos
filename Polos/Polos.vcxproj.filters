@@ -1,49 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="core">
-      <UniqueIdentifier>{4E40957C-3A77-960D-E363-7C10CF79120F}</UniqueIdentifier>
+    <Filter Include="engine">
+      <UniqueIdentifier>{FBDB78FB-E77D-A3D1-D038-B725BC792A22}</UniqueIdentifier>
     </Filter>
-    <Filter Include="events">
-      <UniqueIdentifier>{5A9D08FC-463F-33D2-2FFA-46261B3BBA22}</UniqueIdentifier>
+    <Filter Include="engine\containers">
+      <UniqueIdentifier>{C06FA2ED-2C86-A083-75FD-2BA5E152710B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils">
-      <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
+    <Filter Include="engine\context">
+      <UniqueIdentifier>{AFB9F6CD-9B87-EAD3-841B-5BFA7088C638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\context\opengl">
+      <UniqueIdentifier>{63E00EFE-CF4C-CAF8-9840-6256046CEC60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\core">
+      <UniqueIdentifier>{5341430D-BFF6-BB02-48EB-B5D9B49FB206}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\events">
+      <UniqueIdentifier>{9FF33A70-0BB4-B6A6-D4EE-FF23406EFB82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\renderer">
+      <UniqueIdentifier>{2166C161-8DF1-2E26-9602-B21A020D8B26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\utils">
+      <UniqueIdentifier>{BBBDF3B6-A720-835B-50A6-BB113CE84EDE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\window">
+      <UniqueIdentifier>{A2545199-0E15-CDCF-D74F-164D43CF11AC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{2839F3DC-1406-4EE8-3D1F-3C90294B8376}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\glad">
+      <UniqueIdentifier>{2F05BA43-9BC5-357A-6400-7FF7D07F7A56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\glad\src">
+      <UniqueIdentifier>{C6C2A2EE-32D9-A084-7B50-2CA6E7A5710C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\containers\delegate.h">
+      <Filter>engine\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\context\graphics_context.h">
+      <Filter>engine\context</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\application.h">
-      <Filter>core</Filter>
+      <Filter>engine\core</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\entry_point.h">
-      <Filter>core</Filter>
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\system.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\window.h">
+      <Filter>engine\core</Filter>
     </ClInclude>
     <ClInclude Include="engine\events\event.h">
-      <Filter>events</Filter>
+      <Filter>engine\events</Filter>
     </ClInclude>
     <ClInclude Include="engine\events\event_bus.h">
-      <Filter>events</Filter>
+      <Filter>engine\events</Filter>
     </ClInclude>
-    <ClInclude Include="engine\plpch.h" />
-    <ClInclude Include="engine\polos.h" />
-    <ClInclude Include="engine\utils\platform_defines.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="engine\plpch.h">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\polos.h">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\renderer\renderer_definitions.h">
+      <Filter>engine\renderer</Filter>
     </ClInclude>
     <ClInclude Include="engine\utils\logger.h">
-      <Filter>utils</Filter>
+      <Filter>engine\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\utils\macros.h">
+      <Filter>engine\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\utils\platform_defines.h">
+      <Filter>engine\utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\utils\types.h">
-      <Filter>utils</Filter>
+      <Filter>engine\utils</Filter>
     </ClInclude>
-    <ClInclude Include="engine\containers\delegate.h" />
+    <ClInclude Include="engine\window\glfw_window.h">
+      <Filter>engine\window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="engine\core\application.cpp">
-      <Filter>core</Filter>
+    <ClCompile Include="engine\context\opengl\opengl_context.cpp">
+      <Filter>engine\context\opengl</Filter>
     </ClCompile>
-    <ClCompile Include="engine\plpch.cpp" />
+    <ClCompile Include="engine\core\application.cpp">
+      <Filter>engine\core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\plpch.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
     <ClCompile Include="engine\utils\logger.cpp">
-      <Filter>utils</Filter>
+      <Filter>engine\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\window\glfw_window.cpp">
+      <Filter>engine\window</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glad\src\glad.c">
+      <Filter>external\glad\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

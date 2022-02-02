@@ -19,7 +19,8 @@ namespace polos
 	public:
 		static logger &instance()
 		{
-			return _instance;
+			static logger l;
+			return l;
 		}
 
 		template<typename... Args>
@@ -47,34 +48,25 @@ namespace polos
 		}
 
 	private:
-		static logger &create()
-		{
-			static logger l;
-
-			(void)_instance;
-			return l;
-		}
-
 		std::shared_ptr<spdlog::logger> pick_logger(logger_type type);
 
 		logger();
 		logger(const logger &);
 	private:
-		static logger &_instance;
 
 		static std::shared_ptr<spdlog::logger> _core_logger;
 		static std::shared_ptr<spdlog::logger> _client_logger;
 	};
 }
 
-#define PL_CORE_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define PL_CORE_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define PL_CORE_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define PL_CORE_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CORE, __VA_ARGS__)
 
-#define PL_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define PL_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define PL_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define PL_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
 
 #endif /* POLOS_UTILS_LOGGER_H */

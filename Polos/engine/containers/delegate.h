@@ -18,7 +18,7 @@
 
 namespace polos
 {
-	template <typename Function> struct delegate;
+	template <typename Function> class delegate;
 
 	template<typename Return, typename... Args>
 	class delegate<Return(Args...)>
@@ -26,9 +26,7 @@ namespace polos
 		using stub_type = Return(*)(void *, Args&&...);
 
 		delegate(void *const object_pointer, stub_type const stub_ptr) noexcept
-			: 
-			_object_pointer(object_pointer),
-			_stub_pointer(stub_ptr)
+			: _object_pointer(object_pointer), _stub_pointer(stub_ptr)
 			{}
 	public:
 		delegate() noexcept = default;
@@ -39,26 +37,32 @@ namespace polos
 
 		delegate(std::nullptr_t const) noexcept : delegate() {}
 
-		template<class owner_object, Return(owner_object::* const method_ptr)(Args...) >
+		template<class owner_object, Return(owner_object::* const method_ptr)(Args...)>
 		static delegate from_method(owner_object *const object_pointer) noexcept
 		{
-			return {object_pointer, method_stub<owner_object, method_ptr>};
+			return { object_pointer, method_stub<owner_object, method_ptr> };
 		}
 
-		bool operator==(delegate const &rhs) const noexcept
+		template<class owner_object, Return(owner_object:: *const method_ptr)(Args...) const>
+		static delegate from_method(owner_object const *const object_pointer) noexcept
 		{
-			return (_object_pointer == rhs._object_pointer) && (_stub_pointer == rhs._stub_pointer);
+			return {object_pointer, const_method_stub<owner_object, method_ptr>};
 		}
 
-		bool operator!=(delegate const &rhs) const noexcept
+		bool operator==(delegate const &other) const noexcept
 		{
-			return !(*this == rhs);
+			return (_object_pointer == other._object_pointer) && (_stub_pointer == other._stub_pointer);
 		}
 
-		bool operator<(delegate const &rhs) const noexcept
+		bool operator!=(delegate const &other) const noexcept
 		{
-			return (_object_pointer < rhs._object_pointer) ||
-				((_object_pointer == rhs._object_pointer) && (_stub_pointer < rhs._stub_pointer));
+			return !(*this == other);
+		}
+
+		bool operator<(delegate const &other) const noexcept
+		{
+			return (_object_pointer < other._object_pointer) 
+				|| ((_object_pointer == other._object_pointer) && (_stub_pointer < other._stub_pointer));
 		}
 
 		bool operator==(std::nullptr_t const) const noexcept
@@ -101,6 +105,12 @@ namespace polos
 	private:
 		template <typename owner_object, Return(owner_object::* method_ptr)(Args...)>
 		static Return method_stub(void *const object_ptr, Args&&... args)
+		{
+			return (static_cast<owner_object *>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
+		}
+
+		template <typename owner_object, Return(owner_object:: *method_ptr)(Args...) const>
+		static Return const_method_stub(void *const object_ptr, Args&&... args)
 		{
 			return (static_cast<owner_object *>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
 		}

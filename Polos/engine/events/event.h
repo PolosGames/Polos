@@ -8,23 +8,20 @@ namespace polos
 {
 	static event_id id_counter = 1;
 
-	struct base_event
+	class base_event
 	{
 		virtual ~base_event() = default;
 		virtual event_id _id() = 0;
 	};
 
 	template<typename T>
-	struct event : base_event
+	class event : base_event
 	{
+		virtual event_id _id() { return id; }
+	public:
 		friend class event_bus;
 		virtual ~event() = default;
 		inline static const event_id id = id_counter++;
-	private:
-		virtual event_id _id()
-		{
-			return id;
-		}
 	};
 }
 

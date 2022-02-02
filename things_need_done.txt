@@ -1,0 +1,1 @@
+- Make a window prop value somewhere in engine code, so its global.

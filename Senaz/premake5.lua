@@ -37,7 +37,3 @@ project "Senaz"
 		defines "PL_RELEASE"
 		runtime "Release"
 		optimize "On"
-	
-	filter "configurations:Dist"
-		defines "PL_DIST"
-		optimize "On"

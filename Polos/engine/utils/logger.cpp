@@ -9,8 +9,6 @@ namespace polos
 	std::shared_ptr<spdlog::logger> logger::_client_logger;
 	std::shared_ptr<spdlog::logger> logger::_core_logger;
 
-	logger &logger::_instance = logger::create();
-
 	logger::logger()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;

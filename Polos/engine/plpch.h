@@ -8,3 +8,4 @@
 #include <cstdint>
 
 #include "utils/platform_defines.h"
+#include "utils/logger.h"

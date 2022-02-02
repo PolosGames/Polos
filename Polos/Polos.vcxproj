@@ -9,10 +9,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Dist|x64">
-      <Configuration>Dist</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B260E50D-1E75-0DBF-E7F6-B01E53CA09F0}</ProjectGuid>
@@ -34,12 +30,6 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -47,9 +37,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -65,19 +52,13 @@
     <TargetName>Polos</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <OutDir>..\bin\Dist-windows-x86_64\Polos\</OutDir>
-    <IntDir>..\bin-int\Dist-windows-x86_64\Polos\</IntDir>
-    <TargetName>Polos</TargetName>
-    <TargetExt>.lib</TargetExt>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;PL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>external\spdlog\include;engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;PL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -87,6 +68,9 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>external\glfw\lib\debug\glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Debug-windows-x86_64\Polos\Polos.lib\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\Polos\Polos.lib ..\bin\Debug-windows-x86_64\Senaz &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\Polos\Polos.lib ..\bin\Debug-windows-x86_64\Senaz &gt; nul)</Command>
     </PostBuildEvent>
@@ -96,8 +80,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;PL_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>external\spdlog\include;engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;PL_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -111,52 +95,43 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Lib>
+      <AdditionalDependencies>opengl32.lib;external\glfw\lib\release\glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Release-windows-x86_64\Polos\Polos.lib\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\Polos\Polos.lib ..\bin\Release-windows-x86_64\Senaz &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\Polos\Polos.lib ..\bin\Release-windows-x86_64\Senaz &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;PL_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>external\spdlog\include;engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <Optimization>Full</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <MinimalRebuild>false</MinimalRebuild>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-    </Link>
-    <PostBuildEvent>
-      <Command>IF EXIST ..\bin\Dist-windows-x86_64\Polos\Polos.lib\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\Polos\Polos.lib ..\bin\Dist-windows-x86_64\Senaz &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\Polos\Polos.lib ..\bin\Dist-windows-x86_64\Senaz &gt; nul)</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="engine\containers\delegate.h" />
+    <ClInclude Include="engine\context\graphics_context.h" />
     <ClInclude Include="engine\core\application.h" />
     <ClInclude Include="engine\core\entry_point.h" />
+    <ClInclude Include="engine\core\system.h" />
+    <ClInclude Include="engine\core\window.h" />
     <ClInclude Include="engine\events\event.h" />
     <ClInclude Include="engine\events\event_bus.h" />
     <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
-    <ClInclude Include="engine\utils\platform_defines.h" />
+    <ClInclude Include="engine\renderer\renderer_definitions.h" />
     <ClInclude Include="engine\utils\logger.h" />
+    <ClInclude Include="engine\utils\macros.h" />
+    <ClInclude Include="engine\utils\platform_defines.h" />
     <ClInclude Include="engine\utils\types.h" />
+    <ClInclude Include="engine\window\glfw_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\context\opengl\opengl_context.cpp" />
     <ClCompile Include="engine\core\application.cpp" />
     <ClCompile Include="engine\plpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\utils\logger.cpp" />
+    <ClCompile Include="engine\window\glfw_window.cpp" />
+    <ClCompile Include="external\glad\src\glad.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
