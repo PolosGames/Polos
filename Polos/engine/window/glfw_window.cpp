@@ -3,6 +3,8 @@
 #include "glfw_window.h"
 #include "utils/macros.h"
 
+#include "events/window/window_close.h"
+
 namespace polos
 {
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
@@ -21,7 +23,7 @@ namespace polos
     uint32 glfw_window::_glfw_window_count = 0;
 
     glfw_window::glfw_window(const window_props & props)
-        : props(props)
+        : _props(props)
     {
         initialize();
     }
@@ -34,9 +36,19 @@ namespace polos
             ASSERT(r == GLFW_TRUE, "Failed to initialize GLFW!");
             _is_glfw_initialized = true;
         }
-        window = glfwCreateWindow(props.width, props.height, props.title.c_str(), nullptr, nullptr);
-        glfwSetWindowUserPointer(window, &props);
+        window = glfwCreateWindow(_props.width, _props.height, _props.title.c_str(), nullptr, nullptr);
+        glfwSetWindowUserPointer(window, &_props);
         glfwMakeContextCurrent(window);
+
+        _context = std::make_unique<graphics_context>();
+        _context->initialize(window);
+
+        glfwSetWindowCloseCallback(window, 
+            [](GLFWwindow *window)
+            {
+                event_bus::raise_event<window_close>();
+            }
+        );
     }
 
     void glfw_window::destroy()
@@ -46,23 +58,23 @@ namespace polos
 
     uint32 glfw_window::width()
     {
-        return props.width;
+        return _props.width;
     }
 
     uint32 glfw_window::height()
     {
-        return props.height;
+        return _props.height;
     }
 
     bool glfw_window::vsync()
     {
-        return props.vsync;
+        return _props.vsync;
     }
 
     void glfw_window::vsync(bool vsync)
     {
         glfwSwapInterval(vsync);
-        props.vsync = vsync;
+        _props.vsync = vsync;
     }
 
     void glfw_window::update()

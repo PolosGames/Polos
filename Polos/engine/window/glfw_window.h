@@ -5,8 +5,10 @@
 #ifndef POLOS_WINDOW_GLFWWINDOW_H
 #define POLOS_WINDOW_GLFWWINDOW_H
 
+#include <GLFW/glfw3.h>
+
 #include "core/window.h"
-#include "GLFW/glfw3.h"
+#include "context/graphics_context.h"
 
 namespace polos
 {
@@ -33,7 +35,8 @@ namespace polos
 		static bool _is_glfw_initialized;
 		static uint32 _glfw_window_count;
 
-		window_props props; // definitely make a global window prop variable
+		window_props _props; // definitely make a global window prop variable
+		std::unique_ptr<graphics_context> _context;
 	};
 }
 

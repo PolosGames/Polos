@@ -9,3 +9,5 @@
 
 #include "utils/platform_defines.h"
 #include "utils/logger.h"
+#include "events/event_bus.h"
+#include "utils/macros.h"

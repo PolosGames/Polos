@@ -57,7 +57,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;PL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;GLFW_INCLUDE_NONE;PL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -80,7 +80,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;PL_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;GLFW_INCLUDE_NONE;PL_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -111,6 +111,9 @@
     <ClInclude Include="engine\core\window.h" />
     <ClInclude Include="engine\events\event.h" />
     <ClInclude Include="engine\events\event_bus.h" />
+    <ClInclude Include="engine\events\input\key_press.h" />
+    <ClInclude Include="engine\events\window\framebuffer_size.h" />
+    <ClInclude Include="engine\events\window\window_close.h" />
     <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
     <ClInclude Include="engine\renderer\renderer_definitions.h" />
@@ -129,8 +132,7 @@
     <ClCompile Include="engine\utils\logger.cpp" />
     <ClCompile Include="engine\window\glfw_window.cpp" />
     <ClCompile Include="external\glad\src\glad.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -19,6 +19,12 @@
     <Filter Include="engine\events">
       <UniqueIdentifier>{9FF33A70-0BB4-B6A6-D4EE-FF23406EFB82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\events\input">
+      <UniqueIdentifier>{FEAE1D00-6A10-FB0D-F37D-41C05FDE31CD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\events\window">
+      <UniqueIdentifier>{C6EB1F24-B27A-A9ED-5B99-BDE84707BA93}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine\renderer">
       <UniqueIdentifier>{2166C161-8DF1-2E26-9602-B21A020D8B26}</UniqueIdentifier>
     </Filter>
@@ -62,6 +68,15 @@
     </ClInclude>
     <ClInclude Include="engine\events\event_bus.h">
       <Filter>engine\events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\events\input\key_press.h">
+      <Filter>engine\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\events\window\framebuffer_size.h">
+      <Filter>engine\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\events\window\window_close.h">
+      <Filter>engine\events\window</Filter>
     </ClInclude>
     <ClInclude Include="engine\plpch.h">
       <Filter>engine</Filter>

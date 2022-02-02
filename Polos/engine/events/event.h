@@ -10,7 +10,6 @@ namespace polos
 
 	class base_event
 	{
-		virtual ~base_event() = default;
 		virtual event_id _id() = 0;
 	};
 

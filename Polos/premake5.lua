@@ -24,6 +24,7 @@ project "Polos"
 
 	filter "options:gfxapi=opengl or options:gfxapi=vulkan"
 		files { "external/glad/src/glad.c" }
+		defines { "GLFW_INCLUDE_NONE" }
 
 	includedirs
 	{ 	
@@ -47,8 +48,6 @@ project "Polos"
 		for k, v in pairs(gfxapi_libs_d) do
 			links {v}
 		end
-
-
 	
 	filter "configurations:Release"
 		defines "PL_RELEASE"
@@ -58,3 +57,6 @@ project "Polos"
 		for k, v in pairs(gfxapi_libs_r) do
 			links {v}
 		end
+
+	filter "files:**.c"
+		flags {"NoPCH"}
