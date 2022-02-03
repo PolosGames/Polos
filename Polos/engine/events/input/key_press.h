@@ -9,7 +9,11 @@ namespace polos
 {
 	class key_press : public event<key_press>
 	{
+	public:
+		int32 key;
 
+		key_press() = default;
+		key_press(int32 key) : key(key) {}
 	};
 }
 

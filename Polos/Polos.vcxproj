@@ -112,8 +112,19 @@
     <ClInclude Include="engine\events\event.h" />
     <ClInclude Include="engine\events\event_bus.h" />
     <ClInclude Include="engine\events\input\key_press.h" />
-    <ClInclude Include="engine\events\window\framebuffer_size.h" />
+    <ClInclude Include="engine\events\input\key_release.h" />
+    <ClInclude Include="engine\events\input\key_repeat.h" />
+    <ClInclude Include="engine\events\input\mouse_button_press.h" />
+    <ClInclude Include="engine\events\input\mouse_button_release.h" />
+    <ClInclude Include="engine\events\input\mouse_move.h" />
+    <ClInclude Include="engine\events\input\mouse_scroll.h" />
+    <ClInclude Include="engine\events\window\window_framebuffer_size.h" />
     <ClInclude Include="engine\events\window\window_close.h" />
+    <ClInclude Include="engine\events\window\window_focus.h" />
+    <ClInclude Include="engine\events\window\window_iconify.h" />
+    <ClInclude Include="engine\events\window\window_maximize.h" />
+    <ClInclude Include="engine\events\window\window_position.h" />
+    <ClInclude Include="engine\events\window\window_resize.h" />
     <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
     <ClInclude Include="engine\renderer\renderer_definitions.h" />
@@ -121,6 +132,7 @@
     <ClInclude Include="engine\utils\macros.h" />
     <ClInclude Include="engine\utils\platform_defines.h" />
     <ClInclude Include="engine\utils\types.h" />
+    <ClInclude Include="engine\utils\util.h" />
     <ClInclude Include="engine\window\glfw_window.h" />
   </ItemGroup>
   <ItemGroup>

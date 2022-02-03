@@ -1,9 +1,8 @@
 # Binaries
 **/bin/
-bin-int/
+**/bin-int/
 
-# Hazel files
-*.log
+**.log
 
 # Visual Studio files and folder
 .vs/
