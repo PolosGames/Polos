@@ -11,10 +11,11 @@ namespace polos
 	struct window_props
 	{
 		std::string title = "Polos";
-		uint32 width = 1280;
-		uint32 height = 720;
+		int32 width = 1280;
+		int32 height = 720;
+		int32 refresh_rate = 60;
 		bool vsync = true;
-		uint32 refresh_rate;
+		bool fullscreen = false;
 	};
 
 	class window
@@ -24,6 +25,7 @@ namespace polos
 		virtual ~window() = default;
 
 		virtual void initialize() = 0;
+		virtual void shutdown() = 0;
 		virtual void destroy() = 0;
 
 		virtual uint32 width() = 0;
@@ -36,7 +38,6 @@ namespace polos
 		virtual bool is_open() = 0;
 
 		static window *create_window(const window_props& props = window_props());
-		static void shutdown();
 	};
 }
 

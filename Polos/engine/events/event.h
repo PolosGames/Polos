@@ -1,13 +1,13 @@
 #pragma once
+
 #ifndef POLOS_EVENTS_EVENT_H
 #define POLOS_EVENTS_EVENT_H
 
 #include "utils/types.h"
+#include "utils/util.h"
 
 namespace polos
 {
-	static event_id id_counter = 1;
-
 	class base_event
 	{
 		virtual event_id _id() = 0;
@@ -16,13 +16,13 @@ namespace polos
 	template<typename T>
 	class event : base_event
 	{
-		virtual event_id _id() { return id; }
+		event_id _id() override { return id; }
 	public:
 		friend class event_bus;
+		inline static const event_id id = type_hash<T>();
+		
 		virtual ~event() = default;
-		inline static const event_id id = id_counter++;
 	};
 }
-
 
 #endif /* POLOS_EVENTS_EVENT_H */

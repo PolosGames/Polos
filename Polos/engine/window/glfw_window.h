@@ -20,6 +20,7 @@ namespace polos
 
 		void initialize() override;
 		void destroy() override;
+		void shutdown() override;
 
 		uint32 width() override;
 		uint32 height() override;

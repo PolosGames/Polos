@@ -20,7 +20,8 @@ namespace polos
 			if (instance()._callbacks.count(event_type::id))
 			{
 				event_type e(args...);
-				for (delegate<void(base_event &)> subscriber_function : instance()._callbacks[event_type::id])
+				event_id id = event_type::id;
+				for (delegate<void(base_event &)> subscriber_function : instance()._callbacks[id])
 				{
 					subscriber_function(e);
 				}
@@ -30,7 +31,7 @@ namespace polos
 		template<class event_type, class object_type, void(object_type:: *method_ptr)(event_type&)>
 		static void subscribe_to_event(object_type *const ptr)
 		{
-			auto del = delegate<void(event_type&)>::template from_method<object_type, method_ptr>(ptr);
+			auto del = delegate<void(event_type&)>::template from_method<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));
 			subscribe_to_event<event_type>(del);
 		}
 
