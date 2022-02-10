@@ -84,9 +84,6 @@
     <ClInclude Include="engine\polos.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\renderer\renderer_definitions.h">
-      <Filter>engine\renderer</Filter>
-    </ClInclude>
     <ClInclude Include="engine\utils\logger.h">
       <Filter>engine\utils</Filter>
     </ClInclude>
@@ -114,6 +111,9 @@
     <ClInclude Include="engine\events\input\mouse_scroll.h" />
     <ClInclude Include="engine\events\input\mouse_move.h" />
     <ClInclude Include="engine\utils\util.h" />
+    <ClInclude Include="engine\renderer\renderer.h" />
+    <ClInclude Include="engine\context\vertex_buffer_object.h" />
+    <ClInclude Include="engine\core\layer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\context\opengl\opengl_context.cpp">
@@ -134,5 +134,7 @@
     <ClCompile Include="external\glad\src\glad.c">
       <Filter>external\glad\src</Filter>
     </ClCompile>
+    <ClCompile Include="engine\renderer\renderer.cpp" />
+    <ClCompile Include="engine\context\opengl\opengl_vertex_buffer_object.cpp" />
   </ItemGroup>
 </Project>

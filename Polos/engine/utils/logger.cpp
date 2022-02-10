@@ -33,9 +33,9 @@ namespace polos
 	{
 		switch (type)
 		{
-			case LOGGER_CORE: return _core_logger;
-			case LOGGER_CLIENT: return _client_logger;
-			default: return std::shared_ptr<spdlog::logger>();
+		case logger_type::LOGGER_CORE: return _core_logger;
+		case logger_type::LOGGER_CLIENT: return _client_logger;
+		default: return std::shared_ptr<spdlog::logger>();
 		}
 	}
 

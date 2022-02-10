@@ -1,3 +1,0 @@
-[submodule "Polos/external/spdlog"]
-	path = Polos/external/spdlog
-	url = https://github.com/gabime/spdlog.git

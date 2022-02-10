@@ -5,7 +5,7 @@
 
 namespace polos
 {
-	class System
+	class system
 	{
 
 	};

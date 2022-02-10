@@ -9,6 +9,8 @@ namespace polos
 	{
 	public:
 		void initialize(void *window_handle);
+	public:
+		bool is_initialized;
 	private:
 		void *_window;
 	};

@@ -105,8 +105,10 @@
   <ItemGroup>
     <ClInclude Include="engine\containers\delegate.h" />
     <ClInclude Include="engine\context\graphics_context.h" />
+    <ClInclude Include="engine\context\vertex_buffer_object.h" />
     <ClInclude Include="engine\core\application.h" />
     <ClInclude Include="engine\core\entry_point.h" />
+    <ClInclude Include="engine\core\layer.h" />
     <ClInclude Include="engine\core\system.h" />
     <ClInclude Include="engine\core\window.h" />
     <ClInclude Include="engine\events\event.h" />
@@ -127,16 +129,17 @@
     <ClInclude Include="engine\events\window\window_resize.h" />
     <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
-    <ClInclude Include="engine\renderer\renderer_definitions.h" />
     <ClInclude Include="engine\utils\logger.h" />
     <ClInclude Include="engine\utils\macros.h" />
     <ClInclude Include="engine\utils\platform_defines.h" />
     <ClInclude Include="engine\utils\types.h" />
     <ClInclude Include="engine\utils\util.h" />
     <ClInclude Include="engine\window\glfw_window.h" />
+    <ClInclude Include="engine\renderer\renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\context\opengl\opengl_context.cpp" />
+    <ClCompile Include="engine\context\opengl\opengl_vertex_buffer_object.cpp" />
     <ClCompile Include="engine\core\application.cpp" />
     <ClCompile Include="engine\plpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -146,6 +149,7 @@
     <ClCompile Include="external\glad\src\glad.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="engine\renderer\renderer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,14 +8,14 @@
 
 namespace polos
 {
+	enum class logger_type
+	{
+		LOGGER_CORE,
+		LOGGER_CLIENT
+	};
+
 	class logger
 	{
-	public:
-		enum logger_type
-		{
-			LOGGER_CORE,
-			LOGGER_CLIENT
-		};
 	public:
 		static logger &instance()
 		{
@@ -59,14 +59,14 @@ namespace polos
 	};
 }
 
-#define LOG_CORE_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_ERROR(...) ::polos::logger::instance().error(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_WARN(...)  ::polos::logger::instance().warn(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_INFO(...)  ::polos::logger::instance().info(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
 
-#define LOG_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_ERROR(...) ::polos::logger::instance().error(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_WARN(...)  ::polos::logger::instance().warn(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_INFO(...)  ::polos::logger::instance().info(::polos::logger::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_ERROR(...) ::polos::logger::instance().error(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_WARN(...)  ::polos::logger::instance().warn(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_INFO(...)  ::polos::logger::instance().info(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
 
 #endif /* POLOS_UTILS_LOGGER_H */

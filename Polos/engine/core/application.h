@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef POLOS_CORE_APPLICATION_H
-#define POLOS_CORE_APPLICATION_H
+#ifndef POLOS_CORE_APPLICATION_H_
+#define POLOS_CORE_APPLICATION_H_
 
 #include <memory>
 
@@ -32,5 +32,5 @@ namespace polos
 	application *create_application();
 }
 
-#endif /* POLOS_CORE_APPLICATION_H */
+#endif /* POLOS_CORE_APPLICATION_H_ */
 
