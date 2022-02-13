@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "containers/delegate.h"
-#include "event.h"
+#include "events/event.h"
 
 namespace polos
 {
@@ -21,14 +21,14 @@ namespace polos
 			{
 				event_type e(args...);
 				event_id id = event_type::id;
-				for (delegate<void(base_event &)> subscriber_function : instance()._callbacks[id])
+				for (auto &subscriber_function : instance()._callbacks[id])
 				{
 					subscriber_function(e);
 				}
 			}
 		}
 
-		template<class event_type, class object_type, void(object_type:: *method_ptr)(event_type&)>
+		template<class event_type, class object_type, void(object_type::* method_ptr)(event_type&)>
 		static void subscribe_to_event(object_type *const ptr)
 		{
 			auto del = delegate<void(event_type&)>::template from_method<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));

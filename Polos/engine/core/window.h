@@ -3,8 +3,9 @@
 #ifndef POLOS_CORE_WINDOW_H
 #define POLOS_CORE_WINDOW_H
 
-#include "utils/types.h"
 #include <string>
+
+#include "utils/types.h"
 
 namespace polos
 {

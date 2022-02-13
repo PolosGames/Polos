@@ -1,7 +1,7 @@
 #include "plpch.h"
 #include "application.h"
 
-#include "events/event_bus.h"
+#include "core/event_bus.h"
 
 namespace polos
 {

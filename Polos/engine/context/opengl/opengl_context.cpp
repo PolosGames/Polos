@@ -15,7 +15,7 @@ namespace polos
 		GLFWwindow *gwindow = reinterpret_cast<GLFWwindow *>(_window);
 		
 		int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		ASSERT(r, "Failed to load OpenGL context!");
+		ASSERT_S(r, "Failed to load OpenGL context!");
 
 		is_initialized = true;
 	}

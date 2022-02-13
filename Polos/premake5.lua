@@ -28,6 +28,9 @@ project "Polos"
 
 	includedirs
 	{ 	
+		"engine/core",
+		"engine/window",
+		"engine/containers",
 		"engine",
 		includes["spdlog"]
 	}

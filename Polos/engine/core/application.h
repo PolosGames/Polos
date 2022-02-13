@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "core/window.h"
+#include "window.h"
 #include "events/window/window_close.h"
 #include "events/input/key_release.h"
 #include "events/input/key_repeat.h"

@@ -2,19 +2,9 @@
 
 #include "glfw_window.h"
 
-#include "utils/macros.h"
-#include "events/window/window_close.h"
-#include "events/window/window_focus.h"
-#include "events/window/window_resize.h"
-#include "events/window/window_iconify.h"
-#include "events/window/window_maximize.h"
-#include "events/input/key_press.h"
-#include "events/input/key_release.h"
-#include "events/input/key_repeat.h"
-#include "events/input/mouse_button_press.h"
-#include "events/input/mouse_button_release.h"
-#include "events/input/mouse_move.h"
-#include "events/input/mouse_scroll.h"
+#include "debug.h"
+#include "core/events/window/window_events.h"
+#include "core/events/input/input_events.h"
 
 namespace polos
 {
@@ -54,11 +44,10 @@ namespace polos
     {
         if (!_is_glfw_initialized)
         {
-            int r = glfwInit();
-            ASSERT(r == GLFW_TRUE, "Failed to initialize GLFW!");
-            _is_glfw_initialized = true;
-
             glfwSetErrorCallback(error_callback);
+            int r = glfwInit();
+            ASSERT_S(r == GLFW_TRUE, "Failed to initialize GLFW!");
+            _is_glfw_initialized = true;
         }
 
         GLFWmonitor *monitor = nullptr;
@@ -120,6 +109,13 @@ namespace polos
             }
         );
 
+        glfwSetFramebufferSizeCallback(window,
+            [](GLFWwindow *_, int32 width, int32 height)
+            {
+                event_bus::raise_event<window_framebuffer_size>();
+            }
+        );
+
     #pragma endregion
 
     #pragma region key_input_events
@@ -134,9 +130,6 @@ namespace polos
                     break;
                 case GLFW_RELEASE:
                     event_bus::raise_event<key_release>(key);
-                    break;
-                case GLFW_REPEAT:
-                    event_bus::raise_event<key_repeat>(key, 1);
                     break;
                 }
             }

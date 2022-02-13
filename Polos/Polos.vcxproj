@@ -58,7 +58,7 @@
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;GLFW_INCLUDE_NONE;PL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>engine\core;engine\window;engine\containers;engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -81,7 +81,7 @@
       <PrecompiledHeaderFile>plpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;USE_OPENGL;GLFW_INCLUDE_NONE;PL_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>engine\core;engine\window;engine\containers;engine;external\spdlog\include;external\glad\include;external\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -107,35 +107,39 @@
     <ClInclude Include="engine\context\graphics_context.h" />
     <ClInclude Include="engine\context\vertex_buffer_object.h" />
     <ClInclude Include="engine\core\application.h" />
+    <ClInclude Include="engine\core\debug.h" />
     <ClInclude Include="engine\core\entry_point.h" />
+    <ClInclude Include="engine\core\event_bus.h" />
+    <ClInclude Include="engine\core\events\event.h" />
+    <ClInclude Include="engine\core\events\events.h" />
+    <ClInclude Include="engine\core\events\input\input_events.h" />
+    <ClInclude Include="engine\core\events\input\key_press.h" />
+    <ClInclude Include="engine\core\events\input\key_release.h" />
+    <ClInclude Include="engine\core\events\input\key_repeat.h" />
+    <ClInclude Include="engine\core\events\input\mouse_button_press.h" />
+    <ClInclude Include="engine\core\events\input\mouse_button_release.h" />
+    <ClInclude Include="engine\core\events\input\mouse_move.h" />
+    <ClInclude Include="engine\core\events\input\mouse_scroll.h" />
+    <ClInclude Include="engine\core\events\window\window_close.h" />
+    <ClInclude Include="engine\core\events\window\window_events.h" />
+    <ClInclude Include="engine\core\events\window\window_focus.h" />
+    <ClInclude Include="engine\core\events\window\window_framebuffer_size.h" />
+    <ClInclude Include="engine\core\events\window\window_iconify.h" />
+    <ClInclude Include="engine\core\events\window\window_maximize.h" />
+    <ClInclude Include="engine\core\events\window\window_position.h" />
+    <ClInclude Include="engine\core\events\window\window_resize.h" />
     <ClInclude Include="engine\core\layer.h" />
     <ClInclude Include="engine\core\system.h" />
     <ClInclude Include="engine\core\window.h" />
-    <ClInclude Include="engine\events\event.h" />
-    <ClInclude Include="engine\events\event_bus.h" />
-    <ClInclude Include="engine\events\input\key_press.h" />
-    <ClInclude Include="engine\events\input\key_release.h" />
-    <ClInclude Include="engine\events\input\key_repeat.h" />
-    <ClInclude Include="engine\events\input\mouse_button_press.h" />
-    <ClInclude Include="engine\events\input\mouse_button_release.h" />
-    <ClInclude Include="engine\events\input\mouse_move.h" />
-    <ClInclude Include="engine\events\input\mouse_scroll.h" />
-    <ClInclude Include="engine\events\window\window_framebuffer_size.h" />
-    <ClInclude Include="engine\events\window\window_close.h" />
-    <ClInclude Include="engine\events\window\window_focus.h" />
-    <ClInclude Include="engine\events\window\window_iconify.h" />
-    <ClInclude Include="engine\events\window\window_maximize.h" />
-    <ClInclude Include="engine\events\window\window_position.h" />
-    <ClInclude Include="engine\events\window\window_resize.h" />
     <ClInclude Include="engine\plpch.h" />
     <ClInclude Include="engine\polos.h" />
-    <ClInclude Include="engine\utils\logger.h" />
-    <ClInclude Include="engine\utils\macros.h" />
-    <ClInclude Include="engine\utils\platform_defines.h" />
+    <ClInclude Include="engine\renderer\renderer.h" />
+    <ClInclude Include="engine\core\logger.h" />
+    <ClInclude Include="engine\platform\platform_detection.h" />
     <ClInclude Include="engine\utils\types.h" />
+    <ClInclude Include="engine\utils\util-inl.h" />
     <ClInclude Include="engine\utils\util.h" />
     <ClInclude Include="engine\window\glfw_window.h" />
-    <ClInclude Include="engine\renderer\renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\context\opengl\opengl_context.cpp" />
@@ -144,12 +148,12 @@
     <ClCompile Include="engine\plpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\utils\logger.cpp" />
+    <ClCompile Include="engine\renderer\renderer.cpp" />
+    <ClCompile Include="engine\core\logger.cpp" />
     <ClCompile Include="engine\window\glfw_window.cpp" />
     <ClCompile Include="external\glad\src\glad.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="engine\renderer\renderer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

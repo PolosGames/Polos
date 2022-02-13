@@ -16,14 +16,14 @@
     <Filter Include="engine\core">
       <UniqueIdentifier>{5341430D-BFF6-BB02-48EB-B5D9B49FB206}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\events">
-      <UniqueIdentifier>{9FF33A70-0BB4-B6A6-D4EE-FF23406EFB82}</UniqueIdentifier>
+    <Filter Include="engine\core\events">
+      <UniqueIdentifier>{F7E5628A-E3C9-23E0-4C2A-1E33382D0E62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\events\input">
-      <UniqueIdentifier>{FEAE1D00-6A10-FB0D-F37D-41C05FDE31CD}</UniqueIdentifier>
+    <Filter Include="engine\core\events\input">
+      <UniqueIdentifier>{5603F8DE-4228-475F-6B73-2CEF57F7457D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine\events\window">
-      <UniqueIdentifier>{C6EB1F24-B27A-A9ED-5B99-BDE84707BA93}</UniqueIdentifier>
+    <Filter Include="engine\core\events\window">
+      <UniqueIdentifier>{1ECB44DE-8A8D-7868-D33D-07F53F3F5146}</UniqueIdentifier>
     </Filter>
     <Filter Include="engine\renderer">
       <UniqueIdentifier>{2166C161-8DF1-2E26-9602-B21A020D8B26}</UniqueIdentifier>
@@ -51,10 +51,73 @@
     <ClInclude Include="engine\context\graphics_context.h">
       <Filter>engine\context</Filter>
     </ClInclude>
+    <ClInclude Include="engine\context\vertex_buffer_object.h">
+      <Filter>engine\context</Filter>
+    </ClInclude>
     <ClInclude Include="engine\core\application.h">
       <Filter>engine\core</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\entry_point.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\event_bus.h">
+      <Filter>engine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\event.h">
+      <Filter>engine\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\events.h">
+      <Filter>engine\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\input_events.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\key_press.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\key_release.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\key_repeat.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\mouse_button_press.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\mouse_button_release.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\mouse_move.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\input\mouse_scroll.h">
+      <Filter>engine\core\events\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_close.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_events.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_focus.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_framebuffer_size.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_iconify.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_maximize.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_position.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\events\window\window_resize.h">
+      <Filter>engine\core\events\window</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\layer.h">
       <Filter>engine\core</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\system.h">
@@ -63,60 +126,40 @@
     <ClInclude Include="engine\core\window.h">
       <Filter>engine\core</Filter>
     </ClInclude>
-    <ClInclude Include="engine\events\event.h">
-      <Filter>engine\events</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\events\event_bus.h">
-      <Filter>engine\events</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\events\input\key_press.h">
-      <Filter>engine\events\input</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\events\window\window_framebuffer_size.h">
-      <Filter>engine\events\window</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\events\window\window_close.h">
-      <Filter>engine\events\window</Filter>
-    </ClInclude>
     <ClInclude Include="engine\plpch.h">
       <Filter>engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\polos.h">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\utils\logger.h">
+    <ClInclude Include="engine\renderer\renderer.h">
+      <Filter>engine\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\logger.h">
       <Filter>engine\utils</Filter>
     </ClInclude>
-    <ClInclude Include="engine\utils\macros.h">
-      <Filter>engine\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\utils\platform_defines.h">
+    <ClInclude Include="engine\platform\platform_detection.h">
       <Filter>engine\utils</Filter>
     </ClInclude>
     <ClInclude Include="engine\utils\types.h">
       <Filter>engine\utils</Filter>
     </ClInclude>
+    <ClInclude Include="engine\utils\util-inl.h">
+      <Filter>engine\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\utils\util.h">
+      <Filter>engine\utils</Filter>
+    </ClInclude>
     <ClInclude Include="engine\window\glfw_window.h">
       <Filter>engine\window</Filter>
     </ClInclude>
-    <ClInclude Include="engine\events\window\window_focus.h" />
-    <ClInclude Include="engine\events\window\window_resize.h" />
-    <ClInclude Include="engine\events\window\window_position.h" />
-    <ClInclude Include="engine\events\window\window_iconify.h" />
-    <ClInclude Include="engine\events\window\window_maximize.h" />
-    <ClInclude Include="engine\events\input\key_release.h" />
-    <ClInclude Include="engine\events\input\key_repeat.h" />
-    <ClInclude Include="engine\events\input\mouse_button_press.h" />
-    <ClInclude Include="engine\events\input\mouse_button_release.h" />
-    <ClInclude Include="engine\events\input\mouse_scroll.h" />
-    <ClInclude Include="engine\events\input\mouse_move.h" />
-    <ClInclude Include="engine\utils\util.h" />
-    <ClInclude Include="engine\renderer\renderer.h" />
-    <ClInclude Include="engine\context\vertex_buffer_object.h" />
-    <ClInclude Include="engine\core\layer.h" />
+    <ClInclude Include="engine\core\debug.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\context\opengl\opengl_context.cpp">
+      <Filter>engine\context\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\context\opengl\opengl_vertex_buffer_object.cpp">
       <Filter>engine\context\opengl</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\application.cpp">
@@ -125,7 +168,10 @@
     <ClCompile Include="engine\plpch.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\utils\logger.cpp">
+    <ClCompile Include="engine\renderer\renderer.cpp">
+      <Filter>engine\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\logger.cpp">
       <Filter>engine\utils</Filter>
     </ClCompile>
     <ClCompile Include="engine\window\glfw_window.cpp">
@@ -134,7 +180,5 @@
     <ClCompile Include="external\glad\src\glad.c">
       <Filter>external\glad\src</Filter>
     </ClCompile>
-    <ClCompile Include="engine\renderer\renderer.cpp" />
-    <ClCompile Include="engine\context\opengl\opengl_vertex_buffer_object.cpp" />
   </ItemGroup>
 </Project>

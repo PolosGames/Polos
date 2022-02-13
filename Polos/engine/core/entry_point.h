@@ -2,11 +2,11 @@
 #ifndef POLOS_CORE_ENTRYPOINT_H
 #define POLOS_CORE_ENTRYPOINT_H
 
-#include "utils/platform_defines.h"
+#include "platform/platform_detection.h"
 #include "application.h"
-#include "utils/logger.h"
+#include "logger.h"
 
-#ifdef PL_PLATFORM_WINDOWS
+#ifdef POLOS_WIN
 
 extern polos::application *polos::create_application();
 

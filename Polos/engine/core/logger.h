@@ -4,14 +4,12 @@
 
 #include <spdlog/spdlog.h>
 
-#include "utils/platform_defines.h"
-
 namespace polos
 {
 	enum class logger_type
 	{
 		LOGGER_CORE,
-		LOGGER_CLIENT
+		LOGGER_CLIENT,
 	};
 
 	class logger
@@ -53,7 +51,6 @@ namespace polos
 		logger();
 		logger(const logger &);
 	private:
-
 		static std::shared_ptr<spdlog::logger> _core_logger;
 		static std::shared_ptr<spdlog::logger> _client_logger;
 	};

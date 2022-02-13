@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "utils/platform_defines.h"
-#include "utils/logger.h"
-#include "events/event_bus.h"
-#include "utils/macros.h"
+#include "platform/platform_detection.h"
+#include "logger.h"
+#include "event_bus.h"
+#include "debug.h"
