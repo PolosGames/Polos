@@ -1,0 +1,13 @@
+#pragma once
+#ifndef POLOS_CORE_DEBUG_H
+#define POLOS_CORE_DEBUG_H
+
+#ifdef PL_DEBUG
+#	define ASSERT_S(check, ...) { if (!(check)) { LOG_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n msg: {2}", __FILE__, __LINE__, __VA_ARGS__); __debugbreak();} }
+#	define ASSERT(check) { if (!(check)) { LOG_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n", __FILE__, __LINE__); __debugbreak();} }
+#else
+#	define ASSERT_S(check, ...)
+#	define ASSERT(check)
+#endif
+
+#endif /* POLOS_CORE_DEBUG_H */

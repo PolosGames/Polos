@@ -2,8 +2,6 @@
 **/bin/
 **/bin-int/
 
-**.log
-
 # Visual Studio files and folder
 .vs/
 **.sln
@@ -11,4 +9,9 @@
 **.vcxproj.filters
 **.vcxproj.user
 
+# Stuff for my directory
 **.snippet
+**.txt
+
+# Ignore this on Sandbox
+**.log
