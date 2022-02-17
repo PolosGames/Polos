@@ -6,64 +6,88 @@
 
 namespace polos
 {
-	enum class LoggerType
+	enum class logger_type
 	{
 		LOGGER_CORE,
 		LOGGER_CLIENT,
 	};
 
-	class Logger
+	class logger
 	{
 	public:
-		static Logger &instance()
+		static logger& instance()
 		{
-			static Logger l;
+			static logger l;
 			return l;
 		}
 
-		template<typename... Args>
-		void critical(LoggerType type, spdlog::format_string_t<Args...> fmt, Args &&... args)
-		{
-			pick_logger(type)->critical(fmt, std::forward<Args>(args)...);
-		}
+		template<typename ...Args>
+		void critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename... Args>
-		void error(LoggerType type, spdlog::format_string_t<Args...> fmt, Args &&... args)
-		{
-			pick_logger(type)->error(fmt, std::forward<Args>(args)...);
-		}
+		template<typename ...Args>
+		void error(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename... Args>
-		void warn(LoggerType type, spdlog::format_string_t<Args...> fmt, Args &&... args)
-		{
-			pick_logger(type)->error(fmt, std::forward<Args>(args)...);
-		}
+		template<typename ...Args>
+		void warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename... Args>
-		void info(LoggerType type, spdlog::format_string_t<Args...> fmt, Args &&... args)
-		{
-			pick_logger(type)->error(fmt, std::forward<Args>(args)...);
-		}
+		template<typename ...Args>
+		void info(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+
+		template<typename ...Args>
+		void trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
 	private:
-		std::shared_ptr<spdlog::logger> pick_logger(LoggerType type);
+		std::shared_ptr<spdlog::logger> pick_logger(logger_type type);
 
-		Logger();
-		Logger(Logger const&);
+		logger();
+		logger(logger const&);
 	private:
 		static std::shared_ptr<spdlog::logger> _core_logger;
 		static std::shared_ptr<spdlog::logger> _client_logger;
 	};
-}
 
-#define LOG_CORE_CRITICAL(...) ::polos::Logger::instance().critical(::polos::LoggerType::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_ERROR(...) ::polos::Logger::instance().error(::polos::LoggerType::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_WARN(...)  ::polos::Logger::instance().warn(::polos::LoggerType::LOGGER_CORE, __VA_ARGS__)
-#define LOG_CORE_INFO(...)  ::polos::Logger::instance().info(::polos::LoggerType::LOGGER_CORE, __VA_ARGS__)
+	template<typename ...Args>
+	inline void logger::critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+	{
+		pick_logger(type)->critical(fmt, std::forward<Args>(args)...);
+	}
 
-#define LOG_CRITICAL(...) ::polos::Logger::instance().critical(::polos::LoggerType::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_ERROR(...) ::polos::Logger::instance().error(::polos::LoggerType::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_WARN(...)  ::polos::Logger::instance().warn(::polos::LoggerType::LOGGER_CLIENT, __VA_ARGS__)
-#define LOG_INFO(...)  ::polos::Logger::instance().info(::polos::LoggerType::LOGGER_CLIENT, __VA_ARGS__)
+	template<typename ...Args>
+	inline void logger::error(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+	{
+		pick_logger(type)->error(fmt, std::forward<Args>(args)...);
+	}
+
+	template<typename ...Args>
+	inline void logger::warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+	{
+		pick_logger(type)->warn(fmt, std::forward<Args>(args)...);
+	}
+
+	template<typename ...Args>
+	inline void logger::info(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+	{
+		pick_logger(type)->info(fmt, std::forward<Args>(args)...);
+	}
+
+	template<typename ...Args>
+	inline void logger::trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+	{
+		pick_logger(type)->trace(fmt, std::forward<Args>(args)...);
+	}
+
+} // namespace polos
+
+#define LOG_CORE_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_ERROR(...) ::polos::logger::instance().error(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_WARN(...)  ::polos::logger::instance().warn(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_INFO(...)  ::polos::logger::instance().info(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+#define LOG_CORE_TRACE(...)  ::polos::logger::instance().trace(::polos::logger_type::LOGGER_CORE, __VA_ARGS__)
+
+#define LOG_CRITICAL(...) ::polos::logger::instance().critical(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_ERROR(...) ::polos::logger::instance().error(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_WARN(...)  ::polos::logger::instance().warn(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_INFO(...)  ::polos::logger::instance().info(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
+#define LOG_TRACE(...)  ::polos::logger::instance().trace(::polos::logger_type::LOGGER_CLIENT, __VA_ARGS__)
 
 #endif /* POLOS_UTILS_LOGGER_H */

@@ -1,6 +1,7 @@
 #include "plpch.h"
 
-#include "glfw_window.h"
+#include "x_plat_window.h"
+#if defined(USE_OPENGL) || defined(USE_VULKAN)
 
 #include "debug.h"
 #include "events/window/window_events.h"
@@ -9,13 +10,13 @@
 namespace polos
 {
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
-    Window *Window::create_window(const WindowProps &props)
+    Window* Window::NewWindow(const window_props &props)
     {
-        return new glfw_window(props);
+        return new XPlatWindow(props);
     }
 #endif
-    bool glfw_window::_is_glfw_initialized = false;
-    uint32 glfw_window::_glfw_window_count = 0;
+    bool XPlatWindow::_is_glfw_initialized = false;
+    uint32 XPlatWindow::_glfw_window_count = 0;
 
     static void error_callback(int error_code, const char *description)
     {
@@ -29,18 +30,18 @@ namespace polos
         }
     }
 
-    void glfw_window::shutdown()
+    void XPlatWindow::Shutdown()
     {
         glfwTerminate();
     }
 
-    glfw_window::glfw_window(const WindowProps & props)
+    XPlatWindow::XPlatWindow(const window_props &props)
         : _props(props)
     {
-        initialize();
+        Initialize();
     }
 
-    void glfw_window::initialize()
+    void XPlatWindow::Initialize()
     {
         if (!_is_glfw_initialized)
         {
@@ -67,7 +68,7 @@ namespace polos
         glfwMakeContextCurrent(window);
 
         _context = std::make_unique<graphics_context>();
-        _context->initialize(window);
+        _context->Initialize(window);
 
     #pragma region window_events
 
@@ -88,7 +89,7 @@ namespace polos
         glfwSetWindowSizeCallback(window,
             [](GLFWwindow *window, int32 width, int32 height)
             {
-                WindowProps *props = static_cast<WindowProps*>(glfwGetWindowUserPointer(window));
+                window_props *props = static_cast<window_props*>(glfwGetWindowUserPointer(window));
                 props->width = width;
                 props->height = height;
                 event_bus::raise_event<window_resize>(width, height);
@@ -171,40 +172,42 @@ namespace polos
     #pragma endregion
     }
 
-    void glfw_window::destroy()
+    void XPlatWindow::Destroy()
     {
         glfwDestroyWindow(window);
     }
 
-    uint32 glfw_window::width()
+    uint32 XPlatWindow::Width()
     {
         return _props.width;
     }
 
-    uint32 glfw_window::height()
+    uint32 XPlatWindow::Height()
     {
         return _props.height;
     }
 
-    bool glfw_window::vsync()
+    bool XPlatWindow::Vsync()
     {
         return _props.vsync;
     }
 
-    void glfw_window::vsync(bool vsync)
+    void XPlatWindow::Vsync(bool vsync)
     {
         glfwSwapInterval(vsync);
         _props.vsync = vsync;
     }
 
-    void glfw_window::update()
+    void XPlatWindow::Update()
     {
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
 
-    bool glfw_window::is_open()
+    bool XPlatWindow::IsOpen()
     {
         return !glfwWindowShouldClose(window);
     }
-}
+} // namespace polos
+
+#endif

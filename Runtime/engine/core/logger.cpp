@@ -6,10 +6,10 @@
 
 namespace polos
 {
-	std::shared_ptr<spdlog::logger> Logger::_client_logger;
-	std::shared_ptr<spdlog::logger> Logger::_core_logger;
+	std::shared_ptr<spdlog::logger> logger::_client_logger;
+	std::shared_ptr<spdlog::logger> logger::_core_logger;
 
-	Logger::Logger()
+	logger::logger()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;
 		log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -29,12 +29,12 @@ namespace polos
 		_client_logger->flush_on(spdlog::level::trace);
 	}
 
-	std::shared_ptr<spdlog::logger> Logger::pick_logger(LoggerType type)
+	std::shared_ptr<spdlog::logger> logger::pick_logger(logger_type type)
 	{
 		switch (type)
 		{
-		case LoggerType::LOGGER_CORE: return _core_logger;
-		case LoggerType::LOGGER_CLIENT: return _client_logger;
+		case logger_type::LOGGER_CORE: return _core_logger;
+		case logger_type::LOGGER_CLIENT: return _client_logger;
 		default: return std::shared_ptr<spdlog::logger>();
 		}
 	}

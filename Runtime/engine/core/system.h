@@ -5,12 +5,11 @@
 
 namespace polos
 {
-	template<typename >
+	template<typename T>
 	class System
 	{
 	public:
-		virtual void initialize() = 0;
-		virtual void shutdown() = 0;
+
 	};
 }
 

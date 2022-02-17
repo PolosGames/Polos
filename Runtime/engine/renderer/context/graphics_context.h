@@ -8,7 +8,7 @@ namespace polos
 	class graphics_context
 	{
 	public:
-		void initialize(void *window_handle);
+		void Initialize(void *window_handle);
 	public:
 		bool is_initialized;
 	private:

@@ -9,7 +9,7 @@
 
 namespace polos
 {
-	void graphics_context::initialize(void *window_handle)
+	void graphics_context::Initialize(void *window_handle)
 	{
 		_window = window_handle;
 		GLFWwindow *gwindow = reinterpret_cast<GLFWwindow *>(_window);

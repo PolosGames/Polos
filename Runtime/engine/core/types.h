@@ -3,10 +3,6 @@
 #ifndef POLOS_UTILS_TYPES_H
 #define POLOS_UTILS_TYPES_H
 
-#include <cstdint>
-#include <limits>
-#include <cfloat>
-
 namespace polos
 {
 	using uint8 = std::uint8_t;
@@ -19,11 +15,14 @@ namespace polos
 	using int32 = std::int32_t;
 	using int64 = std::int64_t;
 
-	using byte = uint8_t;
+	using uintptr = std::uintptr_t;
+	using ptrdiff = std::ptrdiff_t;
 
-	using event_id = std::size_t;
+	using byte = uint8;
 
-	using cstring = char const *;
+	using event_id = uint64;
+
+	using cstring = const char*;
 }
 
 #endif /* POLOS_UTILS_TYPES_H */
