@@ -10,7 +10,7 @@ namespace polos::memory
 	LinearAllocator::LinearAllocator(uint64 size)
 		: _buffer_size(size)
 	{
-		_buffer = reinterpret_cast<byte*>(std::malloc(size));
+		_buffer = static_cast<byte*>(std::malloc(size));
 		_top = reinterpret_cast<uintptr>(_buffer);
 	}
 
@@ -22,7 +22,11 @@ namespace polos::memory
 
 	void* LinearAllocator::align(uint64 size)
 	{
-		if (_top + size > (uintptr)_buffer + _buffer_size) return nullptr;
+		if (_top + size > (uintptr)_buffer + _buffer_size)
+		{
+			ASSERT_S(0, "Linear allocator is out of memory!");
+			return nullptr;
+		}
 		
 		void* ptr = reinterpret_cast<void*>(_top);
 		_top = MemUtils::AlignForward(_top + size);
@@ -42,7 +46,11 @@ namespace polos::memory
 			byte* old_mem = _buffer;
 			_buffer = reinterpret_cast<byte*>(std::malloc(size));
 
-			if (!_buffer) return;
+			if (!_buffer)
+			{
+				ASSERT_S(0, "Buffer is null! (LinearAllocator::Resize)");
+				return;
+			}
 
 			// Need this bc memcpy is not safe, and this looks fancier :)
 			// Could've used memmove which is safer.
