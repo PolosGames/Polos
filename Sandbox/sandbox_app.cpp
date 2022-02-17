@@ -1,13 +1,13 @@
 #include <polos.h>
 
-class senaz_app : public polos::Application
+class SandboxApp : public polos::Application
 {
 public:
-	senaz_app() {}
-	~senaz_app() {}
+	SandboxApp() {}
+	~SandboxApp() {}
 };
 
 polos::Application *polos::create_application()
 {
-	return new senaz_app();
+	return new SandboxApp();
 }

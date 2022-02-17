@@ -15,3 +15,7 @@
 
 # Ignore this on Sandbox
 **.log
+
+# For the documentation folder on my computer
+doc/
+Doxyfile

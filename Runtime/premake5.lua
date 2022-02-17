@@ -33,7 +33,13 @@ project "Runtime"
 		"engine/renderer",
 		"engine/window",
 		"engine",
-		includes["spdlog"]
+		includes["spdlog"],
+		includes["Optick"]
+	}
+
+	links
+	{
+		"Optick"
 	}
 
 	for k, v in pairs(gfxapi_includes) do includedirs {v} end
@@ -52,9 +58,6 @@ project "Runtime"
 		for k, v in pairs(gfxapi_libs_d) do
 			links {v}
 		end
-
-		filter "system:Windows"
-			postbuildcommands { ("{COPY} " ..gfxapi_libs_d["GLFW"].. "/" "../bin/" ..output_dir.. "/Sandbox") }
 	
 	filter "configurations:Release"
 		defines "PL_RELEASE"

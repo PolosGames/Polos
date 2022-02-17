@@ -17,6 +17,7 @@ includes = {}
 includes["spdlog"] = "%{wks.location}/Runtime/external/spdlog/include"
 includes["GLFW"] = "%{wks.location}/Runtime/external/GLFW/include"
 includes["glad"] = "%{wks.location}/Runtime/external/glad/include"
+includes["Optick"] = "%{wks.location}/Runtime/external/Optick/api"
 
 libraries_d = {}
 libraries_d["spdlog"] = "%{wks.location}/Runtime/external/spdlog/lib/debug/spdlogd"
@@ -80,6 +81,8 @@ workspace "Polos"
 	}
 
 output_dir  = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+include "Runtime/external/Optick"
 
 include "Runtime"
 include "Sandbox"
