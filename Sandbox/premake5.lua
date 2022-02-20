@@ -15,8 +15,9 @@ project "Sandbox"
 
 	includedirs
 	{
-		"%{wks.location}/Runtime/external/spdlog/include",
-		"%{wks.location}/Runtime/engine"
+		"%{wks.location}/Runtime/engine",
+		includes["spdlog"],
+		includes["Optick"]
 	}
 
 	links

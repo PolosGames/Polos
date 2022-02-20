@@ -19,3 +19,6 @@
 # For the documentation folder on my computer
 doc/
 Doxyfile
+
+# Optick generated files
+**.opt

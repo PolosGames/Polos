@@ -14,54 +14,37 @@ newoption {
 -- Dependency Locations
 
 includes = {}
-includes["spdlog"] = "%{wks.location}/Runtime/external/spdlog/include"
-includes["GLFW"] = "%{wks.location}/Runtime/external/GLFW/include"
-includes["glad"] = "%{wks.location}/Runtime/external/glad/include"
-includes["Optick"] = "%{wks.location}/Runtime/external/Optick/api"
-
-libraries_d = {}
-libraries_d["spdlog"] = "%{wks.location}/Runtime/external/spdlog/lib/debug/spdlogd"
-libraries_d["GLFW"] = "%{wks.location}/Runtime/external/glfw/lib/debug/glfw3"
-libraries_d["opengl"] = "opengl32"
-
-libraries_r = {}
-libraries_r["spdlog"] = "%{wks.location}/Runtime/external/spdlog/lib/release/spdlog"
-libraries_r["GLFW"] = "%{wks.location}/Runtime/external/glfw/lib/release/glfw3"
-libraries_r["opengl"] = "opengl32"
-
--- Graphics API Selection
-
-ignored_files = {}
-
-gfxapi_libs_d = {}
-gfxapi_libs_r = {}
-gfxapi_includes = {}
+includes["spdlog"] = "%{wks.location}/ThirdParty/spdlog/include"
+includes["glfw"] = "%{wks.location}/ThirdParty/glfw/include"
+includes["glad"] = "%{wks.location}/ThirdParty/glad/include"
+includes["Optick"] = "%{wks.location}/ThirdParty/Optick/api"
 
 graphics_api = "USE_OPENGL"
 
-if _OPTIONS["gfxapi"] == "opengl" then
-   gfxapi_libs_d[0] = libraries_d["opengl"]
-   gfxapi_libs_r[0] = libraries_r["opengl"]
-   gfxapi_libs_d[1] = libraries_d["GLFW"]
-   gfxapi_libs_r[2] = libraries_r["GLFW"]
+OS_NAME = os.get()
 
-   gfxapi_includes[0] = includes["GLFW"]
-   gfxapi_includes[1] = includes["glad"]
+gfxapi_includes = {}
+gfxapi_libs = {}
+
+if _OPTIONS["gfxapi"] == "opengl" then
+	gfxapi_includes[0] = includes["glfw"]
+	gfxapi_includes[1] = includes["glad"]
+
+	gfxapi_libs[0] = "glfw"
+	gfxapi_libs[1] = "glad"
+	gfxapi_libs[2] = "opengl32.lib"
 elseif _OPTIONS["gfxapi"] == "vulkan" then
-   graphics_api = "USE_VULKAN"
---   gfxapi_includes[0] = includes["vulkan"]
---   gfxapi_libs_d[0] = libraries_d["vulkan"]
---   gfxapi_libs_d[1] = libraries_r["vulkan"]
+	graphics_api = "USE_VULKAN"
 
 elseif _OPTIONS["gfxapi"] == "d3d11" then
-   if not os.get() == "windows" then
+   if not OS_NAME == "windows" then
       print("Not on Windows")
       exit()
    end
    graphics_api = "USE_D3D11"
 
 elseif _OPTIONS["gfxapi"] == "d3d12" then
-   if not os.get() == "windows" then
+   if not OS_NAME == "windows" then
       print("Not on Windows")
       exit()
    end
@@ -82,7 +65,12 @@ workspace "Polos"
 
 output_dir  = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-include "Runtime/external/Optick"
+group "ThirdParty"
+	include "ThirdParty/Optick"
+	include "ThirdParty/spdlog"
+	include "ThirdParty/glfw"
+	include "ThirdParty/glad"
+group ""
 
 include "Runtime"
 include "Sandbox"

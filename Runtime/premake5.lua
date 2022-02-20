@@ -13,7 +13,8 @@ project "Runtime"
 	defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
-		graphics_api
+		graphics_api,
+		"GLFW_INCLUDE_NONE"
 	}
 
 	files
@@ -21,10 +22,6 @@ project "Runtime"
 		"engine/**.h",
 		"engine/**.cpp"
 	}
-
-	filter "options:gfxapi=opengl or options:gfxapi=vulkan"
-		files { "external/glad/src/glad.c" }
-		defines { "GLFW_INCLUDE_NONE" }
 
 	includedirs
 	{ 	
@@ -39,10 +36,12 @@ project "Runtime"
 
 	links
 	{
-		"Optick"
+		"Optick",
+		"spdlog"
 	}
 
 	for k, v in pairs(gfxapi_includes) do includedirs {v} end
+	for k, v in pairs(gfxapi_libs) do links {v} end
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -54,19 +53,8 @@ project "Runtime"
 		defines "PL_DEBUG"
 		runtime "Debug"
 		symbols "On"
-
-		for k, v in pairs(gfxapi_libs_d) do
-			links {v}
-		end
 	
 	filter "configurations:Release"
 		defines "PL_RELEASE"
 		runtime "Release"
 		optimize "On"
-
-		for k, v in pairs(gfxapi_libs_r) do
-			links {v}
-		end
-
-	filter "files:**.c"
-		flags {"NoPCH"}
