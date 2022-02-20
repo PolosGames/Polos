@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "types.h"
-#include "system.h"
+#include "utils/alias.h"
+#include "engine/system.h"
 
 namespace polos
 {

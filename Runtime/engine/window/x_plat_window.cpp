@@ -3,7 +3,6 @@
 #include "x_plat_window.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
-#include "debug.h"
 #include "events/window/window_events.h"
 #include "events/input/input_events.h"
 

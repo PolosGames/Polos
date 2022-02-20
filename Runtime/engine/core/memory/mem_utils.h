@@ -2,17 +2,18 @@
 #ifndef POLOS_CORE_MEMORY_MEMUTILS_H_
 #define POLOS_CORE_MEMORY_MEMUTILS_H_
 
-#include "types.h"
+#include "utils/alias.h"
 
 namespace polos::memory
 {
 	class MemUtils
 	{
 	public:
-		static uint32 constexpr MEM_ALIGNMENT = 8;
+		static uint32 constexpr MEM_ALIGNMENT = sizeof(size_t);
 
 		static bool IsPowerOfTwo(uintptr p);
 		static uintptr AlignForward(uintptr p);
+		static bool IsAligned(uintptr p);
 		static uint32 CalculatePadding(uintptr p);
 	};
 
@@ -26,6 +27,11 @@ namespace polos::memory
 		uintptr misalignment = p & (MEM_ALIGNMENT - 1);
 
 		return misalignment == 0 ? p : p + MEM_ALIGNMENT - misalignment;
+	}
+
+	inline bool MemUtils::IsAligned(uintptr p)
+	{
+		return (p & (MEM_ALIGNMENT - 1)) == 0;
 	}
 
 	inline uint32 MemUtils::CalculatePadding(uintptr p)

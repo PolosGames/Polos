@@ -3,6 +3,10 @@
 #ifndef POLOS_UTILS_TYPES_H
 #define POLOS_UTILS_TYPES_H
 
+#include <cstdint>
+#include <cstddef>
+#include <ratio>
+
 namespace polos
 {
 	using uint8 = std::uint8_t;
@@ -23,6 +27,10 @@ namespace polos
 	using event_id = uint64;
 
 	using cstring = const char*;
+
+	inline float  operator""_ms(std::size_t time)	{ return 0.001f * time;		}
+	inline double operator""_us(std::size_t time)	{ return 0.001 * 0.001 * time;			}
+	inline double operator""_ns(std::size_t time)	{ return 0.001 * 0.001 * 0.001 * time;	}
 }
 
 #endif /* POLOS_UTILS_TYPES_H */

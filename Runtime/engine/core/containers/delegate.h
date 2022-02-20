@@ -3,18 +3,12 @@
 #define POLOS_CONTAINERS_DELEGATE_H
 
 /**
-	A function delegate class that's heavily influenced and copied from Legion
-	Engine's delegate class.
-
 	Main concept is from Sergey Ryazanov's "The Impossibly Fast C++ Delegates"
 	thread in the codeproject.com
 
 	Currently, there is no type safety in template functions, but it should be
 	added.
 */
-
-#include <type_traits>
-#include <utility>
 
 namespace polos
 {
@@ -27,7 +21,7 @@ namespace polos
 
 		delegate(void* const object_pointer, stub_type const stub_ptr) noexcept
 			: _object_pointer(object_pointer), _stub_pointer(stub_ptr)
-			{}
+		{}
 	public:
 		delegate() noexcept = default;
 

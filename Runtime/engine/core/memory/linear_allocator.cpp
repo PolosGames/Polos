@@ -8,45 +8,38 @@
 namespace polos::memory
 {
 	LinearAllocator::LinearAllocator(uint64 size)
-		: _buffer_size(size)
+		: buffer_size_(size)
 	{
-		_buffer = static_cast<byte*>(std::malloc(size));
-		_top = reinterpret_cast<uintptr>(_buffer);
+		PROFILE_FUNC();
+		buffer_ = static_cast<byte*>(std::malloc(size));
+		offset_ = 0;
+		bottom_ = reinterpret_cast<uintptr>(buffer_);
+
+		if (MemUtils::IsAligned(bottom_ + offset_)) return;
+
+		bottom_ = MemUtils::AlignForward(bottom_);
 	}
 
 	LinearAllocator::~LinearAllocator()
 	{
-		std::free(_buffer);
-		_buffer = nullptr;
-	}
-
-	void* LinearAllocator::align(uint64 size)
-	{
-		if (_top + size > (uintptr)_buffer + _buffer_size)
-		{
-			ASSERT_S(0, "Linear allocator is out of memory!");
-			return nullptr;
-		}
-		
-		void* ptr = reinterpret_cast<void*>(_top);
-		_top = MemUtils::AlignForward(_top + size);
-		return ptr;	
+		PROFILE_FUNC();
+		std::free(buffer_);
+		buffer_ = nullptr;
 	}
 
 	void LinearAllocator::Resize(uint64 size)
 	{
-		
-		if (size <= _buffer_size)
+		if (size <= buffer_size_)
 		{
-			_top = reinterpret_cast<uintptr>(_buffer) + size;
-			_buffer_size = size;
+			offset_ = size;
+			buffer_size_ = size;
 		}
 		else
 		{
-			byte* old_mem = _buffer;
-			_buffer = reinterpret_cast<byte*>(std::malloc(size));
+			byte* old_mem = buffer_;
+			buffer_ = reinterpret_cast<byte*>(std::malloc(size));
 
-			if (!_buffer)
+			if (!buffer_)
 			{
 				ASSERT_S(0, "Buffer is null! (LinearAllocator::Resize)");
 				return;
@@ -54,8 +47,8 @@ namespace polos::memory
 
 			// Need this bc memcpy is not safe, and this looks fancier :)
 			// Could've used memmove which is safer.
-			std::lock_guard<std::mutex> lock(_buffer_mutex);
-			std::memcpy(_buffer, old_mem, _buffer_size);
+			std::lock_guard<std::mutex> lock(buffer_mutex);
+			std::memcpy(buffer_, old_mem, buffer_size_);
 			
 			std::free(old_mem);
 			old_mem = nullptr; // Probably unnecessary lol.
@@ -64,6 +57,23 @@ namespace polos::memory
 
 	void LinearAllocator::Clear()
 	{
-		_top = reinterpret_cast<uintptr>(_buffer);
+		offset_ = 0;
+	}
+
+	void* LinearAllocator::align(uint64 size)
+	{
+		uintptr curr_ptr = bottom_ + offset_;
+		offset_ = MemUtils::AlignForward(curr_ptr) - bottom_;
+
+		if (offset_ + size > buffer_size_)
+		{
+			ASSERT_S(0, "LinearAllocator is full.");
+			return nullptr;
+		}
+
+		void* ptr = &buffer_[offset_];
+		memset(ptr, 0, size);
+		offset_ += size;
+		return ptr;
 	}
 }

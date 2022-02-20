@@ -70,25 +70,23 @@ namespace polos::memory
 	private:
 		void* align(uint64 size);
 	private:
-		byte* _buffer;
-		uintptr _bottom;
-		uintptr _prev_top;
-		uintptr _top;
-		uint64 _buffer_size;
+		byte* buffer_;
+		uintptr bottom_;
+		uintptr prev_top;
+		uintptr top_;
+		uint64 buffer_size;
 	};
 
 	template<typename T, typename... Args>
 	inline T* StackAllocator::Push(Args&&... args)
 	{
-		void* ptr = align(sizeof(T));
-		return new (ptr) T(std::forward<Args>(args)...);
+		return new (align(sizeof(T))) T(std::forward<Args>(args)...);
 	}
 
 	template<typename T>
 	inline T* StackAllocator::PushArr(uint64 count)
 	{
-		void* ptr = align(sizeof(T) * count);
-		return new (ptr) T[count];
+		return new (align(sizeof(T) * count)) T[count];
 	}
 } // namespace polos
 
