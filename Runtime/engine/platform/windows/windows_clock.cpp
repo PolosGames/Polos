@@ -4,7 +4,7 @@
 
 #include "core/time/clock.h"
 
-namespace polos::core::time
+namespace polos::time
 {
 	int64 Clock::Now()
 	{

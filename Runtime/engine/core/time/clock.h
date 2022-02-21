@@ -5,7 +5,7 @@
 #include "utils/alias.h"
 #include <ratio>
 
-namespace polos::core::time
+namespace polos::time
 {
 	class Clock
 	{

@@ -2,15 +2,21 @@
 #ifndef POLOS_CORE_TIME_SCOPETIMER_H_
 #define POLOS_CORE_TIME_SCOPETIMER_H_
 
-namespace polos::core::time
+#include "clock.h"
+
+namespace polos::time
 {
 	class ScopeTimer
 	{
 	public:
-		ScopeTimer();
+		ScopeTimer(const char* scope_name);
 		~ScopeTimer();
-	private:
 
+		void Stop();
+	private:
+		int64 start_;
+		const char* scope_name_;
+		bool is_stopped_;
 	};
 }
 
