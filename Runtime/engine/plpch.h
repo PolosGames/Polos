@@ -2,6 +2,8 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <type_traits>
+#include <utility>
 
 #include <string>
 #include <vector>
@@ -10,6 +12,6 @@
 #include <cstdint>
 
 #include "platform/platform_detection.h"
-#include "logger.h"
-#include "event_bus.h"
-#include "debug.h"
+#include "core/logger.h"
+#include "core/event_bus.h"
+#include "debug/debug.h"

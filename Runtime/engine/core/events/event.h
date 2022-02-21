@@ -3,8 +3,8 @@
 #ifndef POLOS_EVENTS_EVENT_H
 #define POLOS_EVENTS_EVENT_H
 
-#include "types.h"
-#include "util.h"
+#include "utils/type_util.h"
+#include "utils/alias.h"
 
 namespace polos
 {
