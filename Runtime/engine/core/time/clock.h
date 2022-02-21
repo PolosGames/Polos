@@ -11,7 +11,10 @@ namespace polos::time
 	{
 		using period = std::nano;
 	public:
+		static void Initialize();
 		static int64 Now();
+	private:
+		static LARGE_INTEGER Freq;
 	};
 } // namespace polos::core::time
 
