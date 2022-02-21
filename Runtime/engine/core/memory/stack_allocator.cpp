@@ -10,13 +10,9 @@ namespace polos::memory
 	{
 		PROFILE_FUNC();
 		buffer_ = static_cast<byte*>(std::malloc(size));
-		top_ = reinterpret_cast<uintptr>(buffer_);
-		bottom_ = top_;
-
-		if (MemUtils::IsAligned(top_)) return;
-
-		bottom_ = MemUtils::AlignForward(bottom_);
-		top_ = bottom_;
+		offset_ = 0;
+		prev_offset_ = 0;
+		bottom_ = reinterpret_cast<uintptr>(buffer_);
 	}
 	
 	StackAllocator::~StackAllocator()
@@ -27,47 +23,23 @@ namespace polos::memory
 
 	void StackAllocator::Pop()
 	{
-		if (!buffer_ || buffer_size == 0)
+		if (!buffer_ || buffer_size == 0 ||	offset_ == 0)
 		{
 			ASSERT_S(0, "Cannot pop because the buffer is empty! (StackAllocator::Pop)");
 			return;
 		}
 
-		top_ = prev_top;
-		
-		uintptr prev_element = reinterpret_cast<stack_header*>(prev_top)->prev_element;
+		size_t prev_offset = reinterpret_cast<stack_header*>(&buffer_[prev_offset_])->prev_offset;
 
-		// Check if the previous element points somewhere else.
-		prev_top = prev_element < bottom_ ? prev_top : prev_element;
-	}
-
-	void StackAllocator::ClearTo(uintptr position)
-	{
-		if (!(bottom_ <= position && position < bottom_ + buffer_size))
-		{
-			ASSERT_S(0, "Out of bounds memory address passed to stack allocator! (StackAllocator::ClearTo)");
-			return;
-		}
-
-		if (position >= top_)
-		{
-			ASSERT_S(0, "Passed address is not in the scope of current allocations! (StackAllocator::ClearTo)");
-			return;
-		}
-
-		top_ = position;
-		prev_top = (reinterpret_cast<stack_header*>(top_))->prev_element;
+		offset_ = prev_offset_;
+		// Check if the previous element points somewhere out of the buffer.
+		prev_offset_ = prev_offset;
 	}
 
 	void StackAllocator::Clear()
 	{
-		prev_top = bottom_;
-		top_ = bottom_;
-	}
-
-	uintptr StackAllocator::GetPosition()
-	{
-		return prev_top;
+		prev_offset_ = 0;
+		offset_ = bottom_;
 	}
 
 	void* StackAllocator::align(uint64 size)
@@ -75,27 +47,20 @@ namespace polos::memory
 		stack_header* header;
 
 		uint32 header_size = sizeof(stack_header);
-		uintptr new_top = top_ + header_size + size;
+		uint64 end_of_new_element = offset_ + header_size + size; // the new unaligned offset
 
-		if (new_top > bottom_ + buffer_size)
+		if (end_of_new_element > buffer_size)
 		{
 			ASSERT_S(0, "Stack Allocator is out of memory! Returning null. (StackAllocator::align)");
 			return nullptr;
 		}
 
-		header = reinterpret_cast<stack_header*>(top_);
-		header->prev_element = prev_top;
-
-		void* ptr = reinterpret_cast<void*>(top_ + header_size);
-		prev_top = top_;
+		header = reinterpret_cast<stack_header*>(bottom_ + offset_);
+		header->prev_offset = prev_offset_;
+		prev_offset_ = offset_;
 		
-		if (MemUtils::IsAligned(new_top))
-		{
-			top_ = new_top;
-			return ptr;
-		}
-
-		top_ = MemUtils::AlignForward(new_top);
+		void* ptr = &buffer_[offset_ + header_size];
+		offset_ = MemUtils::AlignForward(bottom_ + end_of_new_element) - bottom_;
 
 		return ptr;
 	}

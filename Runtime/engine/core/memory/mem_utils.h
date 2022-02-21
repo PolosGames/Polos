@@ -9,7 +9,7 @@ namespace polos::memory
 	class MemUtils
 	{
 	public:
-		static uint32 constexpr MEM_ALIGNMENT = sizeof(size_t);
+		static uint32 constexpr MEM_ALIGNMENT = 2 * sizeof(void*);
 
 		static bool IsPowerOfTwo(uintptr p);
 		static uintptr AlignForward(uintptr p);
@@ -25,8 +25,9 @@ namespace polos::memory
 	inline uintptr MemUtils::AlignForward(uintptr p)
 	{
 		uintptr misalignment = p & (MEM_ALIGNMENT - 1);
+		uintptr aligned_ptr = p + MEM_ALIGNMENT - misalignment;
 
-		return misalignment == 0 ? p : p + MEM_ALIGNMENT - misalignment;
+		return misalignment == 0 ? p : aligned_ptr;
 	}
 
 	inline bool MemUtils::IsAligned(uintptr p)

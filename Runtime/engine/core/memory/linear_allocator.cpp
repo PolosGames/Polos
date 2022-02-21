@@ -5,19 +5,17 @@
 #include "linear_allocator.h"
 #include "mem_utils.h"
 
+#include "time/scope_timer.h"
+
 namespace polos::memory
 {
 	LinearAllocator::LinearAllocator(uint64 size)
 		: buffer_size_(size)
 	{
 		PROFILE_FUNC();
-		buffer_ = static_cast<byte*>(std::malloc(size));
+		buffer_ = (byte*)std::malloc(size);
 		offset_ = 0;
 		bottom_ = reinterpret_cast<uintptr>(buffer_);
-
-		if (MemUtils::IsAligned(bottom_ + offset_)) return;
-
-		bottom_ = MemUtils::AlignForward(bottom_);
 	}
 
 	LinearAllocator::~LinearAllocator()
@@ -36,8 +34,8 @@ namespace polos::memory
 		}
 		else
 		{
-			byte* old_mem = buffer_;
-			buffer_ = reinterpret_cast<byte*>(std::malloc(size));
+			void* old_mem = buffer_;
+			buffer_ = (byte*)std::malloc(size);
 
 			if (!buffer_)
 			{
@@ -63,17 +61,17 @@ namespace polos::memory
 	void* LinearAllocator::align(uint64 size)
 	{
 		uintptr curr_ptr = bottom_ + offset_;
-		offset_ = MemUtils::AlignForward(curr_ptr) - bottom_;
-
-		if (offset_ + size > buffer_size_)
+		ptrdiff aligned_offset = MemUtils::AlignForward(curr_ptr) - bottom_;
+		uint64 new_offset = aligned_offset + size;
+		
+		if (new_offset > buffer_size_)
 		{
 			ASSERT_S(0, "LinearAllocator is full.");
 			return nullptr;
 		}
 
-		void* ptr = &buffer_[offset_];
-		memset(ptr, 0, size);
-		offset_ += size;
+		void* ptr = &buffer_[aligned_offset];
+		offset_ = new_offset;
 		return ptr;
 	}
 }

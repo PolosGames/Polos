@@ -35,10 +35,8 @@ namespace polos::memory
 	inline T* LinearAllocator::New(Args&&... args)
 	{
 		//PROFILE_FUNC();
-
-		uint64 size = sizeof(T);
 		
-		return new (align(size)) T(std::forward<Args>(args)...);
+		return new (align(sizeof(T))) T(std::forward<Args>(args)...);
 	}
 
 	template<typename T>

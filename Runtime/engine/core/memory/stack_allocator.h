@@ -25,7 +25,7 @@ namespace polos::memory
 	{
 		struct stack_header
 		{
-			uintptr prev_element; /// Stores previous element's header's start
+			size_t prev_offset; /// Stores previous element's header's start
 		};
 	public:
 		StackAllocator(uint64 size);
@@ -55,26 +55,14 @@ namespace polos::memory
 		/// to the start of the stack buffer.
 		/// 
 		void Clear();
-
-		/// 
-		/// Clear to the specified position in the buffer.
-		///
-		/// @param position The position that was acquired by calling GetPosition()
-		/// @see GetPosition
-		void ClearTo(uintptr position);
-
-		///
-		/// Returns the currently added object/array's starting adress
-		/// 
-		uintptr GetPosition();
 	private:
 		void* align(uint64 size);
 	private:
 		byte* buffer_;
 		uintptr bottom_;
-		uintptr prev_top;
-		uintptr top_;
-		uint64 buffer_size;
+		size_t prev_offset_;
+		size_t offset_;
+		size_t buffer_size;
 	};
 
 	template<typename T, typename... Args>
