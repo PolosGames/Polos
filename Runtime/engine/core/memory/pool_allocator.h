@@ -32,6 +32,7 @@ namespace polos::memory
 	template<typename T>
 	class TPoolAllocator
 	{
+	public:
 		TPoolAllocator() = default;
 		TPoolAllocator(size_t count);
 
@@ -44,6 +45,12 @@ namespace polos::memory
 	};
 
 	template<typename T>
+	TPoolAllocator<T>::TPoolAllocator(size_t count)
+		: pool_allocator_(PoolAllocator{sizeof(T), count})
+	{
+	}
+
+	template<typename T>
 	template<typename ...Args>
 	T* TPoolAllocator<T>::New(Args&&... args)
 	{
@@ -53,7 +60,7 @@ namespace polos::memory
 	template<typename T>
 	void TPoolAllocator<T>::Free(T* ptr)
 	{
-		pool_alllocator_.Free(ptr);
+		pool_allocator_.Free(ptr);
 	}
 } // namespace polos::memory
 

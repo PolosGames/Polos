@@ -24,6 +24,7 @@ namespace polos::memory
 
 		buffer_			= (byte*)std::malloc(buffer_size_);
 		free_list_head_	= (free_node*)buffer_;
+		free_list_head_->next = nullptr;
 
 		Clear();
 	}
@@ -54,12 +55,14 @@ namespace polos::memory
 
 	void PoolAllocator::Clear()
 	{
-		for (size_t i = 0; i < buffer_size_; i += chunk_size_)
+		free_node* itr = (free_node*)(&buffer_[0]);
+
+		for (size_t i = chunk_size_; i < buffer_size_; i += chunk_size_)
 		{
-			void* ptr = &buffer_[i];
-			free_node* node = (free_node*)ptr;
-			node->next = free_list_head_;
-			free_list_head_ = node;
+			free_node* node = (free_node*)&buffer_[i];
+			node->next = nullptr; // make them point to null first.
+			itr->next = node;
+			itr = node;
 		}
 	}
 } // namespace polos::memory

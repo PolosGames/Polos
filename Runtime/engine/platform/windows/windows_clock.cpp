@@ -21,6 +21,7 @@ namespace polos::time
 		BOOL ret = QueryPerformanceCounter(&Counter);
 		ASSERT_S(ret, "QueryPerformanceCounter didn't work.");
 
+		// steady_clock's implementation.
 		const int64 Whole = (Counter.QuadPart / Freq.QuadPart) * period::den;
 		const int64 Part = (Counter.QuadPart % Freq.QuadPart) * period::den / Freq.QuadPart;
 
