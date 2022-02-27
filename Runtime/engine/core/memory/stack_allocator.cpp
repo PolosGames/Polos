@@ -1,7 +1,9 @@
 #include "plpch.h"
 
-#include "stack_allocator.h"
 #include "mem_utils.h"
+#include "utils/alias.h"
+
+#include "stack_allocator.h"
 
 namespace polos::memory
 {

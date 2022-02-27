@@ -38,7 +38,6 @@
 	Type& operator=(const Type&) = delete;	\
 	Type& operator=(Type&&) = delete;		\
 
-#define DELETE_
 
 
 #endif /* POLOS_UTILS_UTIL_H */

@@ -13,6 +13,5 @@
 
 #include "platform/platform_detection.h"
 #include "core/logger.h"
-#include "core/event_bus.h"
 #include "debug/debug.h"
 #include "debug/profiling.h"

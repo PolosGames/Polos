@@ -5,6 +5,7 @@
 #include "events/events.h"
 #include "memory/linear_allocator.h"
 #include "time/scope_timer.h"
+#include "containers/delegate.h"
 
 namespace polos
 {
@@ -20,6 +21,7 @@ namespace polos
 
 	void Application::Run()
 	{
+
 		while (m_IsRunning)
 		{
 			m_WindowInstance->Update();
@@ -31,6 +33,4 @@ namespace polos
 		m_IsRunning = false;
 		m_WindowInstance->Shutdown();
 	}
-	void Application::operator()(int a)
-	{}
 } // namespace polos

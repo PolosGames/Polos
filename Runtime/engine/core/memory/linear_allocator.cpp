@@ -2,8 +2,9 @@
 
 #include <cstdlib>
 
-#include "linear_allocator.h"
 #include "mem_utils.h"
+
+#include "linear_allocator.h"
 
 namespace polos::memory
 {

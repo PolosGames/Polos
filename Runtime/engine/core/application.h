@@ -18,7 +18,6 @@ namespace polos
 		virtual ~Application();
 
 		void Run();
-		void operator()(int a);
 	private:
 		void on_window_close(window_close& e);
 	private:

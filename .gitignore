@@ -22,3 +22,4 @@ Doxyfile
 
 # Optick generated files
 **.opt
+*.json
