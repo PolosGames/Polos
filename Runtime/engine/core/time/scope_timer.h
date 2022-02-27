@@ -13,10 +13,11 @@ namespace polos::time
 		~ScopeTimer();
 
 		void Stop();
+		void Reset();
 	private:
-		int64 start_;
-		const char* scope_name_;
-		bool is_stopped_;
+		int64   m_Start;
+		cstring scope_name_;
+		bool    m_IsStopped;
 	};
 }
 

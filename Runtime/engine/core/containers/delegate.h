@@ -10,6 +10,9 @@
 	added.
 */
 
+#include <type_traits>
+#include <memory>
+
 namespace polos
 {
 	template <typename Function> class delegate;
@@ -17,10 +20,12 @@ namespace polos
 	template<typename Return, typename... Args>
 	class delegate<Return(Args...)>
 	{
-		using stub_type = Return(*)(void*, Args&&...);
+		using return_type = Return;
+		using stub_type = return_type(*)(void*, Args&&...);
+		using deleter_type = void(*)(void*);
 
 		delegate(void* const object_pointer, stub_type const stub_ptr) noexcept
-			: _object_pointer(object_pointer), _stub_pointer(stub_ptr)
+			: m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
 		{}
 	public:
 		delegate() noexcept = default;
@@ -31,21 +36,32 @@ namespace polos
 
 		delegate(std::nullptr_t const) noexcept : delegate() {}
 
-		template<class owner_object, Return(owner_object::* const method_ptr)(Args...)>
-		static delegate from_method(owner_object* const object_pointer) noexcept
+		template <return_type(* const function_ptr)(Args...)>
+		static delegate from() noexcept
+		{
+			return { nullptr, function_stub<function_ptr> };
+		}
+
+		template<class owner_object, return_type(owner_object::* const method_ptr)(Args...)>
+		static delegate from(owner_object* const object_pointer) noexcept
 		{
 			return { object_pointer, method_stub<owner_object, method_ptr> };
 		}
 
-		template<class owner_object, Return(owner_object:: *const method_ptr)(Args...) const>
-		static delegate from_method(owner_object const* const object_pointer) noexcept
+		template<class owner_object, return_type(owner_object:: *const method_ptr)(Args...) const>
+		static delegate from(owner_object const* const object_pointer) noexcept
 		{
 			return {object_pointer, const_method_stub<owner_object, method_ptr>};
 		}
 
+		static delegate from(return_type(* const function_ptr)(Args&&...))
+		{
+			return function_ptr;
+		}
+
 		bool operator==(delegate const& other) const noexcept
 		{
-			return (_object_pointer == other._object_pointer) && (_stub_pointer == other._stub_pointer);
+			return (m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer == other.m_StubPointer);
 		}
 
 		bool operator!=(delegate const& other) const noexcept
@@ -55,62 +71,97 @@ namespace polos
 
 		bool operator<(delegate const& other) const noexcept
 		{
-			return (_object_pointer < other._object_pointer) 
-				|| ((_object_pointer == other._object_pointer) && (_stub_pointer < other._stub_pointer));
+			return (m_ObjectPointer < other.m_ObjectPointer) 
+				|| ((m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer < other.m_StubPointer));
 		}
 
 		bool operator==(std::nullptr_t const) const noexcept
 		{
-			return !_stub_pointer;
+			return !m_StubPointer;
 		}
 
 		bool operator!=(std::nullptr_t const) const noexcept
 		{
-			return _stub_pointer;
+			return m_StubPointer;
 		}
 
-		delegate& operator=(delegate const& other)
-		{
-			if (other == *this) return *this;
+		delegate& operator=(delegate const& other) = default;
 
-			_stub_pointer = other._stub_pointer;
-			_object_pointer = other._object_pointer;
+		delegate& operator=(delegate&& other) = default;
+
+		template<typename T, std::enable_if_t<!std::is_same_v<delegate, typename std::decay_t<T>>>>
+		delegate& operator=(T&& f)
+		{
+			using type = typename std::decay_t<T>;
+
+			if ((sizeof(type) > m_FunctorPtrSize))
+			{
+				m_FunctorPtr.reset(operator new(sizeof(type)), functor_deleter<type>);
+				m_FunctorPtrSize = sizeof(type);
+			}
+			else
+			{
+				m_Deleter(m_FunctorPtr.get());
+			}
+
+			new (m_FunctorPtr.get()) type(std::forward<T>(f));
+
+			m_ObjectPointer = m_FunctorPtr.get();
+			m_StubPointer   = functor_stub<type>;
+			m_Deleter       = deleter_stub<type>;
 
 			return *this;
 		}
 
-		delegate& operator=(delegate&& other)
+		auto operator()(Args&&... args) const noexcept
 		{
-			if (other == *this) return *this;
-
-			_stub_pointer = std::move(other._stub_pointer);
-			_object_pointer = std::move(other._object_pointer);
-
-			other._object_pointer = nullptr;
-			other._stub_pointer = nullptr;
-
-			return *this;
-		}
-
-		auto operator()(Args... args) const noexcept
-		{
-			return _stub_pointer(_object_pointer, std::forward<Args>(args)...);
+			return m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
 		}
 	private:
-		template <typename owner_object, Return(owner_object::* method_ptr)(Args...)>
-		static Return method_stub(void* const object_ptr, Args&&... args)
+		template <typename T>
+		static void functor_deleter(void* const p)
+		{
+			static_cast<T*>(p)->~T();
+
+			operator delete(p);
+		}
+
+		template <typename T>
+		static void deleter_stub(void* const p)
+		{
+			static_cast<T*>(p)->~T();
+		}
+
+		template <typename T>
+		return_type functor_stub(void* const object_ptr, Args&&... args)
+		{
+			return (*static_cast<T*>(object_ptr))(std::forward<Args>(args)...);
+		}
+
+		template <return_type(* function_ptr)(Args...)>
+		static return_type function_stub(void* const, Args&&... args)
+		{
+			return function_ptr(std::forward<Args>(args)...);
+		}
+
+		template <typename owner_object, return_type(owner_object::* method_ptr)(Args...)>
+		static return_type method_stub(void* const object_ptr, Args&&... args)
 		{
 			return (static_cast<owner_object*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
 		}
 
-		template <typename owner_object, Return(owner_object::* method_ptr)(Args...) const>
-		static Return const_method_stub(void* const object_ptr, Args&&... args)
+		template <typename owner_object, return_type(owner_object::* method_ptr)(Args...) const>
+		static return_type const_method_stub(void* const object_ptr, Args&&... args)
 		{
 			return (static_cast<owner_object*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
 		}
 
-		stub_type _stub_pointer;
-		void* _object_pointer;
+		stub_type m_StubPointer;
+		void* m_ObjectPointer;
+
+		deleter_type m_Deleter;
+		std::shared_ptr<void> m_FunctorPtr;
+		size_t m_FunctorPtrSize;
 	};
 }
 

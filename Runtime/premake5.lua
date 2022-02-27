@@ -53,8 +53,12 @@ project "Runtime"
 		defines "PL_DEBUG"
 		runtime "Debug"
 		symbols "On"
+
+		defines { "PL_PROFILING=%{ENABLE_PROFILING}" }
 	
 	filter "configurations:Release"
 		defines "PL_RELEASE"
 		runtime "Release"
 		optimize "On"
+
+		defines { "PL_PROFILING=0" }

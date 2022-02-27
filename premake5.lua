@@ -1,15 +1,4 @@
-newoption {
-   trigger = "gfxapi",
-   value = "API",
-   description = "Choose a particular 3D API for rendering",
-   allowed = {
-      { "opengl",    "OpenGL (Default)" },
-      { "vulkan",    "Vulkan" },
-      { "direct11",  "DirectX11 (Windows only)" },
-      { "direct12",  "DirectX12 (Windows only)" },     
-   },
-   default = "opengl"
-}
+include "scripts/options"
 
 -- Dependency Locations
 
@@ -52,6 +41,10 @@ elseif _OPTIONS["gfxapi"] == "d3d12" then
 end
 
 -- Solution Creation
+
+
+ENABLE_PROFILING = 1
+
 
 workspace "Polos"
 	architecture "x64"

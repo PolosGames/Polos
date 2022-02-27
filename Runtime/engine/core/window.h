@@ -12,12 +12,14 @@ namespace polos
 {
 	struct window_props
 	{
-		std::string title = "Polos";
-		int32 width = 1280;
-		int32 height = 720;
+		std::string title  = "Polos";
+		int32 width        = 1280;
+		int32 height       = 720;
 		int32 refresh_rate = 60;
-		bool vsync = true;
-		bool fullscreen = false;
+		bool vsync         = true;
+		bool fullscreen    = false;
+	private:
+		char holder_[2];
 	};
 
 	class Window : public System<Window>
@@ -30,14 +32,14 @@ namespace polos
 		virtual void Shutdown() = 0;
 		virtual void Destroy() = 0;
 
-		virtual uint32 Width() = 0;
-		virtual uint32 Height() = 0;
+		virtual int32 Width() const = 0;
+		virtual int32 Height() const = 0;
 
-		virtual bool Vsync() = 0;
+		virtual bool Vsync() const = 0;
 		virtual void Vsync(bool vsync) = 0;
+		virtual bool IsOpen() const = 0;
 
 		virtual void Update() = 0;
-		virtual bool IsOpen() = 0;
 
 		static Window* NewWindow(const window_props& props = window_props());
 	};

@@ -18,7 +18,7 @@ namespace polos
 	{
 		event_id _id() override { return id; }
 	public:
-		friend class event_bus;
+		friend class EventBus;
 		inline static const event_id id = type_hash<T>();
 		
 		virtual ~event() = default;

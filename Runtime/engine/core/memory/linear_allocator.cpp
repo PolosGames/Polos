@@ -5,48 +5,46 @@
 #include "linear_allocator.h"
 #include "mem_utils.h"
 
-#include "time/scope_timer.h"
-
 namespace polos::memory
 {
 	LinearAllocator::LinearAllocator(uint64 size)
-		: buffer_size_(size)
+		: m_BufferSize(size)
 	{
 		PROFILE_FUNC();
-		buffer_ = (byte*)std::malloc(size);
-		offset_ = 0;
-		bottom_ = reinterpret_cast<uintptr>(buffer_);
+		m_Buffer = (byte*)std::malloc(size);
+		m_Offset = 0;
+		m_Bottom = reinterpret_cast<uintptr>(m_Buffer);
 	}
 
 	LinearAllocator::~LinearAllocator()
 	{
 		PROFILE_FUNC();
-		std::free(buffer_);
-		buffer_ = nullptr;
+		std::free(m_Buffer);
+		m_Buffer = nullptr;
 	}
 
 	void LinearAllocator::Resize(uint64 size)
 	{
-		if (size <= buffer_size_)
+		if (size <= m_BufferSize)
 		{
-			offset_ = size;
-			buffer_size_ = size;
+			m_Offset     = size;
+			m_BufferSize = size;
 		}
 		else
 		{
-			void* old_mem = buffer_;
-			buffer_ = (byte*)std::malloc(size);
+			void* old_mem = m_Buffer;
+			m_Buffer      = static_cast<byte*>(std::malloc(size));
 
-			if (!buffer_)
+			if (!m_Buffer)
 			{
-				ASSERT_S(0, "Buffer is null! (LinearAllocator::Resize)");
+				ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)");
 				return;
 			}
 
 			// Need this bc memcpy is not safe, and this looks fancier :)
 			// Could've used memmove which is safer.
-			std::lock_guard<std::mutex> lock(buffer_mutex);
-			std::memcpy(buffer_, old_mem, buffer_size_);
+			std::lock_guard<std::mutex> lock(m_BufferMutex);
+			std::memcpy(m_Buffer, old_mem, m_BufferSize);
 			
 			std::free(old_mem);
 			old_mem = nullptr; // Probably unnecessary lol.
@@ -55,23 +53,27 @@ namespace polos::memory
 
 	void LinearAllocator::Clear()
 	{
-		offset_ = 0;
+		m_Offset = 0;
 	}
 
 	void* LinearAllocator::align(uint64 size)
 	{
-		uintptr curr_ptr = bottom_ + offset_;
-		ptrdiff aligned_offset = MemUtils::AlignForward(curr_ptr) - bottom_;
-		uint64 new_offset = aligned_offset + size;
-		
-		if (new_offset > buffer_size_)
+		uint64 new_offset = m_Offset + size;
+
+		if (new_offset > m_BufferSize)
 		{
-			ASSERT_S(0, "LinearAllocator is full.");
+			ASSERTSTR(0, "LinearAllocator is full.");
 			return nullptr;
 		}
 
-		void* ptr = &buffer_[aligned_offset];
-		offset_ = new_offset;
+		void* ptr = &m_Buffer[m_Offset];
+
+		uintptr curr_ptr    = m_Bottom + m_Offset;
+		uint64 misalignment = curr_ptr & (MemUtils::kMemoryAlignment - 1);
+		uint64 padding      = MemUtils::kMemoryAlignment - misalignment;
+		padding             = padding & (MemUtils::kMemoryAlignment - 1); // if misalignment == 0, padding becomes 16
+
+		m_Offset = new_offset + padding;
 		return ptr;
 	}
 }

@@ -3,6 +3,7 @@
 #define POLOS_CORE_MEMORY_POOLALLOCATOR_H_
 
 #include "utils/alias.h"
+#include "utils/macro_util.h"
 
 namespace polos::memory
 {
@@ -13,19 +14,20 @@ namespace polos::memory
 			free_node* next;
 		};
 	public:
-		PoolAllocator() = default;
-		PoolAllocator(size_t chunk_size, size_t chunk_amount);
+		PL_RULE_OF_FIVE_NO_DTOR(PoolAllocator)
+
+		explicit PoolAllocator(size_t chunk_size, size_t chunk_amount);
 		~PoolAllocator();
 
 		void Initialize(size_t chunk_size, size_t chunk_amount);
 		void* Get();
 		void Free(void* ptr);
-		void Clear();
+		void Clear() const;
 	private:
-		byte* buffer_;
-		free_node* free_list_head_;
-		size_t buffer_size_;
-		size_t chunk_size_;
+		byte*      m_Buffer;
+		free_node* m_FreeListHead;
+		size_t     m_BufferSize;
+		size_t     m_ChunkSize;
 	};
 
 	// Templated pool allocator
@@ -33,8 +35,8 @@ namespace polos::memory
 	class TPoolAllocator
 	{
 	public:
-		TPoolAllocator() = default;
-		TPoolAllocator(size_t count);
+		PL_RULE_OF_FIVE(TPoolAllocator)
+		explicit TPoolAllocator(size_t count);
 
 		template<typename ...Args>
 		T* New(Args&&... args);
@@ -54,12 +56,14 @@ namespace polos::memory
 	template<typename ...Args>
 	T* TPoolAllocator<T>::New(Args&&... args)
 	{
+		PROFILE_FUNC();
 		return new (pool_allocator_.Get()) T(std::forward<Args>(args)...);
 	}
 
 	template<typename T>
 	void TPoolAllocator<T>::Free(T* ptr)
 	{
+		PROFILE_FUNC();
 		pool_allocator_.Free(ptr);
 	}
 } // namespace polos::memory

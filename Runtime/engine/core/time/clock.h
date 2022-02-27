@@ -9,12 +9,12 @@ namespace polos::time
 {
 	class Clock
 	{
-		using period = std::nano;
+		using Period = std::nano;
 	public:
-		static void Initialize();
+		static void  Initialize();
 		static int64 Now();
 	private:
-		static LARGE_INTEGER Freq;
+		static int64 m_Freq;
 	};
 } // namespace polos::core::time
 

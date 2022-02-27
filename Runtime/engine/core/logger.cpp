@@ -6,10 +6,10 @@
 
 namespace polos
 {
-	std::shared_ptr<spdlog::logger> logger::_client_logger;
-	std::shared_ptr<spdlog::logger> logger::_core_logger;
+	std::shared_ptr<spdlog::logger> Log::m_ClientLogger;
+	std::shared_ptr<spdlog::logger> Log::m_CoreLogger;
 
-	logger::logger()
+	Log::Log()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;
 		log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -18,23 +18,23 @@ namespace polos
 		log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
 		log_sinks[1]->set_pattern("[%T] [%l] %n: %v");
 
-		_core_logger = std::make_shared<spdlog::logger>("POLOS", begin(log_sinks), end(log_sinks));
-		spdlog::register_logger(_core_logger);
-		_core_logger->set_level(spdlog::level::trace);
-		_core_logger->flush_on(spdlog::level::trace);
+		m_CoreLogger = std::make_shared<spdlog::logger>("POLOS", begin(log_sinks), end(log_sinks));
+		spdlog::register_logger(m_CoreLogger);
+		m_CoreLogger->set_level(spdlog::level::trace);
+		m_CoreLogger->flush_on(spdlog::level::trace);
 
-		_client_logger = std::make_shared<spdlog::logger>("SENAZ", begin(log_sinks), end(log_sinks));
-		spdlog::register_logger(_client_logger);
-		_client_logger->set_level(spdlog::level::trace);
-		_client_logger->flush_on(spdlog::level::trace);
+		m_ClientLogger = std::make_shared<spdlog::logger>("SENAZ", begin(log_sinks), end(log_sinks));
+		spdlog::register_logger(m_ClientLogger);
+		m_ClientLogger->set_level(spdlog::level::trace);
+		m_ClientLogger->flush_on(spdlog::level::trace);
 	}
 
-	std::shared_ptr<spdlog::logger> logger::pick_logger(logger_type type)
+	std::shared_ptr<spdlog::logger> Log::pick_logger(logger_type type)
 	{
 		switch (type)
 		{
-		case logger_type::LOGGER_CORE: return _core_logger;
-		case logger_type::LOGGER_CLIENT: return _client_logger;
+		case logger_type::kLoggerCore: return m_CoreLogger;
+		case logger_type::kLoggerClient: return m_ClientLogger;
 		default: return std::shared_ptr<spdlog::logger>();
 		}
 	}

@@ -23,22 +23,22 @@ namespace polos
 		void Shutdown() override;
 		void Destroy() override;
 
-		uint32 Width() override;
-		uint32 Height() override;
+		int32 Width() const override;
+		int32 Height() const override;
 		
-		bool Vsync() override;
+		bool Vsync() const override;
 		void Vsync(bool vsync) override;
 		
 		void Update() override;
-		bool IsOpen() override;
+		bool IsOpen() const override;
 	private:
-		GLFWwindow *window;
+		GLFWwindow*   m_Window;
 
-		static bool _is_glfw_initialized;
-		static uint32 _glfw_window_count;
+		static bool   m_IsInitialized;
+		static uint32 m_WindowCount;
 
-		window_props _props; // definitely make a global window prop variable
-		std::unique_ptr<graphics_context> _context;
+		window_props  m_Props; // definitely make a global window prop variable
+		std::unique_ptr<graphics_context> m_Context;
 	};
 }
 

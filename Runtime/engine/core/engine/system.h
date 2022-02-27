@@ -11,7 +11,6 @@ namespace polos
 	class System
 	{
 	public:
-
 	};
 }
 

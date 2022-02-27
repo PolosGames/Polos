@@ -14,8 +14,8 @@ namespace polos
         return new XPlatWindow(props);
     }
 #endif
-    bool XPlatWindow::_is_glfw_initialized = false;
-    uint32 XPlatWindow::_glfw_window_count = 0;
+    bool XPlatWindow::m_IsInitialized = false;
+    uint32 XPlatWindow::m_WindowCount = 0;
 
     static void error_callback(int error_code, const char *description)
     {
@@ -35,84 +35,84 @@ namespace polos
     }
 
     XPlatWindow::XPlatWindow(const window_props &props)
-        : _props(props)
+        : m_Props(props)
     {
         Initialize();
     }
 
     void XPlatWindow::Initialize()
     {
-        if (!_is_glfw_initialized)
+        if (!m_IsInitialized)
         {
             glfwSetErrorCallback(error_callback);
             int r = glfwInit();
-            ASSERT_S(r == GLFW_TRUE, "Failed to initialize GLFW!");
-            _is_glfw_initialized = true;
+            ASSERTSTR(r == GLFW_TRUE, "Failed to initialize GLFW!");
+            m_IsInitialized = true;
         }
 
         GLFWmonitor *monitor = nullptr;
         const GLFWvidmode *mode = nullptr;
-        if (_props.fullscreen)
+        if (m_Props.fullscreen)
         {
             monitor = glfwGetPrimaryMonitor();
             mode = glfwGetVideoMode(monitor);
 
-            _props.width = mode->width;
-            _props.height = mode->height;
-            _props.refresh_rate = mode->refreshRate;
+            m_Props.width = mode->width;
+            m_Props.height = mode->height;
+            m_Props.refresh_rate = mode->refreshRate;
         }
 
-        window = glfwCreateWindow(_props.width, _props.height, _props.title.c_str(), monitor, nullptr);
-        glfwSetWindowUserPointer(window, &_props);
-        glfwMakeContextCurrent(window);
+        m_Window = glfwCreateWindow(m_Props.width, m_Props.height, m_Props.title.c_str(), monitor, nullptr);
+        glfwSetWindowUserPointer(m_Window, &m_Props);
+        glfwMakeContextCurrent(m_Window);
 
-        _context = std::make_unique<graphics_context>();
-        _context->Initialize(window);
+        m_Context = std::make_unique<graphics_context>();
+        m_Context->Initialize(m_Window);
 
     #pragma region window_events
 
-        glfwSetWindowCloseCallback(window, 
+        glfwSetWindowCloseCallback(m_Window, 
             [](GLFWwindow *_)
             {
-                event_bus::raise_event<window_close>();
+                EventBus::raise_event<window_close>();
             }
         );
 
-        glfwSetWindowFocusCallback(window,
+        glfwSetWindowFocusCallback(m_Window,
             [](GLFWwindow *_, int32 focused)
             {
-                event_bus::raise_event<window_focus>(focused);
+                EventBus::raise_event<window_focus>(focused);
             }
         );
 
-        glfwSetWindowSizeCallback(window,
+        glfwSetWindowSizeCallback(m_Window,
             [](GLFWwindow *window, int32 width, int32 height)
             {
                 window_props *props = static_cast<window_props*>(glfwGetWindowUserPointer(window));
                 props->width = width;
                 props->height = height;
-                event_bus::raise_event<window_resize>(width, height);
+                EventBus::raise_event<window_resize>(width, height);
             }
         );
 
-        glfwSetWindowIconifyCallback(window,
+        glfwSetWindowIconifyCallback(m_Window,
             [](GLFWwindow *_, int32 iconified)
             {
-                event_bus::raise_event<window_iconify>(iconified);
+                EventBus::raise_event<window_iconify>(iconified);
             }
         );
 
-        glfwSetWindowMaximizeCallback(window,
+        glfwSetWindowMaximizeCallback(m_Window,
             [](GLFWwindow *_, int32 maximized)
             {
-                event_bus::raise_event<window_maximize>(maximized);
+                EventBus::raise_event<window_maximize>(maximized);
             }
         );
 
-        glfwSetFramebufferSizeCallback(window,
+        glfwSetFramebufferSizeCallback(m_Window,
             [](GLFWwindow *_, int32 width, int32 height)
             {
-                event_bus::raise_event<window_framebuffer_size>();
+                EventBus::raise_event<window_framebuffer_size>();
             }
         );
 
@@ -120,16 +120,16 @@ namespace polos
 
     #pragma region key_input_events
 
-        glfwSetKeyCallback(window, 
+        glfwSetKeyCallback(m_Window, 
             [](GLFWwindow *_, int32 key, int32 scancode, int32 action, int32 mods)
             {
                 switch (action)
                 {
                 case GLFW_PRESS:
-                    event_bus::raise_event<key_press>(key);
+                    EventBus::raise_event<key_press>(key);
                     break;
                 case GLFW_RELEASE:
-                    event_bus::raise_event<key_release>(key);
+                    EventBus::raise_event<key_release>(key);
                     break;
                 }
             }
@@ -139,32 +139,32 @@ namespace polos
 
     #pragma region mouse_input_events
 
-        glfwSetMouseButtonCallback(window,
+        glfwSetMouseButtonCallback(m_Window,
             [](GLFWwindow *_, int32 button, int32 action, int32 mods)
             {
                 switch (action)
                 {
                 case GLFW_PRESS:
-                    event_bus::raise_event<mouse_button_press>(button);
+                    EventBus::raise_event<mouse_button_press>(button);
                     break;
                 case GLFW_RELEASE:
-                    event_bus::raise_event<mouse_button_release>(button);
+                    EventBus::raise_event<mouse_button_release>(button);
                     break;
                 }
             }
         );
 
-        glfwSetScrollCallback(window,
+        glfwSetScrollCallback(m_Window,
             [](GLFWwindow *_, double x_offset, double y_offset)
             {
-                event_bus::raise_event<mouse_scroll>((float)x_offset, (float)y_offset);
+                EventBus::raise_event<mouse_scroll>((float)x_offset, (float)y_offset);
             }
         );
 
-        glfwSetCursorPosCallback(window,
+        glfwSetCursorPosCallback(m_Window,
             [](GLFWwindow *_, double x, double y)
             {
-                event_bus::raise_event<mouse_move>((float)x, (float)y);
+                EventBus::raise_event<mouse_move>((float)x, (float)y);
             }
         );
 
@@ -173,39 +173,39 @@ namespace polos
 
     void XPlatWindow::Destroy()
     {
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(m_Window);
     }
 
-    uint32 XPlatWindow::Width()
+    int32 XPlatWindow::Width() const
     {
-        return _props.width;
+        return m_Props.width;
     }
 
-    uint32 XPlatWindow::Height()
+    int32 XPlatWindow::Height() const
     {
-        return _props.height;
+        return m_Props.height;
     }
 
-    bool XPlatWindow::Vsync()
+    bool XPlatWindow::Vsync() const
     {
-        return _props.vsync;
+        return m_Props.vsync;
     }
 
     void XPlatWindow::Vsync(bool vsync)
     {
         glfwSwapInterval(vsync);
-        _props.vsync = vsync;
+        m_Props.vsync = vsync;
     }
 
     void XPlatWindow::Update()
     {
         glfwPollEvents();
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(m_Window);
     }
 
-    bool XPlatWindow::IsOpen()
+    bool XPlatWindow::IsOpen() const
     {
-        return !glfwWindowShouldClose(window);
+        return !glfwWindowShouldClose(m_Window);
     }
 } // namespace polos
 

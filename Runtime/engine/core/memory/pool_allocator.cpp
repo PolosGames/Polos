@@ -10,59 +10,63 @@ namespace polos::memory
 
 	PoolAllocator::~PoolAllocator()
 	{
-		std::free(buffer_);
-		buffer_			= nullptr;
-		free_list_head_ = nullptr;
+		std::free(m_Buffer);
+		m_Buffer       = nullptr;
+		m_FreeListHead = nullptr;
 	}
 
 	void PoolAllocator::Initialize(size_t chunk_size, size_t chunk_amount)
 	{
-		buffer_size_	= chunk_size * chunk_amount;
-		chunk_size_		= chunk_size;
+		PROFILE_FUNC();
+		m_BufferSize	= chunk_size * chunk_amount;
+		m_ChunkSize		= chunk_size;
 
-		ASSERT(chunk_size > sizeof(free_node*));
+		ASSERT(chunk_size > sizeof(free_node));
 
-		buffer_			= (byte*)std::malloc(buffer_size_);
-		free_list_head_	= (free_node*)buffer_;
-		free_list_head_->next = nullptr;
+		m_Buffer             = static_cast<byte*>(std::malloc(m_BufferSize));
+		m_FreeListHead       = reinterpret_cast<free_node*>(&m_Buffer[0]);
+		m_FreeListHead->next = nullptr;
 
 		Clear();
 	}
 
 	void* PoolAllocator::Get()
 	{
-		free_node* node = free_list_head_;
+		PROFILE_FUNC();
+		free_node* node = m_FreeListHead;
 
 		if (!node)
 		{
-			ASSERT_S(0, "PoolAllocator is out of memory.");
+			ASSERTSTR(0, "PoolAllocator is out of memory.");
 			return nullptr;
 		}
 
-		free_list_head_ = free_list_head_->next;
+		m_FreeListHead = m_FreeListHead->next;
 
-		return static_cast<void*>(node);
+		return node;
 	}
 
 	void PoolAllocator::Free(void* ptr)
 	{
-		ASSERT(!(buffer_ <= ptr && ptr < buffer_ + buffer_size_));
+		PROFILE_FUNC();
+		ASSERT(!(m_Buffer <= ptr && ptr < m_Buffer + m_BufferSize));
 
-		free_node* node = (free_node*)ptr;
-		node->next = free_list_head_;
-		free_list_head_ = node;
+		auto* node     = static_cast<free_node*>(ptr);
+		node->next     = m_FreeListHead;
+		m_FreeListHead = node;
 	}
 
-	void PoolAllocator::Clear()
+	void PoolAllocator::Clear() const
 	{
-		free_node* itr = (free_node*)(&buffer_[0]);
+		PROFILE_FUNC();
+		auto* itr = reinterpret_cast<free_node*>(&m_Buffer[0]);
 
-		for (size_t i = chunk_size_; i < buffer_size_; i += chunk_size_)
+		for (size_t i = m_ChunkSize; i < m_BufferSize; i += m_ChunkSize)
 		{
-			free_node* node = (free_node*)&buffer_[i];
+			auto node  = reinterpret_cast<free_node*>(&m_Buffer[i]);
 			node->next = nullptr; // make them point to null first.
-			itr->next = node;
-			itr = node;
+			itr->next  = node;
+			itr        = node;
 		}
 	}
 } // namespace polos::memory

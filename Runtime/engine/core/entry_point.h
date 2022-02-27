@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 	polos::time::Clock::Initialize();
 
 	polos::Application *app = polos::create_application();
-	app->run();
+	app->Run();
 	delete app;
 }
 
