@@ -56,11 +56,11 @@ namespace polos
 		}
 	}
 
-	void graphics_context::Initialize(void *window_handle)
+	void graphics_context::Initialize(void* window_handle)
 	{
 		m_window = window_handle;
-		GLFWwindow *gwindow = reinterpret_cast<GLFWwindow *>(m_window);
-		
+		GLFWwindow* gwindow = reinterpret_cast<GLFWwindow*>(m_window);
+
 		int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ASSERTSTR(r, "Failed to load OpenGL context!");
 

@@ -8,11 +8,11 @@ namespace polos
 	class graphics_context
 	{
 	public:
-		void Initialize(void *window_handle);
+		void Initialize(void* window_handle);
 	public:
 		bool is_initialized;
 	private:
-		void *_window;
+		void* m_window;
 	};
 }
 

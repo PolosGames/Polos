@@ -16,7 +16,7 @@ namespace polos::time
 		void Reset();
 	private:
 		int64   m_Start;
-		cstring scope_name_;
+		cstring m_ScopeName;
 		bool    m_IsStopped;
 	};
 }
