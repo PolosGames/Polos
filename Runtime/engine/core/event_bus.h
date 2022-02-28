@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_EVENTBUS_H
-#define POLOS_EVENTS_EVENTBUS_H
+#ifndef POLOS_CORE_EVENTBUS_H_
+#define POLOS_CORE_EVENTBUS_H_
 
 #include <unordered_map>
 
@@ -12,6 +12,7 @@ namespace polos
 {
 	class EventBus
 	{
+		using EventSubscriber = Delegate<void(base_event&)>;
 	public:
 
 		template<class event_type, typename... Args>
@@ -35,17 +36,18 @@ namespace polos
 			return e;
 		}
 	private:
-		std::unordered_map<event_id, std::vector<Delegate<void(base_event &)>>> m_Callbacks;
+		std::unordered_map<event_id, std::vector<EventSubscriber>> m_Callbacks;
 	};
 
 	template<class event_type, typename ...Args>
 	inline void EventBus::raise_event(Args && ...args)
 	{
-		if (instance().m_Callbacks.count(event_type::id))
+		auto& cbs = instance().m_Callbacks;
+		if (cbs.count(event_type::id))
 		{
 			event_type e(args...);
 			event_id id = event_type::id;
-			for (auto &subscriber_function : instance().m_Callbacks[id])
+			for (auto& subscriber_function : cbs[id])
 			{
 				subscriber_function(e);
 			}
@@ -53,18 +55,20 @@ namespace polos
 	}
 
 	template<class event_type, class object_type, void(object_type::* method_ptr)(event_type &)>
-	inline void EventBus::subscribe_to_event(object_type * const ptr)
+	inline void EventBus::subscribe_to_event(object_type* const ptr)
 	{
+		auto& cbs = instance().m_Callbacks;
 		auto del = Delegate<void(event_type&)>::template from<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));
-		subscribe_to_event<event_type>(del);
+		event_id id = event_type::id;
+		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const EventSubscriber> &>(cback));
 	}
 
 	template<class event_type>
 	inline void EventBus::subscribe_to_event(const Delegate<void(event_type&)>& cback)
 	{
-		auto &cbs = instance().m_Callbacks;
+		auto& cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
-		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const Delegate<void(base_event &)> &>(cback));
+		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(cback));
 	}
 
 	template<class event_type>
@@ -72,7 +76,7 @@ namespace polos
 	{
 		auto &cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
-		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<Delegate<void(base_event &)> &&>(cback));
+		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber>&&>(cback));
 	}
 
 	template<class event_type>
@@ -80,9 +84,9 @@ namespace polos
 	{
 		auto &cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
-		cbs.at(id).erase(std::remove(cbs[id].begin(), cbs[id].end(), reinterpret_cast<const Delegate<void(base_event &)> &>(cback)), cbs[id].end());
+		cbs.at(id).erase(std::remove(cbs[id].begin(), cbs[id].end(), reinterpret_cast<EventSubscriber const&>(cback)), cbs[id].end());
 	}
 
-}
+} // namespace polos
 
-#endif /* POLOS_EVENTS_EVENTBUS_H */
+#endif /* POLOS_CORE_EVENTBUS_H_ */
