@@ -8,13 +8,15 @@ namespace polos::time
 {
 	int64 Clock::m_Freq;
 	
-	void Clock::Initialize()
+	void Clock::OnInitialize()
 	{
 		LARGE_INTEGER freq;
 		BOOL ret = QueryPerformanceFrequency(&freq);
 		ASSERTSTR(ret, "QueryPerformanceFrequency didn't work.");
 
 		m_Freq = freq.QuadPart;
+
+		Create();
 	}
 
 	int64 Clock::Now()
