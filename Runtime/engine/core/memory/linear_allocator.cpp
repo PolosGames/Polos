@@ -24,6 +24,11 @@ namespace polos::memory
 		m_Buffer = nullptr;
 	}
 
+	void* LinearAllocator::Allocate(uint64 size)
+	{
+		return align(size);
+	}
+
 	void LinearAllocator::Resize(uint64 size)
 	{
 		if (size <= m_BufferSize)

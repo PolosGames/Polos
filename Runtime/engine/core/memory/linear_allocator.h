@@ -14,6 +14,11 @@ namespace polos::memory
 		LinearAllocator(uint64 size);
 		~LinearAllocator();
 
+		void* Allocate(uint64 size);
+
+		template<typename T, typename = typename std::enable_if_t<std::is_default_constructible_v<T>>>
+		T* New();
+
 		template<typename T, typename... Args>
 		T* New(Args&&... args);
 
@@ -32,6 +37,12 @@ namespace polos::memory
 		uint64     m_BufferSize;
 		std::mutex m_BufferMutex;
 	};
+
+	template<typename T, typename>
+	inline T* LinearAllocator::New()
+	{
+		return new (align(sizeof(T))) T();
+	}
 
 	template<typename T, typename... Args>
 	inline T* LinearAllocator::New(Args&&... args)
