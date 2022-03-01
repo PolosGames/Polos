@@ -40,10 +40,9 @@ namespace polos
 		std::shared_ptr<spdlog::logger> pick_logger(logger_type type);
 
 		Log();
-		Log(Log const&);
 	private:
-		static std::shared_ptr<spdlog::logger> m_CoreLogger;
-		static std::shared_ptr<spdlog::logger> m_ClientLogger;
+		std::shared_ptr<spdlog::logger> m_CoreLogger;
+		std::shared_ptr<spdlog::logger> m_ClientLogger;
 	};
 
 	template<typename ...Args>
@@ -89,5 +88,10 @@ namespace polos
 #define LOG_WARN(...)  ::polos::Log::instance().warn(::polos::logger_type::kLoggerClient, __VA_ARGS__)
 #define LOG_INFO(...)  ::polos::Log::instance().info(::polos::logger_type::kLoggerClient, __VA_ARGS__)
 #define LOG_TRACE(...)  ::polos::Log::instance().trace(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+
+#include "utils/macro_util.h"
+
+#define LOG_VAR_STR(Str, Variable)		LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
+#define LOG_VAR(Variable)				LOG_VAR_STR("value of {0} = {1}", Variable)
 
 #endif /* POLOS_UTILS_LOGGER_H */
