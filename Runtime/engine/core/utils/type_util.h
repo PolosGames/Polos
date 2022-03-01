@@ -2,6 +2,8 @@
 #ifndef POLOS_CORE_UTILS_TYPEUTIL_H_
 #define POLOS_CORE_UTILS_TYPEUTIL_H_
 
+#include <string>
+
 #include "alias.h"
 
 namespace polos
@@ -10,11 +12,8 @@ namespace polos
 	/// DECLARATIONS ///
 	////////////////////
 
-	// Polynomial rolling hash
-	size_t string_hash(std::string const& str);
-
 	template<typename T>
-	size_t type_hash()
+	std::string type_name()
 	{
 		std::string name = typeid(T).name();
 
@@ -33,11 +32,20 @@ namespace polos
 			name += "*";
 		}
 
+		return name.c_str();
+	}
+
+	// Polynomial rolling hash
+	size_t string_hash(std::string const& str);
+
+	template<typename T>
+	size_t type_hash()
+	{
+		static std::string name = type_name<T>();
 		static size_t th = string_hash(name);
 
 		return th;
 	}
-
 
 	///////////////////	
 	/// DEFINITIONS ///
