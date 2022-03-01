@@ -6,18 +6,31 @@
 
 namespace polos::time
 {
+	enum class ScopeTimerUnit : uint8_t
+	{
+		kSecond,
+		kMilliSecond,
+		kMicroSecond,
+		kNanoSecond,
+	};
+
 	class ScopeTimer
 	{
 	public:
-		ScopeTimer(const char* scope_name);
+		ScopeTimer(cstring scope_name);
+		ScopeTimer(cstring scope_name, ScopeTimerUnit unit);
 		~ScopeTimer();
 
 		void Stop();
 		void Reset();
 	private:
-		int64   m_Start;
-		cstring m_ScopeName;
-		bool    m_IsStopped;
+		void calculate_den(ScopeTimerUnit unit);
+	private:
+		float			m_Nom;
+		cstring			m_UnitName;
+		int64			m_Start;
+		cstring			m_ScopeName;
+		bool			m_IsStopped;
 	};
 }
 
