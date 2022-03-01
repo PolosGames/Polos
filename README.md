@@ -4,10 +4,6 @@ WIP project.
 
 Roadmap can be found in [this](https://trello.com/b/frG6m0AQ) link.
 
-Currently, the engine only has pre-built Windows binaries for third party
-libraries. This will be changed in the feature with building the libraries
-per-platform
-
 ### Current Features:
 
 - Logging system
