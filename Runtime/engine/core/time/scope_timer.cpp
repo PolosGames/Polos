@@ -9,7 +9,7 @@ namespace polos::time
 	ScopeTimer::ScopeTimer(const char* scope_name)
 		: m_ScopeName(scope_name), m_IsStopped(false), m_UnitName("ns")
 	{
-		calculate_den(ScopeTimerUnit::kNanoSecond);
+		calculate_den(ScopeTimerUnit::kMilliSecond);
 		m_Start = Clock::Now();
 	}
 
@@ -44,10 +44,9 @@ namespace polos::time
 		switch (unit)
 		{
 			// Clock is in nanos, so nom should be other way around.
-		case ScopeTimerUnit::kSecond:		m_Nom = 1_ns; m_UnitName = "secs";	break;
-		case ScopeTimerUnit::kMilliSecond:	m_Nom = 1_us; m_UnitName = "ms";	break;
-		case ScopeTimerUnit::kMicroSecond:	m_Nom = 1_ms; m_UnitName = "us";	break;
-		case ScopeTimerUnit::kNanoSecond:	m_Nom = 1.0f; m_UnitName = "ns";	break;
+		case ScopeTimerUnit::kSecond:		m_Nom = 1_us; m_UnitName = "secs";	break;
+		case ScopeTimerUnit::kMilliSecond:	m_Nom = 1_ms; m_UnitName = "ms";	break;
+		case ScopeTimerUnit::kMicroSecond:	m_Nom = 1.0f; m_UnitName = "us";	break;
 		}
 	}
 } // namespace polos::time

@@ -11,7 +11,6 @@ namespace polos::time
 		kSecond,
 		kMilliSecond,
 		kMicroSecond,
-		kNanoSecond,
 	};
 
 	class ScopeTimer
