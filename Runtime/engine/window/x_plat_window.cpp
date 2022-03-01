@@ -68,6 +68,7 @@ namespace polos
 		m_Window = glfwCreateWindow(m_Props.width, m_Props.height, m_Props.title.c_str(), monitor, nullptr);
 		glfwSetWindowUserPointer(m_Window, &m_Props);
 		glfwMakeContextCurrent(m_Window);
+		glfwSwapInterval(m_Props.vsync);
 
 		m_Context = std::make_unique<graphics_context>();
 		m_Context->Initialize(m_Window);
