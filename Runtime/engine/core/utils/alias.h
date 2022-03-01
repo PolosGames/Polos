@@ -5,7 +5,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <ratio>
 
 namespace polos
 {

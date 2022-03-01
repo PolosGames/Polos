@@ -7,7 +7,7 @@
 
 namespace polos
 {
-	template<typename T>
+	template<typename SystemType>
 	class System
 	{
 	public:

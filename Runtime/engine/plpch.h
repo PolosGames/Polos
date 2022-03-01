@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory_resource>
 
 #include <cstdint>
 

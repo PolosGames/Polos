@@ -60,7 +60,7 @@ namespace polos
 		auto& cbs = instance().m_Callbacks;
 		auto del = Delegate<void(event_type&)>::template from<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));
 		event_id id = event_type::id;
-		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const EventSubscriber> &>(cback));
+		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const EventSubscriber&>(del));
 	}
 
 	template<class event_type>
@@ -76,7 +76,7 @@ namespace polos
 	{
 		auto &cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
-		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber>&&>(cback));
+		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber&&>(cback));
 	}
 
 	template<class event_type>
