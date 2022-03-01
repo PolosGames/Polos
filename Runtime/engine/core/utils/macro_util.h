@@ -6,7 +6,8 @@
 #define PL_EXPAND(X) x
 
 /// Concatenates the passed parameters together.
-#define PL_CONCAT(x, y) x ## y
+#define CONCAT_IMPL_(x, y) x ## y
+#define PL_CONCAT(x, y)    CONCAT_IMPL_(x, y)
 
 /// Makes the passed parameter string
 #define PL_STRINGIFY(x) #x

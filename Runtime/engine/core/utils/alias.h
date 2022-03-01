@@ -28,7 +28,7 @@ namespace polos
 	using cstring = const char*;
 
 	inline float  operator""_ms(std::size_t time)	{ return 0.001f * time;		}
-	inline double operator""_us(std::size_t time)	{ return 0.001 * 0.001 * time;			}
+	inline float  operator""_us(std::size_t time)	{ return 0.001f * 0.001f * time;		}
 	inline double operator""_ns(std::size_t time)	{ return 0.001 * 0.001 * 0.001 * time;	}
 }
 

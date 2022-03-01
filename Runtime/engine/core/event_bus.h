@@ -16,19 +16,19 @@ namespace polos
 	public:
 
 		template<class event_type, typename... Args>
-		static void raise_event(Args&& ...args);
+		static void RaiseEvent(Args&&... args);
 
 		template<class event_type, class object_type, void(object_type::* method_ptr)(event_type&)>
-		static void subscribe_to_event(object_type *const ptr);
+		static void SubscribeToEvent(object_type *const ptr);
 
 		template<class event_type>
-		static void subscribe_to_event(const Delegate<void(event_type &)> &cback);
+		static void SubscribeToEvent(const Delegate<void(event_type &)> &cback);
 
 		template<class event_type>
-		static void subscribe_to_event(Delegate<void(event_type &)> &&cback);
+		static void SubscribeToEvent(Delegate<void(event_type &)> &&cback);
 
 		template<class event_type>
-		static void unsubscribe_from_event(const Delegate<void(event_type &)> &cback);
+		static void UnsubscribeFromEvent(const Delegate<void(event_type &)> &cback);
 
 		static EventBus &instance()
 		{
@@ -40,7 +40,7 @@ namespace polos
 	};
 
 	template<class event_type, typename ...Args>
-	inline void EventBus::raise_event(Args && ...args)
+	inline void EventBus::RaiseEvent(Args&&... args)
 	{
 		auto& cbs = instance().m_Callbacks;
 		if (cbs.count(event_type::id))
@@ -55,7 +55,7 @@ namespace polos
 	}
 
 	template<class event_type, class object_type, void(object_type::* method_ptr)(event_type &)>
-	inline void EventBus::subscribe_to_event(object_type* const ptr)
+	inline void EventBus::SubscribeToEvent(object_type* const ptr)
 	{
 		auto& cbs = instance().m_Callbacks;
 		auto del = Delegate<void(event_type&)>::template from<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));
@@ -64,7 +64,7 @@ namespace polos
 	}
 
 	template<class event_type>
-	inline void EventBus::subscribe_to_event(const Delegate<void(event_type&)>& cback)
+	inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
 	{
 		auto& cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
@@ -72,7 +72,7 @@ namespace polos
 	}
 
 	template<class event_type>
-	inline void EventBus::subscribe_to_event(Delegate<void(event_type&)>&& cback)
+	inline void EventBus::SubscribeToEvent(Delegate<void(event_type&)>&& cback)
 	{
 		auto &cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
@@ -80,11 +80,11 @@ namespace polos
 	}
 
 	template<class event_type>
-	inline void EventBus::unsubscribe_from_event(const Delegate<void(event_type&)>& cback)
+	inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
 	{
 		auto &cbs = instance().m_Callbacks;
 		event_id id = event_type::id;
-		cbs.at(id).erase(std::remove(cbs[id].begin(), cbs[id].end(), reinterpret_cast<EventSubscriber const&>(cback)), cbs[id].end());
+		cbs.at(id).erase(std::remove(cbs[id].begin(), cbs[id].end(), reinterpret_cast<const EventSubscriber&>(cback)), cbs[id].end());
 	}
 
 } // namespace polos

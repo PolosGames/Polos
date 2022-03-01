@@ -78,14 +78,14 @@ namespace polos
 		glfwSetWindowCloseCallback(m_Window,
 			[](GLFWwindow* _)
 			{
-				EventBus::raise_event<window_close>();
+				EventBus::RaiseEvent<window_close>();
 			}
 		);
 
 		glfwSetWindowFocusCallback(m_Window,
 			[](GLFWwindow* _, int32 focused)
 			{
-				EventBus::raise_event<window_focus>(focused);
+				EventBus::RaiseEvent<window_focus>(focused);
 			}
 		);
 
@@ -95,28 +95,28 @@ namespace polos
 				window_props* props = static_cast<window_props*>(glfwGetWindowUserPointer(window));
 				props->width = width;
 				props->height = height;
-				EventBus::raise_event<window_resize>(width, height);
+				EventBus::RaiseEvent<window_resize>(width, height);
 			}
 		);
 
 		glfwSetWindowIconifyCallback(m_Window,
 			[](GLFWwindow* _, int32 iconified)
 			{
-				EventBus::raise_event<window_iconify>(iconified);
+				EventBus::RaiseEvent<window_iconify>(iconified);
 			}
 		);
 
 		glfwSetWindowMaximizeCallback(m_Window,
 			[](GLFWwindow* _, int32 maximized)
 			{
-				EventBus::raise_event<window_maximize>(maximized);
+				EventBus::RaiseEvent<window_maximize>(maximized);
 			}
 		);
 
 		glfwSetFramebufferSizeCallback(m_Window,
 			[](GLFWwindow* _, int32 width, int32 height)
 			{
-				EventBus::raise_event<window_framebuffer_size>();
+				EventBus::RaiseEvent<window_framebuffer_size>();
 			}
 		);
 
@@ -130,10 +130,10 @@ namespace polos
 				switch (action)
 				{
 				case GLFW_PRESS:
-					EventBus::raise_event<key_press>(key);
+					EventBus::RaiseEvent<key_press>(key);
 					break;
 				case GLFW_RELEASE:
-					EventBus::raise_event<key_release>(key);
+					EventBus::RaiseEvent<key_release>(key);
 					break;
 				}
 			}
@@ -149,10 +149,10 @@ namespace polos
 				switch (action)
 				{
 				case GLFW_PRESS:
-					EventBus::raise_event<mouse_button_press>(button);
+					EventBus::RaiseEvent<mouse_button_press>(button);
 					break;
 				case GLFW_RELEASE:
-					EventBus::raise_event<mouse_button_release>(button);
+					EventBus::RaiseEvent<mouse_button_release>(button);
 					break;
 				}
 			}
@@ -161,14 +161,14 @@ namespace polos
 		glfwSetScrollCallback(m_Window,
 			[](GLFWwindow* _, double x_offset, double y_offset)
 			{
-				EventBus::raise_event<mouse_scroll>((float)x_offset, (float)y_offset);
+				EventBus::RaiseEvent<mouse_scroll>((float)x_offset, (float)y_offset);
 			}
 		);
 
 		glfwSetCursorPosCallback(m_Window,
 			[](GLFWwindow* _, double x, double y)
 			{
-				EventBus::raise_event<mouse_move>((float)x, (float)y);
+				EventBus::RaiseEvent<mouse_move>((float)x, (float)y);
 			}
 		);
 

@@ -5,7 +5,6 @@
 #include "events/events.h"
 #include "memory/linear_allocator.h"
 #include "time/scope_timer.h"
-#include "containers/delegate.h"
 
 namespace polos
 {
@@ -13,7 +12,7 @@ namespace polos
 		: m_IsRunning(true)
 	{
 		m_WindowInstance = std::unique_ptr<Window>(Window::NewWindow());
-		EventBus::subscribe_to_event<window_close, Application, &Application::on_window_close>(this);
+		EventBus::SubscribeToEvent<window_close, Application, &Application::on_window_close>(this);
 	}
 	
 	Application::~Application()
@@ -21,7 +20,6 @@ namespace polos
 
 	void Application::Run()
 	{
-
 		while (m_IsRunning)
 		{
 			m_WindowInstance->Update();

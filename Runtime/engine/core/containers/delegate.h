@@ -41,7 +41,7 @@ namespace polos
 		template <typename owner_type, std::enable_if_t<std::is_class_v<owner_type>>>
 		explicit Delegate(owner_type const& o) noexcept : m_ObjectPointer(const_cast<owner_type*>(&o)) {}
 
-		template<typename FuncPtr, typename = typename std::enable_if_t<!std::is_same_v<Delegate, typename std::decay_t<T>>>>
+		template<typename FuncPtr, typename = typename std::enable_if_t<!std::is_same_v<Delegate, typename std::decay_t<FuncPtr>>>>
 		Delegate(FuncPtr func_ptr)
 		{
 			using static_type = typename std::decay_t<FuncPtr>;
