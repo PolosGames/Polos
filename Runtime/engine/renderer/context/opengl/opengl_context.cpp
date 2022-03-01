@@ -42,16 +42,16 @@ namespace polos
 		switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:
-			LOG_CORE_CRITICAL("Critical {0} on {1}", message_type, message_source);
+			LOG_CORE_CRITICAL("Critical {0} on {1}, {2}", message_type, message_source, message);
 			break;
 		case GL_DEBUG_SEVERITY_MEDIUM:
-			LOG_CORE_ERROR("Error {0} on {1}", message_type, message_source);
+			LOG_CORE_ERROR("Error {0} on {1}, {2}", message_type, message_source, message);
 			break;
 		case GL_DEBUG_SEVERITY_LOW:
-			LOG_CORE_WARN("Warn {0} on {1}", message_type, message_source);
+			LOG_CORE_WARN("Warn {0} on {1}, {2}", message_type, message_source, message);
 			break;
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
-			LOG_CORE_INFO("Type: {0} , Source: {1}", message_type, message_source);
+			LOG_CORE_INFO("Type: {0} , Source: {1}", message_type, message_source, message);
 			break;
 		}
 	}
@@ -68,6 +68,10 @@ namespace polos
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
 		glDebugMessageCallback(DebugCallback, nullptr);
+
+		// TODO: Filter some of the unnecessary messages here
+		// https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
+		// glDebugMessageControl();
 #endif
 
 		is_initialized = true;
