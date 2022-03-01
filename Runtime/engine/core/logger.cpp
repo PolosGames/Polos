@@ -6,9 +6,6 @@
 
 namespace polos
 {
-	std::shared_ptr<spdlog::logger> Log::m_ClientLogger;
-	std::shared_ptr<spdlog::logger> Log::m_CoreLogger;
-
 	Log::Log()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;
@@ -23,7 +20,7 @@ namespace polos
 		m_CoreLogger->set_level(spdlog::level::trace);
 		m_CoreLogger->flush_on(spdlog::level::trace);
 
-		m_ClientLogger = std::make_shared<spdlog::logger>("SENAZ", begin(log_sinks), end(log_sinks));
+		m_ClientLogger = std::make_shared<spdlog::logger>("APP", begin(log_sinks), end(log_sinks));
 		spdlog::register_logger(m_ClientLogger);
 		m_ClientLogger->set_level(spdlog::level::trace);
 		m_ClientLogger->flush_on(spdlog::level::trace);
