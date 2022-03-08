@@ -40,6 +40,8 @@ project "Runtime"
 		"spdlog"
 	}
 
+	buildoptions { "/Zc:__cplusplus" }
+
 	for k, v in pairs(gfxapi_includes) do includedirs {v} end
 	for k, v in pairs(gfxapi_libs) do links {v} end
 
