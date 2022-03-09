@@ -10,14 +10,14 @@ namespace polos::time
 		: m_ScopeName(scope_name), m_IsStopped(false), m_UnitName("ns")
 	{
 		calculate_den(ScopeTimerUnit::kMilliSecond);
-		m_Start = Clock::Now();
+		m_Start = Timer::Now();
 	}
 
 	ScopeTimer::ScopeTimer(const char* scope_name, ScopeTimerUnit unit)
 		: m_ScopeName(scope_name), m_IsStopped(false)
 	{
 		calculate_den(unit);
-		m_Start = Clock::Now();
+		m_Start = Timer::Now();
 	}
 
 	ScopeTimer::~ScopeTimer()
@@ -27,7 +27,7 @@ namespace polos::time
 
 	void ScopeTimer::Stop()
 	{
-		int64 end   = Clock::Now();
+		int64 end   = Timer::Now();
 		m_IsStopped = true;
 		LOG_CORE_INFO("Scope \"{0}\" took: {1:.5} {2}", m_ScopeName, (end - m_Start) * m_Nom, m_UnitName);
 	}
@@ -36,14 +36,14 @@ namespace polos::time
 	{
 		Stop();
 		m_IsStopped = false;
-		m_Start     = Clock::Now();
+		m_Start     = Timer::Now();
 	}
 
 	void ScopeTimer::calculate_den(ScopeTimerUnit unit)
 	{
 		switch (unit)
 		{
-			// Clock is in nanos, so nom should be other way around.
+			// Timer is in nanos, so nom should be other way around.
 		case ScopeTimerUnit::kSecond:		m_Nom = 1_us; m_UnitName = "secs";	break;
 		case ScopeTimerUnit::kMilliSecond:	m_Nom = 1_ms; m_UnitName = "ms";	break;
 		case ScopeTimerUnit::kMicroSecond:	m_Nom = 1.0f; m_UnitName = "us";	break;

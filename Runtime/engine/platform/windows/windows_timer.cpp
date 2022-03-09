@@ -2,24 +2,22 @@
 
 #ifdef POLOS_WIN
 
-#include "time/clock.h"
+#include "time/timer.h"
 
 namespace polos::time
 {
-	int64 Clock::m_Freq;
-	
-	void Clock::OnInitialize()
+	int64 Timer::m_Freq;
+
+	void Timer::OnStartUp()
 	{
 		LARGE_INTEGER freq;
 		BOOL ret = QueryPerformanceFrequency(&freq);
 		ASSERTSTR(ret, "QueryPerformanceFrequency didn't work.");
 
 		m_Freq = freq.QuadPart;
-
-		Create();
 	}
 
-	int64 Clock::Now()
+	int64 Timer::Now()
 	{
 		LARGE_INTEGER Counter;
 
