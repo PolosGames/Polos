@@ -6,7 +6,6 @@
 #include <string>
 
 #include "utils/alias.h"
-#include "engine/system.h"
 
 namespace polos
 {
@@ -22,7 +21,7 @@ namespace polos
 		char holder_[2];
 	};
 
-	class Window : public System<Window>
+	class Window
 	{
 	public:
 		Window() = default;
