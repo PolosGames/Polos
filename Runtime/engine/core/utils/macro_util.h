@@ -1,19 +1,22 @@
 #pragma once
 
-#ifndef POLOS_UTILS_UTIL_H
-#define POLOS_UTILS_UTIL_H
+#ifndef POLOS_UTILS_MACRO_UTIL_H
+#define POLOS_UTILS_MACRO_UTIL_H
 
-#define PL_EXPAND(X) x
+#define _PL_EXPAND(x) x
+#define PL_EXPAND(x) _PL_EXPAND(x)
 
 /// Concatenates the passed parameters together.
-#define CONCAT_IMPL_(x, y) x ## y
-#define PL_CONCAT(x, y)    CONCAT_IMPL_(x, y)
+#define _PL_CONCAT(x, y) x ## y
+#define PL_CONCAT(x, y)  _PL_CONCAT(x, y)
 
 /// Makes the passed parameter string
-#define PL_STRINGIFY(x) #x
+#define _PL_STRINGIFY(x) #x
+#define PL_STRINGIFY(x)  _PL_STRINGIFY(x)
 
 /// Creates a unique name based on a line
 #define PL_ANON_NAME(name) PL_CONCAT(name, __LINE__)
+#define PL
 
 /// Calls function x with parameter y
 #define PL_CALL(x, y) x(y)
@@ -33,7 +36,7 @@
 	Type& operator=(const Type&) = default;	\
 	Type& operator=(Type&&) = default;		\
 
-#define DELETE_COPY_MOVE_CTOR(Type)			\
+#define PL_DELETE_COPY_MOVE_CTOR(Type)			\
 	Type(const Type&) =	delete;				\
 	Type(Type&&) = delete;					\
 	Type& operator=(const Type&) = delete;	\
@@ -41,4 +44,4 @@
 
 
 
-#endif /* POLOS_UTILS_UTIL_H */
+#endif /* POLOS_UTILS_MACRO_UTIL_H */

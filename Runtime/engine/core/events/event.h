@@ -16,9 +16,8 @@ namespace polos
 	template<typename T>
 	class event : base_event
 	{
-		event_id _id() override { return id; }
+		event_id _id() override { return id; } //never going to be accessed, just for vtable
 	public:
-		friend class EventBus;
 		inline static const event_id id = type_hash<T>();
 		
 		virtual ~event() = default;
