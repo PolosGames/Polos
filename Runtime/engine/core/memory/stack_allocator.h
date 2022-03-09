@@ -2,8 +2,10 @@
 #ifndef POLOS_CORE_MEMORY_STACKALLOCATOR_H_
 #define POLOS_CORE_MEMORY_STACKALLOCATOR_H_
 
-#include "linear_allocator.h"
 #include "utils/macro_util.h"
+#include "utils/alias.h"
+#include "utils/feature.h"
+#include "debug/profiling.h"
 
 namespace polos::memory
 {
@@ -28,6 +30,7 @@ namespace polos::memory
 		void Pop();
 		void Clear();
 	private:
+		PL_NODISCARD
 		void* align(uint64 size);
 	private:
 		byte*   m_Buffer;

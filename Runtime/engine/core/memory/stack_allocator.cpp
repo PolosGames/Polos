@@ -44,6 +44,7 @@ namespace polos::memory
 		PROFILE_FUNC();
 		m_PrevOffset = 0;
 		m_Offset     = m_Bottom;
+		memset(m_Buffer, 0, m_BufferSize);
 	}
 
 	void* StackAllocator::align(uint64 size)

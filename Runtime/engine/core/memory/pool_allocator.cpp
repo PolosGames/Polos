@@ -21,21 +21,20 @@ namespace polos::memory
 		m_BufferSize	= chunk_size * chunk_amount;
 		m_ChunkSize		= chunk_size;
 
-		ASSERT(chunk_size > sizeof(free_node));
+		ASSERT(m_ChunkSize > sizeof(free_node) && m_BufferSize > sizeof(free_node));
 
-		m_Buffer             = static_cast<byte*>(std::malloc(m_BufferSize));
-		m_FreeListHead       = reinterpret_cast<free_node*>(&m_Buffer[0]);
-		m_FreeListHead->next = nullptr;
+		m_Buffer        = static_cast<byte*>(std::malloc(m_BufferSize));
 
+		// FreeListHead gets created in Clear function
 		Clear();
 	}
 
-	void* PoolAllocator::Get()
+	void* PoolAllocator::GetNextFree()
 	{
 		PROFILE_FUNC();
 		free_node* node = m_FreeListHead;
 
-		if (!node)
+		if (node == nullptr)
 		{
 			ASSERTSTR(0, "PoolAllocator is out of memory.");
 			return nullptr;
@@ -51,20 +50,21 @@ namespace polos::memory
 		PROFILE_FUNC();
 		ASSERT(!(m_Buffer <= ptr && ptr < m_Buffer + m_BufferSize));
 
-		auto* node     = static_cast<free_node*>(ptr);
-		node->next     = m_FreeListHead;
-		m_FreeListHead = node;
+		free_node* node = new (ptr) free_node{ m_FreeListHead };
+		m_FreeListHead  = node;
 	}
 
-	void PoolAllocator::Clear() const
+	void PoolAllocator::Clear()
 	{
 		PROFILE_FUNC();
-		auto* itr = reinterpret_cast<free_node*>(&m_Buffer[0]);
+		memset(m_Buffer, 0, m_BufferSize);
+
+		m_FreeListHead = new (&m_Buffer[0]) free_node{ nullptr };
+		auto* itr = m_FreeListHead;
 
 		for (size_t i = m_ChunkSize; i < m_BufferSize; i += m_ChunkSize)
 		{
-			auto node  = reinterpret_cast<free_node*>(&m_Buffer[i]);
-			node->next = nullptr; // make them point to null first.
+			auto* node = new (&m_Buffer[i]) free_node{ nullptr };
 			itr->next  = node;
 			itr        = node;
 		}

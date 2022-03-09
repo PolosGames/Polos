@@ -4,6 +4,8 @@
 
 #include "utils/alias.h"
 #include "utils/macro_util.h"
+#include "utils/feature.h"
+#include "debug/profiling.h"
 
 namespace polos::memory
 {
@@ -20,9 +22,13 @@ namespace polos::memory
 		~PoolAllocator();
 
 		void Initialize(size_t chunk_size, size_t chunk_amount);
-		void* Get();
+
+		PL_NODISCARD
+		void* GetNextFree();
+		
 		void Free(void* ptr);
-		void Clear() const;
+
+		void Clear();
 	private:
 		byte*      m_Buffer;
 		free_node* m_FreeListHead;
@@ -43,12 +49,12 @@ namespace polos::memory
 
 		void Free(T* ptr);
 	private:
-		PoolAllocator pool_allocator_;
+		PoolAllocator m_PoolAllocator;
 	};
 
 	template<typename T>
 	TPoolAllocator<T>::TPoolAllocator(size_t count)
-		: pool_allocator_(PoolAllocator{sizeof(T), count})
+		: m_PoolAllocator(PoolAllocator(sizeof(T), count))
 	{
 	}
 
@@ -57,14 +63,14 @@ namespace polos::memory
 	T* TPoolAllocator<T>::New(Args&&... args)
 	{
 		PROFILE_FUNC();
-		return new (pool_allocator_.Get()) T(std::forward<Args>(args)...);
+		return new (m_PoolAllocator.GetNextFree()) T(std::forward<Args>(args)...);
 	}
 
 	template<typename T>
 	void TPoolAllocator<T>::Free(T* ptr)
 	{
 		PROFILE_FUNC();
-		pool_allocator_.Free(ptr);
+		m_PoolAllocator.Free(ptr);
 	}
 } // namespace polos::memory
 

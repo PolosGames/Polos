@@ -3,6 +3,9 @@
 #define POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
 
 #include "utils/macro_util.h"
+#include "utils/alias.h"
+#include "utils/feature.h"
+#include "debug/profiling.h"
 
 namespace polos::memory
 {
@@ -25,9 +28,16 @@ namespace polos::memory
 		template<typename T>
 		T* NewArr(uint64 count);
 
+		template<typename T>
+		void Delete(T* ptr);
+
+		template<typename T>
+		void DeleteArr(T* ptr);
+
 		void Resize(uint64 size);
 		void Clear();
 	private:
+		PL_NODISCARD
 		void* align(uint64 size);
 
 	private:
@@ -56,6 +66,18 @@ namespace polos::memory
 	{
 		PROFILE_FUNC();
 		return new (align(sizeof(T) * count)) T[count];
+	}
+
+	template<typename T>
+	inline void LinearAllocator::Delete(T* ptr)
+	{
+		delete ptr;
+	}
+
+	template<typename T>
+	inline void LinearAllocator::DeleteArr(T* ptr)
+	{
+		delete[] ptr;
 	}
 } // namespace polos
 
