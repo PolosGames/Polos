@@ -3,7 +3,7 @@
 #define POLOS_POLOS_H
 
 #include "core/application.h"
-#include "core/logger.h"
+#include "core/log.h"
 
 #include "core/entry_point.h"
 
