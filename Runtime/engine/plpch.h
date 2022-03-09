@@ -10,11 +10,11 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
 #include <memory_resource>
 
 #include <cstdint>
 
 #include "platform/platform_detection.h"
-#include "core/logger.h"
 #include "debug/debug.h"
-#include "debug/profiling.h"
+#include "core/log.h"
