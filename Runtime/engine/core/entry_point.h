@@ -4,22 +4,16 @@
 
 #include "platform/platform_detection.h"
 #include "application.h"
-#include "logger.h"
+#include "log.h"
 #include "engine/engine.h"
 
 #ifdef POLOS_WIN
 
-extern polos::Application *polos::create_application();
+extern polos::Application* polos::create_application();
 
 int main(int argc, char **argv)
 {
 	polos::Engine::Run();
-
-	polos::Application *app = polos::create_application();
-	app->Run();
-	delete app;
-
-	polos::Engine::Stop();
 }
 
 #endif
