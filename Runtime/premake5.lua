@@ -48,6 +48,8 @@ project "Runtime"
 	filter "system:Windows"
 		staticruntime "On"
 		systemversion "latest"
+		files { "../ThirdParty/Tracy/TracyClient.cpp" }
+		includedirs { "../ThirdParty/Tracy" }
 
 		postbuildcommands { ("{COPY} %{cfg.buildtarget.relpath} ../bin/" ..output_dir.. "/Sandbox") }
 
