@@ -9,7 +9,7 @@
 #	define ASSERT(check)				ASSERTSTR(check, "None")
 #	define STATIC_ASSERT(check)			static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else
-#	define ASSERT(check, ...)
+#	define ASSERTSTR(check, ...)
 #	define ASSERT(check)
 #	define STATIC_ASSERT(check)
 #endif
