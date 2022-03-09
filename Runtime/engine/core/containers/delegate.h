@@ -12,9 +12,6 @@
 	Most of this implementation is from Rythe-Interactive/LegionEngine repo.
 */
 
-#include <type_traits>
-#include <memory>
-
 #include "utils/macro_util.h"
 
 namespace polos
