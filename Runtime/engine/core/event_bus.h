@@ -4,6 +4,7 @@
 #define POLOS_CORE_EVENTBUS_H_
 
 #include "containers/delegate.h"
+
 #include "events/event.h"
 
 namespace polos

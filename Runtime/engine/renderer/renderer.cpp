@@ -1,9 +1,11 @@
 #include "plpch.h"
-#include "renderer.h"
 
+#include "renderer.h"
 
 namespace polos
 {
+	Renderer* Renderer::m_Instance;
+
 	void Renderer::Startup()
 	{
 		m_Instance = this;

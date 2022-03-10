@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_CORE_UTIL_FEATURE_H_
-#define POLOS_CORE_UTIL_FEATURE_H_
+#ifndef POLOS_CORE_UTILS_FEATURE_H_
+#define POLOS_CORE_UTILS_FEATURE_H_
 
 #include <Windows.h>
 
@@ -34,4 +34,4 @@
 #	define PL_UNLIKELY
 #endif
 
-#endif /* POLOS_CORE_UTIL_FEATURE_H_ */
+#endif /* POLOS_CORE_UTILS_FEATURE_H_ */

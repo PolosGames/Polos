@@ -8,7 +8,7 @@
 
 #include <glad/glad.h>
 
-#include "renderer/context/shader.h"
+#include "context/shader.h"
 
 namespace polos
 {

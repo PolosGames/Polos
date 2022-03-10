@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_CORE_DEBUG_H
-#define POLOS_CORE_DEBUG_H
+#ifndef POLOS_CORE_DEBUG_H_
+#define POLOS_CORE_DEBUG_H_
 
 #include "utils/macro_util.h"
 
@@ -14,4 +14,4 @@
 #	define STATIC_ASSERT(check)
 #endif
 
-#endif /* POLOS_CORE_DEBUG_H */
+#endif /* POLOS_CORE_DEBUG_H_ */

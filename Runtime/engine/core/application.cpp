@@ -1,10 +1,11 @@
 #include "plpch.h"
-#include "application.h"
 
 #include "event_bus.h"
 #include "events/events.h"
 #include "memory/linear_allocator.h"
 #include "time/scope_timer.h"
+
+#include "application.h"
 
 namespace polos
 {

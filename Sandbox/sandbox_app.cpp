@@ -1,10 +1,15 @@
 #include <polos.h>
 
+#ifndef SANDBOX_APP_H_
+#define SANDBOX_APP_H_
+
 class SandboxApp : public polos::Application
 {
 public:
-	SandboxApp() {}
-	~SandboxApp() {}
+	SandboxApp()
+	{}
+	~SandboxApp()
+	{}
 };
 
 polos::Application* polos::CreateApplication(void* ptr)
@@ -18,3 +23,5 @@ polos::Application* polos::CreateApplication(void* ptr)
 		return new SandboxApp();
 	}
 }
+
+#endif /* SANDBOX_APP_H_ */

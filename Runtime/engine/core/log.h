@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_UTILS_LOGGER_H
-#define POLOS_UTILS_LOGGER_H
+#ifndef POLOS_UTILS_LOG_H_
+#define POLOS_UTILS_LOG_H_
 
 #include <spdlog/spdlog.h>
 
@@ -101,4 +101,4 @@ namespace polos
 #define LOG_VAR_STR(Str, Variable)		LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
 #define LOG_VAR(Variable)				LOG_VAR_STR("value of {0} = {1}", Variable)
 
-#endif /* POLOS_UTILS_LOGGER_H */
+#endif /* POLOS_UTILS_LOG_H_ */

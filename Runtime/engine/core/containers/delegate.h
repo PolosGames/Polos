@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_CONTAINERS_DELEGATE_H
-#define POLOS_CONTAINERS_DELEGATE_H
+#ifndef POLOS_CORE_CONTAINERS_DELEGATE_H_
+#define POLOS_CORE_CONTAINERS_DELEGATE_H_
 
 /**
 	Main concept is from Sergey Ryazanov's "The Impossibly Fast C++ Delegates"
@@ -149,4 +149,4 @@ namespace polos
 	};
 }
 
-#endif
+#endif /* POLOS_CORE_CONTAINERS_DELEGATE_H_ */

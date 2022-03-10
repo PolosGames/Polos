@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef POLOS_UTILS_MACRO_UTIL_H
-#define POLOS_UTILS_MACRO_UTIL_H
+#ifndef POLOS_CORE_UTILS_MACROUTIL_H_
+#define POLOS_CORE_UTILS_MACROUTIL_H_
 
 #define _PL_EXPAND(x) x
 #define PL_EXPAND(x) _PL_EXPAND(x)
@@ -44,4 +44,4 @@
 
 
 
-#endif /* POLOS_UTILS_MACRO_UTIL_H */
+#endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */
