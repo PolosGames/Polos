@@ -15,7 +15,7 @@ namespace polos
 		EventBus() = default;
 		~EventBus() = default;
 
-		void StartUp();
+		void Startup();
 		void Shutdown();
 
 		template<class event_type, typename... Args>

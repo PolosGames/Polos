@@ -21,7 +21,8 @@ namespace polos
 		~Log() = default;
 		PL_DELETE_COPY_MOVE_CTOR(Log);
 
-		void StartUp();
+		void Startup();
+		void Shutdown();
 
 		template<typename ...Args>
 		void critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);

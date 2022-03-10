@@ -8,7 +8,7 @@ namespace polos
 {
 	Log* Log::m_Instance;
 
-	void Log::StartUp()
+	void Log::Startup()
 	{
 		std::vector<spdlog::sink_ptr> log_sinks;
 		log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -28,6 +28,11 @@ namespace polos
 		m_ClientLogger->flush_on(spdlog::level::trace);
 
 		m_Instance = this;
+	}
+
+	void Log::Shutdown()
+	{
+		m_Instance = nullptr;
 	}
 
 	spdlog::logger& Log::pick_logger(logger_type type)

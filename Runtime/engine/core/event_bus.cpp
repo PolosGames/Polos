@@ -6,7 +6,7 @@ namespace polos
 {
 	EventBus* EventBus::m_Instance;
 
-	void EventBus::StartUp()
+	void EventBus::Startup()
 	{
 		m_Instance = this;
 	}
