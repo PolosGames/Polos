@@ -2,11 +2,13 @@
 
 #include "time/timer.h"
 #include "memory/linear_allocator.h"
+
 #include "log.h"
 #include "event_bus.h"
+#include "renderer/renderer.h"
+#include "application.h"
 
 #include "events/engine/engine_stop.h"
-#include "application.h"
 
 #include "engine.h"
 
@@ -17,28 +19,36 @@ namespace polos
 	{
 		time::Timer::OnStartUp();
 
+		// Allocate enough memory for the whole engine.
+		// Zeroes are so that git
 		size_t needed_memory =
-			sizeof(Log)      +
-			sizeof(EventBus) + 
-			512;
-
+			sizeof(Log)         +
+			sizeof(EventBus)    +
+			sizeof(Application) +
+			0;
+			
 		memory::LinearAllocator engine_memory(needed_memory);
 
-		Log* log = engine_memory.New<Log>();
-		log->StartUp();
-
+		/// Allocate memory for the subsystems
+		Log*      log       = engine_memory.New<Log>();
 		EventBus* event_bus = engine_memory.New<EventBus>();
-		event_bus->StartUp();
+		Renderer* renderer  = engine_memory.New<Renderer>();
 
-		polos::Application* app = polos::create_application();
+		/// Startup for subsystems
+		log      ->Startup();
+		event_bus->Startup();
+		renderer ->Startup();
+
+		Application* app = CreateApplication(nullptr);
 		app->Run();
 
+		/// Shutdown sequence
+		renderer ->Shutdown();
 		event_bus->Shutdown();
-		engine_memory.Delete(event_bus);
-
-		engine_memory.Delete(log);
+		log      ->Shutdown();
 
 		engine_memory.Clear();
+
 		delete app;
 	}
 } // namespace polos
