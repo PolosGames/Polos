@@ -28,7 +28,7 @@ namespace polos
 	private:
 		uint32 m_ProgramId;
 		// TODO: Test if getuniformlocation is faster than creating a lookup table
-		static std::unordered_map<std::string, uint32> m_UniformLookup;
+		static HashMap<std::string, uint32> m_UniformLookup;
 	};
 }
 

@@ -36,7 +36,7 @@ namespace polos
 	private:
 		static EventBus* m_Instance;
 
-		std::unordered_map<event_id, std::vector<EventSubscriber>> m_Callbacks;
+		HashMap<event_id, DArray<EventSubscriber>> m_Callbacks;
 	};
 
 	template<class event_type, typename ...Args>

@@ -30,6 +30,12 @@ namespace polos
 	inline float  operator""_ms(std::size_t time)	{ return 0.001f * time;		}
 	inline float  operator""_us(std::size_t time)	{ return 0.001f * 0.001f * time;		}
 	inline double operator""_ns(std::size_t time)	{ return 0.001 * 0.001 * 0.001 * time;	}
+
+	template<typename T>
+	using DArray = std::vector<T>;
+
+	template<typename Key, typename Value>
+	using HashMap = std::unordered_map<Key, Value>;
 }
 
 #endif /* POLOS_UTILS_TYPES_H */
