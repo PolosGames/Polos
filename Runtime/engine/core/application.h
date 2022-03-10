@@ -25,7 +25,7 @@ namespace polos
 		bool m_IsRunning;
 	};
 
-	Application* create_application();
+	Application* create_application(void* ptr);
 } // namespace polos
 
 #endif /* POLOS_CORE_APPLICATION_H_ */

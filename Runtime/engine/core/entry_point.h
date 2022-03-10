@@ -9,7 +9,7 @@
 
 #ifdef POLOS_WIN
 
-extern polos::Application* polos::create_application();
+extern polos::Application* polos::create_application(void* ptr);
 
 int main(int argc, char **argv)
 {

@@ -7,7 +7,14 @@ public:
 	~SandboxApp() {}
 };
 
-polos::Application *polos::create_application()
+polos::Application* polos::CreateApplication(void* ptr)
 {
-	return new SandboxApp();
+	if (ptr != nullptr)
+	{
+		return new (ptr) SandboxApp();
+	}
+	else
+	{
+		return new SandboxApp();
+	}
 }
