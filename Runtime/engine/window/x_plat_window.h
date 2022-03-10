@@ -5,7 +5,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "window.h"
+#include "core/window.h"
 #include "context/graphics_context.h"
 
 namespace polos
