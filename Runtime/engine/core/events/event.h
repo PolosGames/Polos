@@ -14,7 +14,7 @@ namespace polos
 	};
 
 	template<typename T>
-	class event : base_event
+	class event : public base_event
 	{
 		event_id _id() override { return id; } //never going to be accessed, just for vtable
 	public:
