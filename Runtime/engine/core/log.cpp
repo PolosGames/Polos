@@ -1,9 +1,10 @@
 #include "plpch.h"
-#include "log.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include "utils/alias.h"
+
+#include "log.h"
 
 namespace polos
 {

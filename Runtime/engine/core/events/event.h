@@ -4,6 +4,7 @@
 #define POLOS_EVENTS_EVENT_H
 
 #include "utils/type_util.h"
+
 #include "utils/alias.h"
 
 namespace polos
@@ -18,7 +19,7 @@ namespace polos
 	{
 		event_id _id() override { return id; } //never going to be accessed, just for vtable
 	public:
-		inline static const event_id id = type_hash<T>();
+		inline static const event_id id = TypeHash<T>();
 		
 		virtual ~event() = default;
 	};
