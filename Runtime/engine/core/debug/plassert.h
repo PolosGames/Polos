@@ -3,6 +3,7 @@
 #define POLOS_CORE_DEBUG_H_
 
 #include "utils/macro_util.h"
+#include "log.h"
 
 #ifdef PL_DEBUG
 #	define ASSERTSTR(check, ...)		{ if (!(check)) { LOG_CORE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); __debugbreak();} }

@@ -1,6 +1,5 @@
-#include "plpch.h"
-
 #include "utils/alias.h"
+#include "log.h"
 
 #include "scope_timer.h"
 

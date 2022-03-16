@@ -1,5 +1,3 @@
-#include "plpch.h"
-
 #include "time/timer.h"
 #include "memory/linear_allocator.h"
 
@@ -20,12 +18,11 @@ namespace polos
 		time::Timer::OnStartUp();
 
 		// Allocate enough memory for the whole engine.
-		// Zeroes are so that git
-		size_t needed_memory =
-			sizeof(Log)         +
-			sizeof(EventBus)    +
-			sizeof(Application) +
-			0;
+		size_t needed_memory =  0
+			+ sizeof(Log)
+			+ sizeof(EventBus)
+			+ sizeof(Renderer)
+			;
 			
 		memory::LinearAllocator engine_memory(needed_memory);
 

@@ -1,4 +1,5 @@
-#include "plpch.h"
+#include "debug/plassert.h"
+
 #include "pool_allocator.h"
 
 namespace polos::memory
@@ -69,4 +70,9 @@ namespace polos::memory
 			itr        = node;
 		}
 	}
+    
+    byte* PoolAllocator::Data()
+    {
+        return m_Buffer;
+    }
 } // namespace polos::memory

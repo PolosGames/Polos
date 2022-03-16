@@ -2,6 +2,8 @@
 #ifndef POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
 #define POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
 
+#include <mutex>
+
 #include "utils/macro_util.h"
 #include "utils/alias.h"
 #include "utils/feature.h"
@@ -33,6 +35,8 @@ namespace polos::memory
 
 		template<typename T>
 		void DeleteArr(T* ptr);
+		
+		byte* Data();
 
 		void Resize(uint64 size);
 		void Clear();

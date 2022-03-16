@@ -1,5 +1,3 @@
-#include "plpch.h"
-
 #include "event_bus.h"
 #include "events/events.h"
 #include "memory/linear_allocator.h"
@@ -17,7 +15,8 @@ namespace polos
 	}
 	
 	Application::~Application()
-	{}
+	{
+	}
 
 	void Application::Run()
 	{

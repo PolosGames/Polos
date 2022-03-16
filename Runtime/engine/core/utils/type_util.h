@@ -2,6 +2,9 @@
 #ifndef POLOS_CORE_UTILS_TYPEUTIL_H_
 #define POLOS_CORE_UTILS_TYPEUTIL_H_
 
+#include <typeinfo>
+#include <string>
+
 #include "alias.h"
 
 namespace polos
@@ -43,7 +46,7 @@ namespace polos
 		return th;
 	}
 
-	inline string_id operator""_sid(char const* str, std::size_t _) { Hashit(str); }
+	inline string_id operator""_sid(char const* str, std::size_t _) { return Hashit(str); }
 }
 
 

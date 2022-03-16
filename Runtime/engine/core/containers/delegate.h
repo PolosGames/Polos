@@ -3,16 +3,20 @@
 #define POLOS_CORE_CONTAINERS_DELEGATE_H_
 
 /**
-	Main concept is from Sergey Ryazanov's "The Impossibly Fast C++ Delegates"
+	Main concept is From Sergey Ryazanov's "The Impossibly Fast C++ Delegates"
 	thread in the codeproject.com
 
 	Currently, there is no type safety in template functions, but it should be
 	added.
 
-	Most of this implementation is from Rythe-Interactive/LegionEngine repo.
+	Most of this implementation is From Rythe-Interactive/LegionEngine repo.
 */
 
+#include <type_traits>
+#include <utility>
+
 #include "utils/macro_util.h"
+
 
 namespace polos
 {
@@ -21,14 +25,14 @@ namespace polos
 	template<typename Return, typename... Args>
 	class Delegate<Return(Args...)>
 	{
-		using ReturnType = Return;
-		using StubType = ReturnType(*)(void*, Args&&...);
-		using FunctionPointer = ReturnType(*)(Args...);
-
+        using ReturnType = Return;
+        using StubType = ReturnType(*)(void*, Args&&...);
+        using FunctionPointer = ReturnType(*)(Args...);
+        
 		Delegate(void* const object_pointer, StubType const stub_ptr) noexcept
 			: m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
 		{}
-	public: // constructors
+    public: // constructors
 
 		PL_RULE_OF_FIVE(Delegate);
 
@@ -41,44 +45,42 @@ namespace polos
 		template<typename FuncPtr, typename = typename std::enable_if_t<!std::is_same_v<Delegate, typename std::decay_t<FuncPtr>>>>
 		Delegate(FuncPtr func_ptr)
 		{
-			using static_type = typename std::decay_t<FuncPtr>;
-
 			m_ObjectPointer = nullptr;
-			m_StubPointer = function_stub<static_type>;
+			m_StubPointer = function_stub<typename std::decay_t<FuncPtr>>;
 		}
 
 	public: // Factory methods
 		template <ReturnType(* const function_ptr)(Args...)>
-		static Delegate from() noexcept
+		static Delegate From() noexcept
 		{
 			return { nullptr, function_stub<function_ptr> };
 		}
 
 		template<class owner_object, ReturnType(owner_object::* const method_ptr)(Args...)>
-		static Delegate from(owner_object* const object_pointer) noexcept
+		static Delegate From(owner_object* const object_pointer) noexcept
 		{
 			return { object_pointer, method_stub<owner_object, method_ptr> };
 		}
 
 		template<class owner_object, ReturnType(owner_object:: *const method_ptr)(Args...) const>
-		static Delegate from(owner_object const* const object_pointer) noexcept
+		static Delegate From(owner_object const* const object_pointer) noexcept
 		{
 			return { object_pointer, const_method_stub<owner_object, method_ptr> };
 		}
 
 		template <typename owner_type, ReturnType(owner_type::* const method_ptr)(Args...)>
-		static Delegate from(owner_type& object) noexcept
+		static Delegate From(owner_type& object) noexcept
 		{
 			return { &object, method_stub<owner_type, method_ptr> };
 		}
 
 		template <typename owner_type, ReturnType(owner_type::* const method_ptr)(Args...) const>
-		static Delegate from(owner_type const& object) noexcept
+		static Delegate From(owner_type const& object) noexcept
 		{
 			return { const_cast<owner_type*>(&object), const_method_stub<owner_type, method_ptr> };
 		}
  
-		static Delegate from(ReturnType(* const f_ptr)(Args...))
+		static Delegate From(ReturnType(* const f_ptr)(Args...))
 		{
 			return f_ptr;
 		}
@@ -92,7 +94,7 @@ namespace polos
 
 		bool operator!=(Delegate const& other) const noexcept
 		{
-			return !(*this == other);
+			return *this != other;
 		}
 
 		bool operator<(Delegate const& other) const noexcept
@@ -123,8 +125,6 @@ namespace polos
 			}
 		}
 	private:
-		using deleter_type = void(*)(void*);
-
 		template <ReturnType(* function_ptr)(Args...)>
 		static ReturnType function_stub(void* const, Args&&... args)
 		{
@@ -145,7 +145,7 @@ namespace polos
 
 	private:
 		StubType m_StubPointer;
-		void* m_ObjectPointer;
+		void* m_ObjectPointer{};
 	};
 }
 

@@ -3,9 +3,11 @@
 #ifndef POLOS_CORE_EVENTBUS_H_
 #define POLOS_CORE_EVENTBUS_H_
 
-#include "containers/delegate.h"
+#include <algorithm>
 
+#include "containers/delegate.h"
 #include "events/event.h"
+#include "utils/alias.h"
 
 namespace polos
 {
@@ -13,8 +15,7 @@ namespace polos
 	{
 		using EventSubscriber = Delegate<void(base_event&)>;
 	public:
-		EventBus() = default;
-		~EventBus() = default;
+		EventBus() noexcept = default;
 
 		void Startup();
 		void Shutdown();
@@ -59,7 +60,8 @@ namespace polos
 	inline void EventBus::SubscribeToEvent(object_type* const ptr)
 	{
 		auto& cbs = m_Instance->m_Callbacks;
-		auto del = Delegate<void(event_type&)>::template from<object_type, method_ptr>(reinterpret_cast<object_type *>(ptr));
+		auto del = Delegate<void(event_type&)>::template From<object_type, method_ptr>(
+                reinterpret_cast<object_type *>(ptr));
 		event_id id = event_type::id;
 		cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const EventSubscriber&>(del));
 	}

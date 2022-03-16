@@ -1,5 +1,3 @@
-#include "plpch.h"
-
 #include "event_bus.h"
 
 namespace polos

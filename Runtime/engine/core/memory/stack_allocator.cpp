@@ -1,7 +1,8 @@
-#include "plpch.h"
+#include <cstring>
 
 #include "mem_utils.h"
 #include "utils/alias.h"
+#include "debug/plassert.h"
 
 #include "stack_allocator.h"
 
@@ -44,7 +45,7 @@ namespace polos::memory
 		PROFILE_FUNC();
 		m_PrevOffset = 0;
 		m_Offset     = m_Bottom;
-		memset(m_Buffer, 0, m_BufferSize);
+		std::memset(m_Buffer, 0, m_BufferSize);
 	}
 
 	void* StackAllocator::align(uint64 size)
@@ -76,4 +77,9 @@ namespace polos::memory
 
 		return ptr;
 	}
+    
+    byte* StackAllocator::Data()
+    {
+        return m_Buffer;
+    }
 } // namespace polos

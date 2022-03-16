@@ -2,6 +2,8 @@
 #ifndef POLOS_CORE_TIME_CLOCK_H_
 #define POLOS_CORE_TIME_CLOCK_H_
 
+#include <ratio>
+
 #include "utils/alias.h"
 #include "utils/macro_util.h"
 

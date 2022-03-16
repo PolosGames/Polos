@@ -1,5 +1,4 @@
-#include "plpch.h"
-
+#include "plconfig.h"
 #ifdef USE_OPENGL
 
 #include <fstream>
@@ -7,6 +6,9 @@
 #include <iostream>
 
 #include <glad/glad.h>
+
+#include "log.h"
+#include "debug/plassert.h"
 
 #include "context/shader.h"
 

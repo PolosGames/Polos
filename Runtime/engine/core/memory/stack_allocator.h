@@ -26,6 +26,8 @@ namespace polos::memory
 
 		template<typename T>
 		T* PushArr(uint64 count);
+		
+		byte* Data();
 
 		void Pop();
 		void Clear();

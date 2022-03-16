@@ -1,5 +1,3 @@
-#include "plpch.h"
-
 #include "renderer.h"
 
 namespace polos

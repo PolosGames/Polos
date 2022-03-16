@@ -25,11 +25,12 @@ namespace polos::memory
 
 		PL_NODISCARD
 		void* GetNextFree();
-		
-		void Free(void* ptr);
-
-		void Clear();
-	private:
+        
+        byte* Data();
+        
+        void Free(void* ptr);
+        void Clear();
+    private:
 		byte*      m_Buffer;
 		free_node* m_FreeListHead;
 		size_t     m_BufferSize;

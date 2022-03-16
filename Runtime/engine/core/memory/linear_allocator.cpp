@@ -1,8 +1,8 @@
-#include "plpch.h"
-
 #include <cstdlib>
+#include <cstring>
 
 #include "mem_utils.h"
+#include "debug/plassert.h"
 
 #include "linear_allocator.h"
 
@@ -82,4 +82,9 @@ namespace polos::memory
 		m_Offset = new_offset + padding;
 		return ptr;
 	}
+    
+    byte* LinearAllocator::Data()
+    {
+        return m_Buffer;
+    }
 }

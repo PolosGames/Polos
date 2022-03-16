@@ -1,11 +1,12 @@
-#include "plpch.h"
-
+#include "plconfig.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
 #include "core/events/window/window_events.h"
 #include "core/events/input/input_events.h"
 #include "core/event_bus.h"
 #include "core/utils/alias.h"
+#include "log.h"
+#include "debug/plassert.h"
 
 #include "x_plat_window.h"
 

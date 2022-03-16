@@ -3,6 +3,8 @@
 #ifndef POLOS_WINDOW_XPLATWINDOW_H
 #define POLOS_WINDOW_XPLATWINDOW_H
 
+#include <memory>
+
 #include <GLFW/glfw3.h>
 
 #include "core/window.h"
@@ -17,7 +19,6 @@ namespace polos
 	{
 	public:
 		XPlatWindow(const window_props &props);
-		~XPlatWindow() = default;
 
 		void Initialize() override;
 		void Shutdown() override;

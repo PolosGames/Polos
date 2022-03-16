@@ -1,7 +1,8 @@
-#include "plpch.h"
+#include "platform_detection.h"
 
 #ifdef POLOS_WIN
 
+#include "debug/plassert.h"
 #include "time/timer.h"
 
 namespace polos::time

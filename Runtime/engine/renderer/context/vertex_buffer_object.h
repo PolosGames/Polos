@@ -3,8 +3,6 @@
 #ifndef POLOS_CONTEXT_VERTEXBUFFEROBJECT_H
 #define POLOS_CONTEXT_VERTEXBUFFEROBJECT_H
 
-#include "utils/types.h"
-
 namespace polos
 {
 	class vertex_buffer_object

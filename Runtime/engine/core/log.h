@@ -2,7 +2,10 @@
 #ifndef POLOS_UTILS_LOG_H_
 #define POLOS_UTILS_LOG_H_
 
+#include <memory>
+
 #include <spdlog/spdlog.h>
+#include <spdlog/common.h>
 
 #include "utils/macro_util.h"
 
@@ -17,8 +20,7 @@ namespace polos
 	class Log
 	{
 	public:
-		Log()  = default;
-		~Log() = default;
+		Log() noexcept = default;
 		PL_DELETE_COPY_MOVE_CTOR(Log);
 
 		void Startup();

@@ -4,7 +4,6 @@
 #define POLOS_EVENTS_EVENT_H
 
 #include "utils/type_util.h"
-
 #include "utils/alias.h"
 
 namespace polos
