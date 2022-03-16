@@ -1,0 +1,14 @@
+//
+// Created by Kayra Urfalı on 15.03.2022.
+//
+
+#ifndef POLOS_PLCONFIG_H
+#define POLOS_PLCONFIG_H
+
+#cmakedefine USE_OPENGL
+#cmakedefine USE_VULKAN
+
+#cmakedefine ENABLE_LOGGING
+#cmakedefine ENABLE_PROFILING
+
+#endif //POLOS_PLCONFIG_H
