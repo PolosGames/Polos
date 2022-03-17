@@ -16,16 +16,22 @@ namespace polos::memory
 			free_node* next;
 		};
 	public:
-		PL_RULE_OF_FIVE_NO_DTOR(PoolAllocator)
-
+	    PoolAllocator();
 		explicit PoolAllocator(size_t chunk_size, size_t chunk_amount);
 		~PoolAllocator();
+		
+		PoolAllocator(PoolAllocator&& other)          noexcept;
+		PoolAllocator& operator=(PoolAllocator&& rhs) noexcept;
+		
+		PL_NO_COPY(PoolAllocator);
 
 		void Initialize(size_t chunk_size, size_t chunk_amount);
+		void Resize(size_t chunk_amount);
 
 		PL_NODISCARD
 		void* GetNextFree();
         
+        size_t Capacity();
         byte* Data();
         
         void Free(void* ptr);
@@ -35,6 +41,7 @@ namespace polos::memory
 		free_node* m_FreeListHead;
 		size_t     m_BufferSize;
 		size_t     m_ChunkSize;
+        size_t     m_ChunkAmount;
 	};
 
 	// Templated pool allocator
@@ -42,37 +49,28 @@ namespace polos::memory
 	class TPoolAllocator
 	{
 	public:
-		PL_RULE_OF_FIVE(TPoolAllocator)
-		explicit TPoolAllocator(size_t count);
+	    TPoolAllocator() = default;
+        explicit TPoolAllocator(size_t count);
+        
+        TPoolAllocator(TPoolAllocator&& other) noexcept;
+        TPoolAllocator& operator=(TPoolAllocator&& rhs) noexcept;
+        
+        void Initialize(size_t count);
 
 		template<typename ...Args>
 		T* New(Args&&... args);
+        
+        PL_NODISCARD size_t Capacity();
+        PL_NODISCARD size_t ByteCapacity();
+        
+        T* Data();
 
 		void Free(T* ptr);
 	private:
 		PoolAllocator m_PoolAllocator;
 	};
-
-	template<typename T>
-	TPoolAllocator<T>::TPoolAllocator(size_t count)
-		: m_PoolAllocator(PoolAllocator(sizeof(T), count))
-	{
-	}
-
-	template<typename T>
-	template<typename ...Args>
-	T* TPoolAllocator<T>::New(Args&&... args)
-	{
-		PROFILE_FUNC();
-		return new (m_PoolAllocator.GetNextFree()) T(std::forward<Args>(args)...);
-	}
-
-	template<typename T>
-	void TPoolAllocator<T>::Free(T* ptr)
-	{
-		PROFILE_FUNC();
-		m_PoolAllocator.Free(ptr);
-	}
 } // namespace polos::memory
+
+#include "pool_allocator.inl"
 
 #endif /* POLOS_CORE_MEMORY_POOLALLOCATOR_H_ */

@@ -21,7 +21,8 @@ namespace polos::memory
 	StackAllocator::~StackAllocator()
 	{
 		PROFILE_FUNC();
-		std::free(m_Buffer);
+		if(m_Buffer != nullptr)
+		    std::free(m_Buffer);
 		m_Buffer = nullptr;
 	}
 

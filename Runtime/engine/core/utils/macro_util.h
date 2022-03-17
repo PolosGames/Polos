@@ -43,12 +43,26 @@
 	Type& operator=(const Type&) noexcept = default; \
 	Type& operator=(Type&&)      noexcept = default; \
 
-#define PL_DELETE_COPY_MOVE_CTOR(Type)      \
-	Type(const Type&)             = delete; \
-	Type(Type&&)                  = delete; \
-	Type& operator=(const Type&)  = delete; \
-	Type& operator=(Type&&)       = delete; \
+#define PL_DEFAULT_MOVE_COPY(Type)                   \
+    Type(const Type&)            noexcept = default; \
+    Type(Type&&)                 noexcept = default; \
+    Type& operator=(const Type&) noexcept = default; \
+    Type& operator=(Type&&)      noexcept = default; \
 
+#define PL_DELETE_COPY_MOVE_CTOR(Type)              \
+	Type(const Type&)            noexcept = delete; \
+	Type(Type&&)                 noexcept = delete; \
+	Type& operator=(const Type&) noexcept = delete; \
+	Type& operator=(Type&&)      noexcept = delete; \
 
+#define PL_NO_COPY(Type)                            \
+	Type(const Type&)            noexcept = delete; \
+	Type& operator=(const Type&) noexcept = delete; \
+
+#define PL_NO_MOVE(Type)                            \
+    Type(Type&&)                 noexcept = delete; \
+	Type& operator=(Type&&)      noexcept = delete; \
+ 
 
 #endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */
+

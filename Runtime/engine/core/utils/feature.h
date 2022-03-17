@@ -2,33 +2,31 @@
 #ifndef POLOS_CORE_UTILS_FEATURE_H_
 #define POLOS_CORE_UTILS_FEATURE_H_
 
-#include <Windows.h>
-
-#if __cplusplus >= 202002L
-#	define PL_HAS_CPP_ATTRIB(attrib) __has_cpp_attribute(attrib)
+#if defined(__has_cpp_attribute)
+#	define PL_HAS_CPP_ATTR(x) __has_cpp_attribute(x)
 #else
-#	define PL_HAS_CPP_ATTRIB(attrib) 0
+#   define PL_HAS_CPP_ATTR(x) 0
 #endif
 
-#if PL_HAS_CPP_ATTRIB(maybe_unused)
+#if PL_HAS_CPP_ATTR(maybe_unused)
 #	define PL_MAYBEUNUSED [[maybe_unused]]
 #else
 #	define PL_MAYBEUNUSED
 #endif
 
-#if PL_HAS_CPP_ATTRIB(nodiscard)
+#if PL_HAS_CPP_ATTR(nodiscard)
 #	define PL_NODISCARD [[nodiscard]]
 #else
 #	define PL_NODISCARD
 #endif
 
-#if PL_HAS_CPP_ATTRIB(likely)
+#if PL_HAS_CPP_ATTR(likely)
 #	define PL_LIKELY [[likely]]
 #else
 #	define PL_LIKELY
 #endif
 
-#if PL_HAS_CPP_ATTRIB(unlikely)
+#if PL_HAS_CPP_ATTR(unlikely)
 #	define PL_UNLIKELY [[unlikely]]
 #else
 #	define PL_UNLIKELY

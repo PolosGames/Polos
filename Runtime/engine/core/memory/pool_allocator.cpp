@@ -4,6 +4,11 @@
 
 namespace polos::memory
 {
+    PoolAllocator::PoolAllocator()
+        : m_Buffer(nullptr), m_BufferSize{}, m_ChunkSize{}, m_ChunkAmount{}
+    {
+    }
+
 	PoolAllocator::PoolAllocator(size_t chunk_size, size_t chunk_amount)
 	{
 		Initialize(chunk_size, chunk_amount);
@@ -11,16 +16,45 @@ namespace polos::memory
 
 	PoolAllocator::~PoolAllocator()
 	{
-		std::free(m_Buffer);
+	    if(m_Buffer != nullptr)
+		    std::free(m_Buffer);
 		m_Buffer       = nullptr;
 		m_FreeListHead = nullptr;
 	}
+    
+    PoolAllocator::PoolAllocator(PoolAllocator&& other) noexcept
+    {
+        if(other.m_Buffer == this->m_Buffer) return;
+        m_Buffer       = other.m_Buffer;
+        m_BufferSize   = other.m_BufferSize;
+        m_ChunkAmount  = other.m_ChunkAmount;
+        m_ChunkSize    = other.m_ChunkSize;
+        m_FreeListHead = other.m_FreeListHead;
+        
+        other.m_Buffer = nullptr;
+        other.m_FreeListHead = nullptr;
+    }
+    
+    PoolAllocator& PoolAllocator::operator=(PoolAllocator&& rhs) noexcept
+    {
+        if(rhs.m_Buffer == this->m_Buffer) return *this;
+        m_Buffer       = rhs.m_Buffer;
+        m_BufferSize   = rhs.m_BufferSize;
+        m_ChunkAmount  = rhs.m_ChunkAmount;
+        m_ChunkSize    = rhs.m_ChunkSize;
+        m_FreeListHead = rhs.m_FreeListHead;
+    
+        rhs.m_Buffer = nullptr;
+        rhs.m_FreeListHead = nullptr;
+        return *this;
+    }
 
 	void PoolAllocator::Initialize(size_t chunk_size, size_t chunk_amount)
 	{
 		PROFILE_FUNC();
-		m_BufferSize	= chunk_size * chunk_amount;
-		m_ChunkSize		= chunk_size;
+		m_BufferSize        = chunk_size * chunk_amount;
+		m_ChunkSize         = chunk_size;
+		m_ChunkAmount       = chunk_amount;
 
 		ASSERT(m_ChunkSize > sizeof(free_node) && m_BufferSize > sizeof(free_node));
 
@@ -74,5 +108,36 @@ namespace polos::memory
     byte* PoolAllocator::Data()
     {
         return m_Buffer;
+    }
+    
+    void PoolAllocator::Resize(size_t chunk_amount)
+    {
+        if(chunk_amount <= m_ChunkAmount)
+        {
+            // just shrink the buffer size instead of reallocating the buffer.
+            m_BufferSize = chunk_amount * m_ChunkSize;
+            // Clear with the new buffer size
+            Clear();
+            return;
+        }
+        
+        byte* old_buffer = m_Buffer;
+        
+        size_t new_buffer_size = chunk_amount * m_ChunkSize;
+        m_Buffer               = static_cast<byte*>(std::malloc(new_buffer_size));
+        
+        std::memcpy(m_Buffer, old_buffer, m_BufferSize);
+        
+        m_BufferSize  = new_buffer_size;
+        m_ChunkAmount = chunk_amount;
+        
+        delete old_buffer;
+        
+        Clear();
+    }
+    
+    size_t PoolAllocator::Capacity()
+    {
+        return m_BufferSize;
     }
 } // namespace polos::memory

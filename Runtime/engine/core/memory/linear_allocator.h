@@ -14,10 +14,10 @@ namespace polos::memory
 	class LinearAllocator
 	{
 	public:
-		PL_RULE_OF_FIVE_NO_DTOR(LinearAllocator)
-
 		LinearAllocator(uint64 size);
 		~LinearAllocator();
+
+        PL_DELETE_COPY_MOVE_CTOR(LinearAllocator)
 
 		void* Allocate(uint64 size);
 

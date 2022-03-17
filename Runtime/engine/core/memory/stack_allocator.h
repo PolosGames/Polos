@@ -16,10 +16,10 @@ namespace polos::memory
 			uint64 prev_offset; /// Stores previous element's header's start
 		};
 	public:
-		PL_RULE_OF_FIVE_NO_DTOR(StackAllocator)
-
 		explicit StackAllocator(uint64 size);
 		~StackAllocator();
+		
+        PL_DELETE_COPY_MOVE_CTOR(StackAllocator)
 
 		template<typename T, typename... Args>
 		T* Push(Args&&... args);

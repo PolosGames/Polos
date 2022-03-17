@@ -12,7 +12,7 @@ namespace polos::memory
 		: m_BufferSize(size)
 	{
 		PROFILE_FUNC();
-		m_Buffer = (byte*)std::malloc(size);
+		m_Buffer = static_cast<byte*>(std::malloc(size));
 		m_Offset = 0;
 		m_Bottom = reinterpret_cast<uintptr>(m_Buffer);
 	}
@@ -20,7 +20,8 @@ namespace polos::memory
 	LinearAllocator::~LinearAllocator()
 	{
 		PROFILE_FUNC();
-		std::free(m_Buffer);
+		if(m_Buffer != nullptr)
+		    std::free(m_Buffer);
 		m_Buffer = nullptr;
 	}
 
