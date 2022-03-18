@@ -6,6 +6,12 @@
 
 namespace polos::memory
 {
+    struct InternalBuffer
+    {
+        byte* buffer;
+        size_t bufferSize;
+    };
+    
 	class MemUtils
 	{
 	public:

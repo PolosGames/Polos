@@ -2,10 +2,12 @@
 #ifndef POLOS_CORE_MEMORY_POOLALLOCATOR_H_
 #define POLOS_CORE_MEMORY_POOLALLOCATOR_H_
 
+#include "mem_utils.h"
 #include "utils/alias.h"
 #include "utils/macro_util.h"
 #include "utils/feature.h"
 #include "debug/profiling.h"
+#include "utils/concepts.h"
 
 namespace polos::memory
 {
@@ -15,6 +17,8 @@ namespace polos::memory
 		{
 			free_node* next;
 		};
+    public:
+        InternalBuffer iBuffer;
 	public:
 	    PoolAllocator();
 		explicit PoolAllocator(size_t chunk_size, size_t chunk_amount);
@@ -27,19 +31,16 @@ namespace polos::memory
 
 		void Initialize(size_t chunk_size, size_t chunk_amount);
 		void Resize(size_t chunk_amount);
-
-		PL_NODISCARD
-		void* GetNextFree();
         
-        size_t Capacity();
-        byte* Data();
+        PL_NODISCARD void* GetNextFree();
+        
+        PL_NODISCARD size_t Capacity() const;
+        PL_NODISCARD byte* Data() const;
         
         void Free(void* ptr);
         void Clear();
     private:
-		byte*      m_Buffer;
 		free_node* m_FreeListHead;
-		size_t     m_BufferSize;
 		size_t     m_ChunkSize;
         size_t     m_ChunkAmount;
 	};
@@ -57,13 +58,15 @@ namespace polos::memory
         
         void Initialize(size_t count);
 
+        T* New() requires IsDefaultConstructible<T>;
+
 		template<typename ...Args>
 		T* New(Args&&... args);
         
         PL_NODISCARD size_t Capacity();
         PL_NODISCARD size_t ByteCapacity();
         
-        T* Data();
+        PL_NODISCARD T* Data();
 
 		void Free(T* ptr);
 	private:

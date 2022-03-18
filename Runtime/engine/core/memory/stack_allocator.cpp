@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "mem_utils.h"
 #include "utils/alias.h"
 #include "debug/plassert.h"
 
@@ -9,33 +8,48 @@
 namespace polos::memory
 {
 	StackAllocator::StackAllocator(uint64 size)
-		: m_BufferSize(size)
+	    : iBuffer({static_cast<byte*>(std::malloc(size)), size}),
+	      m_Offset(0),
+	      m_PrevOffset(0),
+	      m_Bottom(reinterpret_cast<uintptr>(iBuffer.buffer))
 	{
-		PROFILE_FUNC();
-		m_Buffer     = static_cast<byte*>(std::malloc(size));
-		m_Offset     = 0;
-		m_PrevOffset = 0;
-		m_Bottom     = reinterpret_cast<uintptr>(m_Buffer);
 	}
 	
 	StackAllocator::~StackAllocator()
 	{
 		PROFILE_FUNC();
-		if(m_Buffer != nullptr)
-		    std::free(m_Buffer);
-		m_Buffer = nullptr;
+		if(iBuffer.buffer != nullptr)
+		    std::free(iBuffer.buffer);
+		iBuffer.buffer = nullptr;
 	}
+    
+    StackAllocator::StackAllocator(StackAllocator&& other) noexcept
+        : iBuffer      (std::exchange(other.iBuffer, {nullptr, 0})),
+          m_Offset     (std::exchange(other.m_Offset, 0)),
+          m_PrevOffset (std::exchange(other.m_PrevOffset, 0)),
+          m_Bottom     (std::exchange(other.m_Bottom, 0))
+    {
+    }
+    
+    StackAllocator& StackAllocator::operator=(StackAllocator&& rhs) noexcept
+    {
+        iBuffer      = std::exchange(rhs.iBuffer, {nullptr, 0});
+        m_Offset     = std::exchange(rhs.m_Offset, 0);
+        m_PrevOffset = std::exchange(rhs.m_PrevOffset, 0);
+        m_Bottom     = std::exchange(rhs.m_Bottom, 0);
+        return *this;
+    }
 
 	void StackAllocator::Pop()
 	{
 		PROFILE_FUNC();
-		if (!m_Buffer || m_BufferSize == 0 || m_Offset == 0)
+		if (!iBuffer.buffer || iBuffer.bufferSize == 0 || m_Offset == 0)
 		{
 			ASSERTSTR(0, "Cannot pop because the buffer is empty! (StackAllocator::Pop)");
 			return;
 		}
 
-		uint64 prev_offset = reinterpret_cast<stack_header*>(&m_Buffer[m_PrevOffset])->prev_offset;
+		uint64 prev_offset = reinterpret_cast<stack_header*>(&iBuffer.buffer[m_PrevOffset])->prev_offset;
 
 		m_Offset     = m_PrevOffset;
 		m_PrevOffset = prev_offset;
@@ -46,7 +60,7 @@ namespace polos::memory
 		PROFILE_FUNC();
 		m_PrevOffset = 0;
 		m_Offset     = m_Bottom;
-		std::memset(m_Buffer, 0, m_BufferSize);
+		std::memset(iBuffer.buffer, 0, iBuffer.bufferSize);
 	}
 
 	void* StackAllocator::align(uint64 size)
@@ -57,7 +71,7 @@ namespace polos::memory
 		uint32 header_size        = sizeof(stack_header);
 		uint64 end_of_new_element = m_Offset + header_size + size; // the new unaligned offset
 
-		if (end_of_new_element > m_BufferSize)
+		if (end_of_new_element > iBuffer.bufferSize)
 		{
 			ASSERTSTR(0, "Stack Allocator is out of memory! Returning null. (StackAllocator::align)");
 			return nullptr;
@@ -67,7 +81,7 @@ namespace polos::memory
 		header->prev_offset = m_PrevOffset;
 		m_PrevOffset        = m_Offset;
 		
-		void* ptr = &m_Buffer[m_Offset + header_size];
+		void* ptr = &iBuffer.buffer[m_Offset + header_size];
 
 		uintptr new_top     = m_Bottom + end_of_new_element;
 		uint64 misalignment = new_top & (MemUtils::kMemoryAlignment - 1);
@@ -81,6 +95,6 @@ namespace polos::memory
     
     byte* StackAllocator::Data()
     {
-        return m_Buffer;
+        return iBuffer.buffer;
     }
 } // namespace polos

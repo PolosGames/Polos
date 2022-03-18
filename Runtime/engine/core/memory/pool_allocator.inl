@@ -1,3 +1,6 @@
+
+#include "pool_allocator.h"
+
 namespace polos::memory
 {
     template<typename T>
@@ -28,6 +31,12 @@ namespace polos::memory
     void TPoolAllocator<T>::Initialize(size_t count)
     {
         m_PoolAllocator.Initialize(sizeof(T), count);
+    }
+    
+    template<typename T>
+    T* TPoolAllocator<T>::New() requires IsDefaultConstructible<T>
+    {
+        return new (m_PoolAllocator.GetNextFree()) T();
     }
     
     template<typename T>
