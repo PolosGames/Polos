@@ -1,4 +1,3 @@
-#include "plconfig.h"
 #ifdef USE_OPENGL
 
 #include <string>
@@ -9,6 +8,7 @@
 #include "utils/alias.h"
 #include "log.h"
 #include "debug/plassert.h"
+#include "utils/feature.h"
 
 #include "context/graphics_context.h"
 
@@ -63,8 +63,8 @@ namespace polos
 	void graphics_context::Initialize(void* window_handle)
 	{
 		m_window = window_handle;
-		GLFWwindow* gwindow = reinterpret_cast<GLFWwindow*>(m_window);
-
+		PL_MAYBEUNUSED auto* gwindow = reinterpret_cast<GLFWwindow*>(m_window);
+		
 		int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		ASSERTSTR(r, "Failed to load OpenGL context!");
 
