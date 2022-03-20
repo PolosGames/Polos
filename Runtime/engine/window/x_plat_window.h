@@ -3,11 +3,9 @@
 #ifndef POLOS_WINDOW_XPLATWINDOW_H
 #define POLOS_WINDOW_XPLATWINDOW_H
 
-#include <memory>
-
 #include <GLFW/glfw3.h>
 
-#include "core/window.h"
+#include "core/i_window.h"
 #include "context/graphics_context.h"
 
 namespace polos
@@ -15,7 +13,7 @@ namespace polos
 	/// 
 	/// Cross platform window that can be used with OpenGL and Vulkan
 	/// 
-	class XPlatWindow : public Window
+	class XPlatWindow : public IWindow
 	{
 	public:
 		XPlatWindow(const window_props &props);

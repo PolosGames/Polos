@@ -1,19 +1,17 @@
-#include "plconfig.h"
+#include "polos_pch.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
 #include "core/events/window/window_events.h"
 #include "core/events/input/input_events.h"
 #include "core/event_bus.h"
 #include "core/utils/alias.h"
-#include "log.h"
-#include "debug/plassert.h"
 
 #include "x_plat_window.h"
 
 namespace polos
 {
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
-	Window* Window::NewWindow(const window_props& props)
+	IWindow* IWindow::NewWindow(const window_props& props)
 	{
 		return new XPlatWindow(props);
 	}

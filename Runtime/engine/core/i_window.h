@@ -6,6 +6,7 @@
 #include <string>
 
 #include "utils/alias.h"
+#include "utils/feature.h"
 
 namespace polos
 {
@@ -18,29 +19,29 @@ namespace polos
 		bool vsync         = true;
 		bool fullscreen    = false;
 	private:
-		char holder_[2];
+		PL_MAYBEUNUSED char m_holder[2];
 	};
 
-	class Window
+	class IWindow
 	{
 	public:
-		Window() = default;
-		virtual ~Window() = default;
+		IWindow() = default;
+		virtual ~IWindow() = default;
 
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 		virtual void Destroy() = 0;
 
-		virtual int32 Width() const = 0;
-		virtual int32 Height() const = 0;
-
-		virtual bool Vsync() const = 0;
-		virtual void Vsync(bool vsync) = 0;
-		virtual bool IsOpen() const = 0;
+		PL_NODISCARD virtual int32 Width() const = 0;
+        PL_NODISCARD virtual int32 Height() const = 0;
+        
+        PL_NODISCARD virtual bool Vsync() const = 0;
+        virtual void Vsync(bool vsync) = 0;
+        PL_NODISCARD virtual bool IsOpen() const = 0;
 
 		virtual void Update() = 0;
-
-		static Window* NewWindow(const window_props& props = window_props());
+        
+        PL_NODISCARD static IWindow* NewWindow(const window_props& props = window_props());
 	};
 }
 

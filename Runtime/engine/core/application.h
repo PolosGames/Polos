@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "window.h"
+#include "i_window.h"
 #include "utils/alias.h"
 #include "events/window/window_close.h"
 
@@ -15,14 +15,13 @@ namespace polos
 	{
 	public:
 		Application();
-		virtual ~Application();
 
 		void Run();
 	private:
 		void on_window_close(window_close& e);
 	private:
-		std::unique_ptr<Window> m_WindowInstance;
-		bool m_IsRunning;
+		std::unique_ptr<IWindow> m_WindowInstance;
+		bool                     m_IsRunning;
 	};
 
 	Application* CreateApplication(void* ptr);
