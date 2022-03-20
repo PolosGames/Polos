@@ -98,8 +98,12 @@ namespace polos::memory
             
             size_t new_buffer_size = amount * m_ChunkSize;
             iBuffer.buffer         = static_cast<byte*>(std::malloc(new_buffer_size));
-            
-            // TODO: destruct the objects.
+    
+            // destruct all objects inside
+            for(size_t i = 0; i < iBuffer.bufferSize; i += m_ChunkSize)
+            {
+                reinterpret_cast<T*>(&iBuffer.buffer[i])->~T();
+            }
             
             iBuffer.bufferSize  = new_buffer_size;
             m_ChunkAmount       = amount;
@@ -139,8 +143,7 @@ namespace polos::memory
             // destruct all objects inside
             for(size_t i = 0; i < iBuffer.bufferSize; i += m_ChunkSize)
             {
-                T* obj = reinterpret_cast<T*>(&iBuffer.buffer[i]);
-                obj->~T();
+                reinterpret_cast<T*>(&iBuffer.buffer[i])->~T();
             }
             std::memset(iBuffer.buffer, 0, iBuffer.bufferSize);
     
@@ -156,7 +159,7 @@ namespace polos::memory
         }
         
     private:
-        PL_NODISCARD void* GetNextFree()
+        PL_NODISCARD void* get_next_free()
         {
             PROFILE_FUNC();
             free_node* node = m_FreeListHead;
@@ -171,7 +174,6 @@ namespace polos::memory
             
             return node;
         }
-        
     private:
 		free_node* m_FreeListHead;
 		size_t     m_ChunkSize;
