@@ -3,8 +3,6 @@
 #ifndef POLOS_CONTEXT_GRAPHICSCONTEXT_H
 #define POLOS_CONTEXT_GRAPHICSCONTEXT_H
 
-#include "plconfig.h"
-
 namespace polos
 {
 	class graphics_context

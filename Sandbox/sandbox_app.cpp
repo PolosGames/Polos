@@ -14,14 +14,8 @@ public:
 
 polos::Application* polos::CreateApplication(void* ptr)
 {
-	if (ptr != nullptr)
-	{
-		return new (ptr) SandboxApp();
-	}
-	else
-	{
-		return new SandboxApp();
-	}
+    Application* app = !ptr ? new SandboxApp() : new (ptr) SandboxApp();
+    return app;
 }
 
 #endif /* SANDBOX_APP_H_ */

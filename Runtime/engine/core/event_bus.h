@@ -3,11 +3,9 @@
 #ifndef POLOS_CORE_EVENTBUS_H_
 #define POLOS_CORE_EVENTBUS_H_
 
-#include <algorithm>
-
 #include "containers/delegate.h"
 #include "events/event.h"
-#include "utils/alias.h"
+#include "containers/containers.h"
 
 namespace polos
 {

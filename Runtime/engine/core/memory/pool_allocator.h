@@ -3,14 +3,17 @@
 #define POLOS_CORE_MEMORY_POOLALLOCATOR_H_
 
 #include "mem_utils.h"
-#include "utils/alias.h"
 #include "utils/macro_util.h"
-#include "utils/feature.h"
-#include "debug/profiling.h"
 #include "utils/concepts.h"
 
 namespace polos::memory
 {
+    template<typename T>
+    requires IsDefaultConstructable<T> &&
+             IsCopyConstructable<T>    &&
+             IsCopyAssignable<T>       &&
+             IsMoveConstructable<T>    &&
+             IsMoveAssignable<T>
 	class PoolAllocator
 	{
 		struct free_node
@@ -20,60 +23,160 @@ namespace polos::memory
     public:
         InternalBuffer iBuffer;
 	public:
-	    PoolAllocator();
-		explicit PoolAllocator(size_t chunk_size, size_t chunk_amount);
-		~PoolAllocator();
+        PL_NO_COPY(PoolAllocator);
+        
+	    PoolAllocator()
+            : iBuffer({nullptr, 0}),
+              m_FreeListHead(nullptr),
+              m_ChunkSize{},
+              m_ChunkAmount{}
+        {
+        }
+        
+		explicit PoolAllocator(size_t amount)
+            : iBuffer{static_cast<byte*>(std::malloc(sizeof(T) * amount)), sizeof(T) * amount},
+              m_ChunkSize{sizeof(T)},
+              m_ChunkAmount{amount}
+        {
+            ASSERT(m_ChunkSize > sizeof(free_node) && iBuffer.bufferSize > sizeof(free_node));
+            // FreeListHead gets created in Clear function
+            Clear();
+        }
+        
+		~PoolAllocator()
+        {
+            if(iBuffer.buffer != nullptr)
+                std::free(iBuffer.buffer);
+            iBuffer.buffer       = nullptr;
+            m_FreeListHead = nullptr;
+        }
 		
-		PoolAllocator(PoolAllocator&& other)          noexcept;
-		PoolAllocator& operator=(PoolAllocator&& rhs) noexcept;
-		
-		PL_NO_COPY(PoolAllocator);
+		PoolAllocator(PoolAllocator&& other) noexcept
+            : iBuffer       (std::exchange(other.iBuffer, {nullptr, 0})),
+              m_FreeListHead(std::exchange(other.m_FreeListHead, nullptr)),
+              m_ChunkSize   (std::exchange(other.m_ChunkSize, 0)),
+              m_ChunkAmount (std::exchange(other.m_ChunkAmount, 0))
+        {
+        }
+        
+		PoolAllocator& operator=(PoolAllocator&& rhs) noexcept
+        {
+            if(&rhs == this) return *this;
+            iBuffer        = std::exchange(rhs.iBuffer, {nullptr, 0});
+            m_FreeListHead = std::exchange(rhs.m_FreeListHead, nullptr);
+            m_ChunkSize    = std::exchange(rhs.m_ChunkSize, 0);
+            m_ChunkAmount  = std::exchange(rhs.m_ChunkAmount, 0);
+            return *this;
+        }
 
-		void Initialize(size_t chunk_size, size_t chunk_amount);
-		void Resize(size_t chunk_amount);
+		void Initialize(size_t amount)
+        {
+            PROFILE_FUNC();
+            m_ChunkSize        = sizeof(T);
+            m_ChunkAmount      = amount;
+            iBuffer.bufferSize = m_ChunkSize * m_ChunkAmount;
+            iBuffer.buffer     = static_cast<byte*>(std::malloc(iBuffer.bufferSize));
+            
+            ASSERT(m_ChunkSize > sizeof(free_node) && iBuffer.bufferSize > sizeof(free_node));
+            
+            // FreeListHead gets created in Clear function
+            Clear();
+        }
         
-        PL_NODISCARD void* GetNextFree();
+		void Resize(size_t amount)
+        {
+            if(amount <= m_ChunkAmount)
+            {
+                // just shrink the buffer size instead of reallocating the buffer.
+                iBuffer.bufferSize = amount * m_ChunkSize;
+                // Clear with the new buffer size
+                Clear();
+                return;
+            }
+            
+            byte* old_buffer = iBuffer.buffer;
+            
+            size_t new_buffer_size = amount * m_ChunkSize;
+            iBuffer.buffer         = static_cast<byte*>(std::malloc(new_buffer_size));
+            
+            // TODO: destruct the objects.
+            
+            iBuffer.bufferSize  = new_buffer_size;
+            m_ChunkAmount       = amount;
+            std::free(old_buffer);
+            
+            Clear();
+        }
         
-        PL_NODISCARD size_t Capacity() const;
-        PL_NODISCARD byte* Data() const;
+        PL_NODISCARD size_t Capacity() const
+        {
+            return iBuffer.bufferSize / m_ChunkSize;
+        }
         
-        void Free(void* ptr);
-        void Clear();
+        PL_NODISCARD size_t ByteCapacity() const
+        {
+            return iBuffer.bufferSize;
+        }
+        
+        PL_NODISCARD T* Data() const
+        {
+            return reinterpret_cast<T*>(iBuffer.buffer);
+        }
+        
+        void Free(void* ptr)
+        {
+            PROFILE_FUNC();
+            ASSERT(!(iBuffer.buffer <= ptr && ptr < iBuffer.buffer + iBuffer.bufferSize));
+    
+            static_cast<T*>( ptr )->~T();
+            auto* node     = new (ptr) free_node{ m_FreeListHead };
+            m_FreeListHead = node;
+        }
+        
+        void Clear()
+        {
+            PROFILE_FUNC();
+            // destruct all objects inside
+            for(size_t i = 0; i < iBuffer.bufferSize; i += m_ChunkSize)
+            {
+                T* obj = reinterpret_cast<T*>(&iBuffer.buffer[i]);
+                obj->~T();
+            }
+            std::memset(iBuffer.buffer, 0, iBuffer.bufferSize);
+    
+            m_FreeListHead = new (&iBuffer.buffer[0]) free_node{ nullptr };
+            auto* itr      = m_FreeListHead;
+    
+            for (size_t i = m_ChunkSize; i < iBuffer.bufferSize; i += m_ChunkSize)
+            {
+                auto* node = new (&iBuffer.buffer[i]) free_node{ nullptr };
+                itr->next  = node;
+                itr        = node;
+            }
+        }
+        
+    private:
+        PL_NODISCARD void* GetNextFree()
+        {
+            PROFILE_FUNC();
+            free_node* node = m_FreeListHead;
+            
+            if (node == nullptr)
+            {
+                ASSERTSTR(0, "PoolAllocator is out of memory.");
+                return nullptr;
+            }
+            
+            m_FreeListHead = m_FreeListHead->next;
+            
+            return node;
+        }
+        
     private:
 		free_node* m_FreeListHead;
 		size_t     m_ChunkSize;
         size_t     m_ChunkAmount;
 	};
-
-	// Templated pool allocator
-	template<typename T>
-	class TPoolAllocator
-	{
-	public:
-	    TPoolAllocator() = default;
-        explicit TPoolAllocator(size_t count);
-        
-        TPoolAllocator(TPoolAllocator&& other) noexcept;
-        TPoolAllocator& operator=(TPoolAllocator&& rhs) noexcept;
-        
-        void Initialize(size_t count);
-
-        T* New() requires IsDefaultConstructible<T>;
-
-		template<typename ...Args>
-		T* New(Args&&... args);
-        
-        PL_NODISCARD size_t Capacity();
-        PL_NODISCARD size_t ByteCapacity();
-        
-        PL_NODISCARD T* Data();
-
-		void Free(T* ptr);
-	private:
-		PoolAllocator m_PoolAllocator;
-	};
 } // namespace polos::memory
-
-#include "pool_allocator.inl"
 
 #endif /* POLOS_CORE_MEMORY_POOLALLOCATOR_H_ */

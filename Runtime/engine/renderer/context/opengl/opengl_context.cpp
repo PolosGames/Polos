@@ -1,13 +1,10 @@
+#include "polos_pch.h"
 #ifdef USE_OPENGL
-
-#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "utils/alias.h"
 #include "log.h"
-#include "debug/plassert.h"
 #include "utils/feature.h"
 
 #include "context/graphics_context.h"

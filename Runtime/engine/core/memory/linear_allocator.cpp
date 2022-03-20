@@ -1,8 +1,4 @@
-#include <cstdlib>
-#include <cstring>
-#include <utility>
-
-#include "debug/plassert.h"
+#include "polos_pch.h"
 
 #include "linear_allocator.h"
 
@@ -48,24 +44,20 @@ namespace polos::memory
         iBuffer.buffer = nullptr;
     }
     
-    void LinearAllocator::Initialize(uint64 size)
+    void LinearAllocator::Initialize(size_t size)
     {
-        iBuffer  = { static_cast<byte*>(std::malloc(size)), size };
+        size_t aligned_size = size + memory::MemUtils::kMemoryAlignment - (size & (memory::MemUtils::kMemoryAlignment - 1));
+        iBuffer  = { static_cast<byte*>(std::malloc(aligned_size)), aligned_size };
+        std::memset(iBuffer.buffer, 0, aligned_size);
         m_Bottom = reinterpret_cast<uintptr>(iBuffer.buffer);
         m_Offset = 0;
     }
     
-    void* LinearAllocator::Allocate(uint64 size)
-    {
-        return align(size);
-    }
-    
-    void LinearAllocator::Resize(uint64 size)
+    void LinearAllocator::Resize(size_t size)
     {
         if (size <= iBuffer.bufferSize)
         {
-            m_Offset = size;
-            iBuffer.bufferSize = size;
+            ASSERTSTR(0, "Cannot shrink the size! (LinearAllocator::Resize)");
             return;
         }
         void* old_mem = iBuffer.buffer;
@@ -73,16 +65,22 @@ namespace polos::memory
         
         if (!iBuffer.buffer)
         {
-            ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)");
+            ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)")
             return;
         }
-        
+    
         {
             std::lock_guard<std::mutex> lock(m_BufferMutex);
             std::memcpy(iBuffer.buffer, old_mem, iBuffer.bufferSize);
             std::free(old_mem);
+            m_Bottom = reinterpret_cast<uintptr>(iBuffer.buffer);
         }
-        iBuffer.bufferSize = size;
+        const uintptr curr_ptr = m_Bottom + iBuffer.bufferSize;
+        const uint64  misalignment = curr_ptr & ( MemUtils::kMemoryAlignment - 1 );
+        // if misalignment == 0, padding becomes 16
+        const uint64  padding      = (MemUtils::kMemoryAlignment - misalignment) & (MemUtils::kMemoryAlignment - 1);
+    
+        iBuffer.bufferSize = size + padding;
         
         old_mem = nullptr; // Probably unnecessary lol.
     }
@@ -92,21 +90,22 @@ namespace polos::memory
         m_Offset = 0;
     }
     
-    void* LinearAllocator::align(uint64 size)
+    void* LinearAllocator::Allocate(uint64 size)
     {
         const uint64 new_offset = m_Offset + size;
         
         if (new_offset > iBuffer.bufferSize)
         {
-            ASSERTSTR(0, "LinearAllocator is full.");
+            ASSERTSTR(0, "LinearAllocator is full. (LinearAllocator::Allocate)");
             return nullptr;
         }
         
         void* ptr = &iBuffer.buffer[m_Offset];
         
-        const uintptr curr_ptr     = m_Bottom + m_Offset;
+        const uintptr curr_ptr     = m_Bottom + new_offset;
         const uint64  misalignment = curr_ptr & ( MemUtils::kMemoryAlignment - 1 );
-        const uint64  padding      = (MemUtils::kMemoryAlignment - misalignment) & (MemUtils::kMemoryAlignment - 1); // if misalignment == 0, padding becomes 16
+        // if misalignment == 0, padding becomes 16
+        const uint64  padding      = (MemUtils::kMemoryAlignment - misalignment) & (MemUtils::kMemoryAlignment - 1);
         
         m_Offset = new_offset + padding;
         return ptr;
@@ -121,4 +120,25 @@ namespace polos::memory
     {
         return iBuffer.bufferSize;
     }
-}
+    
+    void* LinearAllocator::Align(size_t size, size_t offset) const
+    {
+        const uint64 new_offset = offset + size;
+    
+        if (new_offset > iBuffer.bufferSize)
+        {
+            ASSERTSTR(0, "LinearAllocator is full.");
+            return nullptr;
+        }
+    
+        const uintptr curr_ptr     = m_Bottom + offset;
+        const uint64  misalignment = curr_ptr & ( MemUtils::kMemoryAlignment - 1 );
+        // if misalignment == 0, padding becomes 16
+        const uint64  padding      = (MemUtils::kMemoryAlignment - misalignment) & (MemUtils::kMemoryAlignment - 1);
+    
+        void* ptr = &iBuffer.buffer[new_offset + padding];
+    
+        return ptr;
+    }
+    
+} // namespace polos

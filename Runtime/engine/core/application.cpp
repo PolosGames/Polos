@@ -1,7 +1,8 @@
+#include "polos_pch.h"
+
 #include "event_bus.h"
 #include "events/events.h"
-#include "memory/linear_allocator.h"
-#include "time/scope_timer.h"
+#include "containers/dynamic_array.h"
 
 #include "application.h"
 
@@ -10,17 +11,15 @@ namespace polos
 	Application::Application()
 		: m_IsRunning(true)
 	{
-		m_WindowInstance = std::unique_ptr<Window>(Window::NewWindow());
+		m_WindowInstance = std::unique_ptr<IWindow>(IWindow::NewWindow());
 		EventBus::SubscribeToEvent<window_close, Application, &Application::on_window_close>(this);
-	}
-	
-	Application::~Application()
-	{
 	}
 
 	void Application::Run()
 	{
-		while (m_IsRunning)
+        containers::DynamicArray<int> da;
+        
+        while (m_IsRunning)
 		{
 			m_WindowInstance->Update();
 		}

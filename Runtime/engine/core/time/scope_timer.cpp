@@ -1,19 +1,20 @@
-#include "utils/alias.h"
-#include "log.h"
+#include "polos_pch.h"
 
 #include "scope_timer.h"
 
 namespace polos::time
 {
 	ScopeTimer::ScopeTimer(const char* scope_name)
-		: m_ScopeName(scope_name), m_IsStopped(false), m_UnitName("ns")
+		: m_Nom(1.0f), m_UnitName("ms"),
+		  m_ScopeName(scope_name), m_IsStopped(false)
 	{
 		calculate_den(ScopeTimerUnit::kMilliSecond);
 		m_Start = Timer::Now();
 	}
 
 	ScopeTimer::ScopeTimer(const char* scope_name, ScopeTimerUnit unit)
-		: m_ScopeName(scope_name), m_IsStopped(false)
+		: m_Nom(1.0f),
+          m_ScopeName(scope_name), m_IsStopped(false)
 	{
 		calculate_den(unit);
 		m_Start = Timer::Now();

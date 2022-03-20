@@ -1,13 +1,8 @@
+#include "polos_pch.h"
+
 #ifdef USE_OPENGL
 
-#include <fstream>
-#include <sstream>
-#include <iostream>
-
 #include <glad/glad.h>
-
-#include "log.h"
-#include "debug/plassert.h"
 
 #include "context/shader.h"
 

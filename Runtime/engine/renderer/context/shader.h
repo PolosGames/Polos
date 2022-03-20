@@ -3,6 +3,7 @@
 #define POLOS_RENDERER_CONTEXT_SHADER_H_
 
 #include "utils/alias.h"
+#include "containers/containers.h"
 
 namespace polos
 {

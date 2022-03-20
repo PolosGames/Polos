@@ -3,13 +3,9 @@
 #define POLOS_CORE_UTILS_TYPEUTIL_H_
 
 #include <typeinfo>
-#include <string>
-
-#include "alias.h"
 
 namespace polos
 {
-
 	template<typename T>
 	char const* TypeName()
 	{

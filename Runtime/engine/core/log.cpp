@@ -1,7 +1,9 @@
+#include "polos_pch.h"
+
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include "utils/alias.h"
+#include "containers/containers.h"
 
 #include "log.h"
 
@@ -18,12 +20,12 @@ namespace polos
 		log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
 		log_sinks[1]->set_pattern("[%T] [%l] %n: %v");
 
-		m_CoreLogger = std::make_shared<spdlog::logger>("POLOS", begin(log_sinks), end(log_sinks));
+		m_CoreLogger = std::make_shared<spdlog::logger>("POLOS", std::begin(log_sinks), std::end(log_sinks));
 		spdlog::register_logger(m_CoreLogger);
 		m_CoreLogger->set_level(spdlog::level::trace);
 		m_CoreLogger->flush_on(spdlog::level::trace);
 
-		m_ClientLogger = std::make_shared<spdlog::logger>("APP", begin(log_sinks), end(log_sinks));
+		m_ClientLogger = std::make_shared<spdlog::logger>("APP", std::begin(log_sinks), std::end(log_sinks));
 		spdlog::register_logger(m_ClientLogger);
 		m_ClientLogger->set_level(spdlog::level::trace);
 		m_ClientLogger->flush_on(spdlog::level::trace);
@@ -33,6 +35,8 @@ namespace polos
 
 	void Log::Shutdown()
 	{
+	    spdlog::drop("APP");
+	    spdlog::drop("Polos");
 		m_Instance = nullptr;
 	}
 

@@ -1,7 +1,4 @@
-#include <cstring>
-
-#include "utils/alias.h"
-#include "debug/plassert.h"
+#include "polos_pch.h"
 
 #include "stack_allocator.h"
 
@@ -73,7 +70,7 @@ namespace polos::memory
 
 		if (end_of_new_element > iBuffer.bufferSize)
 		{
-			ASSERTSTR(0, "Stack Allocator is out of memory! Returning null. (StackAllocator::align)");
+			ASSERTSTR(0, "Stack Allocator is out of memory! Returning null. (StackAllocator::Align)");
 			return nullptr;
 		}
 

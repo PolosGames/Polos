@@ -1,15 +1,14 @@
+#include "polos_pch.h"
+
 #include "time/timer.h"
 #include "memory/linear_allocator.h"
-
 #include "log.h"
 #include "event_bus.h"
 #include "renderer/renderer.h"
 #include "application.h"
-
 #include "events/engine/engine_stop.h"
 
 #include "engine.h"
-
 
 namespace polos
 {

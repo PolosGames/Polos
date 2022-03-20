@@ -2,8 +2,6 @@
 #ifndef POLOS_UTILS_LOG_H_
 #define POLOS_UTILS_LOG_H_
 
-#include <memory>
-
 #include <spdlog/spdlog.h>
 #include <spdlog/common.h>
 
