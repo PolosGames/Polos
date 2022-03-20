@@ -2,6 +2,7 @@
 **/bin/
 **/bin-int/
 build/
+vsbuild/
 
 # Visual Studio files and folder
 .vs/
@@ -14,6 +15,7 @@ build/
 # Stuff for my directory
 **.snippet
 **.txt
+!CMakeLists.txt
 
 # Ignore this on Sandbox
 **.log
