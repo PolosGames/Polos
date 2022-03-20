@@ -16,7 +16,6 @@
 
 /// Creates a unique name based on a line
 #define PL_ANON_NAME(name) PL_CONCAT(name, __LINE__)
-#define PL
 
 /// Calls function x with parameter y
 #define PL_CALL(x, y) x(y)

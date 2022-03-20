@@ -15,8 +15,10 @@
 #endif
 
 #if PL_HAS_CPP_ATTR(nodiscard)
-#	define PL_NODISCARD [[nodiscard]]
+#	define PL_NODISCARD_MSG(Reason) [[nodiscard(Reason)]]
+#	define PL_NODISCARD             PL_NODISCARD_MSG("")
 #else
+#	define PL_NODISCARD_MSG(Reason)
 #	define PL_NODISCARD
 #endif
 

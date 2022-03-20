@@ -12,11 +12,8 @@
 	Most of this implementation is From Rythe-Interactive/LegionEngine repo.
 */
 
-#include <type_traits>
-#include <utility>
-
 #include "utils/macro_util.h"
-
+#include "utils/concepts.h"
 
 namespace polos
 {
@@ -36,13 +33,20 @@ namespace polos
 
 		PL_RULE_OF_FIVE(Delegate);
 
-		template <typename owner_type, std::enable_if_t<std::is_class_v<owner_type>>>
-		explicit Delegate(owner_type const* const o) noexcept : m_ObjectPointer(const_cast<owner_type*>(o)) {}
+		template <typename owner_type>
+		requires IsClass<owner_type>
+		explicit Delegate(owner_type const* const o) noexcept
+		    : m_ObjectPointer(const_cast<owner_type*>(o))
+		{}
 
-		template <typename owner_type, std::enable_if_t<std::is_class_v<owner_type>>>
-		explicit Delegate(owner_type const& o) noexcept : m_ObjectPointer(const_cast<owner_type*>(&o)) {}
+		template <typename owner_type>
+		requires IsClass<owner_type>
+		explicit Delegate(owner_type const& o) noexcept
+		    : m_ObjectPointer(const_cast<owner_type*>(&o))
+        {}
 
-		template<typename FuncPtr, typename = typename std::enable_if_t<!std::is_same_v<Delegate, typename std::decay_t<FuncPtr>>>>
+		template<typename FuncPtr>
+		requires IsNotSame<typename std::decay_t<FuncPtr>, Delegate>
 		Delegate(FuncPtr func_ptr)
 		{
 			m_ObjectPointer = nullptr;
@@ -144,8 +148,8 @@ namespace polos
 		}
 
 	private:
+		void* m_ObjectPointer;
 		StubType m_StubPointer;
-		void* m_ObjectPointer{};
 	};
 }
 
