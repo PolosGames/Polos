@@ -4,12 +4,19 @@
 
 #include "utils/macro_util.h"
 #include "log.h"
+#include "platform/platform_detection.h"
 
 #ifdef PL_DEBUG
-#	define ASSERTSTR(check, ...)		{ if (!(check)) { LOG_CORE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); __debugbreak();} }
-#	define ASSERT(check)				ASSERTSTR(check, "None")
-#	define STATIC_ASSERT(check)			static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
+#   if defined(POLOS_MSC)
+#       define DEBUGBRK __debugbreak()
+#   elif defined(POLOS_CLANG) || defined(POLOS_GNUC)
+#       define DEBUGBRK asm ("int3")
+#   endif
+#	define ASSERTSTR(check, ...)    { if (!(check)) { LOG_CORE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); DEBUGBRK;} }
+#	define ASSERT(check)            ASSERTSTR(check, "None")
+#	define STATIC_ASSERT(check)	    static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else
+#   define DEBUGBRK
 #	define ASSERTSTR(check, ...)
 #	define ASSERT(check)
 #	define STATIC_ASSERT(check)
