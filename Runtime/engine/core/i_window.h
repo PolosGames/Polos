@@ -33,15 +33,15 @@ namespace polos
 		virtual void Destroy() = 0;
 
 		PL_NODISCARD virtual int32 Width() const = 0;
-        PL_NODISCARD virtual int32 Height() const = 0;
-        
-        PL_NODISCARD virtual bool Vsync() const = 0;
-        virtual void Vsync(bool vsync) = 0;
-        PL_NODISCARD virtual bool IsOpen() const = 0;
-
+		PL_NODISCARD virtual int32 Height() const = 0;
+		
+		PL_NODISCARD virtual bool Vsync() const = 0;
+		virtual void Vsync(bool vsync) = 0;
+		PL_NODISCARD virtual bool IsOpen() const = 0;
+		
 		virtual void Update() = 0;
-        
-        PL_NODISCARD static IWindow* NewWindow(const window_props& props = window_props());
+		
+		PL_NODISCARD static IWindow* NewWindow(const window_props& props = window_props());
 	};
 }
 

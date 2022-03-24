@@ -22,6 +22,7 @@ set(Runtime_core_HEADERS
     engine/core/log.h
     engine/core/event_bus.h
     engine/core/entry_point.h
+    engine/core/i_window.h
 )
 
 set(Runtime_core_containers_HEADERS
