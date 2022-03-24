@@ -17,34 +17,34 @@ namespace polos
 		time::Timer::OnStartUp();
 
 		// Allocate enough memory for the whole engine.
-		size_t needed_memory =  0
+		size_t p_needed_memory = 512
 			+ sizeof(Log)
 			+ sizeof(EventBus)
 			+ sizeof(Renderer)
-			;
+		;
 			
-		memory::LinearAllocator engine_memory(needed_memory);
+		memory::LinearAllocator p_engine_memory(p_needed_memory);
 
 		/// Allocate memory for the subsystems
-		Log*      log       = engine_memory.New<Log>();
-		EventBus* event_bus = engine_memory.New<EventBus>();
-		Renderer* renderer  = engine_memory.New<Renderer>();
+		Log*      p_log       = p_engine_memory.New<Log>();
+		EventBus* p_event_bus = p_engine_memory.New<EventBus>();
+		Renderer* p_renderer  = p_engine_memory.New<Renderer>();
 
 		/// Startup for subsystems
-		log      ->Startup();
-		event_bus->Startup();
-		renderer ->Startup();
+		p_log      ->Startup();
+		p_event_bus->Startup();
+		p_renderer ->Startup();
 
-		Application* app = CreateApplication(nullptr);
-		app->Run();
+		Application* pApp = CreateApplication(nullptr);
+		pApp->Run();
 
 		/// Shutdown sequence
-		renderer ->Shutdown();
-		event_bus->Shutdown();
-		log      ->Shutdown();
+		p_renderer ->Shutdown();
+		p_event_bus->Shutdown();
+		p_log      ->Shutdown();
 
-		engine_memory.Clear();
+		p_engine_memory.Clear();
 
-		delete app;
+		delete pApp;
 	}
 } // namespace polos
