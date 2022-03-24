@@ -16,7 +16,7 @@ namespace polos
 
 	void Application::Run()
 	{
-        while (m_IsRunning)
+		while (m_IsRunning)
 		{
 			m_WindowInstance->Update();
 		}

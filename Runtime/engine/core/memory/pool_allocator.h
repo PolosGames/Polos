@@ -114,7 +114,7 @@ namespace polos::memory
         
         PL_NODISCARD size_t Capacity() const
         {
-            return iBuffer.bufferSize / m_ChunkSize;
+            return m_ChunkAmount;
         }
         
         PL_NODISCARD size_t ByteCapacity() const
@@ -127,7 +127,7 @@ namespace polos::memory
             return reinterpret_cast<T*>(iBuffer.buffer);
         }
         
-        void Free(void* ptr)
+        void Free(void*& ptr)
         {
             PROFILE_FUNC();
             ASSERT(!(iBuffer.buffer <= ptr && ptr < iBuffer.buffer + iBuffer.bufferSize));
@@ -135,6 +135,7 @@ namespace polos::memory
             static_cast<T*>( ptr )->~T();
             auto* node     = new (ptr) free_node{ m_FreeListHead };
             m_FreeListHead = node;
+            ptr = nullptr;
         }
         
         void Clear()
