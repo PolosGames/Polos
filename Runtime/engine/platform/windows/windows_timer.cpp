@@ -1,6 +1,5 @@
 #include "polos_pch.h"
 
-#include "platform_detection.h"
 #ifdef POLOS_WIN
 
 #include "time/timer.h"

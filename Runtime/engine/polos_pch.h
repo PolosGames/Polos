@@ -1,3 +1,10 @@
+#include "platform_detection.h"
+
+#if defined(POLOS_WIN)
+#	include <Windows.h>
+#	include <winnt.h>
+#endif
+
 #include <algorithm>
 #include <cstring>
 #include <cstdint>
@@ -12,6 +19,7 @@
 #include <string>
 
 #include <vector>
+#include <memory_resource>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>

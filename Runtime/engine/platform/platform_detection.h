@@ -6,9 +6,6 @@
 #if defined(_WIN64)
 #	define POLOS_WIN
 
-#	include <Windows.h>
-#	include <winnt.h>
-
 #elif defined(__linux__)
 #	if defined(__ANDROID__)
 #		define POLOS_ANDROID
