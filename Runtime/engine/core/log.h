@@ -98,7 +98,7 @@ namespace polos
 
 #include "utils/macro_util.h"
 
-#define LOG_VAR_STR(Str, Variable)		LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
-#define LOG_VAR(Variable)				LOG_VAR_STR("value of {0} = {1}", Variable)
+#define LOG_VAR_STR(Str, Variable)   LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
+#define LOG_VAR(Variable)            LOG_VAR_STR("value of {0} = {1}", Variable)
 
 #endif /* POLOS_UTILS_LOG_H_ */
