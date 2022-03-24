@@ -2,7 +2,6 @@
 
 #include "event_bus.h"
 #include "events/events.h"
-#include "containers/dynamic_array.h"
 
 #include "application.h"
 
@@ -17,8 +16,6 @@ namespace polos
 
 	void Application::Run()
 	{
-        containers::DynamicArray<int> da;
-        
         while (m_IsRunning)
 		{
 			m_WindowInstance->Update();
