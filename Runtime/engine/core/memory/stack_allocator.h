@@ -7,40 +7,40 @@
 
 namespace polos::memory
 {
-	class StackAllocator
-	{
-		struct stack_header
-		{
-			uint64 prev_offset; /// Stores previous element's header's start
-		};
+    class StackAllocator
+    {
+        struct stack_header
+        {
+            uint64 prev_offset; /// Stores previous element's header's start
+        };
     public:
         InternalBuffer iBuffer;
-	public:
-		explicit StackAllocator(uint64 size);
-		~StackAllocator();
+    public:
+        explicit StackAllocator(uint64 size);
+        ~StackAllocator();
         
         StackAllocator(StackAllocator&& other) noexcept;
         StackAllocator& operator=(StackAllocator&& rhs) noexcept;
         
         PL_NO_COPY(StackAllocator)
 
-		template<typename T, typename... Args>
-		T* Push(Args&&... args);
+        template<typename T, typename... Args>
+        T* Push(Args&&... args);
 
-		template<typename T>
-		T* PushArr(uint64 count);
-		
-		byte* Data();
+        template<typename T>
+        T* PushArr(uint64 count);
+        
+        byte* Data();
 
-		void Pop();
-		void Clear();
-	private:
+        void Pop();
+        void Clear();
+    private:
         PL_NODISCARD void* align(uint64 size);
-	private:
-		uint64  m_Offset;
-		uint64  m_PrevOffset;
-		uintptr m_Bottom;
-	};
+    private:
+        uint64  m_Offset;
+        uint64  m_PrevOffset;
+        uintptr m_Bottom;
+    };
 } // namespace polos
 
 #include "stack_allocator.inl"

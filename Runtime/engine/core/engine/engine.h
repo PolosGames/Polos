@@ -5,18 +5,18 @@
 
 namespace polos
 {
-	class Engine
-	{
-		using Subscriber = void(*)(void);
-	public:
-		static void Run();
+    class Engine
+    {
+        using Subscriber = void(*)(void);
+    public:
+        static void Run();
 
-		static Engine& Instance()
-		{
-			static Engine e;
-			return e;
-		}
-	};
+        static Engine& Instance()
+        {
+            static Engine e;
+            return e;
+        }
+    };
 } // namespace polos
 
 #endif /* POLOS_CORE_ENGINE_H_ */

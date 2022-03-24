@@ -4,17 +4,17 @@
 
 namespace polos
 {
-	class Renderer
-	{
-	public:
-		Renderer() = default;
-		~Renderer() = default;
+    class Renderer
+    {
+    public:
+        Renderer() = default;
+        ~Renderer() = default;
 
-		void Startup();
-		void Shutdown();
-	private:
-		static Renderer* m_Instance;
-	};
+        void Startup();
+        void Shutdown();
+    private:
+        static Renderer* m_Instance;
+    };
 }
 
 #endif /* POLOS_RENDERER_RENDERER_H */

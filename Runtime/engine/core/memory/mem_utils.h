@@ -12,30 +12,30 @@ namespace polos::memory
         size_t bufferSize;
     };
     
-	class MemUtils
-	{
-	public:
-		static uint32 constexpr kMemoryAlignment = 2 * sizeof(void*);
+    class MemUtils
+    {
+    public:
+        static uint32 constexpr kMemoryAlignment = 2 * sizeof(void*);
 
-		static bool IsPowerOfTwo(uintptr p);
-		static bool IsAligned(uintptr p);
-		static uint32 CalculatePadding(uintptr p);
-	};
+        static bool IsPowerOfTwo(uintptr p);
+        static bool IsAligned(uintptr p);
+        static uint32 CalculatePadding(uintptr p);
+    };
 
-	inline bool MemUtils::IsPowerOfTwo(uintptr p)
-	{
-		return (p & (p - 1)) == 0;
-	}
+    inline bool MemUtils::IsPowerOfTwo(uintptr p)
+    {
+        return (p & (p - 1)) == 0;
+    }
 
-	inline bool MemUtils::IsAligned(uintptr p)
-	{
-		return (p & (kMemoryAlignment - 1)) == 0;
-	}
+    inline bool MemUtils::IsAligned(uintptr p)
+    {
+        return (p & (kMemoryAlignment - 1)) == 0;
+    }
 
-	inline uint32 MemUtils::CalculatePadding(uintptr p)
-	{
-		return kMemoryAlignment - (p & (kMemoryAlignment - 1));
-	}
+    inline uint32 MemUtils::CalculatePadding(uintptr p)
+    {
+        return kMemoryAlignment - (p & (kMemoryAlignment - 1));
+    }
 } // namespace polos
 
 #endif /* POLOS_CORE_MEMORY_MEMUTILS_H_ */

@@ -11,20 +11,20 @@
 
 namespace polos
 {
-	class Application
-	{
-	public:
-		Application();
+    class Application
+    {
+    public:
+        Application();
 
-		void Run();
-	private:
-		void on_window_close(window_close& e);
-	private:
-		std::unique_ptr<IWindow> m_WindowInstance;
-		bool                     m_IsRunning;
-	};
+        void Run();
+    private:
+        void on_window_close(window_close& e);
+    private:
+        std::unique_ptr<IWindow> m_WindowInstance;
+        bool                     m_IsRunning;
+    };
 
-	Application* CreateApplication(void* ptr);
+    Application* CreateApplication(void* ptr);
 } // namespace polos
 
 #endif /* POLOS_CORE_APPLICATION_H_ */

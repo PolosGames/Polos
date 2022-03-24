@@ -9,20 +9,20 @@
 
 namespace polos::time
 {
-	class Timer
-	{
-		using Period = std::micro;
-	public:
-		PL_DELETE_COPY_MOVE_CTOR(Timer)
-	
-		static void  OnStartUp();
-	
-		static int64 Now();
-	private:
-		static int64 m_Freq;
-		
-		Timer();
-	};
+    class Timer
+    {
+        using Period = std::micro;
+    public:
+        PL_DELETE_COPY_MOVE_CTOR(Timer)
+    
+        static void  OnStartUp();
+    
+        static int64 Now();
+    private:
+        static int64 m_Freq;
+        
+        Timer();
+    };
 } // namespace polos::core::time
 
 #endif /* POLOS_CORE_TIME_CLOCK_H_ */

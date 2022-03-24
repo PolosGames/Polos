@@ -7,14 +7,14 @@
 
 namespace polos
 {
-	class window_maximize : public event<window_maximize>
-	{
-	public:
-		int32 maximized;
+    class window_maximize : public event<window_maximize>
+    {
+    public:
+        int32 maximized;
 
-		window_maximize() = default;
-		window_maximize(int32 maximized) : maximized(maximized) {}
-	};
+        window_maximize() = default;
+        window_maximize(int32 maximized) : maximized(maximized) {}
+    };
 }
 
 #endif /* POLOS_EVENTS_WINDOW_WINDOWMAXIMIZE_H */

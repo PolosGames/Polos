@@ -4,15 +4,15 @@
 
 namespace polos
 {
-	Renderer* Renderer::m_Instance;
+    Renderer* Renderer::m_Instance;
 
-	void Renderer::Startup()
-	{
-		m_Instance = this;
-	}
-	
-	void Renderer::Shutdown()
-	{
-		m_Instance = nullptr;
-	}
+    void Renderer::Startup()
+    {
+        m_Instance = this;
+    }
+    
+    void Renderer::Shutdown()
+    {
+        m_Instance = nullptr;
+    }
 }

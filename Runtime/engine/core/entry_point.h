@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv)
 {
-	polos::Engine::Run();
+    polos::Engine::Run();
 }
 
 #endif /* POLOS_CORE_ENTRYPOINT_H */

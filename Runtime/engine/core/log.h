@@ -9,78 +9,78 @@
 
 namespace polos
 {
-	enum class logger_type
-	{
-		kLoggerCore,
-		kLoggerClient,
-	};
+    enum class logger_type
+    {
+        kLoggerCore,
+        kLoggerClient,
+    };
 
-	class Log
-	{
-	public:
-		Log() noexcept = default;
-		PL_DELETE_COPY_MOVE_CTOR(Log);
+    class Log
+    {
+    public:
+        Log() noexcept = default;
+        PL_DELETE_COPY_MOVE_CTOR(Log);
 
-		void Startup();
-		void Shutdown();
+        void Startup();
+        void Shutdown();
 
-		template<typename ...Args>
-		void critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        template<typename ...Args>
+        void critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename ...Args>
-		void error(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        template<typename ...Args>
+        void error(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename ...Args>
-		void warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        template<typename ...Args>
+        void warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename ...Args>
-		void info(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        template<typename ...Args>
+        void info(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		template<typename ...Args>
-		void trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        template<typename ...Args>
+        void trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
-		static Log& Instance()
-		{
-			return *m_Instance;
-		}
-	private:
-		static Log* m_Instance;
+        static Log& Instance()
+        {
+            return *m_Instance;
+        }
+    private:
+        static Log* m_Instance;
 
-		spdlog::logger& pick_logger(logger_type type);
-	private:
-		std::shared_ptr<spdlog::logger> m_CoreLogger;
-		std::shared_ptr<spdlog::logger> m_ClientLogger;
-	};
+        spdlog::logger& pick_logger(logger_type type);
+    private:
+        std::shared_ptr<spdlog::logger> m_CoreLogger;
+        std::shared_ptr<spdlog::logger> m_ClientLogger;
+    };
 
-	template<typename ...Args>
-	inline void Log::critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-	{
-		pick_logger(type).critical(fmt, std::forward<Args>(args)...);
-	}
+    template<typename ...Args>
+    inline void Log::critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+    {
+        pick_logger(type).critical(fmt, std::forward<Args>(args)...);
+    }
 
-	template<typename ...Args>
-	inline void Log::error(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-	{
-		pick_logger(type).error(fmt, std::forward<Args>(args)...);
-	}
+    template<typename ...Args>
+    inline void Log::error(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+    {
+        pick_logger(type).error(fmt, std::forward<Args>(args)...);
+    }
 
-	template<typename ...Args>
-	inline void Log::warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-	{
-		pick_logger(type).warn(fmt, std::forward<Args>(args)...);
-	}
+    template<typename ...Args>
+    inline void Log::warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+    {
+        pick_logger(type).warn(fmt, std::forward<Args>(args)...);
+    }
 
-	template<typename ...Args>
-	inline void Log::info(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-	{
-		pick_logger(type).info(fmt, std::forward<Args>(args)...);
-	}
+    template<typename ...Args>
+    inline void Log::info(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+    {
+        pick_logger(type).info(fmt, std::forward<Args>(args)...);
+    }
 
-	template<typename ...Args>
-	inline void Log::trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-	{
-		pick_logger(type).trace(fmt, std::forward<Args>(args)...);
-	}
+    template<typename ...Args>
+    inline void Log::trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
+    {
+        pick_logger(type).trace(fmt, std::forward<Args>(args)...);
+    }
 
 } // namespace polos
 

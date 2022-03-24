@@ -7,14 +7,14 @@
 
 namespace polos
 {
-	class mouse_button_press : public event<mouse_button_press>
-	{
-	public:
-		int32 button;
+    class mouse_button_press : public event<mouse_button_press>
+    {
+    public:
+        int32 button;
 
-		mouse_button_press() = default;
-		mouse_button_press(int32 button) : button(button) {}
-	};
+        mouse_button_press() = default;
+        mouse_button_press(int32 button) : button(button) {}
+    };
 }
 
 #endif /* POLOS_EVENTS_INPUT_MOUSEBUTTONPRESS_H */

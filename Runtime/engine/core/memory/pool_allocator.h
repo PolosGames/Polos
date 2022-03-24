@@ -14,18 +14,18 @@ namespace polos::memory
              IsCopyAssignable<T>       &&
              IsMoveConstructable<T>    &&
              IsMoveAssignable<T>
-	class PoolAllocator
-	{
-		struct free_node
-		{
-			free_node* next;
-		};
+    class PoolAllocator
+    {
+        struct free_node
+        {
+            free_node* next;
+        };
     public:
         InternalBuffer iBuffer;
-	public:
+    public:
         PL_NO_COPY(PoolAllocator);
         
-	    PoolAllocator()
+        PoolAllocator()
             : iBuffer({nullptr, 0}),
               m_FreeListHead(nullptr),
               m_ChunkSize{},
@@ -33,7 +33,7 @@ namespace polos::memory
         {
         }
         
-		explicit PoolAllocator(size_t amount)
+        explicit PoolAllocator(size_t amount)
             : iBuffer{static_cast<byte*>(std::malloc(sizeof(T) * amount)), sizeof(T) * amount},
               m_ChunkSize{sizeof(T)},
               m_ChunkAmount{amount}
@@ -43,15 +43,15 @@ namespace polos::memory
             Clear();
         }
         
-		~PoolAllocator()
+        ~PoolAllocator()
         {
             if(iBuffer.buffer != nullptr)
                 std::free(iBuffer.buffer);
             iBuffer.buffer       = nullptr;
             m_FreeListHead = nullptr;
         }
-		
-		PoolAllocator(PoolAllocator&& other) noexcept
+        
+        PoolAllocator(PoolAllocator&& other) noexcept
             : iBuffer       (std::exchange(other.iBuffer, {nullptr, 0})),
               m_FreeListHead(std::exchange(other.m_FreeListHead, nullptr)),
               m_ChunkSize   (std::exchange(other.m_ChunkSize, 0)),
@@ -59,7 +59,7 @@ namespace polos::memory
         {
         }
         
-		PoolAllocator& operator=(PoolAllocator&& rhs) noexcept
+        PoolAllocator& operator=(PoolAllocator&& rhs) noexcept
         {
             if(&rhs == this) return *this;
             iBuffer        = std::exchange(rhs.iBuffer, {nullptr, 0});
@@ -69,7 +69,7 @@ namespace polos::memory
             return *this;
         }
 
-		void Initialize(size_t amount)
+        void Initialize(size_t amount)
         {
             PROFILE_FUNC();
             m_ChunkSize        = sizeof(T);
@@ -83,7 +83,7 @@ namespace polos::memory
             Clear();
         }
         
-		void Resize(size_t amount)
+        void Resize(size_t amount)
         {
             if(amount <= m_ChunkAmount)
             {
@@ -176,10 +176,10 @@ namespace polos::memory
             return node;
         }
     private:
-		free_node* m_FreeListHead;
-		size_t     m_ChunkSize;
+        free_node* m_FreeListHead;
+        size_t     m_ChunkSize;
         size_t     m_ChunkAmount;
-	};
+    };
 } // namespace polos::memory
 
 #endif /* POLOS_CORE_MEMORY_POOLALLOCATOR_H_ */
