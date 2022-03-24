@@ -85,16 +85,16 @@ namespace polos
 } // namespace polos
 
 #define LOG_CORE_CRITICAL(...) ::polos::Log::Instance().critical(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_ERROR(...) ::polos::Log::Instance().error(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_WARN(...)  ::polos::Log::Instance().warn(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_INFO(...)  ::polos::Log::Instance().info(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_TRACE(...)  ::polos::Log::Instance().trace(::polos::logger_type::kLoggerCore, __VA_ARGS__)
+#define LOG_CORE_ERROR(...)    ::polos::Log::Instance().error(::polos::logger_type::kLoggerCore, __VA_ARGS__)
+#define LOG_CORE_WARN(...)     ::polos::Log::Instance().warn(::polos::logger_type::kLoggerCore, __VA_ARGS__)
+#define LOG_CORE_INFO(...)     ::polos::Log::Instance().info(::polos::logger_type::kLoggerCore, __VA_ARGS__)
+#define LOG_CORE_TRACE(...)    ::polos::Log::Instance().trace(::polos::logger_type::kLoggerCore, __VA_ARGS__)
 
 #define LOG_CRITICAL(...) ::polos::Log::Instance().critical(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_ERROR(...) ::polos::Log::Instance().error(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_WARN(...)  ::polos::Log::Instance().warn(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_INFO(...)  ::polos::Log::Instance().info(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_TRACE(...)  ::polos::Log::Instance().trace(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_ERROR(...)    ::polos::Log::Instance().error(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_WARN(...)     ::polos::Log::Instance().warn(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_INFO(...)     ::polos::Log::Instance().info(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_TRACE(...)    ::polos::Log::Instance().trace(::polos::logger_type::kLoggerClient, __VA_ARGS__)
 
 #include "utils/macro_util.h"
 
