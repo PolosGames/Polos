@@ -13,32 +13,32 @@ namespace polos
 {
     static void DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* userParam)
     {
-        std::string message_source;
-        std::string message_type;
-        std::string message_severity;
-
-        switch (source)
-        {
-        case GL_DEBUG_SOURCE_API:             message_source = "OpenGL API";      break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   message_source = "Window System";   break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER: message_source = "Shader Compiler"; break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY:     message_source = "Third Party";     break;
-        case GL_DEBUG_SOURCE_APPLICATION:     message_source = "User Created App"; break;
-        case GL_DEBUG_SOURCE_OTHER:           message_source = "Unknown";         break;
-        }
-
-        switch (type)
-        {
-        case GL_DEBUG_TYPE_ERROR:				message_type = "Error";					break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	message_type = "Deprecated Behaviour";	break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	message_type = "Undefined Behaviour";	break;
-        case GL_DEBUG_TYPE_PORTABILITY:			message_type = "Portability Issue";		break;
-        case GL_DEBUG_TYPE_PERFORMANCE:			message_type = "Performance Issue";		break;
-        case GL_DEBUG_TYPE_MARKER:				message_type = "Marker";				break;
-        case GL_DEBUG_TYPE_PUSH_GROUP:			message_type = "Push Group";			break;
-        case GL_DEBUG_TYPE_POP_GROUP:			message_type = "Pop Group";				break;
-        case GL_DEBUG_TYPE_OTHER:				message_type = "Unknown";				break;
-        }
+        const std::string message_source = [source] {
+            switch (source)
+            {
+                case GL_DEBUG_SOURCE_API:             return "OpenGL API";
+                case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "Window System";
+                case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
+                case GL_DEBUG_SOURCE_THIRD_PARTY:     return "Third Party";
+                case GL_DEBUG_SOURCE_APPLICATION:     return "User Created App";
+                default:                              return "Unknown";
+            }
+        }();
+        
+        const std::string message_type = [type] {
+            switch (type)
+            {
+                case GL_DEBUG_TYPE_ERROR:				return "Error";
+                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	return "Deprecated Behaviour";
+                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	return "Undefined Behaviour";
+                case GL_DEBUG_TYPE_PORTABILITY:			return "Portability Issue";
+                case GL_DEBUG_TYPE_PERFORMANCE:			return "Performance Issue";
+                case GL_DEBUG_TYPE_MARKER:				return "Marker";
+                case GL_DEBUG_TYPE_PUSH_GROUP:			return "Push Group";
+                case GL_DEBUG_TYPE_POP_GROUP:			return "Pop Group";
+                default:                                return "Unknown";
+            }
+        }();
 
         switch (severity)
         {
