@@ -24,12 +24,15 @@ namespace polos::memory
     template<typename T>
     inline void LinearAllocator::Delete(T* ptr)
     {
-        delete ptr;
+        ptr->~T();
     }
     
     template<typename T>
-    inline void LinearAllocator::DeleteArr(T* ptr)
+    inline void LinearAllocator::DeleteArr(T* ptr, size_t size)
     {
-        delete[] ptr;
+        for(size_t i = 0; i < size; i++)
+        {
+            ptr[i].~T();
+        }
     }
 }

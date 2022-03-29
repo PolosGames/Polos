@@ -39,7 +39,7 @@ namespace polos::memory
         void Delete(T* ptr);
 
         template<typename T>
-        void DeleteArr(T* ptr);
+        void DeleteArr(T* ptr, size_t size);
         
         PL_NODISCARD byte*  Data() const;
         PL_NODISCARD size_t Capacity() const;

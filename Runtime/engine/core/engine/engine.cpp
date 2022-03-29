@@ -35,16 +35,18 @@ namespace polos
         p_event_bus->Startup();
         p_renderer ->Startup();
 
-        Application* pApp = CreateApplication(nullptr);
-        pApp->Run();
+        Application* p_app = CreateApplication(nullptr);
+        p_app->Run();
 
         /// Shutdown sequence
         p_renderer ->Shutdown();
         p_event_bus->Shutdown();
         p_log      ->Shutdown();
-
-        p_engine_memory.Clear();
-
-        delete pApp;
+        
+        p_engine_memory.Delete(p_renderer);
+        p_engine_memory.Delete(p_event_bus);
+        p_engine_memory.Delete(p_log);
+        
+        delete p_app;
     }
 } // namespace polos
