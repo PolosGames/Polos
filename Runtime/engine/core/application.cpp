@@ -2,6 +2,7 @@
 
 #include "event_bus.h"
 #include "events/events.h"
+#include "io/file.h"
 
 #include "application.h"
 
@@ -16,6 +17,8 @@ namespace polos
 
     void Application::Run()
     {
+        File f(R"path(C:\Users\rep.KAYRAPC\Desktop\txt\Cover Letter.txt)path", kRead);
+        LOG_CORE_INFO("{}", f.file_name);
         while (m_IsRunning)
         {
             m_WindowInstance->Update();

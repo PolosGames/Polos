@@ -1,12 +1,11 @@
 #include "polos_pch.h"
 
+#include "log.h"
 #include "time/timer.h"
 #include "memory/linear_allocator.h"
-#include "log.h"
 #include "event_bus.h"
 #include "renderer/renderer.h"
 #include "application.h"
-#include "events/engine/engine_stop.h"
 
 #include "engine.h"
 
@@ -26,9 +25,9 @@ namespace polos
         memory::LinearAllocator p_engine_memory(p_needed_memory);
 
         /// Allocate memory for the subsystems
-        Log*      p_log       = p_engine_memory.New<Log>();
-        EventBus* p_event_bus = p_engine_memory.New<EventBus>();
-        Renderer* p_renderer  = p_engine_memory.New<Renderer>();
+        auto* p_log       = p_engine_memory.New<Log>();
+        auto* p_event_bus = p_engine_memory.New<EventBus>();
+        auto* p_renderer  = p_engine_memory.New<Renderer>();
 
         /// Startup for subsystems
         p_log      ->Startup();

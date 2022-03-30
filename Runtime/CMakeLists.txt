@@ -13,9 +13,9 @@ set(Runtime_SOURCES
     "engine/renderer/renderer.cpp"
     "engine/renderer/context/opengl/opengl_context.cpp"
     "engine/renderer/context/opengl/opengl_shader.cpp"
-    "engine/renderer/context/opengl/opengl_vbo.cpp"
+    "engine/renderer/context/opengl/opengl_vao.cpp"
     "engine/window/x_plat_window.cpp"
-)
+    engine/core/io/file.cpp)
 
 set(Runtime_core_HEADERS
     engine/core/application.h
@@ -57,6 +57,11 @@ set(Runtime_core_events_HEADERS
     engine/core/events/event.h
 )
 
+set(Runtime_core_io_HEADERS
+    engine/core/io/filesystem.h
+    engine/core/io/file.h
+)
+
 set(Runtime_core_memory_HEADERS
     engine/core/memory/mem_utils.h
     engine/core/memory/linear_allocator.h
@@ -88,7 +93,7 @@ set(Runtime_renderer_HEADERS
 set(Runtime_renderer_context_HEADERS
     engine/renderer/context/graphics_context.h
     engine/renderer/context/shader.h
-    engine/renderer/context/vbo.h
+    engine/renderer/context/vao.h
 )
 
 set(Runtime_window_HEADERS
@@ -101,6 +106,7 @@ set(Runtime_HEADERS
         ${Runtime_core_debug_HEADERS}
         ${Runtime_core_engine_HEADERS}
         ${Runtime_core_events_HEADERS}
+        ${Runtime_core_io_HEADERS}
         ${Runtime_core_memory_HEADERS}
         ${Runtime_core_time_HEADERS}
         ${Runtime_core_utils_HEADERS}

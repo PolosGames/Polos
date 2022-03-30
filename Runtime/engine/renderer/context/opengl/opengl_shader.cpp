@@ -4,6 +4,8 @@
 
 #include <glad/glad.h>
 
+#include "io/file.h"
+
 #include "context/shader.h"
 
 namespace polos
@@ -23,31 +25,18 @@ namespace polos
         std::string vertex_code;
         std::string fragment_code;
 
-        std::ifstream vertex_shader_file{};
-        std::ifstream fragment_shader_file{};
-
         {
-            vertex_shader_file.open(vert_file);
-            ASSERTSTR(!vertex_shader_file.fail(), "Vertex Shader file could not be opened.");
-
-            fragment_shader_file.open(frag_file);
-            ASSERTSTR(!fragment_shader_file.fail(), "Vertex Shader file could not be opened.");
-
+            File vertex_shader_file(vert_file, kRead);
+            File fragment_shader_file(frag_file, kRead);
+            
             std::stringstream vertex_shader_stream, fragment_shader_stream;
 
-            // read file's buffer contents into streams
-            vertex_shader_stream << vertex_shader_file.rdbuf();
-            fragment_shader_stream << fragment_shader_file.rdbuf();
-
-            vertex_shader_file.close();
-            fragment_shader_file.close();
-
             // convert stream into string
-            vertex_code = vertex_shader_stream.str();
-            fragment_code = fragment_shader_stream.str();
+            vertex_code   = vertex_shader_file.Read();
+            fragment_code = fragment_shader_file.Read();
         }
 
-        cstring vertex_src = vertex_code.c_str();
+        cstring vertex_src   = vertex_code.c_str();
         cstring fragment_src = fragment_code.c_str();
 
         GLuint vertex_shader;
