@@ -22,19 +22,15 @@ namespace polos
 
     void Shader::Load(cstring vert_file, cstring frag_file)
     {
-        std::string vertex_code;
-        std::string fragment_code;
-
-        {
-            File vertex_shader_file(vert_file, kRead);
-            File fragment_shader_file(frag_file, kRead);
-            
-            std::stringstream vertex_shader_stream, fragment_shader_stream;
-
-            // convert stream into string
-            vertex_code   = vertex_shader_file.Read();
-            fragment_code = fragment_shader_file.Read();
-        }
+        const std::string vertex_code = [&vert_file] {
+            File file(vert_file, kRead);
+            return file.Read();
+        }();
+        
+        const std::string fragment_code = [&frag_file] {
+            File file(frag_file, kRead);
+            return file.Read();
+        }();
 
         cstring vertex_src   = vertex_code.c_str();
         cstring fragment_src = fragment_code.c_str();
