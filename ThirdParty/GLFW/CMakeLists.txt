@@ -24,7 +24,6 @@ set(GLFW_BINARY_DIR ${CMAKE_BINARY_DIR}/ThirdParty/GLFW)
 set(glfw_HEADERS
     ${GLFW_SOURCE_DIR}/src/internal.h
     ${GLFW_SOURCE_DIR}/src/mappings.h
-    "${GLFW_BINARY_DIR}/src/glfw_config.h"
     "${GLFW_SOURCE_DIR}/include/GLFW/glfw3.h"
     "${GLFW_SOURCE_DIR}/include/GLFW/glfw3native.h"
 )
