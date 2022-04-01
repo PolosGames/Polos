@@ -4,7 +4,7 @@
 
 namespace polos
 {
-    int64 Hashit(char const* const str)
+    int64 Hashit(cstring const str)
     {
         int32 p = 31;
         int32 m = 1'000'000'009;

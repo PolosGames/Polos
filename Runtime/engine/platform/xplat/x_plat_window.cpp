@@ -1,8 +1,8 @@
 #include "polos_pch.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
-#include "core/events/window/window_events.h"
-#include "core/events/input/input_events.h"
+#include "events/window/window_events.h"
+#include "events/input/input_events.h"
 #include "core/event_bus.h"
 
 #include "x_plat_window.h"

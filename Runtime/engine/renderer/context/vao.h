@@ -3,7 +3,7 @@
 #ifndef POLOS_CONTEXT_VBO_H
 #define POLOS_CONTEXT_VBO_H
 
-#include "core/utils/alias.h"
+#include "utils/alias.h"
 
 namespace polos
 {

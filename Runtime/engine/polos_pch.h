@@ -24,8 +24,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "core/debug/plassert.h"
-#include "core/debug/profiling.h"
-#include "core/utils/alias.h"
-#include "core/utils/feature.h"
+#include "debug/plassert.h"
+#include "debug/profiling.h"
+#include "utils/alias.h"
+#include "utils/feature.h"
 #include "core/log.h"

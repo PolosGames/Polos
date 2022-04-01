@@ -3,7 +3,7 @@
 #ifndef POLOS_WINDOW_XPLATWINDOW_H
 #define POLOS_WINDOW_XPLATWINDOW_H
 
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 #include "core/i_window.h"
 #include "context/graphics_context.h"

@@ -4,18 +4,18 @@ set(Runtime_SOURCES
     "engine/core/application.cpp"
     "engine/core/event_bus.cpp"
     "engine/core/log.cpp"
-    "engine/core/engine/engine.cpp"
-    "engine/core/memory/linear_allocator.cpp"
-    "engine/core/memory/stack_allocator.cpp"
-    "engine/core/time/scope_timer.cpp"
-    "engine/core/utils/type_util.cpp"
+    "engine/engine/engine.cpp"
+    "engine/memory/linear_allocator.cpp"
+    "engine/memory/stack_allocator.cpp"
+    "engine/time/scope_timer.cpp"
+    "engine/utils/type_util.cpp"
     "engine/platform/windows/windows_timer.cpp"
     "engine/renderer/renderer.cpp"
     "engine/renderer/context/opengl/opengl_context.cpp"
     "engine/renderer/context/opengl/opengl_shader.cpp"
     "engine/renderer/context/opengl/opengl_vao.cpp"
-    "engine/window/x_plat_window.cpp"
-    engine/core/io/file.cpp)
+    "engine/platform/xplat/x_plat_window.cpp"
+    engine/io/file.cpp)
 
 set(Runtime_core_HEADERS
     engine/core/application.h
@@ -26,61 +26,61 @@ set(Runtime_core_HEADERS
 )
 
 set(Runtime_core_containers_HEADERS
-    engine/core/containers/delegate.h
-    engine/core/containers/dynamic_array.h
-    engine/core/containers/containers.h)
+    engine/containers/delegate.h
+    engine/containers/dynamic_array.h
+    engine/containers/containers.h)
 
 set(Runtime_core_debug_HEADERS
-    engine/core/debug/plassert.h
-    engine/core/debug/profiling.h
+    engine/debug/plassert.h
+    engine/debug/profiling.h
 )
 
 set(Runtime_core_engine_HEADERS
-    engine/core/engine/engine.h
+    engine/engine/engine.h
 )
 
 set(Runtime_core_events_HEADERS
-    engine/core/events/engine/engine_stop.h
-    engine/core/events/input/key_press.h
-    engine/core/events/input/key_release.h
-    engine/core/events/input/mouse_button_press.h
-    engine/core/events/input/mouse_button_release.h
-    engine/core/events/input/mouse_move.h
-    engine/core/events/input/mouse_scroll.h
-    engine/core/events/window/window_close.h
-    engine/core/events/window/window_focus.h
-    engine/core/events/window/window_framebuffer_size.h
-    engine/core/events/window/window_iconify.h
-    engine/core/events/window/window_maximize.h
-    engine/core/events/window/window_position.h
-    engine/core/events/window/window_resize.h
-    engine/core/events/event.h
+    engine/events/engine/engine_stop.h
+    engine/events/input/key_press.h
+    engine/events/input/key_release.h
+    engine/events/input/mouse_button_press.h
+    engine/events/input/mouse_button_release.h
+    engine/events/input/mouse_move.h
+    engine/events/input/mouse_scroll.h
+    engine/events/window/window_close.h
+    engine/events/window/window_focus.h
+    engine/events/window/window_framebuffer_size.h
+    engine/events/window/window_iconify.h
+    engine/events/window/window_maximize.h
+    engine/events/window/window_position.h
+    engine/events/window/window_resize.h
+    engine/events/event.h
 )
 
 set(Runtime_core_io_HEADERS
-    engine/core/io/filesystem.h
-    engine/core/io/file.h
+    engine/io/filesystem.h
+    engine/io/file.h
 )
 
 set(Runtime_core_memory_HEADERS
-    engine/core/memory/mem_utils.h
-    engine/core/memory/linear_allocator.h
-    engine/core/memory/stack_allocator.h
-    engine/core/memory/pool_allocator.h
+    engine/memory/mem_utils.h
+    engine/memory/linear_allocator.h
+    engine/memory/stack_allocator.h
+    engine/memory/pool_allocator.h
 )
 
 set(Runtime_core_time_HEADERS
-    engine/core/time/timer.h
-    engine/core/time/scope_timer.h
+    engine/time/timer.h
+    engine/time/scope_timer.h
 )
 
 set(Runtime_core_utils_HEADERS
-    engine/core/utils/alias.h
-    engine/core/utils/type_util.h
-    engine/core/utils/feature.h
-    engine/core/utils/macro_util.h
-    engine/core/utils/meta.h
-    engine/core/utils/concepts.h)
+    engine/utils/alias.h
+    engine/utils/type_util.h
+    engine/utils/feature.h
+    engine/utils/macro_util.h
+    engine/utils/meta.h
+    engine/utils/concepts.h)
 
 set(Runtime_platform_HEADERS
     engine/platform/platform_detection.h
@@ -97,7 +97,7 @@ set(Runtime_renderer_context_HEADERS
 )
 
 set(Runtime_window_HEADERS
-    engine/window/x_plat_window.h
+    engine/platform/xplat/x_plat_window.h
 )
 
 set(Runtime_HEADERS
