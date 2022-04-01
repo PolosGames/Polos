@@ -130,6 +130,6 @@ target_sources(spdlog
         src/spdlog.cpp
         )
 
-build_options(spdlog)
+build_options(spdlog false)
 
 # install(TARGETS spdlog DESTINATION bin)

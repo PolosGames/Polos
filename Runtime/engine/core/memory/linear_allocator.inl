@@ -1,7 +1,7 @@
 namespace polos::memory
 {
     template<typename T>
-    requires IsDefaultConstructable<T>
+    requires IsDefaultConstructible<T>
     inline T* LinearAllocator::New()
     {
         return new (Allocate(sizeof(T))) T();

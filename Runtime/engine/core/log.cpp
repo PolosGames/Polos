@@ -10,6 +10,9 @@
 namespace polos
 {
     Log* Log::m_Instance;
+    
+    static constexpr cstring kStdoutPattern = { "%^[%T] %n: %v%$"};
+    static constexpr cstring kFilePattern   = {"[%T] [%l] %n: %v"};
 
     void Log::Startup()
     {
@@ -17,8 +20,8 @@ namespace polos
         log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
         log_sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Polos.log", true));
 
-        log_sinks[0]->set_pattern("%^[%T] %n: %v%$");
-        log_sinks[1]->set_pattern("[%T] [%l] %n: %v");
+        log_sinks[0]->set_pattern(kStdoutPattern);
+        log_sinks[1]->set_pattern(kFilePattern);
 
         m_CoreLogger = std::make_shared<spdlog::logger>("POLOS", std::begin(log_sinks), std::end(log_sinks));
         spdlog::register_logger(m_CoreLogger);

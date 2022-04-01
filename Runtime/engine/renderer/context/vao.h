@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class vbo
+    class vao
     {
     public:
         void bind();

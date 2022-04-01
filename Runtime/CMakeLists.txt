@@ -155,6 +155,6 @@ target_include_directories(Runtime
                "engine/window"
 )
 
-build_options(Runtime)
+build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)

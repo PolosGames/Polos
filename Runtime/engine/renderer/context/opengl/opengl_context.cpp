@@ -11,7 +11,7 @@
 
 namespace polos
 {
-    static void DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* userParam)
+    static void DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
     {
         const std::string message_source = [source] {
             switch (source)

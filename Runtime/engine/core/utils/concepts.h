@@ -22,20 +22,20 @@ namespace polos
     concept IsNotSame = !IsSame<T, U>;
     
     template<typename T>
-    concept IsDefaultConstructable = std::is_default_constructible_v<T>;
+    concept IsDefaultConstructible = std::is_default_constructible_v<T>;
     
     template<typename T>
-    concept IsCopyConstructable = std::is_copy_constructible_v<T>;
+    concept IsCopyConstructible = std::is_copy_constructible_v<T>;
     template<typename T>
     concept IsCopyAssignable    = std::is_copy_assignable_v<T>;
     
     template<typename T>
-    concept IsMoveConstructable = std::is_move_constructible_v<T>;
+    concept IsMoveConstructible = std::is_move_constructible_v<T>;
     template<typename T>
     concept IsMoveAssignable    = std::is_move_assignable_v<T>;
-    
+
     template<typename T>
-    concept IsTriviallyDestructible = std::is_trivially_destructible_v<T>;
+    concept IsTriviallyDestructible  = std::is_trivially_destructible_v<T>;
 }
 
 #endif //POLOS_CONCEPTS_H

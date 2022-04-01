@@ -9,10 +9,10 @@
 namespace polos::memory
 {
     template<typename T>
-    requires IsDefaultConstructable<T> &&
-             IsCopyConstructable<T>    &&
-             IsCopyAssignable<T>       &&
-             IsMoveConstructable<T>    &&
+    requires IsDefaultConstructible<T> &&
+             IsCopyConstructible<T> &&
+             IsCopyAssignable<T> &&
+             IsMoveConstructible<T> &&
              IsMoveAssignable<T>
     class PoolAllocator
     {

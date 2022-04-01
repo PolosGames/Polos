@@ -6,7 +6,7 @@ target_include_directories(glad PUBLIC include)
 
 include(../../cmake/target_build.cmake)
 
-build_options(glad)
+build_options(glad false)
 
 #install(TARGETS glad DESTINATION bin)
 

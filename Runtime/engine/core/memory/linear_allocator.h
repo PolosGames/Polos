@@ -26,7 +26,7 @@ namespace polos::memory
         PL_NODISCARD void* Align(size_t size, size_t offset) const;
         
         template<typename T>
-        requires IsDefaultConstructable<T>
+        requires IsDefaultConstructible<T>
         PL_NODISCARD T* New();
 
         template<typename T, typename... Args>

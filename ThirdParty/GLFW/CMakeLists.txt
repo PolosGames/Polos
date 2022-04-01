@@ -50,7 +50,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
 endif()
 
-build_options(glfw)
+build_options(glfw false)
 
 if (_GLFW_WIN32)
     target_compile_definitions(glfw PRIVATE UNICODE _UNICODE)

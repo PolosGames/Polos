@@ -22,12 +22,12 @@ namespace polos
 
     void Shader::Load(cstring vert_file, cstring frag_file)
     {
-        const std::string vertex_code = [&vert_file] {
+        std::string const vertex_code = [&vert_file] {
             File file(vert_file, kRead);
             return file.Read();
         }();
         
-        const std::string fragment_code = [&frag_file] {
+        std::string const fragment_code = [&frag_file] {
             File file(frag_file, kRead);
             return file.Read();
         }();
@@ -35,15 +35,13 @@ namespace polos
         cstring vertex_src   = vertex_code.c_str();
         cstring fragment_src = fragment_code.c_str();
 
-        GLuint vertex_shader;
-        vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        GLuint const vertex_shader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex_shader, 1, &vertex_src, nullptr);
         glCompileShader(vertex_shader);
 
         if (!is_successful(vertex_shader, GL_COMPILE_STATUS)) return;
 
-        GLuint fragment_shader;
-        fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        GLuint const fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment_shader, 1, &fragment_src, nullptr);
         glCompileShader(fragment_shader);
 

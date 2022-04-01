@@ -68,6 +68,6 @@ target_compile_features(Polos PRIVATE cxx_std_20)
 
 target_link_libraries(Polos PUBLIC Runtime)
 
-build_options(Polos)
+build_options(Polos true)
 
 install(TARGETS Polos DESTINATION bin)
