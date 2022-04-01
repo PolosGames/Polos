@@ -21,8 +21,6 @@ set(GLFW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(GLFW_BINARY_DIR ${CMAKE_BINARY_DIR}/ThirdParty/GLFW)
 
-configure_file(src/glfw_config.h.in src/glfw_config.h @ONLY)
-
 # pull the sources'n stuff
 include(src/CMakeLists.txt)
 
