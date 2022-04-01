@@ -1,6 +1,5 @@
 # Binaries
 **/bin/
-**/bin-int/
 build/
 vsbuild/
 
@@ -12,8 +11,6 @@ vsbuild/
 **.vcxproj.user
 .idea/
 
-# Stuff for my directory
-**.snippet
 **.txt
 !CMakeLists.txt
 
