@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
+add_library(glfw STATIC)
+
 if(UNIX)
     set(GLFW_LIB_NAME glfw)
 else()
@@ -11,10 +13,13 @@ set(GLFW_VERSION_MINOR 3)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(_GLFW_WIN32 1)
+    target_compile_definitions(glfw PRIVATE _GLFW_WIN32)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(_GLFW_X11 1)
+    target_compile_definitions(glfw PRIVATE _GLFW_X11)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin") # apple
     set(_GLFW_COCOA 1)
+    target_compile_definitions(glfw PRIVATE _GLFW_COCOA)
 endif()
 
 set(GLFW_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -26,7 +31,7 @@ set(glfw_HEADERS
     ${GLFW_SOURCE_DIR}/src/mappings.h
     "${GLFW_SOURCE_DIR}/include/GLFW/glfw3.h"
     "${GLFW_SOURCE_DIR}/include/GLFW/glfw3native.h"
-)
+    )
 set(glfw_SOURCES
     ${GLFW_SOURCE_DIR}/src/context.c
     ${GLFW_SOURCE_DIR}/src/init.c
@@ -34,7 +39,7 @@ set(glfw_SOURCES
     ${GLFW_SOURCE_DIR}/src/monitor.c
     ${GLFW_SOURCE_DIR}/src/vulkan.c
     ${GLFW_SOURCE_DIR}/src/window.c
-)
+    )
 
 if (_GLFW_COCOA)
     list(APPEND glfw_HEADERS
@@ -103,8 +108,6 @@ if (_GLFW_X11 OR _GLFW_WAYLAND)
         list(APPEND glfw_SOURCES ${GLFW_SOURCE_DIR}/src/null_joystick.c)
     endif()
 endif()
-
-add_library(glfw STATIC)
 
 target_sources(glfw PRIVATE ${glfw_SOURCES} ${glfw_HEADERS})
 

@@ -27,10 +27,6 @@
 
 #pragma once
 
-#if defined(_GLFW_USE_CONFIG_H)
- #include "glfw_config.h"
-#endif
-
 #if defined(GLFW_INCLUDE_GLCOREARB) || \
     defined(GLFW_INCLUDE_ES1)       || \
     defined(GLFW_INCLUDE_ES2)       || \
