@@ -23,6 +23,8 @@ add_compile_definitions($<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
 #  Add the third parties into build  #
 # ================================== #
 
+add_subdirectory(ThirdParty/glm)
+
 if(USE_OPENGL OR USE_VULKAN)
     add_subdirectory(ThirdParty/GLFW)
     set_target_properties(glfw PROPERTIES FOLDER "ThirdParty")

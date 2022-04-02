@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+
+set(GLM_VERSION "0.9.9")
+
+add_subdirectory(include/glm)
+add_library(glm::glm ALIAS glm)
