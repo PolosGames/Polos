@@ -1,36 +1,36 @@
-#pragma once
-#ifndef POLOS_RENDERER_CONTEXT_SHADER_H_
-#define POLOS_RENDERER_CONTEXT_SHADER_H_
+#ifndef POLOS_SHADER_H_
+#define POLOS_SHADER_H_
 
-#include "utils/alias.h"
-#include "containers/containers.h"
+#include <glm/glm.hpp>
 
 namespace polos
 {
+    enum ShaderType
+    {
+        kVertex,
+        kFragment,
+        kGeometry,
+        kCompute,
+        kShaderTypeMax,
+    };
+    
     class Shader
     {
     public:
-        Shader() = default;
-        Shader(cstring vert_file, cstring frag_file);
-        ~Shader();
-
-        void Load(cstring vert_file, cstring frag_file);
+        Shader() {}
+        explicit Shader(uint32 program_id);
         void Use() const;
-
+        
         void SetInt(cstring name, int32 value);
+        void SetUint(cstring name, uint32 value);
         void SetFloat(cstring name, float value);
         void SetDouble(cstring name, double value);
-        void SetUint(cstring name, uint32 value);
-        void SetMat(cstring name, float* value);
-        void SetVec(cstring name, float* value);
-    private:
-        static bool is_successful(uint32 id, uint32 action);
-
+        void SetMat(cstring name, glm::mat4 const& value);
+        void SetVec(cstring name, glm::vec2 const& value);
+        void SetVec(cstring name, glm::vec3 const& value);
+        void SetVec(cstring name, glm::vec4 const& value);
     private:
         uint32 m_ProgramId;
-        // TODO: Test if getuniformlocation is faster than creating a lookup table
-        static HashMap<std::string, uint32> m_UniformLookup;
     };
 }
-
-#endif /* POLOS_RENDERER_CONTEXT_SHADER_H_ */
+#endif //POLOS_SHADER_H_

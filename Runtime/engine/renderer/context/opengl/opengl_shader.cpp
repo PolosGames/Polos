@@ -3,122 +3,60 @@
 #ifdef USE_OPENGL
 
 #include <glad/glad.h>
-
-#include "io/file.h"
+#include <glm/gtc/type_ptr.hpp>
 
 #include "context/shader.h"
 
 namespace polos
 {
-    Shader::Shader(cstring vert_file, cstring frag_file)
-    {
-        Load(vert_file, frag_file);
-    }
-
-    Shader::~Shader()
-    {
-        glDeleteProgram(m_ProgramId);
-    }
-
-    void Shader::Load(cstring vert_file, cstring frag_file)
-    {
-        std::string const vertex_code = [&vert_file] {
-            File file(vert_file, kRead);
-            return file.Read();
-        }();
-        
-        std::string const fragment_code = [&frag_file] {
-            File file(frag_file, kRead);
-            return file.Read();
-        }();
-
-        cstring vertex_src   = vertex_code.c_str();
-        cstring fragment_src = fragment_code.c_str();
-
-        GLuint const vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex_shader, 1, &vertex_src, nullptr);
-        glCompileShader(vertex_shader);
-
-        if (!is_successful(vertex_shader, GL_COMPILE_STATUS)) return;
-
-        GLuint const fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment_shader, 1, &fragment_src, nullptr);
-        glCompileShader(fragment_shader);
-
-        if (!is_successful(fragment_shader, GL_COMPILE_STATUS)) return;
-
-        m_ProgramId = glCreateProgram();
-        glAttachShader(m_ProgramId, vertex_shader);
-        glAttachShader(m_ProgramId, fragment_shader);
-        glLinkProgram(m_ProgramId);
-
-        if (!is_successful(m_ProgramId, GL_LINK_STATUS)) return;
-
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
-    }
-
-    void Shader::Use() const
-    {
-        glUseProgram(m_ProgramId);
-    }
-
-    bool Shader::is_successful(uint32 id, uint32 action)
-    {
-        int32 success = -1;
-        char info_log[512];
-        if (action == GL_COMPILE_STATUS)
-        {
-            glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-            if (!success)
-            {
-                glGetShaderInfoLog(id, 512, NULL, info_log);
-                LOG_CORE_ERROR("Shader Compilation Error: {0}", info_log);
-            }
-        }
-        else if (action == GL_LINK_STATUS)
-        {
-            glGetProgramiv(id, GL_LINK_STATUS, &success);
-            if (!success)
-            {
-                glGetProgramInfoLog(id, 512, NULL, info_log);
-                LOG_CORE_ERROR("Shader Linking Error: ", info_log);
-            }
-        }
-
-        return !!success;
-    }
-
+    Shader::Shader(uint32 program_id)
+        : m_ProgramId(program_id)
+    {}
+    
     void Shader::SetInt(cstring name, int32 value)
     {
         glUniform1i(glGetUniformLocation(m_ProgramId, name), value);
     }
-
+    
     void Shader::SetFloat(cstring name, float value)
     {
         glUniform1f(glGetUniformLocation(m_ProgramId, name), value);
     }
-
+    
     void Shader::SetDouble(cstring name, double value)
     {
         glUniform1d(glGetUniformLocation(m_ProgramId, name), value);
     }
-
+    
     void Shader::SetUint(cstring name, uint32 value)
     {
         glUniform1ui(glGetUniformLocation(m_ProgramId, name), value);
     }
-
-    void Shader::SetMat(cstring name, float* value)
+    
+    void Shader::SetMat(cstring name, glm::mat4 const& value)
     {
-        glUniformMatrix4fv(glGetUniformLocation(m_ProgramId, name), 1, GL_FALSE, value);
+        glUniformMatrix4fv(glGetUniformLocation(m_ProgramId, name), 1, GL_FALSE, glm::value_ptr(value));
     }
-
-    void Shader::SetVec(cstring name, float* value)
+    
+    void Shader::SetVec(cstring name, glm::vec2 const& value)
     {
-        glUniform3fv(glGetUniformLocation(m_ProgramId, name), 1, value);
+        glUniform2fv(glGetUniformLocation(m_ProgramId, name), 1, glm::value_ptr(value));
     }
-
+    
+    void Shader::SetVec(cstring name, glm::vec3 const& value)
+    {
+        glUniform3fv(glGetUniformLocation(m_ProgramId, name), 1, glm::value_ptr(value));
+    }
+    
+    void Shader::SetVec(cstring name, glm::vec4 const& value)
+    {
+        glUniform4fv(glGetUniformLocation(m_ProgramId, name), 1, glm::value_ptr(value));
+    }
+    
+    void Shader::Use() const
+    {
+        glUseProgram(m_ProgramId);
+    }
 } // namespace polos
 
-#endif // USE_OPENGL
+#endif /* USE_OPENGL */
