@@ -1,21 +1,23 @@
 cmake_minimum_required(VERSION 3.21)
 
 set(Runtime_SOURCES
-    "engine/core/application.cpp"
-    "engine/core/event_bus.cpp"
-    "engine/core/log.cpp"
-    "engine/engine/engine.cpp"
-    "engine/memory/linear_allocator.cpp"
-    "engine/memory/stack_allocator.cpp"
-    "engine/time/scope_timer.cpp"
-    "engine/utils/type_util.cpp"
-    "engine/platform/windows/windows_timer.cpp"
-    "engine/renderer/renderer.cpp"
-    "engine/renderer/context/opengl/opengl_context.cpp"
-    "engine/renderer/context/opengl/opengl_shader.cpp"
-    "engine/renderer/context/opengl/opengl_vao.cpp"
-    "engine/platform/xplat/x_plat_window.cpp"
-    engine/io/file.cpp)
+    engine/core/application.cpp
+    engine/core/event_bus.cpp
+    engine/core/log.cpp
+    engine/engine/engine.cpp
+    engine/memory/linear_allocator.cpp
+    engine/memory/stack_allocator.cpp
+    engine/time/scope_timer.cpp
+    engine/utils/type_util.cpp
+    engine/platform/windows/windows_timer.cpp
+    engine/renderer/renderer.cpp
+    engine/renderer/context/opengl/opengl_context.cpp
+    engine/renderer/context/opengl/opengl_shader_lib.cpp
+    engine/renderer/context/opengl/opengl_vao.cpp
+    engine/platform/xplat/x_plat_window.cpp
+    engine/io/file.cpp
+    engine/renderer/context/opengl/opengl_shader.cpp
+)
 
 set(Runtime_core_HEADERS
     engine/core/application.h
@@ -28,7 +30,8 @@ set(Runtime_core_HEADERS
 set(Runtime_core_containers_HEADERS
     engine/containers/delegate.h
     engine/containers/dynamic_array.h
-    engine/containers/containers.h)
+    engine/containers/containers.h
+)
 
 set(Runtime_core_debug_HEADERS
     engine/debug/plassert.h
@@ -80,7 +83,9 @@ set(Runtime_core_utils_HEADERS
     engine/utils/feature.h
     engine/utils/macro_util.h
     engine/utils/meta.h
-    engine/utils/concepts.h)
+    engine/utils/concepts.h
+    engine/utils/stringid.h
+)
 
 set(Runtime_platform_HEADERS
     engine/platform/platform_detection.h
@@ -92,8 +97,10 @@ set(Runtime_renderer_HEADERS
 
 set(Runtime_renderer_context_HEADERS
     engine/renderer/context/graphics_context.h
-    engine/renderer/context/shader.h
+    engine/renderer/context/shader_lib.h
     engine/renderer/context/vao.h
+    engine/renderer/context/vertex.h
+    engine/renderer/context/shader.h
 )
 
 set(Runtime_window_HEADERS
@@ -117,6 +124,8 @@ set(Runtime_HEADERS
         engine/polos_pch.h)
 
 set(EXTRA_LIBS)
+
+list(APPEND EXTRA_LIBS glm_static)
 
 if(USE_OPENGL OR USE_VULKAN)
     list(APPEND EXTRA_LIBS glfw)
@@ -148,11 +157,11 @@ target_link_libraries(Runtime PUBLIC ${EXTRA_LIBS})
 target_include_directories(Runtime PUBLIC ${PROJECT_BINARY_DIR})
 
 target_include_directories(Runtime
-        PUBLIC "engine"
-               "engine/core"
-               "engine/platform"
-               "engine/renderer"
-               "engine/window"
+        PUBLIC engine
+               engine/core
+               engine/platform
+               engine/renderer
+               engine/window
 )
 
 build_options(Runtime true)
