@@ -3,6 +3,7 @@
 #define POLOS_CORE_UTILS_TYPEUTIL_H_
 
 #include <typeinfo>
+#include "stringid.h"
 
 namespace polos
 {
@@ -29,20 +30,14 @@ namespace polos
         return name.c_str();
     }
 
-    int64 Hashit(char const* const str);
-    int64 Hashit(std::string const& str);
-    int64 Hashit(std::string&& str);
-
     template<typename T>
-    string_id TypeHash()
+    StringId TypeHash()
     {
-        static char const* name = TypeName<T>();
-        static int64 th = Hashit(name);
+        static cstring name = TypeName<T>();
+        static int64 th = get_string_id(name);
 
         return th;
     }
-
-    inline string_id operator""_sid(char const* str, std::size_t _) { return Hashit(str); }
 }
 
 

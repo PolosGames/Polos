@@ -30,7 +30,7 @@ namespace polos
     using byte = uint8;
 
     using event_id  = int64;
-    using string_id = int64;
+    using StringId = int64;
 
     using cstring = const char*;
 
