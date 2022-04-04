@@ -7,9 +7,9 @@ namespace polos
 {
     enum FileMode : uint32
     {
-        kBinary = std::ios::binary,
-        kRead   = std::ios::in,
-        kWrite  = std::ios::out,
+        kBinary = std::fstream::binary,
+        kRead   = std::fstream::in,
+        kWrite  = std::fstream::out,
     };
 
     class File
@@ -18,7 +18,7 @@ namespace polos
         std::string file_name;
         std::string file_ext;
     public:
-        explicit File(std::string_view full_path, FileMode mode) noexcept;
+        explicit File(std::string&& full_path, FileMode mode) noexcept;
     
         std::string Read();
         std::string ReadLine();
