@@ -25,7 +25,7 @@ function(build_options target warnings)
             CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
     
         target_compile_options(${target}
-            PRIVATE $<$<CONFIG:Debug>: -O0 -g>
+            PRIVATE $<$<CONFIG:Debug>: -Og>
                     $<$<CONFIG:RelWithDebInfo>: -O2 -g>
                     $<$<CONFIG:Release>: -O2>
                     $<$<CONFIG:MinSizeRel>: -O3>
