@@ -44,8 +44,8 @@ namespace polos::time
         switch (unit)
         {
             // Timer is in nanos, so nom should be other way around.
-        case ScopeTimerUnit::kSecond:		m_Nom = 1_us; m_UnitName = "secs";	break;
-        case ScopeTimerUnit::kMilliSecond:	m_Nom = 1_ms; m_UnitName = "ms";	break;
+        case ScopeTimerUnit::kSecond:		m_Nom = 1.0_us; m_UnitName = "secs";	break;
+        case ScopeTimerUnit::kMilliSecond:	m_Nom = 1.0_ms; m_UnitName = "ms";	break;
         case ScopeTimerUnit::kMicroSecond:	m_Nom = 1.0f; m_UnitName = "us";	break;
         }
     }
