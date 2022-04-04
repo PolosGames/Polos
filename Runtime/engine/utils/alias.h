@@ -34,9 +34,8 @@ namespace polos
 
     using cstring = const char*;
 
-    inline constexpr float  operator""_ms(std::size_t time)	{ return 0.001f * time;		}
-    inline constexpr float  operator""_us(std::size_t time)	{ return 0.001f * 0.001f * time;		}
-    inline constexpr double operator""_ns(std::size_t time)	{ return 0.001 * 0.001 * 0.001 * time;	}
+    inline constexpr float  operator""_ms(float time)	{ return 0.001f * time; }
+    inline constexpr float  operator""_us(float time)	{ return 0.001f * 0.001f * time; }
 }
 
 #endif /* POLOS_CORE_UTILS_ALIAS_H_ */
