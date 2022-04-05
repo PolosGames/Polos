@@ -140,7 +140,7 @@ if (${_GLFW_X11})
     target_include_directories(glfw PRIVATE "${X11_Xshape_INCLUDE_PATH}")
 endif()
 
-if (${_GLFW_X11} OR ${_GLFW_WAYLAND})
+if (${_GLFW_X11})
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         list(APPEND glfw_HEADERS ${GLFW_SOURCE_DIR}/src/linux_joystick.h)
         list(APPEND glfw_SOURCES ${GLFW_SOURCE_DIR}/src/linux_joystick.c)
