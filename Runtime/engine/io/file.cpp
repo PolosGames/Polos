@@ -21,7 +21,7 @@ namespace polos
         std::string full_name = full_path.substr(full_name_loc, full_path.size() - full_name_loc);
         std::size_t sep_loc = full_name.find_last_of('.') + 1;
         file_ext  = full_name.substr(sep_loc, full_name.size() - sep_loc);
-        file_name = full_name.substr(0, full_name.size() - file_ext.size());
+        file_name = full_name.substr(0, full_name.size() - file_ext.size() - 1);
     }
     
     std::string File::ReadLine()
