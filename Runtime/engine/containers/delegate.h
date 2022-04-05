@@ -31,7 +31,7 @@ namespace polos
         {}
     public: // constructors
         
-        PL_RULE_OF_FIVE(Delegate);
+        PL_RULE_OF_FIVE(Delegate)
         
         template <typename owner_type>
         requires IsClass<owner_type>

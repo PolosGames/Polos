@@ -2,6 +2,9 @@
 #ifndef POLOS_CORE_CONTAINERS_CONTAINERS_H_
 #define POLOS_CORE_CONTAINERS_CONTAINERS_H_
 
+#include <vector>
+#include <unordered_map>
+
 namespace polos
 {
     template<typename T>
