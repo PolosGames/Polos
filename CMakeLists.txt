@@ -52,6 +52,9 @@ if(ENABLE_LOGGING)
     set_target_properties(spdlog PROPERTIES FOLDER "ThirdParty")
 endif()
 
+add_subdirectory(ThirdParty/imgui)
+set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
+
 configure_file(plconfig.h.in plconfig.h)
 
 # ================================== #

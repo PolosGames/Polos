@@ -5,6 +5,8 @@ set(Runtime_SOURCES
     engine/core/event_bus.cpp
     engine/core/log.cpp
     engine/engine/engine.cpp
+    engine/gui/imgui/imgui_impl_glfw.cpp
+    engine/gui/imgui/imgui_impl_opengl3.cpp
     engine/memory/linear_allocator.cpp
     engine/memory/stack_allocator.cpp
     engine/time/scope_timer.cpp
@@ -27,22 +29,22 @@ set(Runtime_core_HEADERS
     engine/core/i_window.h
 )
 
-set(Runtime_core_containers_HEADERS
+set(Runtime_containers_HEADERS
     engine/containers/delegate.h
     engine/containers/dynamic_array.h
     engine/containers/containers.h
 )
 
-set(Runtime_core_debug_HEADERS
+set(Runtime_debug_HEADERS
     engine/debug/plassert.h
     engine/debug/profiling.h
 )
 
-set(Runtime_core_engine_HEADERS
+set(Runtime_engine_HEADERS
     engine/engine/engine.h
 )
 
-set(Runtime_core_events_HEADERS
+set(Runtime_events_HEADERS
     engine/events/engine/engine_stop.h
     engine/events/input/key_press.h
     engine/events/input/key_release.h
@@ -60,24 +62,30 @@ set(Runtime_core_events_HEADERS
     engine/events/event.h
 )
 
-set(Runtime_core_io_HEADERS
+set(Runtime_gui_HEADERS
+    engine/gui/imgui/imgui_impl_glfw.h
+    engine/gui/imgui/imgui_impl_opengl3.h
+    engine/gui/imgui/imgui_impl_opengl3_loader.h
+)
+
+set(Runtime_io_HEADERS
     engine/io/filesystem.h
     engine/io/file.h
 )
 
-set(Runtime_core_memory_HEADERS
+set(Runtime_memory_HEADERS
     engine/memory/mem_utils.h
     engine/memory/linear_allocator.h
     engine/memory/stack_allocator.h
     engine/memory/pool_allocator.h
 )
 
-set(Runtime_core_time_HEADERS
+set(Runtime_time_HEADERS
     engine/time/timer.h
     engine/time/scope_timer.h
 )
 
-set(Runtime_core_utils_HEADERS
+set(Runtime_utils_HEADERS
     engine/utils/alias.h
     engine/utils/type_util.h
     engine/utils/feature.h
@@ -109,14 +117,15 @@ set(Runtime_window_HEADERS
 
 set(Runtime_HEADERS
         ${Runtime_core_HEADERS}
-        ${Runtime_core_containers_HEADERS}
-        ${Runtime_core_debug_HEADERS}
-        ${Runtime_core_engine_HEADERS}
-        ${Runtime_core_events_HEADERS}
-        ${Runtime_core_io_HEADERS}
-        ${Runtime_core_memory_HEADERS}
-        ${Runtime_core_time_HEADERS}
-        ${Runtime_core_utils_HEADERS}
+        ${Runtime_containers_HEADERS}
+        ${Runtime_debug_HEADERS}
+        ${Runtime_engine_HEADERS}
+        ${Runtime_events_HEADERS}
+        ${Runtime_gui_HEADERS}
+        ${Runtime_io_HEADERS}
+        ${Runtime_memory_HEADERS}
+        ${Runtime_time_HEADERS}
+        ${Runtime_utils_HEADERS}
         ${Runtime_platform_HEADERS}
         ${Runtime_renderer_HEADERS}
         ${Runtime_renderer_context_HEADERS}
@@ -142,6 +151,8 @@ endif()
 if(ENABLE_LOGGING)
     list(APPEND EXTRA_LIBS spdlog)
 endif()
+
+list(APPEND EXTRA_LIBS ImGui)
 
 add_library(Runtime STATIC ${Runtime_SOURCES} ${Runtime_HEADERS})
 

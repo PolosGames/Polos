@@ -9,7 +9,9 @@ function(build_options target warnings)
             CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
             CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
         
-            target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter)
+            target_compile_options(${target}
+                PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter
+                        -Wno-deprecated-volatile)
         endif()
     endif()
     
