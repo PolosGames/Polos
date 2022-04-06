@@ -12,7 +12,7 @@ namespace polos
     public:
         bool is_initialized;
     private:
-        void* m_window;
+        void* m_Window;
     };
 }
 

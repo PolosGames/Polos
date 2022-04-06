@@ -13,7 +13,7 @@ namespace polos
 {
     static void DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
     {
-        const std::string message_source = [source] {
+        auto const message_source = [source] {
             switch (source)
             {
                 case GL_DEBUG_SOURCE_API:             return "OpenGL API";
@@ -24,8 +24,8 @@ namespace polos
                 default:                              return "Unknown";
             }
         }();
-        
-        const std::string message_type = [type] {
+    
+        auto const message_type = [type] {
             switch (type)
             {
                 case GL_DEBUG_TYPE_ERROR:				return "Error";
@@ -39,36 +39,39 @@ namespace polos
                 default:                                return "Unknown";
             }
         }();
-
+        
+        LOG_CORE_TRACE("OpenGL Context");
         switch (severity)
         {
         case GL_DEBUG_SEVERITY_HIGH:
-            LOG_CORE_CRITICAL("Critical {0} on {1}, {2}", message_type, message_source, message);
+            LOG_CORE_CRITICAL("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            LOG_CORE_ERROR("Error {0} on {1}, {2}", message_type, message_source, message);
+            LOG_CORE_ERROR("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_LOW:
-            LOG_CORE_WARN("Warn {0} on {1}, {2}", message_type, message_source, message);
+            LOG_CORE_WARN("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-            LOG_CORE_INFO("Type: {0} , Source: {1}", message_type, message_source, message);
+            LOG_CORE_INFO("Notification: {0}, Source: {1},\n{2}", message_type, message_source, message);
             break;
         }
     }
 
     void graphics_context::Initialize(void* window_handle)
     {
-        m_window = window_handle;
-        PL_MAYBEUNUSED auto* window = reinterpret_cast<GLFWwindow*>(m_window);
+        m_Window = window_handle;
         
         int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
         ASSERTSTR(r, "Failed to load OpenGL context!");
 
 #ifdef PL_DEBUG
+//        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
         glDebugMessageCallback(DebugCallback, nullptr);
+//        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
         // TODO: Filter some of the unnecessary messages here
         // https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
