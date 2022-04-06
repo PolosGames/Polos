@@ -52,7 +52,7 @@ namespace polos
         }
 
         GLFWmonitor* monitor = nullptr;
-        const GLFWvidmode* mode = nullptr;
+        GLFWvidmode const* mode = nullptr;
         if (m_Props.fullscreen)
         {
             monitor = glfwGetPrimaryMonitor();
@@ -70,6 +70,7 @@ namespace polos
 
         m_Context = std::make_unique<graphics_context>();
         m_Context->Initialize(m_Window);
+        glViewport(0, 0, m_Props.width, m_Props.height);
 
 #pragma region window_events
 
@@ -115,6 +116,7 @@ namespace polos
             [](GLFWwindow* _, int32 width, int32 height)
             {
                 EventBus::RaiseEvent<window_framebuffer_size>();
+                glViewport(0, 0, width, height);
             }
         );
 

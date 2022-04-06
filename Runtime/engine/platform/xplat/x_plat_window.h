@@ -3,7 +3,9 @@
 #ifndef POLOS_WINDOW_XPLATWINDOW_H
 #define POLOS_WINDOW_XPLATWINDOW_H
 
-#include "GLFW/glfw3.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 #include "core/i_window.h"
 #include "context/graphics_context.h"
@@ -16,21 +18,22 @@ namespace polos
     class XPlatWindow : public IWindow
     {
     public:
-        XPlatWindow(const window_props &props);
+        explicit XPlatWindow(const window_props &props);
 
         void Initialize() override;
         void Shutdown() override;
         void Destroy() override;
-
-        int32 Width() const override;
-        int32 Height() const override;
+    
+        PL_NODISCARD int32 Width() const override;
+        PL_NODISCARD int32 Height() const override;
         
-        bool Vsync() const override;
+        PL_NODISCARD bool Vsync() const override;
         void Vsync(bool vsync) override;
         
         void Update() override;
-        bool IsOpen() const override;
+        PL_NODISCARD bool IsOpen() const override;
     private:
+        friend class Application;
         GLFWwindow*   m_Window;
 
         static bool   m_IsInitialized;
