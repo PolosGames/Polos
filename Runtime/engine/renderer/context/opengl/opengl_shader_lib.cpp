@@ -13,6 +13,8 @@
 
 namespace polos
 {
+    ShaderLib* ShaderLib::m_Instance;
+
     void ShaderLib::Load(std::string_view glsl_file)
     {
         StringId shader_name;
@@ -67,9 +69,17 @@ namespace polos
         //glDeleteShader(fragment_shader);
     }
     
-    Shader& ShaderLib::Get(std::string const& shader_name)
+    Shader& ShaderLib::Get(StringId shader_name)
+    {
+        if(!m_Shaders.contains(shader_name)) LOG_CORE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
+        Shader& s = m_Shaders[shader_name];
+        return s;
+    }
+    
+    Shader& ShaderLib::Get(cstring shader_name)
     {
         StringId sid = get_string_id(shader_name);
+        if(!m_Shaders.contains(sid)) LOG_CORE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
         Shader& s = m_Shaders[sid];
         return s;
     }

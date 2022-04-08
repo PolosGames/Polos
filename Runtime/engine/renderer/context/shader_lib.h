@@ -14,12 +14,20 @@ namespace polos
     {
     public:
         void Load(std::string_view glsl_file);
-        Shader& Get(std::string const& shader_name);
+        
+        Shader& Get(StringId shader_name);
+        Shader& Get(cstring shader_name);
+        
+        static ShaderLib& Instance()
+        {
+            return *m_Instance;
+        }
     private:
         static uint32 compile_shader(std::string_view source, uint32 shader_type);
         static bool is_successful(uint32 id, uint32 action);
     private:
-        // TODO: Test if getuniformlocation is faster than creating a lookup table
+        friend class Engine;
+        static ShaderLib* m_Instance;
         HashMap<StringId, uint32> m_UniformLookup;
         HashMap<StringId, Shader> m_Shaders;
     };
