@@ -7,7 +7,10 @@ project(
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
+endif()
 
 option(USE_OPENGL "Use Polos with OpenGL" ON)
 option(USE_VULKAN "Use Polos with Vulkan" OFF)
@@ -24,6 +27,7 @@ add_compile_definitions($<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
 # ================================== #
 
 add_subdirectory(ThirdParty/glm)
+set_target_properties(glm_static PROPERTIES FOLDER "ThirdParty")
 
 if(USE_OPENGL OR USE_VULKAN)
     add_subdirectory(ThirdParty/GLFW)
@@ -68,11 +72,18 @@ add_subdirectory(Runtime)
 # ================================== #
 
 add_executable(Polos Sandbox/sandbox_app.cpp)
+if(MSVC)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
+endif()
 
 target_compile_features(Polos PRIVATE cxx_std_20)
 
-target_link_libraries(Polos PUBLIC Runtime)
+target_link_libraries(Polos
+                      PUBLIC Runtime
+                            -static-libgcc
+                            -static-libstdc++
+)
 
 build_options(Polos true)
 
-install(TARGETS Polos DESTINATION bin)
+install(TARGETS Polos DESTINATION bin/${CMAKE_BUILD_TYPE})
