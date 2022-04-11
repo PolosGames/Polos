@@ -56,31 +56,18 @@ namespace polos
         
         uint32 program_id = glCreateProgram();
         for(int k = 0; k < i; k++)
-        {
             glAttachShader(program_id, shader_ids[k]);
-        }
         glLinkProgram(program_id);
 
         if (!is_successful(program_id, GL_LINK_STATUS)) return;
         
         m_Shaders.insert({shader_name, Shader{program_id}});
-
-        //glDeleteShader(vertex_shader);
-        //glDeleteShader(fragment_shader);
     }
     
     Shader& ShaderLib::Get(StringId shader_name)
     {
         if(!m_Shaders.contains(shader_name)) LOG_CORE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
         Shader& s = m_Shaders[shader_name];
-        return s;
-    }
-    
-    Shader& ShaderLib::Get(cstring shader_name)
-    {
-        StringId sid = get_string_id(shader_name);
-        if(!m_Shaders.contains(sid)) LOG_CORE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
-        Shader& s = m_Shaders[sid];
         return s;
     }
     

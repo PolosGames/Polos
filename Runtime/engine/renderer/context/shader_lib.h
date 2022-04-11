@@ -16,7 +16,6 @@ namespace polos
         void Load(std::string_view glsl_file);
         
         Shader& Get(StringId shader_name);
-        Shader& Get(cstring shader_name);
         
         static ShaderLib& Instance()
         {
