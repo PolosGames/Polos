@@ -8,22 +8,38 @@
 namespace polos
 {
     Vao::Vao(std::span<vertex const> vertices, std::span<uint32 const> indices)
-        : m_VboId(0), m_EboId(0)
+        : m_BufferId(0)
     {
-        glCreateVertexArrays(1, &m_VaoId);
-
-        auto vertices_size = static_cast<int32>(vertices.size_bytes());
-        glCreateBuffers(1, &m_VboId);
-        glNamedBufferData(m_VboId, vertices_size, vertices.data(), GL_STATIC_DRAW);
-        glVertexArrayVertexBuffer(m_VboId, 0, m_VboId, 0, sizeof(vertex));
+        int32 alignment = GL_NONE;
+        glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
         
-        if(!indices.empty())
-        {
-            auto indices_size = static_cast<int32>(indices.size_bytes());
-            glCreateBuffers(1, &m_EboId);
-            glNamedBufferData(m_EboId, indices_size, indices.data(), GL_STATIC_DRAW);
-            glVertexArrayElementBuffer(m_VaoId, m_EboId);
-        }
+        m_IndCount = static_cast<int32>(indices.size());
+    
+        auto const vrt_size = static_cast<int32>(vertices.size_bytes());
+        auto const ind_size  = static_cast<int32>(indices.size_bytes());
+        
+        auto const align = [](int32 const length, int32 const alignment) -> int64 {
+            const int32  misalignment = length & ( alignment - 1 );
+            const int32  padding      = (alignment - misalignment) & (alignment - 1);
+            return length + padding;
+        };
+        
+        int64 const vrt_size_aligned = align(vrt_size, alignment);
+        int64 const ind_size_aligned = align(ind_size, alignment);
+        
+        int64 const vrt_offset = 0;
+        int64 const ind_offset = vrt_size_aligned;
+        m_IndOffset = ind_offset;
+        
+        glCreateBuffers(1, &m_BufferId);
+        glNamedBufferStorage(m_BufferId, vrt_size_aligned + ind_size_aligned, nullptr, GL_DYNAMIC_STORAGE_BIT);
+        
+        glNamedBufferSubData(m_BufferId, vrt_offset, vrt_size_aligned, vertices.data());
+        glNamedBufferSubData(m_BufferId, ind_offset, ind_size_aligned, indices.data());
+    
+        glCreateVertexArrays(1, &m_VaoId);
+        glVertexArrayVertexBuffer(m_VaoId, 0, m_BufferId, vrt_offset, sizeof(vertex));
+        glVertexArrayElementBuffer(m_VaoId, m_BufferId);
     
         glEnableVertexArrayAttrib(m_VaoId, 0);
         glEnableVertexArrayAttrib(m_VaoId, 1);
@@ -38,8 +54,7 @@ namespace polos
     Vao::~Vao()
     {
         glDeleteVertexArrays(1, &m_VaoId);
-        glDeleteBuffers(1, &m_VboId);
-        glDeleteBuffers(1, &m_EboId);
+        glDeleteBuffers(1, &m_BufferId);
     }
 
     void Vao::Bind() const
@@ -50,6 +65,12 @@ namespace polos
     void Vao::Unbind() const
     {
         glBindVertexArray(0);
+    }
+    
+    void Vao::Draw() const
+    {
+        Bind();
+        glDrawElements(GL_TRIANGLES, m_IndCount, GL_UNSIGNED_INT, reinterpret_cast<void*>(m_IndOffset));
     }
 }
 

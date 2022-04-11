@@ -19,10 +19,12 @@ namespace polos
     
         void Bind() const;
         void Unbind() const;
+        void Draw() const;
     private:
         uint32 m_VaoId;
-        uint32 m_VboId;
-        uint32 m_EboId;
+        uint32 m_BufferId;
+        int32  m_IndCount;
+        int64  m_IndOffset;
     };
 }
 
