@@ -23,6 +23,8 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
+#include <span>
 
 #include "debug/plassert.h"
 #include "debug/profiling.h"
