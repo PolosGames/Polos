@@ -12,6 +12,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
 endif()
 
+option(STATIC_STD "Link static libraries of STL" ON)
 option(USE_OPENGL "Use Polos with OpenGL" ON)
 option(USE_VULKAN "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
@@ -78,10 +79,14 @@ endif()
 
 target_compile_features(Polos PRIVATE cxx_std_20)
 
+set(EXTRA_LIBS)
+if(STATIC_STD)
+    list(APPEND EXTRA_LIBS -static-stdc++)
+endif()
+
 target_link_libraries(Polos
                       PUBLIC Runtime
-                            -static-libgcc
-                            -static-libstdc++
+                             ${EXTRA_LIBS}
 )
 
 build_options(Polos true)
