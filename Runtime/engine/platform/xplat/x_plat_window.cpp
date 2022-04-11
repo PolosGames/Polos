@@ -22,11 +22,11 @@ namespace polos
     {
         switch (error_code)
         {
-        case GLFW_INVALID_ENUM: LOG_CORE_WARN("GLFW received an invalid enum to it's function! Desc: {0}", description); break;
-        case GLFW_INVALID_VALUE: LOG_CORE_WARN("GLFW received an invalid value to it's function! Desc: {0}", description); break;
-        case GLFW_OUT_OF_MEMORY: LOG_CORE_CRITICAL("A memory allocation failed within GLFW or the operating system! Desc: {0}", description); break;
-        case GLFW_API_UNAVAILABLE: LOG_CORE_ERROR("GLFW could not find support for the requested API on the system! Desc: {0}", description); break;
-        case GLFW_FORMAT_UNAVAILABLE: LOG_CORE_ERROR("The requested pixel format is not supported! Desc: {0}", description); break;
+        case GLFW_INVALID_ENUM: LOG_ENGINE_WARN("GLFW received an invalid enum to it's function! Desc: {0}", description); break;
+        case GLFW_INVALID_VALUE: LOG_ENGINE_WARN("GLFW received an invalid value to it's function! Desc: {0}", description); break;
+        case GLFW_OUT_OF_MEMORY: LOG_ENGINE_CRITICAL("A memory allocation failed within GLFW or the operating system! Desc: {0}", description); break;
+        case GLFW_API_UNAVAILABLE: LOG_ENGINE_ERROR("GLFW could not find support for the requested API on the system! Desc: {0}", description); break;
+        case GLFW_FORMAT_UNAVAILABLE: LOG_ENGINE_ERROR("The requested pixel format is not supported! Desc: {0}", description); break;
         }
     }
 

@@ -6,17 +6,22 @@
 #include <spdlog/common.h>
 
 #include "utils/macro_util.h"
+#include "containers/containers.h"
+#include "utils/alias.h"
 
 namespace polos
 {
-    enum class logger_type
-    {
-        kLoggerCore,
-        kLoggerClient,
-    };
-
     class Log
     {
+    public:
+        enum logger_type : uint8
+        {
+            kLoggerEngine,
+            kLoggerEditor,
+            kLoggerClient,
+        
+            kMaxLoggerType
+        };
     public:
         Log() noexcept = default;
         PL_DELETE_COPY_MOVE_CTOR(Log);
@@ -25,19 +30,19 @@ namespace polos
         void Shutdown();
 
         template<typename ...Args>
-        void critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        void critical(uint8 type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
         template<typename ...Args>
-        void error(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        void error(uint8 type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
         template<typename ...Args>
-        void warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        void warn(uint8 type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
         template<typename ...Args>
-        void info(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        void info(uint8 type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
         template<typename ...Args>
-        void trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args &&... args);
+        void trace(uint8 type, spdlog::format_string_t<Args...> fmt, Args &&... args);
 
         static Log& Instance()
         {
@@ -45,56 +50,30 @@ namespace polos
         }
     private:
         static Log* m_Instance;
-
-        spdlog::logger& pick_logger(logger_type type);
     private:
-        std::shared_ptr<spdlog::logger> m_CoreLogger;
-        std::shared_ptr<spdlog::logger> m_ClientLogger;
+        std::array<Ref<spdlog::logger>, kMaxLoggerType> m_Logger;
     };
-
-    template<typename ...Args>
-    inline void Log::critical(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-    {
-        pick_logger(type).critical(fmt, std::forward<Args>(args)...);
-    }
-
-    template<typename ...Args>
-    inline void Log::error(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-    {
-        pick_logger(type).error(fmt, std::forward<Args>(args)...);
-    }
-
-    template<typename ...Args>
-    inline void Log::warn(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-    {
-        pick_logger(type).warn(fmt, std::forward<Args>(args)...);
-    }
-
-    template<typename ...Args>
-    inline void Log::info(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-    {
-        pick_logger(type).info(fmt, std::forward<Args>(args)...);
-    }
-
-    template<typename ...Args>
-    inline void Log::trace(logger_type type, spdlog::format_string_t<Args...> fmt, Args && ...args)
-    {
-        pick_logger(type).trace(fmt, std::forward<Args>(args)...);
-    }
-
 } // namespace polos
 
-#define LOG_CORE_CRITICAL(...) ::polos::Log::Instance().critical(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_ERROR(...)    ::polos::Log::Instance().error(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_WARN(...)     ::polos::Log::Instance().warn(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_INFO(...)     ::polos::Log::Instance().info(::polos::logger_type::kLoggerCore, __VA_ARGS__)
-#define LOG_CORE_TRACE(...)    ::polos::Log::Instance().trace(::polos::logger_type::kLoggerCore, __VA_ARGS__)
+#include "log.inl"
 
-#define LOG_CRITICAL(...) ::polos::Log::Instance().critical(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_ERROR(...)    ::polos::Log::Instance().error(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_WARN(...)     ::polos::Log::Instance().warn(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_INFO(...)     ::polos::Log::Instance().info(::polos::logger_type::kLoggerClient, __VA_ARGS__)
-#define LOG_TRACE(...)    ::polos::Log::Instance().trace(::polos::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_ENGINE_CRITICAL(...) ::polos::Log::Instance().critical(::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
+#define LOG_ENGINE_ERROR(...)    ::polos::Log::Instance().error(   ::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
+#define LOG_ENGINE_WARN(...)     ::polos::Log::Instance().warn(    ::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
+#define LOG_ENGINE_INFO(...)     ::polos::Log::Instance().info(    ::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
+#define LOG_ENGINE_TRACE(...)    ::polos::Log::Instance().trace(   ::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
+
+#define LOG_EDITOR_CRITICAL(...) ::polos::Log::Instance().critical(::polos::Log::logger_type::kLoggerEditor, __VA_ARGS__)
+#define LOG_EDITOR_ERROR(...)    ::polos::Log::Instance().error(   ::polos::Log::logger_type::kLoggerEditor, __VA_ARGS__)
+#define LOG_EDITOR_WARN(...)     ::polos::Log::Instance().warn(    ::polos::Log::logger_type::kLoggerEditor, __VA_ARGS__)
+#define LOG_EDITOR_INFO(...)     ::polos::Log::Instance().info(    ::polos::Log::logger_type::kLoggerEditor, __VA_ARGS__)
+#define LOG_EDITOR_TRACE(...)    ::polos::Log::Instance().trace(   ::polos::Log::logger_type::kLoggerEditor, __VA_ARGS__)
+
+#define LOG_CLIENT_CRITICAL(...) ::polos::Log::Instance().critical(::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_CLIENT_ERROR(...)    ::polos::Log::Instance().error(   ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_CLIENT_WARN(...)     ::polos::Log::Instance().warn(    ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_CLIENT_INFO(...)     ::polos::Log::Instance().info(    ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
+#define LOG_CLIENT_TRACE(...)    ::polos::Log::Instance().trace(   ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
 
 #include "utils/macro_util.h"
 

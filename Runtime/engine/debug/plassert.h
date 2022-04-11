@@ -12,7 +12,7 @@
 #   elif defined(POLOS_CLANG) || defined(POLOS_GNUC)
 #       define DEBUGBRK asm ("int3")
 #   endif
-#	define ASSERTSTR(check, ...)    { if (!(check)) { LOG_CORE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); DEBUGBRK;} }
+#	define ASSERTSTR(check, ...)    { if (!(check)) { LOG_ENGINE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); DEBUGBRK;} }
 #	define ASSERT(check)            ASSERTSTR(check, "None")
 #	define STATIC_ASSERT(check)	    static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else

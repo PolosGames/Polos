@@ -24,6 +24,7 @@ set(Runtime_SOURCES
 set(Runtime_core_HEADERS
     engine/core/application.h
     engine/core/log.h
+    engine/core/log.inl
     engine/core/event_bus.h
     engine/core/entry_point.h
     engine/core/i_window.h

@@ -15,6 +15,9 @@ namespace polos
     
     template<typename T>
     using PmrVector = std::pmr::vector<T>;
+    
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
 }
 
 #endif //POLOS_CONTAINERS_H

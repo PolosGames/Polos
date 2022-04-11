@@ -40,20 +40,20 @@ namespace polos
             }
         }();
         
-        LOG_CORE_TRACE("OpenGL Context");
+        LOG_ENGINE_TRACE("OpenGL Context");
         switch (severity)
         {
         case GL_DEBUG_SEVERITY_HIGH:
-            LOG_CORE_CRITICAL("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_CRITICAL("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            LOG_CORE_ERROR("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_ERROR("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_LOW:
-            LOG_CORE_WARN("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_WARN("{0} on {1},\n{2}", message_type, message_source, message);
             break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-            LOG_CORE_INFO("Notification: {0}, Source: {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_INFO("Notification: {0}, Source: {1},\n{2}", message_type, message_source, message);
             break;
         }
     }

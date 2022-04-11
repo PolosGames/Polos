@@ -48,7 +48,7 @@ namespace polos
                     case "fragment"_sid: return GL_FRAGMENT_SHADER;
                     case "geometry"_sid: return GL_GEOMETRY_SHADER;
                     case "compute"_sid:  return GL_COMPUTE_SHADER;
-                    default: LOG_CORE_ERROR("Shader type not recognized"); return 0;
+                    default: LOG_ENGINE_ERROR("Shader type not recognized"); return 0;
                 }
             }();
             shader_ids[i] = compile_shader(shader_source, shader_type);
@@ -66,7 +66,7 @@ namespace polos
     
     Shader& ShaderLib::Get(StringId shader_name)
     {
-        if(!m_Shaders.contains(shader_name)) LOG_CORE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
+        if(!m_Shaders.contains(shader_name)) LOG_ENGINE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
         Shader& s = m_Shaders[shader_name];
         return s;
     }
@@ -93,7 +93,7 @@ namespace polos
             if (!success)
             {
                 glGetShaderInfoLog(id, 512, nullptr, info_log);
-                LOG_CORE_ERROR("Shader Compilation Error: {0}", info_log);
+                LOG_ENGINE_ERROR("Shader Compilation Error: {0}", info_log);
             }
         }
         else if (action == GL_LINK_STATUS)
@@ -102,7 +102,7 @@ namespace polos
             if (!success)
             {
                 glGetProgramInfoLog(id, 512, nullptr, info_log);
-                LOG_CORE_ERROR("Shader Linking Error: ", info_log);
+                LOG_ENGINE_ERROR("Shader Linking Error: ", info_log);
             }
         }
 
