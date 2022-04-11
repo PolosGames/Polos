@@ -6,8 +6,8 @@ function(build_options target warnings)
         if (MSVC)
             target_compile_options(${target} PRIVATE /W3)
         elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
-            CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
-            CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+                CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+                CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
         
             target_compile_options(${target}
                 PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter
@@ -18,7 +18,7 @@ function(build_options target warnings)
     if (MSVC)
         target_compile_options(${target}
             PRIVATE $<$<CONFIG:Debug>: /Od /ZI>
-                    $<$<CONFIG:RelWithDebInfo>: /0t /ZI>
+                    $<$<CONFIG:RelWithDebInfo>: /Ot /ZI>
                     $<$<CONFIG:Release>: /O2>
                     $<$<CONFIG:MinSizeRel>: /O1>
         )
