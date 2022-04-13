@@ -17,6 +17,7 @@ option(USE_OPENGL "Use Polos with OpenGL" ON)
 option(USE_VULKAN "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
 option(ENABLE_LOGGING "Enable logging inside the engine and in applications" ON)
+option(GUI_USE_IMGUI "Use ImGui for default Gui implementation" ON)
 
 include(CMake/target_build.cmake)
 
@@ -57,8 +58,11 @@ if(ENABLE_LOGGING)
     set_target_properties(spdlog PROPERTIES FOLDER "ThirdParty")
 endif()
 
-add_subdirectory(ThirdParty/imgui)
-set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
+if(GUI_USE_IMGUI)
+    add_subdirectory(ThirdParty/imgui)
+    set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
+    add_compile_definitions(GUI_USE_IMGUI)
+endif()
 
 configure_file(plconfig.h.in plconfig.h)
 

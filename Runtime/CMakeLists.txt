@@ -20,7 +20,7 @@ set(Runtime_SOURCES
     engine/platform/xplat/x_plat_window.cpp
     engine/io/file.cpp
     engine/renderer/context/opengl/opengl_shader.cpp
-    engine/gui/imgui/gui.cpp engine/core/camera.cpp)
+    engine/gui/imgui/imgui_gui.cpp engine/core/camera.cpp)
 
 set(Runtime_core_HEADERS
     engine/core/application.h
