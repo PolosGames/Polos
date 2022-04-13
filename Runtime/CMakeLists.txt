@@ -4,6 +4,7 @@ set(Runtime_SOURCES
     engine/core/application.cpp
     engine/core/event_bus.cpp
     engine/core/log.cpp
+    engine/core/camera.cpp
     engine/engine/engine.cpp
     engine/gui/imgui/imgui_impl_glfw.cpp
     engine/gui/imgui/imgui_impl_opengl3.cpp
@@ -19,7 +20,7 @@ set(Runtime_SOURCES
     engine/platform/xplat/x_plat_window.cpp
     engine/io/file.cpp
     engine/renderer/context/opengl/opengl_shader.cpp
-)
+    engine/gui/imgui/gui.cpp engine/core/camera.cpp)
 
 set(Runtime_core_HEADERS
     engine/core/application.h
@@ -29,6 +30,7 @@ set(Runtime_core_HEADERS
     engine/core/event_bus.inl
     engine/core/entry_point.h
     engine/core/i_window.h
+    engine/core/camera.h
 )
 
 set(Runtime_containers_HEADERS
@@ -68,7 +70,7 @@ set(Runtime_gui_HEADERS
     engine/gui/imgui/imgui_impl_glfw.h
     engine/gui/imgui/imgui_impl_opengl3.h
     engine/gui/imgui/imgui_impl_opengl3_loader.h
-)
+    engine/gui/gui.h)
 
 set(Runtime_io_HEADERS
     engine/io/filesystem.h
