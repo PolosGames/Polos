@@ -159,6 +159,10 @@ endif()
 
 list(APPEND EXTRA_LIBS ImGui)
 
+if (UNIX)
+    list(APPEND EXTRA_LIBS pthread)
+endif (UNIX)
+
 add_library(Runtime STATIC ${Runtime_SOURCES} ${Runtime_HEADERS})
 
 target_precompile_headers(Runtime PRIVATE engine/polos_pch.h)
