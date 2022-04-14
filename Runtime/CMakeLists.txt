@@ -13,6 +13,7 @@ set(Runtime_SOURCES
     engine/time/scope_timer.cpp
     engine/utils/type_util.cpp
     engine/platform/windows/windows_timer.cpp
+    engine/platform/linux/linux_timer.cpp
     engine/renderer/renderer.cpp
     engine/renderer/context/opengl/opengl_context.cpp
     engine/renderer/context/opengl/opengl_shader_lib.cpp

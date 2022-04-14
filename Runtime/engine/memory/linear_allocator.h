@@ -19,7 +19,7 @@ namespace polos::memory
         
         LinearAllocator(LinearAllocator&& other) noexcept;
         LinearAllocator& operator=(LinearAllocator&& rhs) noexcept;
-        PL_NO_COPY(LinearAllocator);
+        PL_NO_COPY(LinearAllocator)
 
         void  Initialize(size_t size);
         PL_NODISCARD void* Allocate(size_t size);

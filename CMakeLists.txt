@@ -12,7 +12,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
 endif()
 
-option(STATIC_STD "Link static libraries of STL" OFF)
+option(STATIC_STD "Link static libraries of STL" ON)
 option(USE_OPENGL "Use Polos with OpenGL" ON)
 option(USE_VULKAN "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)

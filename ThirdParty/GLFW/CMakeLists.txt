@@ -138,6 +138,8 @@ if (${_GLFW_X11})
         message(FATAL_ERROR "X Shape headers not found; install libxext development package")
     endif()
     target_include_directories(glfw PRIVATE "${X11_Xshape_INCLUDE_PATH}")
+
+    target_link_libraries(glfw PRIVATE "${X11_LIBRARIES}")
 endif()
 
 if (${_GLFW_X11})
@@ -183,6 +185,27 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     ${GLFW_SOURCE_DIR}/src/osmesa_context.c
     PROPERTIES COMPILE_FLAGS -Wdeclaration-after-statement)
 
+endif()
+
+if (UNIX AND NOT APPLE)
+    find_library(RT_LIBRARY rt)
+    mark_as_advanced(RT_LIBRARY)
+    if (RT_LIBRARY)
+        target_link_libraries(glfw PRIVATE "${RT_LIBRARY}")
+        list(APPEND glfw_PKG_LIBS "-lrt")
+    endif()
+
+    find_library(MATH_LIBRARY m)
+    mark_as_advanced(MATH_LIBRARY)
+    if (MATH_LIBRARY)
+        target_link_libraries(glfw PRIVATE "${MATH_LIBRARY}")
+        list(APPEND glfw_PKG_LIBS "-lm")
+    endif()
+
+    if (CMAKE_DL_LIBS)
+        target_link_libraries(glfw PRIVATE "${CMAKE_DL_LIBS}")
+        list(APPEND glfw_PKG_LIBS "-l${CMAKE_DL_LIBS}")
+    endif()
 endif()
 
 build_options(glfw false)

@@ -24,7 +24,7 @@ namespace polos
         };
     public:
         Log() noexcept = default;
-        PL_DELETE_COPY_MOVE_CTOR(Log);
+        PL_DELETE_COPY_MOVE_CTOR(Log)
 
         void Startup();
         void Shutdown();

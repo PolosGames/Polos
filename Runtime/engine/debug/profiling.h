@@ -4,7 +4,7 @@
 
 #include "platform/platform_detection.h"
 
-#if PL_PROFILING
+#ifdef ENABLE_PROFILING
 //// IMPLEMENTATIONS
 #	if defined(POLOS_WIN) || defined(POLOS_LINUX)
 #	include <optick.h>

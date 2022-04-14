@@ -10,8 +10,16 @@ function(build_options target warnings)
                 CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
         
             target_compile_options(${target}
-                PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter
-                        -Wno-deprecated-volatile)
+                PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter)
+
+            if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+               CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+               target_compile_options(${target} 
+                                      PRIVATE -Wno-deprecated-volatile)
+
+            elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+                target_compile_options(${target} PRIVATE -Wno-volatile)
+            endif()
         endif()
     endif()
     
