@@ -31,6 +31,9 @@ add_compile_definitions($<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
 add_subdirectory(ThirdParty/glm)
 set_target_properties(glm_static PROPERTIES FOLDER "ThirdParty")
 
+add_subdirectory(ThirdParty/stb_image)
+set_target_properties(stb_image  PROPERTIES FOLDER "ThirdParty")
+
 if(USE_OPENGL OR USE_VULKAN)
     add_subdirectory(ThirdParty/GLFW)
     set_target_properties(glfw PROPERTIES FOLDER "ThirdParty")

@@ -140,6 +140,7 @@ set(Runtime_HEADERS
 set(EXTRA_LIBS)
 
 list(APPEND EXTRA_LIBS glm_static)
+list(APPEND EXTRA_LIBS stb_image)
 
 if(USE_OPENGL OR USE_VULKAN)
     list(APPEND EXTRA_LIBS glfw)
