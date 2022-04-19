@@ -1,11 +1,11 @@
 #include "polos_pch.h"
 
-#include "log.h"
+#include "core/log.h"
 #include "time/timer.h"
 #include "memory/linear_allocator.h"
-#include "event_bus.h"
+#include "core/event_bus.h"
 #include "renderer/renderer.h"
-#include "application.h"
+#include "core/application.h"
 #include "renderer/context/shader_lib.h"
 
 #include "engine.h"

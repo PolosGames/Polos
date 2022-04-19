@@ -8,7 +8,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "core/i_window.h"
-#include "context/graphics_context.h"
+#include "renderer/context/graphics_context.h"
 
 namespace polos
 {

@@ -41,8 +41,9 @@ namespace polos
 
     void Log::Shutdown()
     {
-        spdlog::drop("APP");
-        spdlog::drop("Polos");
+        spdlog::drop("ENGINE");
+        spdlog::drop("EDITOR");
+        spdlog::drop("CLIENT");
         m_Instance = nullptr;
     }
 }

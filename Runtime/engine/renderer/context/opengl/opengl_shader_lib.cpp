@@ -9,7 +9,7 @@
 #include "utils/alias.h"
 #include "debug/plassert.h"
 
-#include "context/shader_lib.h"
+#include "renderer/context/shader_lib.h"
 
 namespace polos
 {

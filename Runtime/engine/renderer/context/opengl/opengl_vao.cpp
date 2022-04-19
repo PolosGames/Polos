@@ -3,32 +3,30 @@
 
 #include <glad/glad.h>
 
-#include "context/vao.h"
+#include "renderer/context/vao.h"
 
 namespace polos
 {
     Vao::Vao(std::span<vertex const> vertices, std::span<uint32 const> indices)
-        : m_BufferId(0)
+        : m_IndCount{ static_cast<int32>(indices.size()) }
     {
-        int32 alignment = GL_NONE;
+        int32 alignment { GL_NONE };
         glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
-        
-        m_IndCount = static_cast<int32>(indices.size());
     
-        auto const vrt_size = static_cast<int32>(vertices.size_bytes());
-        auto const ind_size  = static_cast<int32>(indices.size_bytes());
+        auto const vrt_size { static_cast<int32>(vertices.size_bytes()) };
+        auto const ind_size { static_cast<int32>(indices.size_bytes())  };
         
         auto const align = [](int32 const length, int32 const alignment) -> int64 {
-            const int32  misalignment = length & ( alignment - 1 );
-            const int32  padding      = (alignment - misalignment) & (alignment - 1);
+            const int32  misalignment { length & ( alignment - 1 ) };
+            const int32  padding      { (alignment - misalignment) & (alignment - 1) };
             return length + padding;
         };
         
-        int64 const vrt_size_aligned = align(vrt_size, alignment);
-        int64 const ind_size_aligned = align(ind_size, alignment);
+        int64 const vrt_size_aligned{ align(vrt_size, alignment) };
+        int64 const ind_size_aligned{ align(ind_size, alignment) };
         
-        int64 const vrt_offset = 0;
-        int64 const ind_offset = vrt_size_aligned;
+        int64 const vrt_offset{0};
+        int64 const ind_offset{vrt_size_aligned};
         m_IndOffset = ind_offset;
         
         glCreateBuffers(1, &m_BufferId);

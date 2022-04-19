@@ -179,10 +179,6 @@ target_include_directories(Runtime PUBLIC ${PROJECT_BINARY_DIR})
 
 target_include_directories(Runtime
         PUBLIC engine
-               engine/core
-               engine/platform
-               engine/renderer
-               engine/window
 )
 
 build_options(Runtime true)

@@ -3,7 +3,7 @@
 #define POLOS_CORE_DEBUG_H_
 
 #include "utils/macro_util.h"
-#include "log.h"
+#include "core/log.h"
 #include "platform/platform_detection.h"
 
 #ifdef PL_DEBUG

@@ -4,10 +4,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "log.h"
 #include "utils/feature.h"
 
-#include "context/graphics_context.h"
+#include "renderer/context/graphics_context.h"
 
 namespace polos
 {

@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "context/shader.h"
+#include "renderer/context/shader.h"
 
 namespace polos
 {

@@ -21,10 +21,10 @@ namespace polos
         void Unbind() const;
         void Draw() const;
     private:
-        uint32 m_VaoId;
-        uint32 m_BufferId;
-        int32  m_IndCount;
-        int64  m_IndOffset;
+        uint32 m_VaoId{};
+        uint32 m_BufferId{};
+        int32  m_IndCount{};
+        int64  m_IndOffset{};
     };
 }
 

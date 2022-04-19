@@ -3,13 +3,6 @@
 build/
 vsbuild/
 
-# Visual Studio files and folder
-.vs/
-**.sln
-**.vcxproj
-**.vcxproj.filters
-**.vcxproj.user
-.idea/
 
 **.txt
 !CMakeLists.txt
@@ -17,9 +10,14 @@ vsbuild/
 # Ignore this on Sandbox
 **.log
 
-# For the documentation folder on my computer
-doc/
-Doxyfile
+# Folders to ignore
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+.idea/
+.cache/
 
 # Optick generated files
 **.opt

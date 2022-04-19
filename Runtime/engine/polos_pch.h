@@ -1,4 +1,4 @@
-#include "platform_detection.h"
+#include "platform/platform_detection.h"
 
 #if defined(POLOS_WIN)
 #	include <Windows.h>
