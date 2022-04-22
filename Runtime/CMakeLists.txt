@@ -189,4 +189,4 @@ target_include_directories(Runtime
 build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)
-install(DIRECTORY engine/resources DESTINATION ${INSTALL_DIR})
+install(DIRECTORY engine/resources/ DESTINATION ${INSTALL_DIR})

@@ -15,7 +15,13 @@ namespace polos
     {
         std::replace(full_path.begin(), full_path.end(), '/', seperator);
         m_FileStream.open(full_path.c_str(), std::ios::openmode(mode));
-        ASSERTSTR(m_FileStream.is_open(), "File could not be opened.");
+        
+        if(!m_FileStream.is_open())
+        {
+            LOG_ENGINE_ERROR("File {} could not be opened", full_path);
+            m_FileStream.close();
+            return;
+        }
         
         std::size_t full_name_loc = full_path.find_last_of(seperator) + 1;
         std::string full_name = full_path.substr(full_name_loc, full_path.size() - full_name_loc);
