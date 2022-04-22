@@ -141,6 +141,7 @@ set(EXTRA_LIBS)
 
 list(APPEND EXTRA_LIBS glm_static)
 list(APPEND EXTRA_LIBS stb_image)
+list(APPEND EXTRA_LIBS stb_textedit)
 
 if(USE_OPENGL OR USE_VULKAN)
     list(APPEND EXTRA_LIBS glfw)
@@ -164,23 +165,28 @@ if (UNIX)
     list(APPEND EXTRA_LIBS pthread)
 endif (UNIX)
 
-add_library(Runtime STATIC ${Runtime_SOURCES} ${Runtime_HEADERS})
+add_library(Runtime STATIC)
 
-target_precompile_headers(Runtime PRIVATE engine/polos_pch.h)
+target_sources(Runtime
+               PRIVATE ${Runtime_SOURCES} ${Runtime_HEADERS}
+)
 
-target_compile_features(
-    Runtime
-    PRIVATE cxx_std_20 cxx_attributes)
+target_precompile_headers(Runtime
+                          PRIVATE engine/polos_pch.h)
 
-target_link_libraries(Runtime PUBLIC ${EXTRA_LIBS})
+target_compile_features(Runtime
+                        PRIVATE cxx_std_20 cxx_attributes)
+
+target_link_libraries(Runtime
+                      PUBLIC ${EXTRA_LIBS})
 
 # for the config header
-target_include_directories(Runtime PUBLIC ${PROJECT_BINARY_DIR})
-
 target_include_directories(Runtime
-        PUBLIC engine
+                           PUBLIC engine ${PROJECT_BINARY_DIR}
+                           INTERFACE include
 )
 
 build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)
+install(DIRECTORY engine/resources DESTINATION ${INSTALL_DIR})

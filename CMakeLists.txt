@@ -12,6 +12,8 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
 endif()
 
+set(INSTALL_DIR bin/${CMAKE_BUILD_TYPE})
+
 option(STATIC_STD "Link static libraries of STL" ON)
 option(USE_OPENGL "Use Polos with OpenGL" ON)
 option(USE_VULKAN "Use Polos with Vulkan" OFF)
@@ -29,10 +31,13 @@ add_compile_definitions($<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
 # ================================== #
 
 add_subdirectory(ThirdParty/glm)
-set_target_properties(glm_static PROPERTIES FOLDER "ThirdParty")
+set_target_properties(glm_static   PROPERTIES FOLDER "ThirdParty")
 
 add_subdirectory(ThirdParty/stb_image)
-set_target_properties(stb_image  PROPERTIES FOLDER "ThirdParty")
+set_target_properties(stb_image    PROPERTIES FOLDER "ThirdParty")
+
+add_subdirectory(ThirdParty/stb_textedit)
+set_target_properties(stb_textedit PROPERTIES FOLDER "ThirdParty")
 
 if(USE_OPENGL OR USE_VULKAN)
     add_subdirectory(ThirdParty/GLFW)
@@ -98,4 +103,4 @@ target_link_libraries(Polos
 
 build_options(Polos true)
 
-install(TARGETS Polos DESTINATION bin/${CMAKE_BUILD_TYPE})
+install(TARGETS Polos DESTINATION ${INSTALL_DIR})
