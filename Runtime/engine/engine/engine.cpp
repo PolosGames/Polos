@@ -7,6 +7,7 @@
 #include "renderer/renderer.h"
 #include "core/application.h"
 #include "renderer/context/shader_lib.h"
+#include "core/update_queue.h"
 
 #include "engine.h"
 
@@ -30,15 +31,19 @@ namespace polos
         auto* p_event_bus = p_engine_memory.New<EventBus>();
         auto* p_renderer  = p_engine_memory.New<Renderer>();
         auto* p_shaderlib = p_engine_memory.New<ShaderLib>();
+        auto* p_update_q  = p_engine_memory.New<UpdateQueue>();
 
         /// Startup for subsystems
         p_log      ->Startup();
         p_event_bus->Startup();
         p_renderer ->Startup();
-        ShaderLib::m_Instance = p_shaderlib;
+        
+        ShaderLib::m_Instance   = p_shaderlib;
+        UpdateQueue::m_Instance = p_update_q;
 
         Application* p_app = CreateApplication(nullptr);
         p_app->Run();
+
 
         /// Shutdown sequence
         p_renderer ->Shutdown();
