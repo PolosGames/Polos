@@ -56,8 +56,8 @@ endif()
 
 if(ENABLE_PROFILING)
     add_compile_definitions(ENABLE_PROFILING)
-    add_subdirectory(ThirdParty/Optick)
-    set_target_properties(Optick PROPERTIES FOLDER "ThirdParty")
+#    add_subdirectory(ThirdParty/Optick)
+#    set_target_properties(Optick PROPERTIES FOLDER "ThirdParty")
 endif()
 
 if(ENABLE_LOGGING)
@@ -85,6 +85,7 @@ add_subdirectory(Runtime)
 # ================================== #
 
 add_executable(Polos Sandbox/sandbox_app.cpp)
+
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
 endif()

@@ -18,6 +18,7 @@ vsbuild/
 **.vcxproj.user
 .idea/
 .cache/
+.vscode/
 
 # Optick generated files
 **.opt
