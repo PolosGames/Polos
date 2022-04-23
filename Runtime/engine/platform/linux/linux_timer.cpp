@@ -9,6 +9,11 @@ namespace polos::time
     void Timer::OnStartUp()
     {
     }
+    
+    int64 Timer::Now()
+    {
+    
+    }
 }
 
 #endif /* POLOS_LINUX */
