@@ -45,9 +45,9 @@ namespace polos
             : m_ObjectPointer(const_cast<owner_type*>(&o))
         {}
         
-        template<typename FuncPtr>
-        requires IsNotSame<typename std::decay_t<FuncPtr>, Delegate>
+        template<IsNotMemFunPtr FuncPtr>
         Delegate(FuncPtr func_ptr)
+        requires IsNotSame<typename std::decay_t<FuncPtr>, Delegate>
         {
             m_ObjectPointer = nullptr;
             m_StubPointer = function_stub<typename std::decay_t<FuncPtr>>;

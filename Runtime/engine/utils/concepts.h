@@ -36,6 +36,18 @@ namespace polos
 
     template<typename T>
     concept IsTriviallyDestructible  = std::is_trivially_destructible_v<T>;
+
+    template<typename Func>
+    concept IsMemFunPtr         = requires
+    {
+        std::is_member_function_pointer_v<Func>;
+    };
+
+    template<typename Func>
+    concept IsNotMemFunPtr         = requires
+    {
+        !std::is_member_function_pointer_v<Func>;
+    };
 }
 
 #endif //POLOS_CONCEPTS_H
