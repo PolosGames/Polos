@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <utility>
+#include <variant>
 
 #include <fstream>
 #include <sstream>

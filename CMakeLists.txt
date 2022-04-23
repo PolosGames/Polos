@@ -84,7 +84,9 @@ add_subdirectory(Runtime)
 #             Build Polos            #
 # ================================== #
 
-add_executable(Polos Sandbox/sandbox_app.cpp)
+add_executable(Polos)
+
+add_subdirectory(Editor)
 
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)

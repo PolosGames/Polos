@@ -1,28 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-set(Runtime_SOURCES
-    engine/core/application.cpp
-    engine/core/event_bus.cpp
-    engine/core/log.cpp
-    engine/core/camera.cpp
-    engine/engine/engine.cpp
-    engine/gui/imgui/imgui_impl_glfw.cpp
-    engine/gui/imgui/imgui_impl_opengl3.cpp
-    engine/memory/linear_allocator.cpp
-    engine/memory/stack_allocator.cpp
-    engine/time/scope_timer.cpp
-    engine/utils/type_util.cpp
-    engine/platform/windows/windows_timer.cpp
-    engine/platform/linux/linux_timer.cpp
-    engine/renderer/renderer.cpp
-    engine/renderer/context/opengl/opengl_context.cpp
-    engine/renderer/context/opengl/opengl_shader_lib.cpp
-    engine/renderer/context/opengl/opengl_vao.cpp
-    engine/platform/xplat/x_plat_window.cpp
-    engine/io/file.cpp
-    engine/renderer/context/opengl/opengl_shader.cpp
-    engine/gui/imgui/imgui_gui.cpp engine/core/camera.cpp)
-
 set(Runtime_core_HEADERS
     engine/core/application.h
     engine/core/log.h
@@ -32,6 +9,7 @@ set(Runtime_core_HEADERS
     engine/core/entry_point.h
     engine/core/i_window.h
     engine/core/camera.h
+    engine/core/update_queue.h
 )
 
 set(Runtime_containers_HEADERS
@@ -164,6 +142,31 @@ list(APPEND EXTRA_LIBS ImGui)
 if (UNIX)
     list(APPEND EXTRA_LIBS pthread)
 endif (UNIX)
+
+set(Runtime_SOURCES
+    engine/core/application.cpp
+    engine/core/event_bus.cpp
+    engine/core/log.cpp
+    engine/core/camera.cpp
+    engine/core/update_queue.cpp
+    engine/engine/engine.cpp
+    engine/gui/imgui/imgui_impl_glfw.cpp
+    engine/gui/imgui/imgui_impl_opengl3.cpp
+    engine/memory/linear_allocator.cpp
+    engine/memory/stack_allocator.cpp
+    engine/time/scope_timer.cpp
+    engine/utils/type_util.cpp
+    engine/platform/windows/windows_timer.cpp
+    engine/platform/linux/linux_timer.cpp
+    engine/renderer/renderer.cpp
+    engine/renderer/context/opengl/opengl_context.cpp
+    engine/renderer/context/opengl/opengl_shader_lib.cpp
+    engine/renderer/context/opengl/opengl_vao.cpp
+    engine/renderer/context/opengl/opengl_shader.cpp
+    engine/platform/xplat/x_plat_window.cpp
+    engine/io/file.cpp
+    engine/gui/imgui/imgui_gui.cpp 
+)
 
 add_library(Runtime STATIC)
 
