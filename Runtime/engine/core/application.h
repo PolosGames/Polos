@@ -15,8 +15,11 @@ namespace polos
     {
     public:
         Application();
+        virtual ~Application();
 
         void Run();
+    protected:
+        IWindow& get_main_window();
     private:
         void on_window_close(window_close& e);
     private:
