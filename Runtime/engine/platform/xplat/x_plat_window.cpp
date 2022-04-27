@@ -1,3 +1,4 @@
+#include "GLFW/glfw3.h"
 #include "polos_pch.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
@@ -136,6 +137,13 @@ namespace polos
                     EventBus::RaiseEvent<key_release>(key);
                     break;
                 }
+            }
+        );
+
+        glfwSetCharCallback(m_Window, 
+            [] (GLFWwindow*, uint32 unicode)
+            {
+                EventBus::RaiseEvent<char_type>(unicode);
             }
         );
 
