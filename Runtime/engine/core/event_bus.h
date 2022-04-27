@@ -4,6 +4,7 @@
 #define POLOS_CORE_EVENTBUS_H_
 
 #include "events/event.h"
+#include "utils/concepts.h"
 #include "containers/containers.h"
 #include "containers/delegate.h"
 
@@ -23,6 +24,9 @@ namespace polos
 
         template<class event_type, class object_type, void(object_type::* method_ptr)(event_type&)>
         static void SubscribeToEvent(object_type *const ptr);
+
+        template<class event_type, void(* const func_ptr)(event_type&)>
+        static void SubscribeToEvent();
         
         template<class event_type>
         static void SubscribeToEvent(const Delegate<void(event_type &)>& cback);

@@ -22,9 +22,18 @@ namespace polos
         auto del = Delegate<void(event_type&)>::template From<object_type, method_ptr>(
                 reinterpret_cast<object_type *>(ptr));
         event_id id = event_type::id;
-        cbs.try_emplace(id).first->second.push_back(reinterpret_cast<const EventSubscriber&>(del));
+        cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(del));
     }
-    
+
+    template<class event_type, void (*const func_ptr)(event_type&)>
+    inline void EventBus::SubscribeToEvent()
+    {
+        auto& cbs = m_Instance->m_Callbacks;
+        auto del = Delegate<void(event_type&)>::template From<func_ptr>();
+        event_id id = event_type::id;
+        cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(del));
+    }
+
     template<class event_type>
     inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
     {
