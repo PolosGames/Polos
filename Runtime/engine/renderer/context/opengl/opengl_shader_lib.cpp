@@ -63,6 +63,36 @@ namespace polos
         
         m_Shaders.insert({shader_name, Shader{program_id}});
     }
+
+    void ShaderLib::Load(std::string_view vert_file, std::string_view frag_file)
+    {
+        StringId shader_name;
+        std::string const vert_code = [&vert_file, &shader_name] {
+            File file(vert_file.data(), kRead);
+            shader_name = get_string_id(file.file_name);
+            return file.Read();
+        }();
+
+        if (m_Shaders.contains(shader_name)) return;
+
+        std::string const frag_code = [&frag_file, &shader_name] {
+            File file(frag_file.data(), kRead);
+            return file.Read();
+        }();
+
+        auto vert_id = compile_shader(vert_code, GL_VERTEX_SHADER);
+        auto frag_id = compile_shader(frag_code, GL_FRAGMENT_SHADER);
+
+        uint32 program_id = glCreateProgram();
+        glAttachShader(program_id, vert_id);
+        glAttachShader(program_id, frag_id);
+
+        glLinkProgram(program_id);
+
+        if (!is_successful(program_id, GL_LINK_STATUS)) return;
+
+        m_Shaders.insert({shader_name, Shader{program_id}});
+    }
     
     Shader& ShaderLib::Get(StringId shader_name)
     {

@@ -14,6 +14,7 @@ namespace polos
     {
     public:
         void Load(std::string_view glsl_file);
+        void Load(std::string_view vert_file, std::string_view frag_file);
         
         Shader& Get(StringId shader_name);
         

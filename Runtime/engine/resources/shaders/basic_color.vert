@@ -14,13 +14,3 @@ void main() {
     fragColor = a_Color;
     gl_Position = projection * view * model * vec4(a_Pos, 1.0);
 }
-
-#version 460 core
-
-out vec4 FragColor;
-
-in vec3 fragColor;
-
-void main() {
-    FragColor = vec4(fragColor, 1.0);
-}
