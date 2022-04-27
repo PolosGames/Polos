@@ -194,4 +194,4 @@ target_compile_definitions(Runtime PUBLIC GLFW_INCLUDE_NONE)
 build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)
-install(DIRECTORY engine/resources/ DESTINATION ${INSTALL_DIR})
+install(DIRECTORY engine/resources DESTINATION ${INSTALL_DIR})
