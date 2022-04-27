@@ -152,6 +152,7 @@ set(Runtime_SOURCES
     engine/engine/engine.cpp
     engine/gui/imgui/imgui_impl_glfw.cpp
     engine/gui/imgui/imgui_impl_opengl3.cpp
+    engine/gui/imgui/imgui_gui.cpp
     engine/memory/linear_allocator.cpp
     engine/memory/stack_allocator.cpp
     engine/time/scope_timer.cpp
@@ -165,7 +166,6 @@ set(Runtime_SOURCES
     engine/renderer/context/opengl/opengl_shader.cpp
     engine/platform/xplat/x_plat_window.cpp
     engine/io/file.cpp
-    engine/gui/imgui/imgui_gui.cpp 
 )
 
 add_library(Runtime STATIC)
@@ -188,6 +188,8 @@ target_include_directories(Runtime
                            PUBLIC engine ${PROJECT_BINARY_DIR}
                            INTERFACE include
 )
+
+target_compile_definitions(Runtime PUBLIC GLFW_INCLUDE_NONE)
 
 build_options(Runtime true)
 
