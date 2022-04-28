@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.21.1)
 
 target_sources(RapidJSON PRIVATE 
     allocators.h
