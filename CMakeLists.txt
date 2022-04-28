@@ -39,7 +39,7 @@ set_target_properties(stb_image    PROPERTIES FOLDER "ThirdParty")
 add_subdirectory(ThirdParty/stb_textedit)
 set_target_properties(stb_textedit PROPERTIES FOLDER "ThirdParty")
 
-add_subdirectory(ThirdParty/RapidJSON)
+add_subdirectory(ThirdParty/rapidjson)
 set_target_properties(RapidJSON    PROPERTIES FOLDER "ThirdParty")
 
 if(USE_OPENGL OR USE_VULKAN)
