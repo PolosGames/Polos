@@ -10,6 +10,7 @@ set(Runtime_core_HEADERS
     engine/core/i_window.h
     engine/core/camera.h
     engine/core/update_queue.h
+    engine/core/resource_manager.h
 )
 
 set(Runtime_containers_HEADERS
@@ -113,13 +114,14 @@ set(Runtime_HEADERS
         ${Runtime_renderer_HEADERS}
         ${Runtime_renderer_context_HEADERS}
         ${Runtime_window_HEADERS}
-        engine/polos_pch.h)
+)
 
 set(EXTRA_LIBS)
 
 list(APPEND EXTRA_LIBS glm_static)
 list(APPEND EXTRA_LIBS stb_image)
 list(APPEND EXTRA_LIBS stb_textedit)
+list(APPEND EXTRA_LIBS RapidJSON)
 
 if(USE_OPENGL OR USE_VULKAN)
     list(APPEND EXTRA_LIBS glfw)
@@ -171,7 +173,7 @@ set(Runtime_SOURCES
 add_library(Runtime STATIC)
 
 target_sources(Runtime
-               PRIVATE ${Runtime_SOURCES} ${Runtime_HEADERS}
+               PRIVATE ${Runtime_SOURCES}
 )
 
 target_precompile_headers(Runtime
