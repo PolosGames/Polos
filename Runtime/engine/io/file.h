@@ -20,8 +20,9 @@ namespace polos
     public:
         explicit File(std::string&& full_path, FileMode mode) noexcept;
     
-        std::string Read();
-        std::string ReadLine();
+        std::string  ReadStr();
+        DArray<byte> ReadByte();
+        std::string  ReadLine();
     private:
         std::fstream m_FileStream;
         uint32       m_Mode;

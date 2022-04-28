@@ -40,10 +40,21 @@ namespace polos
         return line;
     }
     
-    std::string File::Read()
+    std::string File::ReadStr()
     {
         std::stringstream ss;
         ss << m_FileStream.rdbuf();
         return ss.str();
+    }
+    
+    DArray<byte> File::ReadByte()
+    {
+        if (!(m_Mode & (FileMode::kRead | FileMode::kBinary))) return DArray<byte>{};
+
+        DArray<byte> byte_arr {
+            std::istreambuf_iterator<char>(m_FileStream), {}
+        };
+
+        return byte_arr;
     }
 } // namespace polos

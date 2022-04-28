@@ -99,7 +99,9 @@ target_compile_features(Polos PRIVATE cxx_std_20)
 
 set(EXTRA_LIBS)
 if(STATIC_STD)
-    list(APPEND EXTRA_LIBS -static-libstdc++)
+    if(!MSVC)
+        list(APPEND EXTRA_LIBS -static-libstdc++)
+    endif()
 endif()
 
 target_link_libraries(Polos

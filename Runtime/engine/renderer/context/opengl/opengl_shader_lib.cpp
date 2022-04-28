@@ -21,7 +21,7 @@ namespace polos
         std::string const shader_code = [&glsl_file, &shader_name] {
             File file(glsl_file.data(), kRead);
             shader_name = get_string_id(file.file_name);
-            return file.Read();
+            return file.ReadStr();
         }();
         
         if(m_Shaders.contains(shader_name)) return;
@@ -70,14 +70,14 @@ namespace polos
         std::string const vert_code = [&vert_file, &shader_name] {
             File file(vert_file.data(), kRead);
             shader_name = get_string_id(file.file_name);
-            return file.Read();
+            return file.ReadStr();
         }();
 
         if (m_Shaders.contains(shader_name)) return;
 
         std::string const frag_code = [&frag_file, &shader_name] {
             File file(frag_file.data(), kRead);
-            return file.Read();
+            return file.ReadStr();
         }();
 
         auto vert_id = compile_shader(vert_code, GL_VERTEX_SHADER);
