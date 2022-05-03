@@ -29,8 +29,9 @@ namespace polos
 
     using byte = uint8;
 
-    using event_id  = int64;
-    using StringId = int64;
+    using EventId       = int64;
+    using StringId       = int64;
+    using ResourceHandle = int64;
 
     using cstring = const char*;
 

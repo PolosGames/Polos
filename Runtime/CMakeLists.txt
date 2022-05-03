@@ -93,6 +93,7 @@ set(Runtime_renderer_context_HEADERS
     engine/renderer/context/vao.h
     engine/renderer/context/vertex.h
     engine/renderer/context/shader.h
+    engine/renderer/context/texture.h
 )
 
 set(Runtime_window_HEADERS
@@ -151,6 +152,7 @@ set(Runtime_SOURCES
     engine/core/log.cpp
     engine/core/camera.cpp
     engine/core/update_queue.cpp
+    engine/core/resource_manager.cpp
     engine/engine/engine.cpp
     engine/gui/imgui/imgui_impl_glfw.cpp
     engine/gui/imgui/imgui_impl_opengl3.cpp
@@ -166,6 +168,7 @@ set(Runtime_SOURCES
     engine/renderer/context/opengl/opengl_shader_lib.cpp
     engine/renderer/context/opengl/opengl_vao.cpp
     engine/renderer/context/opengl/opengl_shader.cpp
+    engine/renderer/context/opengl/opengl_texture.cpp
     engine/platform/xplat/x_plat_window.cpp
     engine/io/file.cpp
 )
