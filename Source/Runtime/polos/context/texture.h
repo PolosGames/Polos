@@ -4,13 +4,15 @@
 
 namespace polos
 {
-    class Texture
+    struct Texture
     {
-    public:
-        void LoadTexture();
-    private:
-        void* m_Data;
-        int64 m_Handle;
+        uint32 id;
+        
+        int32 width;
+        int32 height;
+        int32 channels;
+
+        static Texture Load(cstring path);
     };
 }// namespace polos
 
