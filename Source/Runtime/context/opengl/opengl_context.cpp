@@ -6,7 +6,7 @@
 
 #include "utils/feature.h"
 
-#include "renderer/context/graphics_context.h"
+#include "context/graphics_context.h"
 
 namespace polos
 {

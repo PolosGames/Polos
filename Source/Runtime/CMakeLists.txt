@@ -47,11 +47,11 @@ set(Runtime_SOURCES
     platform/windows/windows_timer.cpp
     platform/linux/linux_timer.cpp
     renderer/renderer.cpp
-    renderer/context/opengl/opengl_context.cpp
-    renderer/context/opengl/opengl_shader_lib.cpp
-    renderer/context/opengl/opengl_vao.cpp
-    renderer/context/opengl/opengl_shader.cpp
-    renderer/context/opengl/opengl_texture.cpp
+    context/opengl/opengl_context.cpp
+    context/opengl/opengl_shader_lib.cpp
+    context/opengl/opengl_vao.cpp
+    context/opengl/opengl_shader.cpp
+    context/opengl/opengl_texture.cpp
     platform/xplat/x_plat_window.cpp
     io/file.cpp
 )

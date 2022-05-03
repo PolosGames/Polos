@@ -3,8 +3,8 @@
 #include <imgui.h>
 
 #include "core/update_queue.h"
-#include "renderer/context/shader_lib.h"
-#include "renderer/context/vertex.h"
+#include "context/shader_lib.h"
+#include "context/vertex.h"
 
 #include "editor.h"
 
