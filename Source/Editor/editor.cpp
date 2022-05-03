@@ -82,13 +82,13 @@ namespace polos
         pos2 = slider_pos2;
 
         basic_color.Use();
-        basic_color.SetMat("view", view);
-        basic_color.SetMat("projection", projection);
+        basic_color.SetMat("view"_sid, view);
+        basic_color.SetMat("projection"_sid, projection);
 
-        basic_color.SetMat("model", model);
+        basic_color.SetMat("model"_sid, model);
         cube.Draw();
 
-        basic_color.SetMat("model", model2);
+        basic_color.SetMat("model"_sid, model2);
         cube.Draw();
         
         ImGui::Begin("First box");
