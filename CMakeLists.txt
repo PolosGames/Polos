@@ -20,6 +20,7 @@ option(USE_VULKAN "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
 option(ENABLE_LOGGING "Enable logging inside the engine and in applications" ON)
 option(GUI_USE_IMGUI "Use ImGui for default Gui implementation" ON)
+option(BUILD_EDITOR "If not checked, only builds the runtime binaries" OFF)
 
 include(CMake/target_build.cmake)
 
@@ -83,32 +84,34 @@ configure_file(plconfig.h.in plconfig.h)
 
 add_subdirectory(Runtime)
 
-# ================================== #
-#             Build Polos            #
-# ================================== #
+if(BUILD_EDITOR)
+    # ================================== #
+    #             Build Polos            #
+    # ================================== #
 
-add_executable(Polos)
+    add_executable(Polos)
 
-add_subdirectory(Editor)
+    add_subdirectory(Editor)
 
-if(MSVC)
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
-endif()
-
-target_compile_features(Polos PRIVATE cxx_std_20)
-
-set(EXTRA_LIBS)
-if(STATIC_STD)
-    if(!MSVC)
-        list(APPEND EXTRA_LIBS -static-libstdc++)
+    if(MSVC)
+        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
     endif()
+
+    target_compile_features(Polos PRIVATE cxx_std_20)
+
+    set(EXTRA_LIBS)
+    if(STATIC_STD)
+        if(!MSVC)
+            list(APPEND EXTRA_LIBS -static-libstdc++)
+        endif()
+    endif()
+
+    target_link_libraries(Polos
+                          PUBLIC Runtime
+                                 ${EXTRA_LIBS}
+    )
+
+    build_options(Polos true)
+
+    install(TARGETS Polos DESTINATION ${INSTALL_DIR})
 endif()
-
-target_link_libraries(Polos
-                      PUBLIC Runtime
-                             ${EXTRA_LIBS}
-)
-
-build_options(Polos true)
-
-install(TARGETS Polos DESTINATION ${INSTALL_DIR})
