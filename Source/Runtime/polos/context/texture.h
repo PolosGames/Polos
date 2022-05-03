@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_RENDERER_CONTEXT_TEXTURE_H_
-#define POLOS_RENDERER_CONTEXT_TEXTURE_H_
+#ifndef POLOS_CONTEXT_TEXTURE_H_
+#define POLOS_CONTEXT_TEXTURE_H_
 
 namespace polos
 {
@@ -16,4 +16,4 @@ namespace polos
     };
 }// namespace polos
 
-#endif /* POLOS_RENDERER_CONTEXT_TEXTURE_H_ */
+#endif /* POLOS_CONTEXT_TEXTURE_H_ */
