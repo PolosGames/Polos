@@ -6,7 +6,7 @@
 #include "core/event_bus.h"
 #include "renderer/renderer.h"
 #include "core/application.h"
-#include "renderer/context/shader_lib.h"
+#include "context/shader_lib.h"
 #include "core/update_queue.h"
 #include "core/resource_manager.h"
 
