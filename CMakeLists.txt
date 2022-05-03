@@ -20,7 +20,7 @@ option(USE_VULKAN "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
 option(ENABLE_LOGGING "Enable logging inside the engine and in applications" ON)
 option(GUI_USE_IMGUI "Use ImGui for default Gui implementation" ON)
-option(BUILD_EDITOR "If not checked, only builds the runtime binaries" OFF)
+option(BUILD_EDITOR "If not checked, only builds the runtime binaries" ON)
 
 include(CMake/target_build.cmake)
 

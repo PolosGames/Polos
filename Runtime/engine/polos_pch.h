@@ -27,6 +27,11 @@
 #include <array>
 #include <span>
 
+// glm stuff
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "debug/plassert.h"
 #include "debug/profiling.h"
 #include "utils/alias.h"

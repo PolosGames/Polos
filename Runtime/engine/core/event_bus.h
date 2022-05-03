@@ -37,7 +37,7 @@ namespace polos
     private:
         static EventBus* m_Instance;
 
-        HashMap<EventId, DArray<EventSubscriber>> m_Callbacks;
+        HashMap<StringId, DArray<EventSubscriber>> m_Callbacks;
     };
 } // namespace polos
 

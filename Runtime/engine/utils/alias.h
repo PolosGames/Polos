@@ -29,7 +29,6 @@ namespace polos
 
     using byte = uint8;
 
-    using EventId       = int64;
     using StringId       = int64;
     using ResourceHandle = int64;
 

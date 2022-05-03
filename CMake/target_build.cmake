@@ -25,8 +25,8 @@ function(build_options target warnings)
     
     if (MSVC)
         target_compile_options(${target}
-            PRIVATE $<$<CONFIG:Debug>: /Od /ZI>
-                    $<$<CONFIG:RelWithDebInfo>: /Ot /ZI>
+            PRIVATE $<$<CONFIG:Debug>: /Od>
+                    $<$<CONFIG:RelWithDebInfo>: /Ot>
                     $<$<CONFIG:Release>: /O2>
                     $<$<CONFIG:MinSizeRel>: /O1>
         )

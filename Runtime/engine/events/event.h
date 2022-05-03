@@ -10,15 +10,15 @@ namespace polos
 {
     class base_event
     {
-        virtual event_id _id() = 0;
+        virtual StringId _id() = 0;
     };
 
     template<typename T>
     class event : public base_event
     {
-        event_id _id() override { return id; } //never going to be accessed, just for vtable
+        StringId _id() override { return id; }//never going to be accessed, just for vtable
     public:
-        inline static const event_id id = TypeHash<T>();
+        inline static const StringId id = TypeHash<T>();
         
         virtual ~event() = default;
     };

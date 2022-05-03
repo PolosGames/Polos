@@ -7,7 +7,7 @@ namespace polos
         if (cbs.count(event_type::id))
         {
             event_type e(args...);
-            EventId id = event_type::id;
+            StringId id = event_type::id;
             for (auto& subscriber_function : cbs[id])
             {
                 subscriber_function(e);
@@ -21,7 +21,7 @@ namespace polos
         auto& cbs = m_Instance->m_Callbacks;
         auto del = Delegate<void(event_type&)>::template From<object_type, method_ptr>(
                 reinterpret_cast<object_type *>(ptr));
-        EventId id = event_type::id;
+        StringId id = event_type::id;
         cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(del));
     }
 
@@ -30,23 +30,23 @@ namespace polos
     {
         auto& cbs = m_Instance->m_Callbacks;
         auto del = Delegate<void(event_type&)>::template From<func_ptr>();
-        EventId id = event_type::id;
+        StringId id = event_type::id;
         cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(del));
     }
 
     template<class event_type>
     inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
     {
-        auto& cbs = m_Instance->m_Callbacks;
-        EventId id = event_type::id;
+        auto& cbs   = m_Instance->m_Callbacks;
+        StringId id = event_type::id;
         cbs.try_emplace(id).first->second.push_back(reinterpret_cast<EventSubscriber const&>(cback));
     }
-    
+
     template<class event_type>
     inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
     {
-        auto &cbs = m_Instance->m_Callbacks;
-        EventId id = event_type::id;
+        auto& cbs   = m_Instance->m_Callbacks;
+        StringId id = event_type::id;
         cbs.at(id).erase(std::remove(cbs.at(id).begin(), cbs.at(id).end(), reinterpret_cast<const EventSubscriber&>(cback)), cbs.at(id).end());
     }
 }
