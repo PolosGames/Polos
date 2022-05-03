@@ -1,6 +1,7 @@
-#include "GLFW/glfw3.h"
 #include "polos_pch.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
+
+#include "GLFW/glfw3.h"
 
 #include "events/window/window_events.h"
 #include "events/input/input_events.h"

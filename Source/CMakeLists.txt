@@ -66,8 +66,9 @@ if(BUILD_EDITOR)
     endif()
 
     target_link_libraries(Polos
-                          PUBLIC Runtime
-                                 ${EXTRA_LIBS}
+        PUBLIC
+            Runtime
+            ${EXTRA_LIBS}
     )
 
     build_options(Polos true)

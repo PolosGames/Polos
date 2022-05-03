@@ -1,10 +1,10 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #include <imgui.h>
 
-#include "core/update_queue.h"
-#include "context/shader_lib.h"
-#include "context/vertex.h"
+#include "polos/core/update_queue.h"
+#include "polos/context/shader_lib.h"
+#include "polos/context/vertex.h"
 
 #include "editor.h"
 
@@ -52,7 +52,7 @@ namespace polos
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
-        IWindow& window = get_main_window();
+        IWindow& window = Application::get_main_window();
         float aspect = static_cast<float>(window.Width()) / window.Height();
         projection = glm::perspective(
                 45.0f,

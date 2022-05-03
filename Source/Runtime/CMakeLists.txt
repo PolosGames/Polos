@@ -29,31 +29,39 @@ if (UNIX)
     list(APPEND EXTRA_LIBS pthread)
 endif (UNIX)
 
+set(Runtime_HEADERS
+    polos/containers/containers.h
+    polos/containers/delegate.h
+    polos/containers/dynamic_array.h
+    polos/core/log.h
+    polos/core/update_queue.h
+)
+
 set(Runtime_SOURCES
-    core/application.cpp
-    core/event_bus.cpp
-    core/log.cpp
-    core/camera.cpp
-    core/update_queue.cpp
-    core/resource_manager.cpp
-    engine/engine.cpp
-    gui/imgui/imgui_impl_glfw.cpp
-    gui/imgui/imgui_impl_opengl3.cpp
-    gui/imgui/imgui_gui.cpp
-    memory/linear_allocator.cpp
-    memory/stack_allocator.cpp
-    time/scope_timer.cpp
-    utils/type_util.cpp
-    platform/windows/windows_timer.cpp
-    platform/linux/linux_timer.cpp
-    renderer/renderer.cpp
-    context/opengl/opengl_context.cpp
-    context/opengl/opengl_shader_lib.cpp
-    context/opengl/opengl_vao.cpp
-    context/opengl/opengl_shader.cpp
-    context/opengl/opengl_texture.cpp
-    platform/xplat/x_plat_window.cpp
-    io/file.cpp
+    polos/core/application.cpp
+    polos/core/event_bus.cpp
+    polos/core/log.cpp
+    polos/core/camera.cpp
+    polos/core/update_queue.cpp
+    polos/core/resource_manager.cpp
+    polos/engine/engine.cpp
+    polos/gui/imgui/imgui_impl_glfw.cpp
+    polos/gui/imgui/imgui_impl_opengl3.cpp
+    polos/gui/imgui/imgui_gui.cpp
+    polos/memory/linear_allocator.cpp
+    polos/memory/stack_allocator.cpp
+    polos/time/scope_timer.cpp
+    polos/utils/type_util.cpp
+    polos/platform/windows/windows_timer.cpp
+    polos/platform/linux/linux_timer.cpp
+    polos/renderer/renderer.cpp
+    polos/context/opengl/opengl_context.cpp
+    polos/context/opengl/opengl_shader_lib.cpp
+    polos/context/opengl/opengl_vao.cpp
+    polos/context/opengl/opengl_shader.cpp
+    polos/context/opengl/opengl_texture.cpp
+    polos/platform/xplat/x_plat_window.cpp
+    polos/io/file.cpp
 )
 
 add_library(Runtime STATIC)
@@ -61,11 +69,13 @@ add_library(Runtime STATIC)
 set_target_properties(Runtime PROPERTIES OUTPUT_NAME "PolosRuntime")
 
 target_sources(Runtime
-               PRIVATE ${Runtime_SOURCES}
+    PRIVATE
+        ${Runtime_SOURCES}
+        ${Runtime_HEADERS}
 )
 
 target_precompile_headers(Runtime
-                          PUBLIC polos_pch.h)
+                          PUBLIC polos/polos_pch.h)
 
 target_compile_features(Runtime
                         PRIVATE cxx_std_20 cxx_attributes)
@@ -73,11 +83,13 @@ target_compile_features(Runtime
 target_link_libraries(Runtime
                       PUBLIC ${EXTRA_LIBS})
 
-# for the config header
 target_include_directories(Runtime
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} 
-                                  ${PROJECT_BINARY_DIR}
-                           INTERFACE include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/polos
+        ${PROJECT_BINARY_DIR}
+    INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/polos
 )
 
 target_compile_definitions(Runtime PUBLIC GLFW_INCLUDE_NONE)
@@ -85,4 +97,4 @@ target_compile_definitions(Runtime PUBLIC GLFW_INCLUDE_NONE)
 build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)
-install(DIRECTORY resources DESTINATION ${INSTALL_DIR})
+install(DIRECTORY polos/resources DESTINATION ${INSTALL_DIR})

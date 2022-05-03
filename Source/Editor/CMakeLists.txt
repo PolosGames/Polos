@@ -5,10 +5,9 @@ add_executable(Polos)
 target_sources(Polos
     PRIVATE
         editor.cpp
-        editor.h
 )
 
 target_include_directories(Polos
     PRIVATE
-        Editor
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )

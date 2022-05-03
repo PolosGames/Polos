@@ -1,10 +1,10 @@
 #ifndef POLOS_EDITOR_H_
 #define POLOS_EDITOR_H_
 
-#include "core/application.h"
-#include "context/shader.h"
-#include "context/vao.h"
-#include "core/i_window.h"
+#include "polos/core/application.h"
+#include "polos/context/shader.h"
+#include "polos/context/vao.h"
+#include "polos/core/i_window.h"
 
 namespace polos
 {   

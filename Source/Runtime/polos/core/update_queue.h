@@ -1,3 +1,4 @@
+#pragma once
 #ifndef POLOS_CORE_UPDATEQUEUE_H_
 #define POLOS_CORE_UPDATEQUEUE_H_
 
