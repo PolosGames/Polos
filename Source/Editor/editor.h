@@ -1,9 +1,6 @@
 #ifndef POLOS_EDITOR_H_
 #define POLOS_EDITOR_H_
 
-#include <glm/glm.hpp>
-#include <memory>
-
 #include "core/application.h"
 #include "renderer/context/shader.h"
 #include "renderer/context/vao.h"
@@ -28,6 +25,8 @@ namespace polos
         glm::mat4 view, projection;
         glm::vec3 pos, pos2;
         glm::vec3 slider_pos, slider_pos2;
+
+        bool open;
     };
 }
 

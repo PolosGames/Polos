@@ -1,12 +1,10 @@
 #include "polos_pch.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
 
 #include "core/update_queue.h"
 #include "renderer/context/shader_lib.h"
 #include "renderer/context/vertex.h"
-#include "imgui.h"
 
 #include "editor.h"
 
@@ -43,13 +41,13 @@ namespace polos
         UpdateQueue::PutLast(UpdateQueue::FuncType::From<Editor, &Editor::Update>(this));
         
         ShaderLib& lib = ShaderLib::Instance();
-            lib.Load("resources/shaders/basic_color.glsl");
+        lib.Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         
         basic_color = lib.Get("basic_color"_sid);
 
-        model = glm::mat4(1.0f);
+        model  = glm::mat4(1.0f);
         model2 = glm::mat4(1.0f);
-        view  = glm::lookAt(
+        view   = glm::lookAt(
             glm::vec3(0.5f, 0.5f, 1.0f),
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f)
@@ -67,6 +65,8 @@ namespace polos
         
         pos2        = glm::vec3(2.0f, 0.0f, -3.0f);
         slider_pos2 = pos2;
+
+        open = true;
     }
 
     Editor::~Editor()
@@ -75,13 +75,11 @@ namespace polos
 
     void Editor::Update(float delta_time)
     {
-        auto mapped_val = (slider_pos * (10.0f / 2000.0f));
-        model = glm::translate(model, (pos - mapped_val));
-        pos = mapped_val;
+        model = glm::translate(model, (pos - slider_pos));
+        pos = slider_pos;
         
-        auto mapped_val2 = (slider_pos2 * (10.0f / 2000.0f));
-        model2 = glm::translate(model2, (pos2 - mapped_val2));
-        pos2 = mapped_val2;
+        model2 = glm::translate(model2, (pos2 - slider_pos2));
+        pos2 = slider_pos2;
 
         basic_color.Use();
         basic_color.SetMat("view", view);
@@ -94,14 +92,18 @@ namespace polos
         cube.Draw();
         
         ImGui::Begin("First box");
-        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos), -1000.0f, 1000.0f);
-        ImGui::SliderFloat3("Mapped Pos", glm::value_ptr(mapped_val), -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos), -5.0f, 5.0f);
         ImGui::End();
 
         ImGui::Begin("Second box");
-        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos2), -1000.0f, 1000.0f);
-        ImGui::SliderFloat3("Mapped Pos", glm::value_ptr(mapped_val2), -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
         ImGui::End();
+
+        auto const* viewport = ImGui::GetMainViewport();
+
+        ImGui::DockSpaceOverViewport(viewport);
+
+        //ImGui::ShowDemoWindow(&open);
     }
 
     Application* CreateApplication(void* ptr)

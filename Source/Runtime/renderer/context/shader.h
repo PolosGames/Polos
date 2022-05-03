@@ -17,8 +17,9 @@ namespace polos
     class Shader
     {
     public:
-        Shader() {}
+        Shader() : m_ProgramId{uint32(-1)} {}
         explicit Shader(uint32 program_id);
+        void CreateUniformLookup();
         void Use() const;
         
         void SetInt(cstring name, int32 value);

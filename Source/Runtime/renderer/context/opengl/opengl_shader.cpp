@@ -9,9 +9,48 @@
 
 namespace polos
 {
+    namespace detail
+    {
+        struct uniform_info
+        {
+            GLint   location;
+            GLsizei count;
+        };
+    }
+
     Shader::Shader(uint32 program_id)
         : m_ProgramId(program_id)
     {}
+
+    void Shader::CreateUniformLookup()
+    {
+        GLint uniform_count = 0;
+        glGetProgramiv(m_ProgramId, GL_ACTIVE_UNIFORMS, &uniform_count);
+
+        if (uniform_count != 0)
+        {
+            GLint max_name_len = 0;
+            GLsizei length     = 0;
+            GLsizei count      = 0;
+            GLenum type        = GL_NONE;
+            glGetProgramiv(m_ProgramId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_len);
+
+            char* uniform_name = static_cast<char*>(alloca(max_name_len));
+
+            std::unordered_map<std::string, detail::uniform_info> uniforms;
+
+            for (GLint i = 0; i < uniform_count; ++i)
+            {
+                glGetActiveUniform(m_ProgramId, i, max_name_len, &length, &count, &type, uniform_name);
+
+                detail::uniform_info uniform_info = {};
+                uniform_info.location             = glGetUniformLocation(m_ProgramId, uniform_name);
+                uniform_info.count                = count;
+
+                uniforms.emplace(std::make_pair(std::string(uniform_name, length), uniform_info));
+            }
+        }
+    }
     
     void Shader::SetInt(cstring name, int32 value)
     {

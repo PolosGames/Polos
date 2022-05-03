@@ -13,9 +13,10 @@ namespace polos
     class ShaderLib
     {
     public:
-        void Load(std::string_view glsl_file);
-        void Load(std::string_view vert_file, std::string_view frag_file);
-        
+        void    Load(std::string_view glsl_file);
+        void    Load(std::string_view vert_file, std::string_view frag_file);
+        void    Finalize();
+
         Shader& Get(StringId shader_name);
         
         static ShaderLib& Instance()
@@ -28,7 +29,6 @@ namespace polos
     private:
         friend class Engine;
         static ShaderLib* m_Instance;
-        HashMap<StringId, uint32> m_UniformLookup;
         HashMap<StringId, Shader> m_Shaders;
     };
 }
