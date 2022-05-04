@@ -38,15 +38,21 @@ namespace polos
         glCreateVertexArrays(1, &m_VaoId);
         glVertexArrayVertexBuffer(m_VaoId, 0, m_BufferId, vrt_offset, sizeof(vertex));
         glVertexArrayElementBuffer(m_VaoId, m_BufferId);
-    
+
         glEnableVertexArrayAttrib(m_VaoId, 0);
         glEnableVertexArrayAttrib(m_VaoId, 1);
-    
+        glEnableVertexArrayAttrib(m_VaoId, 2);
+        glEnableVertexArrayAttrib(m_VaoId, 3);
+
         glVertexArrayAttribFormat(m_VaoId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, position));
-        glVertexArrayAttribFormat(m_VaoId, 1, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, color));
+        glVertexArrayAttribFormat(m_VaoId, 1, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, normal));
+        glVertexArrayAttribFormat(m_VaoId, 2, 2, GL_FLOAT, GL_FALSE, offsetof(vertex, texture_coord));
+        glVertexArrayAttribFormat(m_VaoId, 3, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, color));
     
         glVertexArrayAttribBinding(m_VaoId, 0, 0);
         glVertexArrayAttribBinding(m_VaoId, 1, 0);
+        glVertexArrayAttribBinding(m_VaoId, 2, 0);
+        glVertexArrayAttribBinding(m_VaoId, 3, 0);
     }
     
     Vao::~Vao()

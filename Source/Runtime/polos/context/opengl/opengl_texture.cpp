@@ -7,8 +7,12 @@
 
 namespace polos
 {
+    int32 Texture::s_IsFlipped = 0;
+
     Texture Texture::Load(cstring path)
     {
+        if(!Texture::s_IsFlipped) stbi__vertically_flip_on_load_global = 1;
+
         uint32 handle;
         glCreateTextures(GL_TEXTURE_2D, 1, &handle);
 
