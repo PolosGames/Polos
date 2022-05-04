@@ -45,8 +45,8 @@ namespace polos
         
         return sid;
     }
-    
-    constexpr StringId operator""_sid(cstring str, std::size_t _) { return hash_function(str); }
 } // namespace polos
+
+constexpr polos::StringId operator""_sid(char const* str, std::size_t _) { return polos::hash_function(str); }
 
 #endif //POLOSUTILS__STRINGID_H_
