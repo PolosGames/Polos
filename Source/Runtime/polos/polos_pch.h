@@ -37,3 +37,5 @@
 #include "utils/alias.h"
 #include "utils/feature.h"
 #include "core/log.h"
+
+namespace pl = ::polos;
