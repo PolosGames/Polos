@@ -38,7 +38,7 @@ namespace polos
     Editor::Editor()
         : cube{vertices, indices}
     {
-        UpdateQueue::PutLast(UpdateQueue::FuncType::From<Editor, &Editor::Update>(this));
+        UPDATE_Q_MEM_ADD_LAST(Editor, Update);
         
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         
