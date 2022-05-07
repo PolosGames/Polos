@@ -33,4 +33,9 @@ namespace polos
 
         return {handle, i_width, i_height, i_channels};
     }
+
+    Texture Texture::Load(std::string const& path)
+    {
+        return Load(path.c_str());
+    }
 }// namespace polos

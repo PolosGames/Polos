@@ -13,6 +13,8 @@ namespace polos
         int32 channels;
 
         static Texture Load(cstring path);
+        static Texture Load(std::string const& path);
+
         static int32 s_IsFlipped;
     };
 }// namespace polos
