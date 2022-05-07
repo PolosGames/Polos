@@ -24,7 +24,7 @@ namespace polos
             return file.ReadStr();
         }();
         
-        if(m_Shaders.contains(shader_name)) return;
+        if(m_Instance->m_Shaders.contains(shader_name)) return;
         
         int32 i = 0; // how many shaders are created
         uint32 shader_ids[kShaderTypeMax];
@@ -61,7 +61,7 @@ namespace polos
 
         if (!is_successful(program_id, GL_LINK_STATUS)) return;
         
-        m_Shaders.insert({shader_name, Shader{program_id}});
+        m_Instance->m_Shaders.insert({shader_name, Shader{program_id}});
     }
 
     void ShaderLib::Load(std::string_view vert_file, std::string_view frag_file)
@@ -73,7 +73,7 @@ namespace polos
             return file.ReadStr();
         }();
 
-        if (m_Shaders.contains(shader_name)) return;
+        if (m_Instance->m_Shaders.contains(shader_name)) return;
 
         std::string const frag_code = [&frag_file, &shader_name] {
             File file(frag_file.data(), kRead);
@@ -91,14 +91,16 @@ namespace polos
 
         if (!is_successful(program_id, GL_LINK_STATUS)) return;
 
-        m_Shaders.insert({shader_name, Shader{program_id}});
+        m_Instance->m_Shaders.insert({shader_name, Shader{program_id}});
     }
     
     Shader& ShaderLib::Get(StringId shader_name)
     {
-        if(!m_Shaders.contains(shader_name)) LOG_ENGINE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name);
-        Shader& s = m_Shaders[shader_name];
-        return s;
+        if (!m_Instance->m_Shaders.contains(shader_name))
+        {
+            LOG_ENGINE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name); 
+        }
+        return m_Instance->m_Shaders[shader_name];
     }
     
     uint32 ShaderLib::compile_shader(std::string_view source, uint32 shader_type)

@@ -13,16 +13,12 @@ namespace polos
     class ShaderLib
     {
     public:
-        void    Load(std::string_view glsl_file);
-        void    Load(std::string_view vert_file, std::string_view frag_file);
-        void    Finalize();
+        static void    Load(std::string_view glsl_file);
+        static void    Load(std::string_view vert_file, std::string_view frag_file);
+        static void    Finalize();
 
-        Shader& Get(StringId shader_name);
+        static Shader& Get(StringId shader_name);
         
-        static ShaderLib& Instance()
-        {
-            return *m_Instance;
-        }
     private:
         static uint32 compile_shader(std::string_view source, uint32 shader_type);
         static bool is_successful(uint32 id, uint32 action);

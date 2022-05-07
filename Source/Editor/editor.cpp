@@ -40,10 +40,9 @@ namespace polos
     {
         UpdateQueue::PutLast(UpdateQueue::FuncType::From<Editor, &Editor::Update>(this));
         
-        ShaderLib& lib = ShaderLib::Instance();
-        lib.Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
+        ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         
-        basic_color = lib.Get("basic_color"_sid);
+        basic_color = ShaderLib::Get("basic_color"_sid);
 
         model  = glm::mat4(1.0f);
         model2 = glm::mat4(1.0f);

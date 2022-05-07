@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 
+project(
+    Polos
+    VERSION 0.1.0
+)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
