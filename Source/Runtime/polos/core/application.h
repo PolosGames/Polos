@@ -14,7 +14,7 @@ namespace polos
     class Application
     {
     public:
-        Application();
+        Application(window_props&& props = window_props{});
         virtual ~Application();
 
         void Run();

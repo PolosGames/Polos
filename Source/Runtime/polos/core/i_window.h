@@ -41,7 +41,7 @@ namespace polos
         
         virtual void Update() = 0;
         
-        PL_NODISCARD static IWindow* NewWindow(const window_props& props = window_props());
+        PL_NODISCARD static IWindow* NewWindow(window_props&& props);
     };
 }
 

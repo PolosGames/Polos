@@ -12,7 +12,7 @@
 namespace polos
 {
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
-    IWindow* IWindow::NewWindow(const window_props& props)
+    IWindow* IWindow::NewWindow(window_props&& props)
     {
         return new XPlatWindow(props);
     }
