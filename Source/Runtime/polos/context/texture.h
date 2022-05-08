@@ -6,7 +6,7 @@ namespace polos
 {
     struct Texture
     {
-        ~Texture();
+        void Delete() const;
 
         static Texture Load(cstring path);
         static Texture Load(std::string const& path);
