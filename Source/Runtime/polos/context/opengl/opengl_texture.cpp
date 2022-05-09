@@ -14,7 +14,7 @@ namespace polos
         glDeleteTextures(1, &id);
     }
 
-    Texture Texture::Load(cstring path)
+    std::shared_ptr<Texture> Texture::Load(cstring path)
     {
         if (!Texture::s_IsFlipped) stbi_set_flip_vertically_on_load(1);
 
@@ -49,13 +49,13 @@ namespace polos
 
             stbi_image_free(pixel_data);
 
-            return {handle, i_width, i_height, i_channels};
+            return std::make_shared<Texture>(handle, i_width, i_height, i_channels);
         }
 
-        return {0, 0, 0, 0};
+        return std::make_shared<Texture>(0, 0, 0, 0);
     }
 
-    Texture Texture::Load(std::string const& path)
+    std::shared_ptr<Texture> Texture::Load(std::string const& path)
     {
         return Load(path.c_str());
     }

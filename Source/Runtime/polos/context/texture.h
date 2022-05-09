@@ -8,8 +8,8 @@ namespace polos
     {
         ~Texture();
 
-        static Texture Load(cstring path);
-        static Texture Load(std::string const& path);
+        static std::shared_ptr<Texture> Load(cstring path);
+        static std::shared_ptr<Texture> Load(std::string const& path);
 
         static int32 s_IsFlipped;
 
@@ -18,6 +18,8 @@ namespace polos
         int32  height;
         int32  channels;
     };
+
+    using TextureRef = std::shared_ptr<Texture>;
 }// namespace polos
 
 #endif /* POLOS_CONTEXT_TEXTURE_H_ */
