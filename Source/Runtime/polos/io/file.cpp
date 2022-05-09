@@ -10,7 +10,7 @@ namespace polos
     static constexpr char seperator = '/';
 #endif
 
-    File::File(std::string&& full_path, FileMode mode) noexcept
+    File::File(std::string full_path, FileMode mode) noexcept
         : m_Mode(mode)
     {
         std::replace(full_path.begin(), full_path.end(), '/', seperator);
@@ -49,7 +49,7 @@ namespace polos
     
     DArray<byte> File::ReadByte()
     {
-        if (!(m_Mode & (FileMode::kRead | FileMode::kBinary))) return DArray<byte>{};
+        ASSERT(m_Mode & (FileMode::kRead | FileMode::kBinary));
 
         DArray<byte> byte_arr {
             std::istreambuf_iterator<char>(m_FileStream), {}

@@ -6,8 +6,6 @@
 
 #include "io/file.h"
 #include "utils/stringid.h"
-#include "utils/alias.h"
-#include "debug/plassert.h"
 
 #include "context/shader_lib.h"
 
@@ -75,7 +73,7 @@ namespace polos
 
         if (m_Instance->m_Shaders.contains(shader_name)) return;
 
-        std::string const frag_code = [&frag_file, &shader_name] {
+        std::string const frag_code = [&frag_file] {
             File file(frag_file.data(), kRead);
             return file.ReadStr();
         }();

@@ -18,7 +18,7 @@ namespace polos
         std::string file_name;
         std::string file_ext;
     public:
-        explicit File(std::string&& full_path, FileMode mode) noexcept;
+        explicit File(std::string full_path, FileMode mode) noexcept;
     
         std::string  ReadStr();
         DArray<byte> ReadByte();
