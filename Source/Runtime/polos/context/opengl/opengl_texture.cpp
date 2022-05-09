@@ -9,6 +9,11 @@ namespace polos
 {
     int32 Texture::s_IsFlipped = 0;
 
+    Texture::~Texture()
+    {
+        glDeleteTextures(1, &id);
+    }
+
     Texture Texture::Load(cstring path)
     {
         if (!Texture::s_IsFlipped) stbi_set_flip_vertically_on_load(1);
@@ -48,11 +53,6 @@ namespace polos
         }
 
         return {0, 0, 0, 0};
-    }
-
-    void Texture::Delete() const
-    {
-        glDeleteTextures(1, &id);
     }
 
     Texture Texture::Load(std::string const& path)
