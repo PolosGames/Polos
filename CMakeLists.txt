@@ -24,9 +24,6 @@ option(BUILD_EDITOR "If not checked, only builds the runtime binaries" OFF)
 
 include(CMake/target_build.cmake)
 
-add_compile_definitions($<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
-                        $<$<CONFIG:Release,MinSizeRel>:PL_RELEASE>)
-
 configure_file(plconfig.h.in plconfig.h)
 
 # ================================== #

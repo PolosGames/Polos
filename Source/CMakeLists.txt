@@ -75,3 +75,5 @@ if(BUILD_EDITOR)
 
     install(TARGETS Polos DESTINATION ${INSTALL_DIR})
 endif()
+
+install(DIRECTORY resources DESTINATION ${INSTALL_DIR})

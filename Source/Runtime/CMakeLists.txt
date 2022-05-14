@@ -92,9 +92,13 @@ target_include_directories(Runtime
         ${CMAKE_CURRENT_SOURCE_DIR}/polos
 )
 
-target_compile_definitions(Runtime PUBLIC GLFW_INCLUDE_NONE)
+target_compile_definitions(Runtime
+    PUBLIC
+        GLFW_INCLUDE_NONE
+        $<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
+        $<$<CONFIG:Release,MinSizeRel>:PL_RELEASE>
+)
 
 build_options(Runtime true)
 
 #install(TARGETS Runtime DESTINATION bin)
-install(DIRECTORY polos/resources DESTINATION ${INSTALL_DIR})
