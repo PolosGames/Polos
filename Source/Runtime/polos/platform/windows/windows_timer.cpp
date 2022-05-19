@@ -13,6 +13,7 @@ namespace polos::time
         LARGE_INTEGER freq;
         BOOL ret = QueryPerformanceFrequency(&freq);
         ASSERTSTR(ret, "QueryPerformanceFrequency didn't work.");
+        static_cast<void>(ret);
 
         m_Freq = freq.QuadPart;
     }
@@ -23,6 +24,7 @@ namespace polos::time
 
         BOOL ret = QueryPerformanceCounter(&Counter);
         ASSERTSTR(ret, "QueryPerformanceCounter didn't work.");
+        static_cast<void>(ret);
 
         // steady_clock's implementation.
         const int64 Whole = (Counter.QuadPart / m_Freq) * Period::den;

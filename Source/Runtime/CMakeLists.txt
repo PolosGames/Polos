@@ -74,31 +74,40 @@ target_sources(Runtime
         ${Runtime_HEADERS}
 )
 
-target_precompile_headers(Runtime
-                          PUBLIC polos/polos_pch.h)
+target_precompile_headers(
+    Runtime
+        PUBLIC
+            polos/polos_pch.h)
 
-target_compile_features(Runtime
-                        PRIVATE cxx_std_20 cxx_attributes)
-
-target_link_libraries(Runtime
-                      PUBLIC ${EXTRA_LIBS})
-
-target_include_directories(Runtime
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/polos
-        ${PROJECT_BINARY_DIR}
-    INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/polos
+target_compile_features(
+    Runtime
+        PRIVATE
+            cxx_std_20
+            cxx_attributes
 )
 
-target_compile_definitions(Runtime
-    PUBLIC
-        GLFW_INCLUDE_NONE
-        $<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
-        $<$<CONFIG:Release,MinSizeRel>:PL_RELEASE>
+target_link_libraries(
+    Runtime
+        PUBLIC
+            ${EXTRA_LIBS})
+
+target_include_directories(
+    Runtime
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/polos
+            ${PROJECT_BINARY_DIR}
+        INTERFACE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/polos
+)
+
+target_compile_definitions(
+    Runtime
+        PUBLIC
+            GLFW_INCLUDE_NONE
+            _CRT_SECURE_NO_WARNINGS
+            $<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
+            $<$<CONFIG:Release,MinSizeRel>:PL_RELEASE>
 )
 
 build_options(Runtime true)
-
-#install(TARGETS Runtime DESTINATION bin)

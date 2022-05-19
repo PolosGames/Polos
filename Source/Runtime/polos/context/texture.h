@@ -6,6 +6,9 @@ namespace polos
 {
     struct Texture
     {
+        Texture(uint32 id, int32 w, int32 h, int32 c)
+            : id{id}, width{w}, height{h}, channels{c}
+        {}
         ~Texture();
 
         static std::shared_ptr<Texture> Load(cstring path);

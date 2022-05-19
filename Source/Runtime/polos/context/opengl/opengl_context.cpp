@@ -10,7 +10,8 @@
 
 namespace polos
 {
-    static void DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
+#ifdef PL_DEBUG
+    static void DebugCallback(GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei /*length*/, GLchar const* message, void const* /*user_param*/)
     {
         auto const message_source = [source] {
             switch (source)
@@ -56,12 +57,14 @@ namespace polos
             break;
         }
     }
+#endif /* PL_DEBUG */
 
     void graphics_context::Initialize(void* window_handle)
     {
         m_Window = window_handle;
         
         int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        static_cast<void>(r);
         ASSERTSTR(r, "Failed to load OpenGL context!");
 
 #ifdef PL_DEBUG

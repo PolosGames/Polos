@@ -48,7 +48,7 @@ namespace polos
         if (!m_IsInitialized)
         {
             glfwSetErrorCallback(error_callback);
-            int r = glfwInit();
+            int r = glfwInit(); static_cast<void>(r);
             ASSERTSTR(r == GLFW_TRUE, "Failed to initialize GLFW!");
             m_IsInitialized = true;
         }
@@ -77,14 +77,14 @@ namespace polos
 #pragma region window_events
 
         glfwSetWindowCloseCallback(m_Window,
-            [](GLFWwindow* _)
+            [](GLFWwindow* /*window*/)
             {
                 EventBus::RaiseEvent<window_close>();
             }
         );
 
         glfwSetWindowFocusCallback(m_Window,
-            [](GLFWwindow* _, int32 focused)
+            [](GLFWwindow* /*window*/, int32 focused)
             {
                 EventBus::RaiseEvent<window_focus>(focused);
             }
@@ -101,21 +101,21 @@ namespace polos
         );
 
         glfwSetWindowIconifyCallback(m_Window,
-            [](GLFWwindow* _, int32 iconified)
+            [](GLFWwindow* /*window*/, int32 iconified)
             {
                 EventBus::RaiseEvent<window_iconify>(iconified);
             }
         );
 
         glfwSetWindowMaximizeCallback(m_Window,
-            [](GLFWwindow* _, int32 maximized)
+            [](GLFWwindow* /*window*/, int32 maximized)
             {
                 EventBus::RaiseEvent<window_maximize>(maximized);
             }
         );
 
         glfwSetFramebufferSizeCallback(m_Window,
-            [](GLFWwindow* _, int32 width, int32 height)
+            [](GLFWwindow* /*window*/, int32 width, int32 height)
             {
                 EventBus::RaiseEvent<window_framebuffer_size>();
                 glViewport(0, 0, width, height);
@@ -127,7 +127,7 @@ namespace polos
 #pragma region key_input_events
 
         glfwSetKeyCallback(m_Window,
-            [](GLFWwindow* _, int32 key, int32 scancode, int32 action, int32 mods)
+            [](GLFWwindow* /*window*/, int32 key, int32 /*scancode*/, int32 action, int32 /*mods*/)
             {
                 switch (action)
                 {
@@ -141,8 +141,8 @@ namespace polos
             }
         );
 
-        glfwSetCharCallback(m_Window, 
-            [] (GLFWwindow*, uint32 unicode)
+        glfwSetCharCallback(m_Window,
+            [](GLFWwindow*, uint32 unicode)
             {
                 EventBus::RaiseEvent<char_type>(unicode);
             }
@@ -153,29 +153,28 @@ namespace polos
 #pragma region mouse_input_events
 
         glfwSetMouseButtonCallback(m_Window,
-            [](GLFWwindow* _, int32 button, int32 action, int32 mods)
-            {
+            [](GLFWwindow* /*window*/, int32 button, int32 action, int32 /*mods*/) {
                 switch (action)
                 {
-                case GLFW_PRESS:
-                    EventBus::RaiseEvent<mouse_button_press>(button);
-                    break;
-                case GLFW_RELEASE:
-                    EventBus::RaiseEvent<mouse_button_release>(button);
-                    break;
+                    case GLFW_PRESS:
+                        EventBus::RaiseEvent<mouse_button_press>(button);
+                        break;
+                    case GLFW_RELEASE:
+                        EventBus::RaiseEvent<mouse_button_release>(button);
+                        break;
                 }
             }
         );
 
         glfwSetScrollCallback(m_Window,
-            [](GLFWwindow* _, double x_offset, double y_offset)
+            [](GLFWwindow* /*window*/, double x_offset, double y_offset)
             {
                 EventBus::RaiseEvent<mouse_scroll>((float)x_offset, (float)y_offset);
             }
         );
 
         glfwSetCursorPosCallback(m_Window,
-            [](GLFWwindow* _, double x, double y)
+            [](GLFWwindow* /*window*/, double x, double y)
             {
                 EventBus::RaiseEvent<mouse_move>((float)x, (float)y);
             }

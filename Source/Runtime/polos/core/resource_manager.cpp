@@ -14,9 +14,13 @@ namespace polos
         "audio",   // kAudio
     };
 
-    ResourceHandle ResourceManager::LoadAsset(ResourceType type, cstring resource_file)
+    ResourceHandle ResourceManager::LoadAsset(ResourceType /* type */, cstring /* resource_file */)
     {
         ResourceManager& mgr = *m_Instance;
+        
+        static_cast<void>(mgr);
+        static_cast<void>(g_ResourceTypeIds);
+
         return 0;
     }
 }// namespace polos

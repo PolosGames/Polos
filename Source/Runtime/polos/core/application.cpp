@@ -49,7 +49,7 @@ namespace polos
         Gui::Shutdown();
     }
     
-    void Application::on_window_close(window_close &e)
+    void Application::on_window_close(window_close& /* e */)
     {
         m_IsRunning = false;
         m_WindowInstance->Shutdown();

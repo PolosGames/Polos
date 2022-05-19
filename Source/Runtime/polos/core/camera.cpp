@@ -22,6 +22,8 @@ namespace polos
           mouseSensitivity(g_Sensitivity),
           zoom(g_Zoom)
     {
+        static_cast<void>(g_Yaw);
+        static_cast<void>(g_Pitch);
         update_camera_vectors();
     }
     

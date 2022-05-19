@@ -7,20 +7,15 @@ project(
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR} CACHE PATH "..." FORCE)
-endif()
+set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 
-set(INSTALL_DIR bin/${CMAKE_BUILD_TYPE})
-
-option(STATIC_STD "Link static libraries of STL" ON)
-option(USE_OPENGL "Use Polos with OpenGL" ON)
-option(USE_VULKAN "Use Polos with Vulkan" OFF)
+option(STATIC_STD       "Link static libraries of STL" ON)
+option(USE_OPENGL       "Use Polos with OpenGL" ON)
+option(USE_VULKAN       "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
-option(ENABLE_LOGGING "Enable logging inside the engine and in applications" ON)
-option(GUI_USE_IMGUI "Use ImGui for default Gui implementation" ON)
-option(BUILD_EDITOR "If not checked, only builds the runtime binaries" OFF)
+option(ENABLE_LOGGING   "Enable logging inside the engine and in applications" ON)
+option(GUI_USE_IMGUI    "Use ImGui for default Gui implementation" ON)
+option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" OFF)
 
 include(CMake/target_build.cmake)
 
