@@ -3,7 +3,7 @@
 #ifndef POLOS_EVENTS_CHARTYPE_H_
 #define POLOS_EVENTS_CHARTYPE_H_
 
-#include "events/event.h"
+#include "polos/events/event.h"
 
 namespace polos
 {

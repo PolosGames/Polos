@@ -1,9 +1,9 @@
-#include <polos_pch.h>
+#include <polos/polos_pch.h>
 #ifdef USE_OPENGL
 
 #include <glad/glad.h>
 
-#include "context/vao.h"
+#include "polos/context/vao.h"
 
 namespace polos
 {

@@ -2,8 +2,8 @@
 #ifndef POLOS_CORE_MEMORY_STACKALLOCATOR_H_
 #define POLOS_CORE_MEMORY_STACKALLOCATOR_H_
 
-#include "mem_utils.h"
-#include "utils/macro_util.h"
+#include "polos/memory/mem_utils.h"
+#include "polos/utils/macro_util.h"
 
 namespace polos::memory
 {

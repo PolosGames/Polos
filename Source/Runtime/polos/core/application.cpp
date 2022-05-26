@@ -1,12 +1,12 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #include <glad/glad.h>
 
-#include "event_bus.h"
-#include "events/events.h"
-#include "update_queue.h"
-#include "time/timer.h"
-#include "gui/gui.h"
+#include "polos/core/event_bus.h"
+#include "polos/events/events.h"
+#include "polos/core/update_queue.h"
+#include "polos/time/timer.h"
+#include "polos/gui/gui.h"
 
 #include "application.h"
 

@@ -3,7 +3,7 @@
 #ifndef POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
 #define POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
 
-#include "events/event.h"
+#include "polos/events/event.h"
 
 namespace polos
 {

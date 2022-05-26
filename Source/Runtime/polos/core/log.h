@@ -5,9 +5,9 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/common.h>
 
-#include "utils/macro_util.h"
-#include "containers/containers.h"
-#include "utils/alias.h"
+#include "polos/utils/macro_util.h"
+#include "polos/containers/containers.h"
+#include "polos/utils/alias.h"
 
 namespace polos
 {
@@ -75,7 +75,7 @@ namespace polos
 #define LOG_CLIENT_INFO(...)     ::polos::Log::Instance().info(    ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
 #define LOG_CLIENT_TRACE(...)    ::polos::Log::Instance().trace(   ::polos::Log::logger_type::kLoggerClient, __VA_ARGS__)
 
-#include "utils/macro_util.h"
+#include "polos/utils/macro_util.h"
 
 #define LOG_VAR_STR(Str, Variable)   LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
 #define LOG_VAR(Variable)            LOG_VAR_STR("value of {0} = {1}", Variable)

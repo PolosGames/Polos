@@ -2,8 +2,8 @@
 #ifndef POLOS_CORE_UPDATEQUEUE_H_
 #define POLOS_CORE_UPDATEQUEUE_H_
 
-#include "containers/containers.h"
-#include "containers/delegate.h"
+#include "polos/containers/containers.h"
+#include "polos/containers/delegate.h"
 
 namespace polos
 {

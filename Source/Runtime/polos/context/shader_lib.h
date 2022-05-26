@@ -4,9 +4,9 @@
 
 #include <glm/glm.hpp>
 
-#include "utils/alias.h"
-#include "containers/containers.h"
-#include "shader.h"
+#include "polos/utils/alias.h"
+#include "polos/containers/containers.h"
+#include "polos/context/shader.h"
 
 namespace polos
 {

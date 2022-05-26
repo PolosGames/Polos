@@ -11,9 +11,8 @@
 
     Most of this implementation is From Rythe-Interactive/LegionEngine repo.
 */
-
-#include "utils/macro_util.h"
-#include "utils/concepts.h"
+#include "polos/utils/macro_util.h"
+#include "polos/utils/concepts.h"
 
 namespace polos
 {

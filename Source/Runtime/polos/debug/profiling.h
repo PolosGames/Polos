@@ -2,7 +2,7 @@
 #ifndef POLOS_CORE_DEBUG_PROFILING_H_
 #define POLOS_CORE_DEBUG_PROFILING_H_
 
-#include "platform/platform_detection.h"
+#include "polos/platform/platform_detection.h"
 
 #ifdef ENABLE_PROFILING
 //// IMPLEMENTATIONS

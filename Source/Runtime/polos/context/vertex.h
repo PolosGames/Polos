@@ -1,8 +1,6 @@
 #ifndef POLOS_VERTEX_H_
 #define POLOS_VERTEX_H_
 
-#include <glm/glm.hpp>
-
 namespace polos
 {
     struct vertex

@@ -38,9 +38,9 @@ if(ENABLE_LOGGING)
 endif()
 
 if(GUI_USE_IMGUI)
+    add_compile_definitions(GUI_USE_IMGUI)
     add_subdirectory(ThirdParty/imgui)
     set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
-    add_compile_definitions(GUI_USE_IMGUI)
 endif()
 
 add_subdirectory(Runtime)
@@ -65,10 +65,19 @@ if(BUILD_EDITOR)
         endif()
     endif()
 
-    target_link_libraries(Polos
-        PUBLIC
-            Runtime
-            ${EXTRA_LIBS}
+    target_link_libraries(
+        Polos
+            PUBLIC
+                Runtime
+                ${EXTRA_LIBS}
+    )
+
+    target_compile_options(
+        Polos
+            PUBLIC
+                "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
+                "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes=on>"
+                "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
     )
 
     build_options(Polos true)

@@ -1,11 +1,11 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
 #include "GLFW/glfw3.h"
 
-#include "events/window/window_events.h"
-#include "events/input/input_events.h"
-#include "core/event_bus.h"
+#include "polos/events/window/window_events.h"
+#include "polos/events/input/input_events.h"
+#include "polos/core/event_bus.h"
 
 #include "x_plat_window.h"
 

@@ -66,7 +66,11 @@ set(Runtime_SOURCES
 
 add_library(Runtime STATIC)
 
-set_target_properties(Runtime PROPERTIES OUTPUT_NAME "PolosRuntime")
+set_target_properties(
+    Runtime
+        PROPERTIES
+            OUTPUT_NAME "PolosRuntime"
+)
 
 target_sources(Runtime
     PRIVATE
@@ -77,7 +81,8 @@ target_sources(Runtime
 target_precompile_headers(
     Runtime
         PUBLIC
-            polos/polos_pch.h)
+            polos/polos_pch.h
+)
 
 target_compile_features(
     Runtime
@@ -89,16 +94,15 @@ target_compile_features(
 target_link_libraries(
     Runtime
         PUBLIC
-            ${EXTRA_LIBS})
+            ${EXTRA_LIBS}
+)
 
 target_include_directories(
     Runtime
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/polos
             ${PROJECT_BINARY_DIR}
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            ${CMAKE_CURRENT_SOURCE_DIR}/polos
+        PUBLIC
+            ${CMAKE_CURRENT_LIST_DIR}
 )
 
 target_compile_definitions(

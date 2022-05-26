@@ -2,8 +2,8 @@
 #ifndef POLOS_CORE_CONTAINERS_DARRAY_H_
 #define POLOS_CORE_CONTAINERS_DARRAY_H_
 
-#include "memory/pool_allocator.h"
-#include "utils/concepts.h"
+#include "polos/memory/pool_allocator.h"
+#include "polos/utils/concepts.h"
 
 namespace polos::containers
 {

@@ -5,9 +5,9 @@
 
 #include <glm/glm.hpp>
 
-#include "utils/alias.h"
-#include "vertex.h"
-#include "utils/macro_util.h"
+#include "polos/utils/alias.h"
+#include "polos/utils/macro_util.h"
+#include "polos/context/vertex.h"
 
 namespace polos
 {

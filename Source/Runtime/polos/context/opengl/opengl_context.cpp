@@ -1,12 +1,12 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 #ifdef USE_OPENGL
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "utils/feature.h"
+#include "polos/utils/feature.h"
 
-#include "context/graphics_context.h"
+#include "polos/context/graphics_context.h"
 
 namespace polos
 {

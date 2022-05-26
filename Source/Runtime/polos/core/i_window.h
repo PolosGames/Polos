@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "utils/alias.h"
-#include "utils/feature.h"
+#include "polos/utils/alias.h"
+#include "polos/utils/feature.h"
 
 namespace polos
 {

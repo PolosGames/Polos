@@ -32,10 +32,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "debug/plassert.h"
-#include "debug/profiling.h"
-#include "utils/alias.h"
-#include "utils/feature.h"
-#include "core/log.h"
+#include "polos/debug/plassert.h"
+#include "polos/debug/profiling.h"
+#include "polos/utils/alias.h"
+#include "polos/utils/feature.h"
+#include "polos/core/log.h"
 
 namespace pl = ::polos;

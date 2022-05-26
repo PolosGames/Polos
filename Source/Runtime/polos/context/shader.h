@@ -1,8 +1,6 @@
 #ifndef POLOS_SHADER_H_
 #define POLOS_SHADER_H_
 
-#include <glm/glm.hpp>
-
 namespace polos
 {
     enum ShaderType

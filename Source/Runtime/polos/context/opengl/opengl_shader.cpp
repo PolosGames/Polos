@@ -1,13 +1,13 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #ifdef USE_OPENGL
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "utils/stringid.h"
+#include "polos/utils/stringid.h"
 
-#include "context/shader.h"
+#include "polos/context/shader.h"
 
 namespace polos
 {

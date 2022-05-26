@@ -2,7 +2,7 @@
 #ifndef POLOS_CORE_TIME_SCOPETIMER_H_
 #define POLOS_CORE_TIME_SCOPETIMER_H_
 
-#include "timer.h"
+#include "polos/time/timer.h"
 
 namespace polos::time
 {

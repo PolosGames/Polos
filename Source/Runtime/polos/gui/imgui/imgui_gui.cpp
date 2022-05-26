@@ -1,14 +1,14 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #ifdef GUI_USE_IMGUI
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "polos/gui/imgui/imgui_impl_glfw.h"
+#include "polos/gui/imgui/imgui_impl_opengl3.h"
 
-#include "gui/gui.h"
+#include "polos/gui/gui.h"
 
 namespace polos
 {

@@ -2,7 +2,7 @@
 #ifndef POLOS_CORE_MEMORY_MEMUTILS_H_
 #define POLOS_CORE_MEMORY_MEMUTILS_H_
 
-#include "utils/alias.h"
+#include "polos/utils/alias.h"
 
 namespace polos::memory
 {

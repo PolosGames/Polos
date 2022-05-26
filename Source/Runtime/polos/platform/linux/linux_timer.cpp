@@ -1,8 +1,8 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #ifdef POLOS_LINUX
 
-#include "time/timer.h"
+#include "polos/time/timer.h"
 
 namespace polos::time
 {

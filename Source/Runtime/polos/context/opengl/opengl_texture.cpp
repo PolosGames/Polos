@@ -1,9 +1,9 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
 #include <glad/glad.h>
 #include <stb_image.h>
 
-#include "context/texture.h"
+#include "polos/context/texture.h"
 
 namespace polos
 {

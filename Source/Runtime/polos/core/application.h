@@ -5,9 +5,9 @@
 
 #include <memory>
 
-#include "i_window.h"
-#include "utils/alias.h"
-#include "events/window/window_close.h"
+#include "polos/core/i_window.h"
+#include "polos/utils/alias.h"
+#include "polos/events/window/window_close.h"
 
 namespace polos
 {

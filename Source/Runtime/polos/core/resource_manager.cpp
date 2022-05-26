@@ -1,6 +1,6 @@
-#include "polos_pch.h"
+#include "polos/polos_pch.h"
 
-#include "utils/stringid.h"
+#include "polos/utils/stringid.h"
 
 #include "resource_manager.h"
 
