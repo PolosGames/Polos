@@ -76,7 +76,7 @@ if(BUILD_EDITOR)
         Polos
             PUBLIC
                 "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
-                "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes=on>"
+                "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
                 "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
     )
 
