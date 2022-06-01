@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class engine_stop : public event<engine_stop>
+    class engine_stop : public Event<engine_stop>
     {
     public:
         uint32 engine_event;

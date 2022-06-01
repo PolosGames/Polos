@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_focus : public event<window_focus>
+    class window_focus : public Event<window_focus>
     {
     public:
         int32 is_focused;

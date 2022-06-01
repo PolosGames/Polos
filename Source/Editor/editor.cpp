@@ -74,6 +74,7 @@ namespace polos
 
     void Editor::Update(float delta_time)
     {
+        static_cast<void>(delta_time);
         model = glm::translate(model, (pos - slider_pos));
         pos = slider_pos;
         

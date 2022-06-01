@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_maximize : public event<window_maximize>
+    class window_maximize : public Event<window_maximize>
     {
     public:
         int32 maximized;

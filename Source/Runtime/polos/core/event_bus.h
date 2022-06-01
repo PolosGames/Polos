@@ -12,7 +12,7 @@ namespace polos
 {
     class EventBus
     {
-        using EventSubscriber = Delegate<void(base_event&)>;
+        using EventSubscriber = Delegate<void(BaseEvent&)>;
     public:
         EventBus() noexcept = default;
 

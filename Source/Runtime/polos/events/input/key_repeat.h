@@ -7,7 +7,7 @@
 
 namespace polos
 {
-	class key_repeat : public event<key_repeat>
+	class key_repeat : public Event<key_repeat>
 	{
 	public:
 		int32 key;

@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_close final : public event<window_close>
+    class window_close final : public Event<window_close>
     {
     public:
         window_close() = default;

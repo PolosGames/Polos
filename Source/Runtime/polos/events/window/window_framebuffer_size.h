@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_framebuffer_size final : public event<window_framebuffer_size>
+    class window_framebuffer_size final : public Event<window_framebuffer_size>
     {
     public:
         int32 width, height;

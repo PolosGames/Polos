@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_resize : public event<window_resize>
+    class window_resize : public Event<window_resize>
     {
     public:
         int32 width, height;

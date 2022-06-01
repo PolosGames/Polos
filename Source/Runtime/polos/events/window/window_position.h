@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_position : public event<window_position>
+    class window_position : public Event<window_position>
     {
     public:
         int32 x, y;

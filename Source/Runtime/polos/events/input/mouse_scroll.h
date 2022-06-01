@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class mouse_scroll : public event<mouse_scroll>
+    class mouse_scroll : public Event<mouse_scroll>
     {
     public:
         float x_offset, y_offset;

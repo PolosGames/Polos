@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class key_release : public event<key_release>
+    class key_release : public Event<key_release>
     {
     public:
         int32 key;

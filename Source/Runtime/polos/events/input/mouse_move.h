@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class mouse_move : public event<mouse_move>
+    class mouse_move : public Event<mouse_move>
     {
     public:
         float x, y;

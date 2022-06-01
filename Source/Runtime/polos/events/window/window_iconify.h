@@ -7,7 +7,7 @@
 
 namespace polos
 {
-    class window_iconify : public event<window_iconify>
+    class window_iconify : public Event<window_iconify>
     {
     public:
         int32 iconified;

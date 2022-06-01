@@ -7,13 +7,13 @@
 
 namespace polos
 {
-    class char_type : public event<char_type>
+    class char_type : public Event<char_type>
     {
     public:
         uint32 unicode;
 
         char_type() = default;
-        char_type(uint32 unicode) : unicode(unicode) {}
+        char_type(uint32 ucode) : unicode{ucode} {}
     };
 }
 
