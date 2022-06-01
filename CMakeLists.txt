@@ -25,4 +25,10 @@ configure_file(plconfig.h.in plconfig.h)
 #       Build the whole source       #
 # ================================== #
 
+add_compile_options(
+    "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
+    "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
+    "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
+)
+
 add_subdirectory(Source)

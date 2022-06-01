@@ -71,15 +71,7 @@ if(BUILD_EDITOR)
                 Runtime
                 ${EXTRA_LIBS}
     )
-
-    target_compile_options(
-        Polos
-            PUBLIC
-                "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
-                "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
-                "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
-    )
-
+    
     build_options(Polos true)
 
     install(TARGETS Polos DESTINATION ${INSTALL_DIR})
