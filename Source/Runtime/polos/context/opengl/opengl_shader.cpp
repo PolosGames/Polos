@@ -19,8 +19,12 @@ namespace polos
 
     void Shader::CreateUniformLookup()
     {
-        GLint uniform_count = 0;
-        glGetProgramiv(m_ProgramId, GL_ACTIVE_UNIFORMS, &uniform_count);
+        GLuint const uniform_count = [&program_id = m_ProgramId]()
+        {
+            GLint u_count = 0;
+            glGetProgramiv(program_id, GL_ACTIVE_UNIFORMS, &u_count);
+            return static_cast<GLuint>(u_count);
+        }();
 
         GLint max_name_len = 0;
         GLsizei length     = 0;
@@ -28,9 +32,9 @@ namespace polos
         GLenum type        = GL_NONE;
         glGetProgramiv(m_ProgramId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_len);
 
-        auto uniform_name = std::make_unique<char[]>(max_name_len);
+        auto uniform_name = std::make_unique<char[]>(static_cast<std::size_t>(max_name_len));
 
-        for (GLint i = 0; i < uniform_count; ++i)
+        for (GLuint i = 0; i < uniform_count; ++i)
         {
             glGetActiveUniform(m_ProgramId, i, max_name_len, &length, &count, &type, uniform_name.get());
 

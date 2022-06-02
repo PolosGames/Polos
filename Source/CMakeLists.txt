@@ -60,7 +60,7 @@ if(BUILD_EDITOR)
 
     set(EXTRA_LIBS)
     if(STATIC_STD)
-        if(!MSVC)
+        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             list(APPEND EXTRA_LIBS -static-libstdc++)
         endif()
     endif()

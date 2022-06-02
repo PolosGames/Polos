@@ -33,7 +33,7 @@ namespace polos
         while (m_IsRunning)
         {
             end = time::Timer::Now();
-            delta_time = (end - start) * 0.001f * 0.001f * 0.001f;
+            delta_time = static_cast<float>(end - start) * 0.001f * 0.001f;
             start = time::Timer::Now();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     

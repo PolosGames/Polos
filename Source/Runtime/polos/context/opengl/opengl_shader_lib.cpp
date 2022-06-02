@@ -39,7 +39,7 @@ namespace polos
             pos = end_of_shader;
             std::string shader_source   = shader_code.substr(start_of_shader, end_of_shader - start_of_shader);
             
-            uint32 const shader_type = [s_shader_type] {
+            uint32 const shader_type = [s_shader_type]() -> uint32 {
                 switch (s_shader_type)
                 {
                     case "vertex"_sid:   return GL_VERTEX_SHADER;

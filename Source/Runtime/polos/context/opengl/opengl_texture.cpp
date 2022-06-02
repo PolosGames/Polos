@@ -33,7 +33,7 @@ namespace polos
 
         if (pixel_data != nullptr)
         {
-            auto const [sized_internal_format, internal_format] = [i_channels]() -> std::tuple<int32, int32> 
+            auto const [sized_internal_format, internal_format] = [i_channels]() -> std::tuple<GLenum, GLenum> 
             {
                 switch (i_channels)
                 {

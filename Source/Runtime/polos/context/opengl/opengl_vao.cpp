@@ -13,8 +13,8 @@ namespace polos
         int32 alignment { GL_NONE };
         glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
     
-        auto const vrt_size { vertices.size_bytes() };
-        auto const ind_size { indices.size_bytes()  };
+        auto const vrt_size = static_cast<int64>(vertices.size_bytes());
+        auto const ind_size = static_cast<int64>(indices.size_bytes());
         
         auto const align = [](int64 const length, int64 const alignment) -> int64 {
             const int64  misalignment { length & ( alignment - 1 ) };

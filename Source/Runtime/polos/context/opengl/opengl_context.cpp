@@ -63,7 +63,7 @@ namespace polos
     {
         m_Window = window_handle;
         
-        int r = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        int r = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         static_cast<void>(r);
         ASSERTSTR(r, "Failed to load OpenGL context!");
 

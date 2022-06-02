@@ -52,7 +52,7 @@ namespace polos
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
         IWindow& window = Application::get_main_window();
-        float aspect = static_cast<float>(window.Width()) / window.Height();
+        float aspect = static_cast<float>(window.Width()) / static_cast<float>(window.Height());
         projection = glm::perspective(
                 45.0f,
                 aspect,

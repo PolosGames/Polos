@@ -169,7 +169,7 @@ namespace polos
         glfwSetScrollCallback(m_Window,
             [](GLFWwindow* /*window*/, double x_offset, double y_offset)
             {
-                EventBus::RaiseEvent<mouse_scroll>(static_cast<float>(x_offset), static_cast<float>(y_offset));
+                EventBus::RaiseEvent<mouse_scroll>(float(x_offset), static_cast<float>(y_offset));
             }
         );
 

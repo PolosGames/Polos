@@ -29,7 +29,7 @@ namespace polos::time
     {
         int64 end   = Timer::Now();
         m_IsStopped = true;
-        LOG_ENGINE_INFO("Scope \"{0}\" took: {1:.5} {2}", m_ScopeName, (end - m_Start) * m_Nom, m_UnitName);
+        LOG_ENGINE_INFO("Scope \"{0}\" took: {1:.5} {2}", m_ScopeName, static_cast<float>(end - m_Start) * m_Nom, m_UnitName);
     }
     
     void ScopeTimer::Reset()
