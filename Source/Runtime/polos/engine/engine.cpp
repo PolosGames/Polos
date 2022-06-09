@@ -51,7 +51,7 @@ namespace polos
 
         Application* p_app = CreateApplication(nullptr);
         p_app->Run();
-
+        delete p_app;
 
         // Shutdown sequence
         p_renderer ->Shutdown();
@@ -64,6 +64,5 @@ namespace polos
         p_engine_memory.Delete(p_event_bus);
         p_engine_memory.Delete(p_log);
         
-        delete p_app;
     }
 } // namespace polos

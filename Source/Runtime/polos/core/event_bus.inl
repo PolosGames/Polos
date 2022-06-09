@@ -21,10 +21,10 @@ namespace polos
         auto& cbs = m_Instance->m_Callbacks;
         
         auto  del = Delegate<void(event_type&)>::template From<object_type, method_ptr>(ptr);
-        auto* sub = std::launder(reinterpret_cast<EventSubscriber*>(&del));
+        auto& sub = *std::launder(reinterpret_cast<EventSubscriber*>(&del));
 
         StringId id = event_type::id;
-        cbs.try_emplace(id).first->second.push_back(std::move(*sub));
+        cbs.try_emplace(id).first->second.push_back(std::move(sub));
     }
 
     template<class event_type, void (*const func_ptr)(event_type&)>
@@ -33,33 +33,53 @@ namespace polos
         auto& cbs = m_Instance->m_Callbacks;
         
         auto  del = Delegate<void(event_type&)>::template From<func_ptr>();
-        auto* sub = std::launder(reinterpret_cast<EventSubscriber*>(&del));
+        auto& sub = *std::launder(reinterpret_cast<EventSubscriber*>(&del));
 
         StringId id  = event_type::id;
-        cbs.try_emplace(id).first->second.push_back(std::move(*sub));
+        cbs.try_emplace(id).first->second.push_back(std::move(sub));
     }
 
     template<class event_type>
     inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
     {
-        auto& cbs   = m_Instance->m_Callbacks;
-        auto* sub = std::launder(reinterpret_cast<EventSubscriber*>(&cback));
+        auto& cbs = m_Instance->m_Callbacks;
+        auto& sub = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
 
         StringId id = event_type::id;
-        cbs.try_emplace(id).first->second.push_back(std::move(*sub));
+        cbs.try_emplace(id).first->second.push_back(std::move(sub));
     }
 
     template<class event_type>
     inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
     {
-        StringId id = event_type::id;
+        StringId id      = event_type::id;
         auto& cbs        = m_Instance->m_Callbacks;
         auto& event_list = cbs.at(id);
-        auto* sub        = std::launder(reinterpret_cast<EventSubscriber*>(&cback));
-        std::remove(
-            event_list.begin(),
-            event_list.end(),
-            *sub
+        auto& sub        = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
+        event_list.erase(
+            std::remove(
+                event_list.begin(),
+                event_list.end(),
+                sub
+            ),
+            event_list.end()
+        );
+    }
+
+    template<class event_type>
+    inline void EventBus::UnsubscribeFromEvent(Delegate<void(event_type&)>&& cback)
+    {
+        StringId id      = event_type::id;
+        auto& cbs        = m_Instance->m_Callbacks;
+        auto& event_list = cbs.at(id);
+        auto& sub        = *std::launder(reinterpret_cast<EventSubscriber*>(&cback));
+        event_list.erase(
+            std::remove(
+                event_list.begin(),
+                event_list.end(),
+                sub
+            ),
+            event_list.end()
         );
     }
 }
