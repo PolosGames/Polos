@@ -47,6 +47,6 @@ namespace polos
     }
 } // namespace polos
 
-constexpr polos::StringId operator""_sid(char const* str, std::size_t /**/) { return polos::hash_function(str); }
+consteval polos::StringId operator""_sid(char const* str, std::size_t /**/) { return polos::hash_function(str); }
 
 #endif //POLOSUTILS__STRINGID_H_

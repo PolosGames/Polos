@@ -54,10 +54,10 @@ namespace polos
         IWindow& window = Application::get_main_window();
         float aspect = static_cast<float>(window.Width()) / static_cast<float>(window.Height());
         projection = glm::perspective(
-                45.0f,
-                aspect,
-                0.1f,
-                1000.0f
+            45.0f,
+            aspect,
+            0.1f,
+            1000.0f
         );
         pos        = glm::vec3(0.0f, 0.0f, -3.0f);
         slider_pos = pos;
@@ -82,13 +82,13 @@ namespace polos
         pos2 = slider_pos2;
 
         basic_color.Use();
-        basic_color.SetMat("view"_sid, view);
-        basic_color.SetMat("projection"_sid, projection);
+        basic_color.SetMat("u_View"_sid, view);
+        basic_color.SetMat("u_Projection"_sid, projection);
 
-        basic_color.SetMat("model"_sid, model);
+        basic_color.SetMat("u_Model"_sid, model);
         cube.Draw();
 
-        basic_color.SetMat("model"_sid, model2);
+        basic_color.SetMat("u_Model"_sid, model2);
         cube.Draw();
         
         ImGui::Begin("First box");
@@ -99,9 +99,9 @@ namespace polos
         ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
         ImGui::End();
 
-        auto const* viewport = ImGui::GetMainViewport();
+        //auto const* viewport = ImGui::GetMainViewport();
 
-        ImGui::DockSpaceOverViewport(viewport);
+        //ImGui::DockSpaceOverViewport(viewport);
 
         //ImGui::ShowDemoWindow(&open);
     }
