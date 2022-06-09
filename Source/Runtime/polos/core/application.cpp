@@ -16,8 +16,12 @@ namespace polos
         : m_WindowInstance{std::unique_ptr<IWindow>{ IWindow::NewWindow(std::forward<window_props>(props)) }},
           m_IsRunning{true}
     {
-        
-        EventBus::SubscribeToEvent<window_close, Application, &Application::on_window_close>(this);
+        SUB_TO_EVENT(window_close, on_window_close);
+    }
+
+    Application::~Application()
+    {
+        UNSUB_FROM_EVENT(window_close, on_window_close);
     }
 
     void Application::Run()
@@ -53,10 +57,6 @@ namespace polos
     {
         m_IsRunning = false;
         m_WindowInstance->Shutdown();
-    }
-    
-    Application::~Application()
-    {
     }
     
     IWindow& Application::get_main_window()
