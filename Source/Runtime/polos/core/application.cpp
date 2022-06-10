@@ -16,12 +16,13 @@ namespace polos
         : m_WindowInstance{std::unique_ptr<IWindow>{ IWindow::NewWindow(std::forward<window_props>(props)) }},
           m_IsRunning{true}
     {
-        SUB_TO_EVENT(window_close, on_window_close);
+        SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
     }
+
 
     Application::~Application()
     {
-        UNSUB_FROM_EVENT(window_close, on_window_close);
+        UNSUB_FROM_EVENT_MEM_FUN(window_close, on_window_close);
     }
 
     void Application::Run()
