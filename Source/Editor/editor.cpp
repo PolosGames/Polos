@@ -5,6 +5,7 @@
 #include "polos/core/update_queue.h"
 #include "polos/context/shader_lib.h"
 #include "polos/context/vertex.h"
+#include "polos/core/event_bus.h"
 
 #include "editor.h"
 
@@ -82,13 +83,13 @@ namespace polos
         pos2 = slider_pos2;
 
         basic_color.Use();
-        basic_color.SetMat("u_View"_sid, view);
-        basic_color.SetMat("u_Projection"_sid, projection);
+        basic_color.SetUniform("u_View"_sid, view);
+        basic_color.SetUniform("u_Projection"_sid, projection);
 
-        basic_color.SetMat("u_Model"_sid, model);
+        basic_color.SetUniform("u_Model"_sid, model);
         cube.Draw();
 
-        basic_color.SetMat("u_Model"_sid, model2);
+        basic_color.SetUniform("u_Model"_sid, model2);
         cube.Draw();
         
         ImGui::Begin("First box");
