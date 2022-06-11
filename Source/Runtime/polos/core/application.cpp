@@ -33,7 +33,7 @@ namespace polos
         int64 start{ time::Timer::Now() };
         
         glClearColor(0.45f, 0.55f, 0.6f, 1.0f);
-        
+
         Gui::Setup();
         while (m_IsRunning)
         {
