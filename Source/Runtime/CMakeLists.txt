@@ -52,6 +52,7 @@ set(Runtime_SOURCES
     polos/memory/stack_allocator.cpp
     polos/time/scope_timer.cpp
     polos/utils/type_util.cpp
+    polos/utils/stringid.cpp
     polos/platform/windows/windows_timer.cpp
     polos/platform/linux/linux_timer.cpp
     polos/renderer/renderer.cpp

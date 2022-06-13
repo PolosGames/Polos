@@ -8,6 +8,9 @@
 
 namespace polos
 {
+    template<typename T>
+    StringId g_UniqueEventId = -1;
+
     class BaseEvent
     {
     public:
@@ -18,10 +21,16 @@ namespace polos
     template<typename T>
     class Event : public BaseEvent
     {
-        StringId _id() override { return id; }//never going to be accessed, just for vtable
     public:
-        inline static const StringId id = TypeHash<T>();
-        
+        Event()
+        {
+            if (g_UniqueEventId<T> == -1)
+            {
+                g_UniqueEventId<T> = TypeHash<T>();
+            }
+        }
+    private:
+        StringId _id() override { return g_UniqueEventId<T>; }//never going to be accessed, just for vtable
     };
 }
 

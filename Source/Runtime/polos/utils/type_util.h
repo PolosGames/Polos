@@ -12,10 +12,10 @@ namespace polos
     template<typename T>
     StringId TypeHash()
     {
-        std::string name = typeid(T).name();
-        static int64 th = get_string_id(name.c_str());
+        std::string const name = typeid(T).name();
+        StringId const    id   = get_string_id(name);
 
-        return th;
+        return id;
     }
 }
 

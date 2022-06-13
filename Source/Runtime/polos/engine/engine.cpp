@@ -9,11 +9,33 @@
 #include "polos/context/shader_lib.h"
 #include "polos/core/update_queue.h"
 #include "polos/core/resource_manager.h"
+#include "polos/utils/stringid.h"
+#include "polos/events/events.h"
 
 #include "engine.h"
 
 namespace polos
 {
+    static void RaiseAllEvents()
+    {
+        // This literally smells bad, but will do for now
+        engine_stop{};
+        char_type{};
+        key_press{};
+        key_release{};
+        mouse_button_press{};
+        mouse_button_release{};
+        mouse_move{};
+        mouse_scroll{};
+        window_close{};
+        window_focus{};
+        window_framebuffer_size{};
+        window_iconify{};
+        window_maximize{};
+        window_position{};
+        window_resize{};
+    }
+
     void Engine::Run()
     {
         time::Timer::OnStartUp();
@@ -49,6 +71,10 @@ namespace polos
         UpdateQueue::m_Instance     = p_update_q;
         ResourceManager::m_Instance = p_rsrc_mng;
 
+        // This ensures that all events are fired (instantiated) once,
+        // so that every one of their id's get created.
+        RaiseAllEvents();
+
         Application* p_app = CreateApplication(nullptr);
         p_app->Run();
         delete p_app;
@@ -63,6 +89,5 @@ namespace polos
         p_engine_memory.Delete(p_renderer);
         p_engine_memory.Delete(p_event_bus);
         p_engine_memory.Delete(p_log);
-        
     }
 } // namespace polos

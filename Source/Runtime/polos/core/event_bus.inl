@@ -4,10 +4,10 @@ namespace polos
     inline void EventBus::RaiseEvent(Args&&... args)
     {
         auto& cbs = m_Instance->m_Callbacks;
-        if (cbs.contains(event_type::id))
+        if (cbs.contains(g_UniqueEventId<event_type>))
         {
             event_type e(std::forward<Args>(args)...);
-            StringId id = event_type::id;
+            StringId id = g_UniqueEventId<event_type>;
             for (auto const& subscriber_function : cbs[id])
             {
                 std::invoke(subscriber_function, e);
@@ -21,14 +21,14 @@ namespace polos
         auto& cbs = m_Instance->m_Callbacks;
         auto& sub = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
 
-        StringId id = event_type::id;
+        StringId id = g_UniqueEventId<event_type>;
         cbs.try_emplace(id).first->second.push_back(std::move(sub));
     }
 
     template<EngineEvent event_type>
     inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
     {
-        StringId id      = event_type::id;
+        StringId id = g_UniqueEventId<event_type>;
         auto& cbs        = m_Instance->m_Callbacks;
         auto& event_list = cbs.at(id);
         auto& sub        = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
