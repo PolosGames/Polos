@@ -15,7 +15,6 @@ namespace polos
         ~Editor();
     private:
         void Update(float delta_time);
-
     private:
         Shader basic_color;
 

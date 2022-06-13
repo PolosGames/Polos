@@ -53,30 +53,32 @@ namespace polos
         glUseProgram(m_ProgramId);
     }
 
+#pragma region UniformSetters
+
 #pragma region INT32
     // ========  INT32  ========
 
-    void Shader::SetUniform(StringId name, int32 value)
+    void Shader::SetUniform(StringId const name, int32 const value) const
     {
         glUniform1i(m_LookupTable.at(name).location, value);
     }
 
-    void Shader::SetUniform(StringId name, glm::i32vec2 const& value)
+    void Shader::SetUniform(StringId const name, glm::i32vec2 const& value) const
     {
         glUniform2iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::i32vec3 const& value)
+    void Shader::SetUniform(StringId const name, glm::i32vec3 const& value) const
     {
         glUniform3iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::i32vec4 const& value)
+    void Shader::SetUniform(StringId const name, glm::i32vec4 const& value) const
     {
         glUniform4iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, std::span<int32> value)
+    void Shader::SetUniform(StringId const name, std::span<int32> value) const
     {
         int32 size = static_cast<int32>(value.size());
         switch (size)
@@ -102,27 +104,27 @@ namespace polos
 #pragma region UINT32
     // ========  UINT32  ========
 
-    void Shader::SetUniform(StringId name, uint32 value)
+    void Shader::SetUniform(StringId const name, uint32 const value) const
     {
         glUniform1ui(m_LookupTable.at(name).location, value);
     }
 
-    void Shader::SetUniform(StringId name, glm::u32vec2 const& value)
+    void Shader::SetUniform(StringId const name, glm::u32vec2 const& value) const
     {
         glUniform2uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::u32vec3 const& value)
+    void Shader::SetUniform(StringId const name, glm::u32vec3 const& value) const
     {
         glUniform3uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::u32vec4 const& value)
+    void Shader::SetUniform(StringId name, glm::u32vec4 const& value) const
     {
         glUniform4uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, std::span<uint32> value)
+    void Shader::SetUniform(StringId name, std::span<uint32> value) const
     {
         int32 size = static_cast<int32>(value.size());
         switch (size)
@@ -148,27 +150,27 @@ namespace polos
 #pragma region FLOAT  
     // ========  FLOAT  ========
 
-    void Shader::SetUniform(StringId name, float value)
+    void Shader::SetUniform(StringId const name, float const value) const
     {
         glUniform1f(m_LookupTable.at(name).location, value);
     }
 
-    void Shader::SetUniform(StringId name, glm::vec2 const& value)
+    void Shader::SetUniform(StringId const name, glm::vec2 const& value) const
     {
         glUniform2fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::vec3 const& value)
+    void Shader::SetUniform(StringId const name, glm::vec3 const& value) const
     {
         glUniform3fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::vec4 const& value)
+    void Shader::SetUniform(StringId const name, glm::vec4 const& value) const
     {
         glUniform4fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, std::span<float> value)
+    void Shader::SetUniform(StringId const name, std::span<float> value) const
     {
         int32  size = static_cast<int32>(value.size());
         float* data = value.data();
@@ -196,27 +198,27 @@ namespace polos
 #pragma region DOUBLE
     // ========  DOUBLE  ========
 
-    void Shader::SetUniform(StringId name, double value)
+    void Shader::SetUniform(StringId const name, double const value) const
     {
         glUniform1d(m_LookupTable.at(name).location, value);
     }
 
-    void Shader::SetUniform(StringId name, glm::dvec2 const& value)
+    void Shader::SetUniform(StringId const name, glm::dvec2 const& value) const
     {
         glUniform2dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::dvec3 const& value)
+    void Shader::SetUniform(StringId const name, glm::dvec3 const& value) const
     {
         glUniform3dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::dvec4 const& value)
+    void Shader::SetUniform(StringId const name, glm::dvec4 const& value) const
     {
         glUniform3dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, std::span<double> value)
+    void Shader::SetUniform(StringId const name, std::span<double> value) const
     {
         int32 size   = static_cast<int32>(value.size());
         double* data = value.data();
@@ -243,20 +245,22 @@ namespace polos
 
 #pragma region MATRIX
     
-    void Shader::SetUniform(StringId name, glm::mat2 const& value)
+    void Shader::SetUniform(StringId const name, glm::mat2 const& value) const
     {
         glUniformMatrix2fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::mat3 const& value)
+    void Shader::SetUniform(StringId const name, glm::mat3 const& value) const
     {
         glUniformMatrix3fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void Shader::SetUniform(StringId name, glm::mat4 const& value)
+    void Shader::SetUniform(StringId const name, glm::mat4 const& value) const
     {
         glUniformMatrix4fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
     }
+#pragma endregion
+
 #pragma endregion
 
 } // namespace polos
