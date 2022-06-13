@@ -6,12 +6,12 @@
 
 namespace polos
 {
-    static HashMap<StringId, std::string> g_StringTable;
-    
+    extern HashMap<StringId, std::string> g_StringTable;
+
     inline constexpr StringId hash_function(cstring str)
     {
-        int32 p = 31;
-        int32 m = 1'000'000'009;
+        int64 p = 31;
+        int64 m = 1'000'000'009;
         int64 power_of_p = 1;
         int64 hash_val = 0;
     
@@ -21,7 +21,7 @@ namespace polos
         for (size_t i = 0; str[i] != '\0'; i++)
         {
             c = str[i];
-            hash_val = (hash_val + (c - 'a' + 1) * power_of_p) % m;
+            hash_val = (hash_val + static_cast<int64>(c) * power_of_p) % m;
             power_of_p = (power_of_p * p) % m;
         }
     
@@ -34,17 +34,9 @@ namespace polos
         return sid;
     }
     
-    inline StringId get_string_id(std::string const& str)
-    {
-        StringId sid = hash_function(str.c_str());
-        
-        if(!g_StringTable.contains(sid))
-        {
-            g_StringTable.insert({sid, str});
-        }
-        
-        return sid;
-    }
+    StringId         get_string_id(std::string const& str);
+    std::string_view get_string_from_id(StringId sid);
+
 } // namespace polos
 
 consteval polos::StringId operator""_sid(char const* str, std::size_t /**/) { return polos::hash_function(str); }
