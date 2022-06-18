@@ -13,8 +13,6 @@ namespace polos::time
     {
         using Period = std::micro;
     public:
-        PL_DELETE_COPY_MOVE_CTOR(Timer)
-    
         static void  OnStartUp();
     
         static int64 Now();

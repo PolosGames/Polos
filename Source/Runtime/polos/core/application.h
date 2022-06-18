@@ -23,8 +23,8 @@ namespace polos
     private:
         void on_window_close(window_close& e);
     private:
-        std::unique_ptr<IWindow> m_WindowInstance;
         bool                     m_IsRunning;
+        std::unique_ptr<IWindow> m_WindowInstance;
     };
 
     Application* CreateApplication(void* ptr);

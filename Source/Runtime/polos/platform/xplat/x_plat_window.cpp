@@ -14,7 +14,7 @@ namespace polos
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
     IWindow* IWindow::NewWindow(window_props&& props)
     {
-        return new XPlatWindow(props);
+        return new XPlatWindow(std::move(props));
     }
 #endif
     bool XPlatWindow::m_IsInitialized = false;

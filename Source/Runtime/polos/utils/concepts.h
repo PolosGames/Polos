@@ -9,18 +9,6 @@
 
 namespace polos
 {
-    template<typename D, typename B>
-    concept Derived = std::is_base_of_v<B, D>;
-    
-    template<typename T>
-    concept IsClass = std::is_class_v<T>;
-    
-    template<typename T, typename U>
-    concept IsSame = std::is_same_v<T, U>;
-    
-    template<typename T, typename U>
-    concept IsNotSame = !IsSame<T, U>;
-    
     template<typename T>
     concept IsDefaultConstructible = std::is_default_constructible_v<T>;
     
@@ -35,16 +23,16 @@ namespace polos
     concept IsMoveAssignable    = std::is_move_assignable_v<T>;
 
     template<typename T>
-    concept IsTriviallyDestructible  = std::is_trivially_destructible_v<T>;
+    concept IsTriviallyDestructible = std::is_trivially_destructible_v<T>;
 
     template<typename Func>
-    concept IsMemFunPtr         = requires
+    concept MemberFunctionPtr         = requires
     {
         std::is_member_function_pointer_v<Func>;
     };
 
     template<typename Func>
-    concept IsNotMemFunPtr         = requires
+    concept NonMemberFunctionPtr      = requires
     {
         !std::is_member_function_pointer_v<Func>;
     };

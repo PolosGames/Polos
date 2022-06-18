@@ -85,11 +85,11 @@ target_precompile_headers(
             polos/polos_pch.h
 )
 
-target_compile_features(
+set_target_properties(
     Runtime
-        PRIVATE
-            cxx_std_20
-            cxx_attributes
+        PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED True
 )
 
 target_link_libraries(

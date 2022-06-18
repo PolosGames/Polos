@@ -17,128 +17,131 @@
 namespace polos
 {
     template <typename Function> class Delegate;
-    
+
     template<typename Return, typename... Args>
     class Delegate<Return(Args...)>
     {
+    private:
+        
         using ReturnType = Return;
         using StubType = ReturnType(*)(void*, Args&&...);
-        using FunctionPointer = ReturnType(*)(Args...);
         
-        Delegate(void* const object_pointer, StubType const stub_ptr) noexcept
-            : m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
-        {}
+        using FreeFuncPtr = ReturnType(* const)(Args...);
+
+        template<typename T>
+        using MethodPtr = ReturnType(T::* const)(Args...);
+
+        template<typename T>
+        using ConstMethodPtr = ReturnType(T::* const)(Args...) const;
+
     public: // constructors
         
         PL_RULE_OF_FIVE(Delegate)
+
+    public: 
+        // Factory methods
         
-        template <typename owner_type>
-        requires IsClass<owner_type>
-        explicit Delegate(owner_type const* const o) noexcept
-            : m_ObjectPointer(const_cast<owner_type*>(o))
-        {}
-        
-        template <typename owner_type>
-        requires IsClass<owner_type>
-        explicit Delegate(owner_type const& o) noexcept
-            : m_ObjectPointer(const_cast<owner_type*>(&o))
-        {}
-        
-    public: // Factory methods
-        template <ReturnType(* const function_ptr)(Args...)>
+        template<FreeFuncPtr ffunc_ptr>
         static Delegate From() noexcept
         {
-            return { nullptr, function_stub<function_ptr> };
+            return { nullptr, function_stub<ffunc_ptr> };
         }
         
-        template<class owner_object, ReturnType(owner_object::* const method_ptr)(Args...)>
-        static Delegate From(owner_object* const object_pointer) noexcept
+        template<class ObjType, MethodPtr<ObjType> method_ptr>
+        static Delegate From(ObjType* const obj_ptr) noexcept
         {
-            return { object_pointer, method_stub<owner_object, method_ptr> };
+            return { obj_ptr, method_stub<ObjType, method_ptr> };
         }
         
-        template<class owner_object, ReturnType(owner_object:: *const method_ptr)(Args...) const>
-        static Delegate From(owner_object const* const object_pointer) noexcept
+        template <typename ObjType, MethodPtr<ObjType> method_ptr>
+        static Delegate From(ObjType& object) noexcept
         {
-            return { object_pointer, const_method_stub<owner_object, method_ptr> };
+            return { &object, method_stub<ObjType, method_ptr> };
         }
-        
-        template <typename owner_type, ReturnType(owner_type::* const method_ptr)(Args...)>
-        static Delegate From(owner_type& object) noexcept
+
+        template<class ObjType, ConstMethodPtr<ObjType> method_ptr>
+        static Delegate From(ObjType const* const obj_ptr) noexcept
         {
-            return { &object, method_stub<owner_type, method_ptr> };
+            return {const_cast<ObjType*>(&obj_ptr), const_method_stub<ObjType, method_ptr> };
         }
-        
-        template <typename owner_type, ReturnType(owner_type::* const method_ptr)(Args...) const>
-        static Delegate From(owner_type const& object) noexcept
+
+        template <typename ObjType, ConstMethodPtr<ObjType> method_ptr>
+        static Delegate From(ObjType const& object) noexcept
         {
-            return { const_cast<owner_type*>(&object), const_method_stub<owner_type, method_ptr> };
+            return { const_cast<ObjType*>(&object), const_method_stub<ObjType, method_ptr> };
         }
-        
+
         static Delegate From(ReturnType(* const f_ptr)(Args...))
         {
             return f_ptr;
         }
-        
+#pragma region operators
     public: // operators
-        
+
         bool operator==(Delegate const& other) const noexcept
         {
             return (m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer == other.m_StubPointer);
         }
-        
+
         bool operator!=(Delegate const& other) const noexcept
         {
             return *this != other;
         }
-        
+
         bool operator<(Delegate const& other) const noexcept
         {
-            return (m_ObjectPointer < other.m_ObjectPointer) 
+            return (m_ObjectPointer < other.m_ObjectPointer)
                 || ((m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer < other.m_StubPointer));
         }
-        
+
         bool operator==(std::nullptr_t const) const noexcept
         {
             return !m_StubPointer;
         }
-        
+
         bool operator!=(std::nullptr_t const) const noexcept
         {
             return m_StubPointer;
         }
-        
+
         auto operator()(Args&&... args) const noexcept
         {
             if constexpr (std::is_same_v<ReturnType, void>)
             {
-                if(m_StubPointer) m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
+                if (m_StubPointer) m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
             }
             else
             {
                 return m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
             }
         }
+#pragma endregion
+
     private:
-        template <ReturnType(* function_ptr)(Args...)>
+        template <FreeFuncPtr ffunc_ptr>
         static ReturnType function_stub(void* const, Args&&... args)
         {
-            return function_ptr(std::forward<Args>(args)...);
+            return ffunc_ptr(std::forward<Args>(args)...);
         }
-        
-        template <typename owner_object, ReturnType(owner_object::* method_ptr)(Args...)>
+
+        template <typename ObjType, MethodPtr<ObjType> method_ptr>
         static ReturnType method_stub(void* const object_ptr, Args&&... args)
         {
-            return (static_cast<owner_object*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
+            return (static_cast<ObjType*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
         }
-        
-        template <typename owner_object, ReturnType(owner_object::* method_ptr)(Args...) const>
+
+        template <typename ObjType, ConstMethodPtr<ObjType> method_ptr>
         static ReturnType const_method_stub(void* const object_ptr, Args&&... args)
         {
-            return (static_cast<owner_object*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
+            return (reinterpret_cast<ObjType const*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
         }
-        
+
     private:
+        Delegate(void* const object_pointer, StubType const stub_ptr) noexcept
+            : m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
+        {}
+    private:
+
         void* m_ObjectPointer;
         StubType m_StubPointer;
     };

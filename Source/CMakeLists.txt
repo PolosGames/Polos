@@ -56,7 +56,12 @@ if(BUILD_EDITOR)
         set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
     endif()
 
-    target_compile_features(Polos PRIVATE cxx_std_20)
+    set_target_properties(
+        Polos
+            PROPERTIES
+                CXX_STANDARD 20
+                CXX_STANDARD_REQUIRED True
+    )
 
     set(EXTRA_LIBS)
     if(STATIC_STD)
