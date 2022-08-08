@@ -1,7 +1,3 @@
-//
-// Created by Kayra Urfalı on 18.03.2022.
-//
-
 #ifndef POLOS_CONCEPTS_H
 #define POLOS_CONCEPTS_H
 

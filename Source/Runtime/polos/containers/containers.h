@@ -17,7 +17,27 @@ namespace polos
     using PmrVector = std::pmr::vector<T>;
     
     template<typename T>
-    using Ref = std::shared_ptr<T>;
+    using SharedPtr = std::shared_ptr<T>;
+
+    template<typename T, typename... Args>
+    [[nodiscard]]
+    inline SharedPtr<T> MakeShared(Args&&... args)
+    {
+        std::make_shared<T>(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    using UniquePtr = std::unique_ptr<T>;
+    
+    template<typename T, typename... Args>
+    [[nodiscard]]
+    inline UniquePtr<T> MakeUniq(Args&&... args)
+    {
+        std::make_unique<T>(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    using Optional = std::optional<T>;
 }
 
 #endif //POLOS_CONTAINERS_H

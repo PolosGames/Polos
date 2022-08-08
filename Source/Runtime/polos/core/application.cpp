@@ -7,15 +7,16 @@
 #include "polos/core/update_queue.h"
 #include "polos/time/timer.h"
 #include "polos/gui/gui.h"
+#include "polos/core/window_system.h"
 
 #include "application.h"
 
 namespace polos
 {
-    Application::Application(window_props&& props)
+    Application::Application()
         : m_IsRunning{true}
     {
-        m_WindowInstance = std::unique_ptr<IWindow>(IWindow::NewWindow(std::forward<window_props>(props)));
+        m_WindowInstance = WindowSystem::GetMainWindow();
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
     }
 
@@ -35,6 +36,7 @@ namespace polos
         glClearColor(0.45f, 0.55f, 0.6f, 1.0f);
 
         Gui::Setup();
+
         while (m_IsRunning)
         {
             end = time::Timer::Now();
@@ -49,12 +51,14 @@ namespace polos
             Gui::End();
             
             m_WindowInstance->Update();
+
+            int a = 3; static_cast<void>(a);
         }
         
         Gui::Shutdown();
     }
     
-    void Application::on_window_close(window_close& /* e */)
+    void Application::on_window_close(window_close&)
     {
         m_IsRunning = false;
         m_WindowInstance->Shutdown();

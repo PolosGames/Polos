@@ -14,7 +14,7 @@ namespace polos
     class Application
     {
     public:
-        Application(window_props&& props = window_props{});
+        Application();
         virtual ~Application();
 
         void Run();
@@ -23,8 +23,8 @@ namespace polos
     private:
         void on_window_close(window_close& e);
     private:
-        bool                     m_IsRunning;
-        std::unique_ptr<IWindow> m_WindowInstance;
+        bool               m_IsRunning;
+        SharedPtr<IWindow> m_WindowInstance;
     };
 
     Application* CreateApplication(void* ptr);

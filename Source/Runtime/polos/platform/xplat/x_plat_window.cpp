@@ -6,19 +6,19 @@
 #include "polos/events/window/window_events.h"
 #include "polos/events/input/input_events.h"
 #include "polos/core/event_bus.h"
+#include "polos/core/window_system.h"
 
 #include "x_plat_window.h"
 
 namespace polos
 {
-#if defined(USE_OPENGL) || defined(USE_VULKAN)
-    IWindow* IWindow::NewWindow(window_props&& props)
-    {
-        return new XPlatWindow(std::move(props));
-    }
-#endif
-    bool XPlatWindow::m_IsInitialized = false;
+    bool   XPlatWindow::m_IsInitialized = false;
     uint32 XPlatWindow::m_WindowCount = 0;
+    
+    SharedPtr<IWindow> WindowSystem::NewWindow()
+    {
+        return m_Instance->m_Windows.emplace_back(new XPlatWindow());
+    }
 
     static void error_callback(int error_code, const char* description)
     {
@@ -37,12 +37,6 @@ namespace polos
         glfwTerminate();
     }
 
-    XPlatWindow::XPlatWindow(const window_props& props)
-        : m_Props(props)
-    {
-        Initialize();
-    }
-
     void XPlatWindow::Initialize()
     {
         if (!m_IsInitialized)
@@ -55,24 +49,24 @@ namespace polos
 
         GLFWmonitor* monitor = nullptr;
         GLFWvidmode const* mode = nullptr;
-        if (m_Props.fullscreen)
+        if (props.fullscreen)
         {
             monitor = glfwGetPrimaryMonitor();
             mode = glfwGetVideoMode(monitor);
 
-            m_Props.width = mode->width;
-            m_Props.height = mode->height;
-            m_Props.refresh_rate = mode->refreshRate;
+            props.width = mode->width;
+            props.height = mode->height;
+            props.refresh_rate = mode->refreshRate;
         }
 
-        m_Window = glfwCreateWindow(m_Props.width, m_Props.height, m_Props.title.c_str(), monitor, nullptr);
-        glfwSetWindowUserPointer(m_Window, &m_Props);
+        m_Window = glfwCreateWindow(props.width, props.height, props.title.c_str(), monitor, nullptr);
+        glfwSetWindowUserPointer(m_Window, &props);
         glfwMakeContextCurrent(m_Window);
-        glfwSwapInterval(m_Props.vsync);
+        glfwSwapInterval(props.vsync);
 
         m_Context = std::make_unique<graphics_context>();
         m_Context->Initialize(m_Window);
-        glViewport(0, 0, m_Props.width, m_Props.height);
+        glViewport(0, 0, props.width, props.height);
 
 #pragma region window_events
 
@@ -190,26 +184,26 @@ namespace polos
 
     int32 XPlatWindow::Width() const
     {
-        return m_Props.width;
+        return props.width;
     }
 
     int32 XPlatWindow::Height() const
     {
-        return m_Props.height;
+        return props.height;
     }
 
     bool XPlatWindow::Vsync() const
     {
-        return m_Props.vsync;
+        return props.vsync;
     }
 
     void XPlatWindow::Vsync(bool vsync)
     {
         glfwSwapInterval(vsync);
-        m_Props.vsync = vsync;
+        props.vsync = vsync;
     }
 
-    void XPlatWindow::Update()
+    void XPlatWindow::Update() const
     {
         glfwPollEvents();
         glfwSwapBuffers(m_Window);

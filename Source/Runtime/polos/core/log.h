@@ -48,7 +48,7 @@ namespace polos
     private:
         static Log* m_Instance;
     private:
-        std::array<Ref<spdlog::logger>, kMaxLoggerType> m_Logger;
+        std::array<SharedPtr<spdlog::logger>, kMaxLoggerType> m_Logger;
     };
 } // namespace polos
 

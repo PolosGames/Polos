@@ -17,8 +17,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <string>
 
+#include <string>
 #include <vector>
 #include <memory_resource>
 #include <map>
@@ -26,6 +26,7 @@
 #include <unordered_set>
 #include <array>
 #include <span>
+#include <optional>
 
 // glm stuff
 #include <glm/glm.hpp>

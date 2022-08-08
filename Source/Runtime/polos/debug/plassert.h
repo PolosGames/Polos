@@ -10,7 +10,8 @@
 #   if defined(POLOS_MSC)
 #       define DEBUGBRK __debugbreak()
 #   elif defined(POLOS_CLANG) || defined(POLOS_GNUC)
-#       define DEBUGBRK asm ("int3")
+#include <assert.h>
+#       define DEBUGBRK assert(0);
 #   endif
 #	define ASSERTSTR(check, ...)    { if (!(check)) { LOG_ENGINE_CRITICAL("Assertion failed at File: {0}, Line: {1}. \n Msg: {2}", __FILE__, __LINE__, __VA_ARGS__); DEBUGBRK;} }
 #	define ASSERT(check)            ASSERTSTR(check, "None")

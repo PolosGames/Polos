@@ -11,6 +11,7 @@
 #include "polos/core/resource_manager.h"
 #include "polos/utils/stringid.h"
 #include "polos/events/events.h"
+#include "polos/core/window_system.h"
 
 #include "engine.h"
 
@@ -56,6 +57,7 @@ namespace polos
         auto* p_log       = p_engine_memory.New<Log>();
         auto* p_event_bus = p_engine_memory.New<EventBus>();
         auto* p_renderer  = p_engine_memory.New<Renderer>();
+        auto* p_winsystem = p_engine_memory.New<WindowSystem>();
 
         // Single instance subsystems
         auto* p_shaderlib = p_engine_memory.New<ShaderLib>();
@@ -66,6 +68,7 @@ namespace polos
         p_log      ->Startup();
         p_event_bus->Startup();
         p_renderer ->Startup();
+        p_winsystem->Startup();
 
         ShaderLib::m_Instance       = p_shaderlib;
         UpdateQueue::m_Instance     = p_update_q;
@@ -80,6 +83,7 @@ namespace polos
         delete p_app;
 
         // Shutdown sequence
+        p_winsystem->Shutdown();
         p_renderer ->Shutdown();
         p_event_bus->Shutdown();
         p_log      ->Shutdown();

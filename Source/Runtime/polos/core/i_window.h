@@ -3,8 +3,6 @@
 #ifndef POLOS_CORE_WINDOW_H
 #define POLOS_CORE_WINDOW_H
 
-#include <string>
-
 #include "polos/utils/alias.h"
 #include "polos/utils/feature.h"
 
@@ -19,7 +17,7 @@ namespace polos
         bool vsync         = true;
         bool fullscreen    = false;
     private:
-        PL_MAYBEUNUSED char m_holder[2];
+        char m_holder[2] = {44, 34};
     };
 
     class IWindow
@@ -34,14 +32,14 @@ namespace polos
 
         PL_NODISCARD virtual int32 Width() const = 0;
         PL_NODISCARD virtual int32 Height() const = 0;
+        PL_NODISCARD virtual bool  Vsync() const = 0;
+        PL_NODISCARD virtual bool  IsOpen() const = 0;
         
-        PL_NODISCARD virtual bool Vsync() const = 0;
         virtual void Vsync(bool vsync) = 0;
-        PL_NODISCARD virtual bool IsOpen() const = 0;
-        
-        virtual void Update() = 0;
-        
-        PL_NODISCARD static IWindow* NewWindow(window_props&& props);
+
+        virtual void Update() const = 0;
+
+        window_props props;
     };
 }
 

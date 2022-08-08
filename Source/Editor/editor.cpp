@@ -6,6 +6,7 @@
 #include "polos/context/shader_lib.h"
 #include "polos/context/vertex.h"
 #include "polos/core/event_bus.h"
+#include "polos/core/window_system.h"
 
 #include "editor.h"
 
@@ -109,6 +110,17 @@ namespace polos
 
     Application* CreateApplication(void* ptr)
     {
+        auto main_window = WindowSystem::NewWindow();
+
+        main_window->props.title = "Hello";
+        main_window->props.width = 720;
+        main_window->props.height = 360;
+        main_window->props.refresh_rate = 60;
+        main_window->props.vsync = true;
+        main_window->props.fullscreen = false;
+
+        main_window->Initialize();
+
         Application* app = !ptr ? new Editor() : new (ptr) Editor();
         return app;
     }
