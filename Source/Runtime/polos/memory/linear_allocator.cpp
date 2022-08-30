@@ -65,7 +65,7 @@ namespace polos::memory
         
         if (!iBuffer.buffer)
         {
-            ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)")
+            ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)");
             return;
         }
     

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef POLOS_CORE_CONTAINERS_CONTAINERS_H_
-#define POLOS_CORE_CONTAINERS_CONTAINERS_H_
+#ifndef POLOS_CONTAINERS_CONTAINERS_H_
+#define POLOS_CONTAINERS_CONTAINERS_H_
 
 #include <vector>
 #include <unordered_map>
@@ -35,6 +35,9 @@ namespace polos
     {
         std::make_unique<T>(std::forward<Args>(args)...);
     }
+
+    template<typename T>
+    using WeakPtr = std::weak_ptr<T>;
 
     template<typename T>
     using Optional = std::optional<T>;

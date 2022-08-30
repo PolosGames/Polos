@@ -16,7 +16,16 @@
 
 namespace polos
 {
-    template <typename Function> class Delegate;
+    template<typename Fn> struct Delegate {};
+
+    /*namespace detail
+    {
+        template<typename R, typename T, typename... Args>
+        concept Lambda = requires {
+            std::is_invocable_v<R, T, Args...>;
+            !std::is_same_v<T, Delegate<R(Args...)>>;
+        };
+    }*/
 
     template<typename Return, typename... Args>
     class Delegate<Return(Args...)>
@@ -141,8 +150,7 @@ namespace polos
             : m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
         {}
     private:
-
-        void* m_ObjectPointer;
+        void*    m_ObjectPointer;
         StubType m_StubPointer;
     };
 }

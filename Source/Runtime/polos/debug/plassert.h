@@ -18,9 +18,9 @@
 #	define STATIC_ASSERT(check)	    static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else
 #   define DEBUGBRK
-#	define ASSERTSTR(check, ...)
-#	define ASSERT(check)
-#	define STATIC_ASSERT(check)
+#	define ASSERTSTR(check, ...) static_cast<void>(check)
+#	define ASSERT(check)         static_cast<void>(check)
+#	define STATIC_ASSERT(check)  static_cast<void>(check)
 #endif
 
 #endif /* POLOS_CORE_DEBUG_H_ */
