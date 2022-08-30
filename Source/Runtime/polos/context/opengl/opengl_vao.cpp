@@ -7,6 +7,13 @@
 
 namespace polos
 {
+    constexpr auto align = [](int64 const length, int64 const alignment) -> int64
+    {
+        const int64  misalignment{length & (alignment - 1)};
+        const int64  padding{(alignment - misalignment) & (alignment - 1)};
+        return length + padding;
+    };
+
     Vao::Vao(std::span<vertex const> vertices, std::span<uint32 const> indices)
         : m_IndCount{ static_cast<int32>(indices.size()) }
     {
@@ -15,12 +22,6 @@ namespace polos
     
         auto const vrt_size = static_cast<int64>(vertices.size_bytes());
         auto const ind_size = static_cast<int64>(indices.size_bytes());
-        
-        auto const align = [](int64 const length, int64 const alignment) -> int64 {
-            const int64  misalignment { length & ( alignment - 1 ) };
-            const int64  padding      { (alignment - misalignment) & (alignment - 1) };
-            return length + padding;
-        };
         
         int64 const vrt_size_aligned{ align(vrt_size, alignment) };
         int64 const ind_size_aligned{ align(ind_size, alignment) };

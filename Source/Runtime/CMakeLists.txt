@@ -63,6 +63,7 @@ set(Runtime_SOURCES
     polos/context/opengl/opengl_shader.cpp
     polos/context/opengl/opengl_texture.cpp
     polos/platform/xplat/x_plat_window.cpp
+    polos/platform/xplat/x_plat_window_system.cpp
     polos/io/file.cpp
 )
 

@@ -5,12 +5,12 @@
 
 namespace polos
 {
-    class graphics_context
+    class GraphicsContext
     {
     public:
         void Initialize(void* window_handle);
     public:
-        bool is_initialized;
+        static bool s_IsInitialized;
     private:
         void* m_Window;
     };

@@ -53,7 +53,7 @@ namespace polos
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
-        IWindow& window = Application::get_main_window();
+        Window& window = Application::get_main_window();
         float aspect = static_cast<float>(window.Width()) / static_cast<float>(window.Height());
         projection = glm::perspective(
             45.0f,
@@ -94,12 +94,26 @@ namespace polos
         cube.Draw();
         
         ImGui::Begin("First box");
-        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos), -5.0f, 5.0f);
+        ImGui::SliderFloat3("Position 1", glm::value_ptr(slider_pos), -5.0f, 5.0f);
+        ImGui::SliderFloat3("Position 2", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
+        if (ImGui::Button("New Window", ImVec2{100, 40}))
+        {
+            win = WindowSystem::NewWindow();
+            win->props.width = 720;
+            win->props.height = 360;
+            win->props.title = "Another";
+            win->props.vsync = true;
+            win->props.refresh_rate = 60;
+            win->props.fullscreen = false;
+
+            win->Create();
+        }
         ImGui::End();
 
-        ImGui::Begin("Second box");
-        ImGui::SliderFloat3("Position", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
-        ImGui::End();
+        if (win != nullptr)
+        {
+            win->Update();
+        }
 
         //auto const* viewport = ImGui::GetMainViewport();
 
@@ -110,16 +124,16 @@ namespace polos
 
     Application* CreateApplication(void* ptr)
     {
-        auto main_window = WindowSystem::NewWindow();
+        auto editor_window = WindowSystem::NewWindow();
 
-        main_window->props.title = "Hello";
-        main_window->props.width = 720;
-        main_window->props.height = 360;
-        main_window->props.refresh_rate = 60;
-        main_window->props.vsync = true;
-        main_window->props.fullscreen = false;
+        editor_window->props.title = "Hello";
+        editor_window->props.width = 720;
+        editor_window->props.height = 360;
+        editor_window->props.refresh_rate = 60;
+        editor_window->props.vsync = true;
+        editor_window->props.fullscreen = false;
 
-        main_window->Initialize();
+        editor_window->Create();
 
         Application* app = !ptr ? new Editor() : new (ptr) Editor();
         return app;

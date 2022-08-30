@@ -4,7 +4,7 @@
 #include "polos/core/application.h"
 #include "polos/context/shader.h"
 #include "polos/context/vao.h"
-#include "polos/core/i_window.h"
+#include "polos/core/window.h"
 
 namespace polos
 {   
@@ -19,6 +19,7 @@ namespace polos
         Shader basic_color;
 
         Vao cube;
+        SharedPtr<Window> win;
         
         glm::mat4 model, model2;
         glm::mat4 view, projection;

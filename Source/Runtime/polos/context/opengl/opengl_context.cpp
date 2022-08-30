@@ -59,7 +59,9 @@ namespace polos
     }
 #endif /* PL_DEBUG */
 
-    void graphics_context::Initialize(void* window_handle)
+    bool GraphicsContext::s_IsInitialized;
+
+    void GraphicsContext::Initialize(void* window_handle)
     {
         m_Window = window_handle;
         
@@ -79,8 +81,10 @@ namespace polos
         // https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
         // glDebugMessageControl();
 #endif
-
-        is_initialized = true;
+        if (!s_IsInitialized)
+        {
+            s_IsInitialized = true;
+        }
     }
 }
 

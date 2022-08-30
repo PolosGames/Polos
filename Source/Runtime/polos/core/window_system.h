@@ -3,8 +3,9 @@
 #ifndef POLOS_CORE_WINDOWSYSTEM_H_
 #define POLOS_CORE_WINDOWSYSTEM_H_
 
-#include "polos/core/i_window.h"
+#include "polos/core/window.h"
 #include "polos/containers/containers.h"
+#include "polos/context/graphics_context.h"
 
 namespace polos
 {
@@ -14,12 +15,19 @@ namespace polos
         void Startup();
         void Shutdown();
 
-        static PL_NODISCARD SharedPtr<IWindow> NewWindow();
-        static PL_NODISCARD SharedPtr<IWindow> GetMainWindow();
+        PL_NODISCARD static SharedPtr<Window> NewWindow();
+        PL_NODISCARD static SharedPtr<Window> GetMainWindow();
+        
+        PL_NODISCARD static bool IsInitialized();
+    private:
+        // Defined in the selected platform's window system
+        void Initialize();
     private:
         static WindowSystem* m_Instance;
+        static bool          s_IsInitialized;
 
-        std::vector<SharedPtr<IWindow>> m_Windows;
+        std::vector<SharedPtr<Window>> m_Windows;
+        SharedPtr<GraphicsContext>      m_GfxContext;
     };
 } // namespace polos
 

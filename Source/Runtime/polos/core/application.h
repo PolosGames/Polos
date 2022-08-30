@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "polos/core/i_window.h"
+#include "polos/core/window.h"
 #include "polos/utils/alias.h"
 #include "polos/events/window/window_close.h"
 
@@ -19,12 +19,12 @@ namespace polos
 
         void Run();
     protected:
-        IWindow& get_main_window();
+        Window& get_main_window();
     private:
         void on_window_close(window_close& e);
     private:
         bool               m_IsRunning;
-        SharedPtr<IWindow> m_WindowInstance;
+        SharedPtr<Window> m_WindowInstance;
     };
 
     Application* CreateApplication(void* ptr);

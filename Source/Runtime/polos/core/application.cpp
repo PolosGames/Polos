@@ -39,9 +39,9 @@ namespace polos
 
         while (m_IsRunning)
         {
-            end = time::Timer::Now();
+            end        = time::Timer::Now();
             delta_time = static_cast<float>(end - start) * 0.001f * 0.001f;
-            start = time::Timer::Now();
+            start      = time::Timer::Now();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
             Gui::Begin();
@@ -61,10 +61,9 @@ namespace polos
     void Application::on_window_close(window_close&)
     {
         m_IsRunning = false;
-        m_WindowInstance->Shutdown();
     }
     
-    IWindow& Application::get_main_window()
+    Window& Application::get_main_window()
     {
         return *m_WindowInstance;
     }
