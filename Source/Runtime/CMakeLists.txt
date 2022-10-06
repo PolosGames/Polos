@@ -57,11 +57,11 @@ set(Runtime_SOURCES
     polos/platform/windows/windows_timer.cpp
     polos/platform/linux/linux_timer.cpp
     polos/renderer/renderer.cpp
-    polos/context/opengl/opengl_context.cpp
-    polos/context/opengl/opengl_shader_lib.cpp
-    polos/context/opengl/opengl_vao.cpp
-    polos/context/opengl/opengl_shader.cpp
-    polos/context/opengl/opengl_texture.cpp
+    polos/context/opengl/gl_context.cpp
+    polos/context/opengl/gl_shader_lib.cpp
+    polos/context/opengl/gl_vao.cpp
+    polos/context/opengl/gl_shader.cpp
+    polos/context/opengl/gl_texture.cpp
     polos/platform/xplat/x_plat_window.cpp
     polos/platform/xplat/x_plat_window_system.cpp
     polos/io/file.cpp
