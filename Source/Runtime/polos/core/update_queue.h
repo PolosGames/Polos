@@ -12,8 +12,8 @@ namespace polos
     public:
         using FuncType = Delegate<void(float)>;
     public:
-        static void PutLast(FuncType&& update_func);
-        static void PutFirst(FuncType&& update_func);
+        static void PutLast(FuncType update_func);
+        static void PutFirst(FuncType update_func);
         static void Update(float delta_time);
 
     private:
@@ -28,10 +28,14 @@ namespace polos
 */ 
 
 // these two macros should be called only from inside the member functions.
-#define UPDATE_Q_MEM_ADD_LAST(Type, Func) ::polos::UpdateQueue::PutLast( \
-    ::polos::UpdateQueue::FuncType::From<Type, &Type::Func>(this))
-#define UPDATE_Q_MEM_ADD_FIRST(Type, Func) ::polos::UpdateQueue::PutFirst(\
-    ::polos::UpdateQueue::FuncType::From<Type, &Type::Func>(this))
+#define UPDATE_Q_MEM_ADD_LAST(Func) ::polos::UpdateQueue::PutLast( \
+    ::polos::UpdateQueue::FuncType::From<                                \
+        std::remove_cvref_t<decltype(*this)>,                            \
+        &std::remove_cvref_t<decltype(*this)>::Func>(this))
+#define UPDATE_Q_MEM_ADD_FIRST(Func) ::polos::UpdateQueue::PutFirst(\
+    ::polos::UpdateQueue::FuncType::From<                                 \
+        std::remove_cvref_t<decltype(*this)>,                             \
+        &std::remove_cvref_t<decltype(*this)>::Func>(this))
 
 // this macro should be used with non-member functions
 #define UPDATE_Q_NMEM_ADD_LAST(Func) ::polos::UpdateQueue::PutLast( \

@@ -6,12 +6,12 @@ namespace polos
 {
     UpdateQueue* UpdateQueue::m_Instance;
 
-    void UpdateQueue::PutLast(FuncType&& update_func)
+    void UpdateQueue::PutLast(FuncType update_func)
     {
         m_Instance->m_UpdateList.push_back(std::move(update_func));
     }
 
-    void UpdateQueue::PutFirst(FuncType&& update_func)
+    void UpdateQueue::PutFirst(FuncType update_func)
     {
         m_Instance->m_UpdateList.insert(m_Instance->m_UpdateList.cbegin(), std::forward<FuncType>(update_func));
     }
