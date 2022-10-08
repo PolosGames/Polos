@@ -19,12 +19,14 @@ namespace polos
         Shader basic_color;
 
         Vao cube;
-        SharedPtr<Window> win;
         
         glm::mat4 model, model2;
         glm::mat4 view, projection;
         glm::vec3 pos, pos2;
         glm::vec3 slider_pos, slider_pos2;
+
+        polos::GUID app_window;
+        polos::GUID popup_window;
 
         bool open;
     };

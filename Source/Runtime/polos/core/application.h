@@ -18,16 +18,13 @@ namespace polos
         virtual ~Application();
 
         void Run();
-    protected:
-        Window& get_main_window();
     private:
         void on_window_close(window_close& e);
     private:
-        bool               m_IsRunning;
-        SharedPtr<Window> m_WindowInstance;
+        bool m_IsRunning;
     };
 
-    Application* CreateApplication(void* ptr);
+    Application* CreateApplication(void* ptr = nullptr);
 } // namespace polos
 
 #endif /* POLOS_CORE_APPLICATION_H_ */

@@ -78,7 +78,7 @@ namespace polos
         // so that every one of their id's get created.
         RaiseAllEvents();
 
-        Application* p_app = CreateApplication(nullptr);
+        Application* p_app = CreateApplication();
         p_app->Run();
         delete p_app;
 

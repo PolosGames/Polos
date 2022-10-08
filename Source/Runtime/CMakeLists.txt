@@ -54,6 +54,7 @@ set(Runtime_SOURCES
     polos/time/scope_timer.cpp
     polos/utils/type_util.cpp
     polos/utils/stringid.cpp
+    polos/utils/guid.cpp
     polos/platform/windows/windows_timer.cpp
     polos/platform/linux/linux_timer.cpp
     polos/renderer/renderer.cpp
@@ -62,8 +63,8 @@ set(Runtime_SOURCES
     polos/context/opengl/gl_vao.cpp
     polos/context/opengl/gl_shader.cpp
     polos/context/opengl/gl_texture.cpp
-    polos/platform/xplat/x_plat_window.cpp
     polos/platform/xplat/x_plat_window_system.cpp
+    polos/platform/xplat/x_plat_window_callbacks.cpp
     polos/io/file.cpp
 )
 

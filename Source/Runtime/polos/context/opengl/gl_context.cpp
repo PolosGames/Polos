@@ -69,6 +69,11 @@ namespace polos
         static_cast<void>(r);
         ASSERTSTR(r, "Failed to load OpenGL context!");
 
+        int w;
+        int h;
+        glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_Window), &w, &h);
+        glViewport(0, 0, w, h);
+
 #ifdef PL_DEBUG
 //        glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT);

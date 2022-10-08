@@ -1,6 +1,7 @@
 #include "polos/polos_pch.h"
 
 #include <imgui.h>
+#include <glad/glad.h>
 
 #include "polos/core/update_queue.h"
 #include "polos/context/shader_lib.h"
@@ -40,7 +41,7 @@ namespace polos
     Editor::Editor()
         : cube{vertices, indices}
     {
-        UPDATE_Q_MEM_ADD_LAST(Editor, Update);
+        UPDATE_Q_MEM_ADD_LAST(Update);
         
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         
@@ -53,8 +54,11 @@ namespace polos
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
-        Window& window = Application::get_main_window();
-        float aspect = static_cast<float>(window.Width()) / static_cast<float>(window.Height());
+        app_window     = WindowSystem::GetAppWindowGUID();
+        popup_window   = INT_MIN;
+
+        auto win_props = WindowSystem::GetAppWindowProps();
+        float aspect   = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
         projection = glm::perspective(
             45.0f,
             aspect,
@@ -87,33 +91,31 @@ namespace polos
         basic_color.SetUniform("u_View"_sid, view);
         basic_color.SetUniform("u_Projection"_sid, projection);
 
+        WindowSystem::SwitchWindow(app_window);
         basic_color.SetUniform("u_Model"_sid, model);
         cube.Draw();
 
         basic_color.SetUniform("u_Model"_sid, model2);
         cube.Draw();
-        
+
         ImGui::Begin("First box");
         ImGui::SliderFloat3("Position 1", glm::value_ptr(slider_pos), -5.0f, 5.0f);
         ImGui::SliderFloat3("Position 2", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
         if (ImGui::Button("New Window", ImVec2{100, 40}))
         {
-            win = WindowSystem::NewWindow();
-            win->props.width = 720;
-            win->props.height = 360;
-            win->props.title = "Another";
-            win->props.vsync = true;
-            win->props.refresh_rate = 60;
-            win->props.fullscreen = false;
+            window_props props;
+            props.width = 720;
+            props.height = 360;
+            props.title = "Another";
+            props.vsync = true;
+            props.refresh_rate = 60;
+            props.fullscreen = false;
 
-            win->Create();
+            popup_window = WindowSystem::NewWindow(props);
+            WindowSystem::SwitchWindow(popup_window);
+            glClearColor(0.3f, 1.0f, .502f, 1.0f);
         }
         ImGui::End();
-
-        if (win != nullptr)
-        {
-            win->Update();
-        }
 
         //auto const* viewport = ImGui::GetMainViewport();
 
@@ -124,16 +126,15 @@ namespace polos
 
     Application* CreateApplication(void* ptr)
     {
-        auto editor_window = WindowSystem::NewWindow();
+        window_props props;
+        props.title = "Hello";
+        props.width = 1280;
+        props.height = 720;
+        props.refresh_rate = 60;
+        props.vsync = true;
+        props.fullscreen = false;
 
-        editor_window->props.title = "Hello";
-        editor_window->props.width = 720;
-        editor_window->props.height = 360;
-        editor_window->props.refresh_rate = 60;
-        editor_window->props.vsync = true;
-        editor_window->props.fullscreen = false;
-
-        editor_window->Create();
+        auto a = WindowSystem::NewWindow(props);
 
         Application* app = !ptr ? new Editor() : new (ptr) Editor();
         return app;

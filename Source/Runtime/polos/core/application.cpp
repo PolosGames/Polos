@@ -16,7 +16,6 @@ namespace polos
     Application::Application()
         : m_IsRunning{true}
     {
-        m_WindowInstance = WindowSystem::GetMainWindow();
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
     }
 
@@ -42,15 +41,16 @@ namespace polos
             end        = time::Timer::Now();
             delta_time = static_cast<float>(end - start) * 0.001f * 0.001f;
             start      = time::Timer::Now();
+
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
             Gui::Begin();
-            
+
             UpdateQueue::Update(delta_time);
-    
-            Gui::End();
             
-            m_WindowInstance->Update();
+            Gui::End();
+
+            WindowSystem::Update();
 
             int a = 3; static_cast<void>(a);
         }
@@ -61,10 +61,5 @@ namespace polos
     void Application::on_window_close(window_close&)
     {
         m_IsRunning = false;
-    }
-    
-    Window& Application::get_main_window()
-    {
-        return *m_WindowInstance;
     }
 } // namespace polos
