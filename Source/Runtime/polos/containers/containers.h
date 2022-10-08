@@ -23,7 +23,7 @@ namespace polos
     [[nodiscard]]
     inline SharedPtr<T> MakeShared(Args&&... args)
     {
-        std::make_shared<T>(std::forward<Args>(args)...);
+        return std::make_shared<T>(std::forward<Args>(args)...);
     }
 
     template<typename T>
@@ -33,7 +33,7 @@ namespace polos
     [[nodiscard]]
     inline UniquePtr<T> MakeUniq(Args&&... args)
     {
-        std::make_unique<T>(std::forward<Args>(args)...);
+        return std::make_unique<T>(std::forward<Args>(args)...);
     }
 
     template<typename T>
