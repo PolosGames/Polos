@@ -46,10 +46,10 @@ namespace polos::memory
             return;
         }
 
-        uint64 prev_offset = reinterpret_cast<stack_header*>(&iBuffer.buffer[m_PrevOffset])->prev_offset;
+        uint64 prevOffset = reinterpret_cast<stack_header*>(&iBuffer.buffer[m_PrevOffset])->prevOffset;
 
         m_Offset     = m_PrevOffset;
-        m_PrevOffset = prev_offset;
+        m_PrevOffset = prevOffset;
     }
 
     void StackAllocator::Clear()
@@ -75,7 +75,7 @@ namespace polos::memory
         }
 
         header              = reinterpret_cast<stack_header*>(m_Bottom + m_Offset);
-        header->prev_offset = m_PrevOffset;
+        header->prevOffset = m_PrevOffset;
         m_PrevOffset        = m_Offset;
         
         void* ptr = &iBuffer.buffer[m_Offset + header_size];

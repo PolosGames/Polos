@@ -30,7 +30,7 @@ namespace polos
     using byte = uint8;
 
     using StringId       = int64;
-    using ResourceHandle = int64;
+    using ResourceHandle = uint64;
 
     using cstring = const char*;
 }

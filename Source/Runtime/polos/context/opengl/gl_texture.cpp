@@ -9,6 +9,10 @@ namespace polos
 {
     int32 Texture::s_IsFlipped = 0;
 
+    Texture::Texture(uint32 id, int32 w, int32 h, int32 c)
+        : id{id}, width{w}, height{h}, channels{c}
+    {}
+
     Texture::~Texture()
     {
         glDeleteTextures(1, &id);

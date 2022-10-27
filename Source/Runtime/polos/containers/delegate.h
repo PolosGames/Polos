@@ -16,7 +16,7 @@
 
 namespace polos
 {
-    template<typename Fn> struct Delegate {};
+    template<typename Fn> class Delegate {};
 
     /*namespace detail
     {

@@ -15,7 +15,7 @@ namespace polos
         std::string title  = "Polos";
         int32 width        = 1280;
         int32 height       = 720;
-        int32 refresh_rate = 60;
+        int32 refreshRate = 60;
         bool vsync         = true;
         bool fullscreen    = false;
     private:

@@ -55,7 +55,7 @@ namespace polos
 
             win_props.width    = mode->width;
             win_props.height   = mode->height;
-            win_props.refresh_rate = mode->refreshRate;
+            win_props.refreshRate = mode->refreshRate;
         }
 
         /*auto* first_win_handle = 

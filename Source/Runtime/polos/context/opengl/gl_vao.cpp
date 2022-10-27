@@ -47,7 +47,7 @@ namespace polos
 
         glVertexArrayAttribFormat(m_VaoId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, position));
         glVertexArrayAttribFormat(m_VaoId, 1, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, normal));
-        glVertexArrayAttribFormat(m_VaoId, 2, 2, GL_FLOAT, GL_FALSE, offsetof(vertex, texture_coord));
+        glVertexArrayAttribFormat(m_VaoId, 2, 2, GL_FLOAT, GL_FALSE, offsetof(vertex, textureCoord));
         glVertexArrayAttribFormat(m_VaoId, 3, 3, GL_FLOAT, GL_FALSE, offsetof(vertex, color));
     
         glVertexArrayAttribBinding(m_VaoId, 0, 0);

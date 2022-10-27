@@ -11,7 +11,7 @@ namespace polos::memory
     class LinearAllocator
     {
     public:
-        InternalBuffer iBuffer;
+        internal_buffer iBuffer;
     public:
         LinearAllocator();
         explicit LinearAllocator(size_t size);

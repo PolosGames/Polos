@@ -108,7 +108,7 @@ namespace polos
             props.height = 360;
             props.title = "Another";
             props.vsync = true;
-            props.refresh_rate = 60;
+            props.refreshRate = 60;
             props.fullscreen = false;
 
             popup_window = WindowSystem::NewWindow(props);
@@ -130,7 +130,7 @@ namespace polos
         props.title = "Hello";
         props.width = 1280;
         props.height = 720;
-        props.refresh_rate = 60;
+        props.refreshRate = 60;
         props.vsync = true;
         props.fullscreen = false;
 

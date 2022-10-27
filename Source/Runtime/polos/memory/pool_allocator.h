@@ -21,7 +21,7 @@ namespace polos::memory
             free_node* next;
         };
     public:
-        InternalBuffer iBuffer;
+        internal_buffer iBuffer;
     public:
         PL_NO_COPY(PoolAllocator);
         

@@ -6,7 +6,7 @@
 
 namespace polos::memory
 {
-    struct InternalBuffer
+    struct internal_buffer
     {
         byte* buffer;
         size_t bufferSize;
@@ -29,12 +29,13 @@ namespace polos::memory
 
     inline bool MemUtils::IsAligned(uintptr p)
     {
-        return (p & (kMemoryAlignment - 1)) == 0;
+        // TODO: either make kMemoryAlignment uint64, or find another solution!!!
+        return (p & static_cast<uintptr>(kMemoryAlignment - 1)) == 0;
     }
 
     inline uint32 MemUtils::CalculatePadding(uintptr p)
     {
-        return kMemoryAlignment - (p & (kMemoryAlignment - 1));
+        return kMemoryAlignment - static_cast<uint32>(p & static_cast<uintptr>(kMemoryAlignment - 1));
     }
 } // namespace polos
 

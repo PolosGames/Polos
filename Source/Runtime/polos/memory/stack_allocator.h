@@ -11,10 +11,10 @@ namespace polos::memory
     {
         struct stack_header
         {
-            uint64 prev_offset; /// Stores previous element's header's start
+            uint64 prevOffset; /// Stores previous element's header's start
         };
     public:
-        InternalBuffer iBuffer;
+        internal_buffer iBuffer;
     public:
         explicit StackAllocator(uint64 size);
         ~StackAllocator();

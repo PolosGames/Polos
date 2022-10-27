@@ -7,7 +7,7 @@ namespace polos
     {
         glm::vec3 position;
         glm::vec3 normal;
-        glm::vec2 texture_coord;
+        glm::vec2 textureCoord;
         glm::vec3 color;
     };
 }
