@@ -43,6 +43,66 @@ if(GUI_USE_IMGUI)
     set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
 endif()
 
+
+# Specific for FMOD, will change later on
+add_library(FMOD SHARED IMPORTED)
+set_target_properties(
+    FMOD
+        PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmod.dll"
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmod_vc.lib"
+            FOLDER "ThirdParty"
+)
+
+add_library(FMODL SHARED IMPORTED)
+set_target_properties(
+    FMODL
+        PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmodL.dll"
+            IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmodL_vc.lib"
+            FOLDER "ThirdParty"
+)
+
+if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(
+        FMOD
+            INTERFACE
+                $<$<CONFIG:Debug>:/Od>
+                $<$<CONFIG:RelWithDebInfo>:/Ot>
+                $<$<CONFIG:Release>:/O2>
+                $<$<CONFIG:MinSizeRel>:/O1>
+    )
+    target_compile_options(
+        FMODL
+            INTERFACE
+                $<$<CONFIG:Debug>:/Od>
+                $<$<CONFIG:RelWithDebInfo>:/Ot>
+                $<$<CONFIG:Release>:/O2>
+                $<$<CONFIG:MinSizeRel>:/O1>
+    )
+elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
+        CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+        CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    target_compile_options(
+        FMOD
+            INTERFACE
+                $<$<CONFIG:Debug>:-Og>
+                $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+                $<$<CONFIG:Release>:-O2>
+                $<$<CONFIG:MinSizeRel>:-O3>
+    )
+    target_compile_options(
+        FMODL
+            INTERFACE
+                $<$<CONFIG:Debug>:-Og>
+                $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+                $<$<CONFIG:Release>:-O2>
+                $<$<CONFIG:MinSizeRel>:-O3>
+    )
+endif()
+
+####
+
 add_subdirectory(Runtime)
 
 if(BUILD_EDITOR)

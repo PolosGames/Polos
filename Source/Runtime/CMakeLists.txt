@@ -29,6 +29,9 @@ if (UNIX)
     list(APPEND EXTRA_LIBS pthread)
 endif (UNIX)
 
+list (APPEND EXTRA_LIBS FMOD)
+list (APPEND EXTRA_LIBS FMODL)
+
 set(Runtime_HEADERS
     polos/containers/containers.h
     polos/containers/delegate.h

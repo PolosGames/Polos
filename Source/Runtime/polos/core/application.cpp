@@ -51,8 +51,6 @@ namespace polos
             Gui::End();
 
             WindowSystem::Update();
-
-            int a = 3; static_cast<void>(a);
         }
         
         Gui::Shutdown();
