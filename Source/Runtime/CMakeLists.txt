@@ -46,7 +46,6 @@ set(Runtime_SOURCES
     polos/core/log.cpp
     polos/core/camera.cpp
     polos/core/update_queue.cpp
-    polos/core/resource_manager.cpp
     polos/core/window_system.cpp
     polos/engine/engine.cpp
     polos/gui/imgui/imgui_impl_glfw.cpp
@@ -69,6 +68,7 @@ set(Runtime_SOURCES
     polos/platform/xplat/x_plat_window_system.cpp
     polos/platform/xplat/x_plat_window_callbacks.cpp
     polos/io/file.cpp
+    polos/core/sound/sound_engine.cpp
 )
 
 add_library(Runtime STATIC)
@@ -110,6 +110,7 @@ target_include_directories(
             ${PROJECT_BINARY_DIR}
         PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}
+            ../ThirdParty/fmod/inc
 )
 
 target_compile_definitions(

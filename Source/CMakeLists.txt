@@ -63,46 +63,6 @@ set_target_properties(
             FOLDER "ThirdParty"
 )
 
-if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(
-        FMOD
-            INTERFACE
-                $<$<CONFIG:Debug>:/Od>
-                $<$<CONFIG:RelWithDebInfo>:/Ot>
-                $<$<CONFIG:Release>:/O2>
-                $<$<CONFIG:MinSizeRel>:/O1>
-    )
-    target_compile_options(
-        FMODL
-            INTERFACE
-                $<$<CONFIG:Debug>:/Od>
-                $<$<CONFIG:RelWithDebInfo>:/Ot>
-                $<$<CONFIG:Release>:/O2>
-                $<$<CONFIG:MinSizeRel>:/O1>
-    )
-elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
-        CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
-        CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
-    target_compile_options(
-        FMOD
-            INTERFACE
-                $<$<CONFIG:Debug>:-Og>
-                $<$<CONFIG:RelWithDebInfo>:-O2 -g>
-                $<$<CONFIG:Release>:-O2>
-                $<$<CONFIG:MinSizeRel>:-O3>
-    )
-    target_compile_options(
-        FMODL
-            INTERFACE
-                $<$<CONFIG:Debug>:-Og>
-                $<$<CONFIG:RelWithDebInfo>:-O2 -g>
-                $<$<CONFIG:Release>:-O2>
-                $<$<CONFIG:MinSizeRel>:-O3>
-    )
-endif()
-
-####
-
 add_subdirectory(Runtime)
 
 if(BUILD_EDITOR)

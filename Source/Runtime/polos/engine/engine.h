@@ -3,6 +3,8 @@
 #ifndef POLOS_CORE_ENGINE_H_
 #define POLOS_CORE_ENGINE_H_
 
+#include <stack>
+
 namespace polos
 {
     class Engine
