@@ -103,3 +103,5 @@ if(BUILD_EDITOR)
 endif()
 
 install(DIRECTORY resources DESTINATION ${INSTALL_DIR})
+install(FILES ThirdParty/fmod/lib/fmod.dll DESTINATION ${INSTALL_DIR})
+install(FILES ThirdParty/fmod/lib/fmodL.dll DESTINATION ${INSTALL_DIR})

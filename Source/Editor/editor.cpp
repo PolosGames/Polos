@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 #include "polos/core/update_queue.h"
 #include "polos/context/shader_lib.h"
@@ -15,28 +17,22 @@
 
 namespace polos
 {
+
+    // 2D Texture Rectangle
+
     static constexpr std::array<vertex, 8> vertices {
-            // Front
-            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{1.0f, 0.0f, 0.0f}}, // Bottom-left
-            vertex{glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 1.0f, 0.0f}}, // Bottom-right
-            vertex{glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}}, // Top-right
-            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.5f, 0.5f, 0.5f}}, // Top-left
-        
-            // Back
-            vertex{glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 1.0f, 0.0f}}, // Bottom-left
-            vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{1.0f, 0.0f, 0.0f}}, // Bottom-right
-            vertex{glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.5f, 0.5f, 0.5f}}, // Top-right
-            vertex{glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}}, // Top-left
+            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-left
+            vertex{glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-right
+            vertex{glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{1.0f}}, // Top-right
+            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{1.0f}}, // Top-left
     };
 
-    static constexpr std::array<uint32, 36> indices {
-            0, 1, 2,   2, 3, 0, // Front
-            4, 5, 6,   6, 7, 4, // Back
-            5, 0, 3,   3, 6, 5, // left
-            1, 4, 7,   7, 2, 1, // right
-            3, 2, 7,   7, 6, 3, // top
-            1, 0, 5,   5, 4, 1  // Bottom
+    static constexpr std::array<uint32, 6> indices {
+            0, 1, 2,
+            2, 3, 0,
     };
+
+    // !2D Texture Rectangle
 
     Editor::Editor()
         : cube{vertices, indices}
@@ -48,28 +44,14 @@ namespace polos
         basic_color = ShaderLib::Get("basic_color"_sid);
 
         model  = glm::mat4(1.0f);
-        model2 = glm::mat4(1.0f);
-        view   = glm::lookAt(
-            glm::vec3(0.5f, 0.5f, 1.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
+
         app_window     = WindowSystem::GetAppWindowGUID();
         popup_window   = INT_MIN;
 
         auto win_props = WindowSystem::GetAppWindowProps();
-        float aspect   = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
-        projection = glm::perspective(
-            45.0f,
-            aspect,
-            0.1f,
-            1000.0f
-        );
-        pos        = glm::vec3(0.0f, 0.0f, -3.0f);
+
+        pos        = glm::vec3(0.0f, 0.0f, 0.0f);
         slider_pos = pos;
-        
-        pos2        = glm::vec3(2.0f, 0.0f, -3.0f);
-        slider_pos2 = pos2;
 
         open = true;
     }
@@ -81,11 +63,9 @@ namespace polos
     void Editor::Update(float delta_time)
     {
         static_cast<void>(delta_time);
+
         model = glm::translate(model, (pos - slider_pos));
         pos = slider_pos;
-        
-        model2 = glm::translate(model2, (pos2 - slider_pos2));
-        pos2 = slider_pos2;
 
         basic_color.Use();
         basic_color.SetUniform("u_View"_sid, view);
@@ -95,26 +75,8 @@ namespace polos
         basic_color.SetUniform("u_Model"_sid, model);
         cube.Draw();
 
-        basic_color.SetUniform("u_Model"_sid, model2);
-        cube.Draw();
-
         ImGui::Begin("First box");
         ImGui::SliderFloat3("Position 1", glm::value_ptr(slider_pos), -5.0f, 5.0f);
-        ImGui::SliderFloat3("Position 2", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
-        if (ImGui::Button("New Window", ImVec2{100, 40}))
-        {
-            window_props props;
-            props.width = 720;
-            props.height = 360;
-            props.title = "Another";
-            props.vsync = true;
-            props.refreshRate = 60;
-            props.fullscreen = false;
-
-            popup_window = WindowSystem::NewWindow(props);
-            WindowSystem::SwitchWindow(popup_window);
-            glClearColor(0.3f, 1.0f, .502f, 1.0f);
-        }
         ImGui::End();
 
         //auto const* viewport = ImGui::GetMainViewport();

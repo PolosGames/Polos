@@ -20,10 +20,10 @@ namespace polos
 
         Vao cube;
         
-        glm::mat4 model, model2;
+        glm::mat4 model;
         glm::mat4 view, projection;
-        glm::vec3 pos, pos2;
-        glm::vec3 slider_pos, slider_pos2;
+        glm::vec3 pos;
+        glm::vec3 slider_pos;
 
         polos::GUID app_window;
         polos::GUID popup_window;
