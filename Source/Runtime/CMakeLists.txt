@@ -69,6 +69,7 @@ set(Runtime_SOURCES
     polos/platform/xplat/x_plat_window_callbacks.cpp
     polos/io/file.cpp
     polos/core/sound/sound_engine.cpp
+    polos/renderer/shapes/shapes2d_transform.cpp
 )
 
 add_library(Runtime STATIC)

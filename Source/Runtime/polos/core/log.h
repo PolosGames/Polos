@@ -74,7 +74,7 @@ namespace polos
 
 #include "polos/utils/macro_util.h"
 
-#define LOG_VAR_STR(Str, Variable)   LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
-#define LOG_VAR(Variable)            LOG_VAR_STR("value of {0} = {1}", Variable)
+#define LOG_VAR_IMPL(Str, Variable)  LOG_ENGINE_INFO(Str, __FILE__, __LINE__, PL_STRINGIFY(Variable), Variable)
+#define LOG_VAR(Variable)            LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
 
 #endif /* POLOS_CORE_LOG_H_ */

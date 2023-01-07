@@ -7,34 +7,39 @@
 #include "polos/containers/containers.h"
 #include "polos/context/texture.h"
 #include "polos/context/shader.h"
+#include "polos/utils/guid.h"
+#include "polos/context/vao.h"
 
 namespace polos
 {
     class Renderer
     {
     public:
-        Renderer() = default;
-        ~Renderer() = default;
-
         void Startup();
         void Shutdown();
+
+        static void SetMainWindowHandle(pl::GUID handle);
         
-        glm::mat4 const& GetProjectionMatrix();
-        glm::mat4 const& GetViewMatrix();
+        static glm::mat4 const& GetProjectionMatrix();
+        static pl::Vao& GetRectangleVao();
 
     private:
         static Renderer* m_Instance;
 
-        glm::mat4 m_ViewMatrix;
+        pl::GUID  m_MainWinHandle;
+        pl::Vao   m_RectangleVao;
         glm::mat4 m_ProjectionMatrix;
     };
 
+    void RenderRectangle(
+        glm::mat4& model_matrix,
+        Shader& shader
+    );
+
     void RenderTexture2D(
-        glm::vec2 position,
-        glm::vec2 rotation,
-        glm::mat4& model,
+        glm::mat4& model_matrix,
         TextureRef texture,
-        StringId const shader_name
+        Shader& shader
     );
 }
 

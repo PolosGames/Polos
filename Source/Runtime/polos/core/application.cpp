@@ -35,11 +35,14 @@ namespace polos
         glClearColor(0.45f, 0.55f, 0.6f, 1.0f);
 
         Gui::Setup();
-
+        
         while (m_IsRunning)
         {
             end        = time::Timer::Now();
             delta_time = static_cast<float>(end - start) * 0.001f * 0.001f;
+
+            //LOG_ENGINE_INFO("FPS: {}", 1 / delta_time);
+
             start      = time::Timer::Now();
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

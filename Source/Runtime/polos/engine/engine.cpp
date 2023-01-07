@@ -69,8 +69,8 @@ namespace polos
         // Startup for systems
         p_log        ->Startup();
         p_event_bus  ->Startup();
-        p_renderer   ->Startup();
         p_winsystem  ->Startup();
+        p_renderer   ->Startup();
 
         ShaderLib::m_Instance       = p_shaderlib;
         UpdateQueue::m_Instance     = p_update_q;
@@ -86,8 +86,8 @@ namespace polos
 
         // Shutdown sequence
         p_soundEngine->Shutdown();
-        p_winsystem  ->Shutdown();
         p_renderer   ->Shutdown();
+        p_winsystem  ->Shutdown();
         p_event_bus  ->Shutdown();
         p_log        ->Shutdown();
         

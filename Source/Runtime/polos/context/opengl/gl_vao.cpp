@@ -14,8 +14,14 @@ namespace polos
         return length + padding;
     };
 
+    Vao::Vao()
+        : bound{false}
+    {
+
+    }
+
     Vao::Vao(std::span<vertex const> vertices, std::span<uint32 const> indices)
-        : m_IndCount{ static_cast<int32>(indices.size()) }
+        : m_IndCount{ static_cast<int32>(indices.size()) }, bound{true}
     {
         int32 alignment { GL_NONE };
         glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
@@ -55,11 +61,46 @@ namespace polos
         glVertexArrayAttribBinding(m_VaoId, 2, 0);
         glVertexArrayAttribBinding(m_VaoId, 3, 0);
     }
+
+    Vao& Vao::operator=(Vao& rhs) noexcept
+    {
+        if (&rhs == this)
+            return *this;
+
+        m_VaoId = rhs.m_VaoId;
+        m_BufferId = rhs.m_BufferId;
+        m_IndCount = rhs.m_IndCount;
+        m_IndOffset = rhs.m_IndOffset;
+
+        rhs.bound = false;
+        bound = true;
+
+        return *this;
+    }
+
+    Vao& Vao::operator=(Vao&& rhs) noexcept
+    {
+        if (&rhs == this)
+            return *this;
+
+        m_VaoId = rhs.m_VaoId;
+        m_BufferId = rhs.m_BufferId;
+        m_IndCount = rhs.m_IndCount;
+        m_IndOffset = rhs.m_IndOffset;
+
+        rhs.bound = false;
+        bound = true;
+
+        return *this;
+    }
     
     Vao::~Vao()
     {
-        glDeleteVertexArrays(1, &m_VaoId);
-        glDeleteBuffers(1, &m_BufferId);
+        if (bound)
+        {
+            glDeleteVertexArrays(1, &m_VaoId);
+            glDeleteBuffers(1, &m_BufferId);
+        }
     }
 
     void Vao::Bind() const

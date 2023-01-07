@@ -11,7 +11,10 @@ namespace polos
         kForward,
         kBackward,
         kLeft,
-        kRight
+        kRight,
+        kUp,
+        kDown,
+        kNone
     };
     
     namespace globals
@@ -31,7 +34,7 @@ namespace polos
         Camera(glm::vec3 position, glm::vec3 up, float yaw = globals::g_Yaw, float pitch = globals::g_Pitch);
 
         // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-        PL_NODISCARD glm::mat4 GetViewMatrix() const;
+        static PL_NODISCARD glm::mat4 GetViewMatrix();
         
         // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
         void ProcessKeyboard(CameraMovement direction, float delta_time);
@@ -56,6 +59,8 @@ namespace polos
         float mouseSensitivity;
         float zoom;
     private:
+        static Camera* s_Instance;
+
         // calculates the front vector from the Camera's (updated) Euler Angles
         void update_camera_vectors();
     };

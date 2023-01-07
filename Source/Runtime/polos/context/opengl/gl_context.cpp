@@ -8,6 +8,8 @@
 
 #include "polos/context/graphics_context.h"
 
+#define PL_FILTER_OPENGL_NOTIFICATIONS 1
+
 namespace polos
 {
 #ifdef PL_DEBUG
@@ -80,16 +82,23 @@ namespace polos
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
         glDebugMessageCallback(DebugCallback, nullptr);
-//        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-
-        // TODO: Filter some of the unnecessary messages here
-        // https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
-        // glDebugMessageControl();
-#endif
+        /*
+        *    TODO: Filter some of the unnecessary messages here
+        *    https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
+        *    glDebugMessageControl();
+        */
+#if PL_FILTER_OPENGL_NOTIFICATIONS
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+#endif // !PL_FILTER_OPENGL_NOTIFICATIONS
+        
+#endif // !PL_DEBUG
         if (!s_IsInitialized)
         {
             s_IsInitialized = true;
         }
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 }
 

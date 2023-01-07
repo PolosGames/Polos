@@ -11,6 +11,7 @@
 #include "polos/core/event_bus.h"
 #include "polos/platform/xplat/x_plat_window_callbacks.h"
 #include "polos/utils/guid.h"
+#include "polos/renderer/renderer.h"
 
 namespace polos
 {
@@ -26,6 +27,11 @@ namespace polos
             int r = glfwInit(); static_cast<void>(r);
             ASSERTSTR(r == GLFW_TRUE, "Failed to initialize GLFW!");
             s_IsInitialized = true;
+
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         }
         
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
@@ -46,22 +52,8 @@ namespace polos
         auto& win_props = m_Instance->m_WinProps.back();
 
         // Create the GLFW window and attach its callbacks.
-        GLFWmonitor* monitor    = nullptr;
-        GLFWvidmode const* mode = nullptr;
-        if (win_props.fullscreen)
-        {
-            monitor = glfwGetPrimaryMonitor();
-            mode    = glfwGetVideoMode(monitor);
-
-            win_props.width    = mode->width;
-            win_props.height   = mode->height;
-            win_props.refreshRate = mode->refreshRate;
-        }
-
-        /*auto* first_win_handle = 
-            m_Instance->m_WinHandles.size() >= 1 ? 
-                static_cast<GLFWwindow*>(m_Instance->m_WinHandles.front()) 
-                : nullptr;*/
+        GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+        GLFWvidmode const* mode = glfwGetVideoMode(monitor);
 
         auto* glfw_win_ptr = glfwCreateWindow(
             win_props.width,
@@ -78,11 +70,34 @@ namespace polos
         glfwSetWindowUserPointer(win_handle, &win_props);
         glfwMakeContextCurrent(win_handle);
 
+        int32 pos_x, pos_y;
+        glfwGetWindowPos(glfw_win_ptr, &pos_x, &pos_y);
+
+        if (win_props.fullscreen)
+        {
+            win_props.width = mode->width;
+            win_props.height = mode->height;
+
+            int32 refresh_rate = win_props.vsync ? mode->refreshRate : win_props.refreshRate;
+
+            glfwSetWindowMonitor(glfw_win_ptr, monitor, pos_x, pos_y, win_props.width, win_props.height, refresh_rate);
+        }
+        else
+        {
+            // We don't care about the refresh rate when it's windowed, because
+            // windowed mode makes the window match the refresh rate to that of
+            // the main screen refresh rate itself.
+            glfwSetWindowMonitor(glfw_win_ptr, nullptr, pos_x, pos_y, win_props.width, win_props.height, GLFW_DONT_CARE);
+        }
+
         // If it's the first window, it's the main window, so create the gfx
         // context with it.
         if (m_Instance->m_WinProps.size() == 1)
         {
             m_Instance->m_GfxContext->Initialize(win_handle);
+
+            // Also set the renderer's window handle here.
+            Renderer::SetMainWindowHandle(win_guid);
         }
 
         glfwSwapInterval(win_props.vsync);

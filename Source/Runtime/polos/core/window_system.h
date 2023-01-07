@@ -41,10 +41,10 @@ namespace polos
         static WindowSystem* m_Instance;
         static bool          s_IsInitialized;
 
-        DArray<polos::GUID>             m_WinGUIDs;
-        DArray<window_props> m_WinProps;
-        DArray<void*>                   m_WinHandles;
-        SharedPtr<GraphicsContext>      m_GfxContext;
+        DArray<polos::GUID>        m_WinGUIDs;
+        DArray<window_props>       m_WinProps;
+        DArray<void*>              m_WinHandles;
+        SharedPtr<GraphicsContext> m_GfxContext;
     };
 } // namespace polos
 

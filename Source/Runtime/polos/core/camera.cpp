@@ -4,26 +4,30 @@
 
 namespace polos
 {
-    constexpr float g_Yaw         = -90.0f;
-    constexpr float g_Pitch       =   0.0f;
-    constexpr float g_Speed       =   2.5f;
-    constexpr float g_Sensitivity =   0.1f;
-    constexpr float g_Zoom        =  45.0f;
+    constexpr float globals::g_Yaw         = -90.0f;
+    constexpr float globals::g_Pitch       =   0.0f;
+    constexpr float globals::g_Speed       =   2.5f;
+    constexpr float globals::g_Sensitivity =   0.1f;
+    constexpr float globals::g_Zoom        =  45.0f;
+
+    Camera* Camera::s_Instance;
     
     Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
         : position{position},
           front{glm::vec3{0.0f, 0.0f, -1.0f}},
-          up{{}},
+          up{},
           right{{}},
           worldUp(up),
           yaw(yaw),
           pitch(pitch),
-          movementSpeed(g_Speed),
-          mouseSensitivity(g_Sensitivity),
-          zoom(g_Zoom)
+          movementSpeed(globals::g_Speed),
+          mouseSensitivity(globals::g_Sensitivity),
+          zoom(globals::g_Zoom)
     {
-        static_cast<void>(g_Yaw);
-        static_cast<void>(g_Pitch);
+        s_Instance = this;
+
+        static_cast<void>(globals::g_Yaw);
+        static_cast<void>(globals::g_Pitch);
         update_camera_vectors();
     }
     
@@ -32,12 +36,16 @@ namespace polos
         float velocity = movementSpeed * delta_time;
         if (direction == kForward)
             position += front * velocity;
-        if (direction == kBackward)
+        else if (direction == kBackward)
             position -= front * velocity;
         if (direction == kLeft)
-            position -= right * velocity;
-        if (direction == kRight)
             position += right * velocity;
+        else if (direction == kRight)
+            position -= right * velocity;
+        if (direction == kUp)
+            position -= up * velocity;
+        else if (direction == kDown)
+            position += up * velocity;
     }
     
     void Camera::ProcessMouseMovement(float x_offset, float y_offset, GLboolean constrain_pitch)
@@ -70,9 +78,10 @@ namespace polos
             zoom = 45.0f;
     }
     
-    glm::mat4 Camera::GetViewMatrix() const
+    glm::mat4 Camera::GetViewMatrix()
     {
-        return glm::lookAt(position, position + front, up);
+        auto* cam = s_Instance;
+        return glm::lookAt(cam->position, cam->position + cam->front, cam->up);
     }
     
     void Camera::update_camera_vectors()

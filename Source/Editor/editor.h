@@ -5,6 +5,10 @@
 #include "polos/context/shader.h"
 #include "polos/context/vao.h"
 #include "polos/core/window.h"
+#include "polos/core/camera.h"
+#include "polos/events/input/mouse_move.h"
+#include "polos/events/input/key_press.h"
+#include "polos/events/input/key_release.h"
 
 namespace polos
 {   
@@ -15,20 +19,21 @@ namespace polos
         ~Editor();
     private:
         void Update(float delta_time);
+        
+        void OnKeyPress(key_press& e);
+        void OnKeyRelease(key_release& e);
+        void OnMouseMove(mouse_move& e);
     private:
-        Shader basic_color;
+        Shader* m_TextureShader;
+        TextureRef texture;
 
-        Vao cube;
+        pl::Camera camera;
         
         glm::mat4 model;
-        glm::mat4 view, projection;
-        glm::vec3 pos;
-        glm::vec3 slider_pos;
+
+        int32 key;
 
         polos::GUID app_window;
-        polos::GUID popup_window;
-
-        bool open;
     };
 }
 

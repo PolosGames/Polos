@@ -14,7 +14,15 @@ namespace polos
     class Vao
     {
     public:
+        Vao();
         Vao(std::span<vertex const> vertices, std::span<uint32 const> indices);
+        
+        Vao(Vao&)  noexcept = default;
+        Vao(Vao&&) noexcept = default;
+
+        Vao& operator=(Vao& rhs) noexcept;
+        Vao& operator=(Vao&& rhs) noexcept;
+
         ~Vao();
     
         void Bind() const;
@@ -25,6 +33,7 @@ namespace polos
         uint32 m_BufferId{};
         int32  m_IndCount{};
         int64  m_IndOffset{};
+        bool bound;
     };
 }
 

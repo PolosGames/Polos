@@ -49,7 +49,7 @@ namespace polos
                     default: LOG_ENGINE_ERROR("Shader type not recognized"); return 0;
                 }
             }();
-            shader_ids[i] = compile_shader(shader_source, shader_type);
+            shader_ids[i] = compile_shader(shader_source.c_str(), shader_type);
         }
         
         uint32 program_id = glCreateProgram();
@@ -78,8 +78,8 @@ namespace polos
             return file.ReadStr();
         }();
 
-        auto vert_id = compile_shader(vert_code, GL_VERTEX_SHADER);
-        auto frag_id = compile_shader(frag_code, GL_FRAGMENT_SHADER);
+        auto vert_id = compile_shader(vert_code.c_str(), GL_VERTEX_SHADER);
+        auto frag_id = compile_shader(frag_code.c_str(), GL_FRAGMENT_SHADER);
 
         uint32 program_id = glCreateProgram();
         glAttachShader(program_id, vert_id);
@@ -101,9 +101,9 @@ namespace polos
         return m_Instance->m_Shaders[shader_name];
     }
     
-    uint32 ShaderLib::compile_shader(std::string_view source, uint32 shader_type)
+    uint32 ShaderLib::compile_shader(cstring source, uint32 shader_type)
     {
-        cstring shader_source = source.data();
+        cstring shader_source = source;
         uint32 shader_id = glCreateShader(shader_type);
         glShaderSource(shader_id, 1, &shader_source, nullptr);
         glCompileShader(shader_id);

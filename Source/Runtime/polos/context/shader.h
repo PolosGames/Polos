@@ -25,6 +25,7 @@ namespace polos
 
         void CreateUniformLookup();
         void Use() const;
+        void Release() const;
 
         void SetUniform(StringId const name, int32 const value)         const;
         void SetUniform(StringId const name, glm::i32vec2 const& value) const;

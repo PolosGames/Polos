@@ -1,6 +1,11 @@
 #include "polos/polos_pch.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "polos/core/window_system.h"
+#include "polos/context/vertex.h"
+#include "polos/context/shader_lib.h"
+#include "polos/core/camera.h"
 
 #include "renderer.h"
 
@@ -8,27 +13,25 @@ namespace polos
 {
     Renderer* Renderer::m_Instance;
 
+    // 2D Texture Rectangle
+
+    static constexpr std::array<vertex, 5> vertices{
+            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-left
+            vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-right
+            vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{1.0f}}, // Top-right
+            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{1.0f}}, // Top-left
+    };
+
+    static constexpr std::array<uint32, 6> indices{
+            0, 1, 2,
+            2, 3, 0,
+    };
+
+    // !2D Texture Rectangle
+
     void Renderer::Startup()
     {
         m_Instance = this;
-
-        auto win_props = WindowSystem::GetAppWindowProps();
-        float aspect = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
-
-        m_ViewMatrix = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, 2.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, -1.0f, 0.0f)
-        );
-
-        m_ProjectionMatrix = glm::ortho(
-            -aspect,
-            aspect,
-            -1.0f,
-            1.0f,
-            0.1f,
-            100.0f
-        );
     }
     
     void Renderer::Shutdown()
@@ -36,24 +39,83 @@ namespace polos
         m_Instance = nullptr;
     }
 
-    glm::mat4 const& Renderer::GetProjectionMatrix()
+    void Renderer::SetMainWindowHandle(pl::GUID handle)
     {
-        return m_ProjectionMatrix;
+        auto& win_handle = m_Instance->m_MainWinHandle;
+        auto& proj_matrix = m_Instance->m_ProjectionMatrix;
+
+        win_handle = handle;
+
+        auto win_props = WindowSystem::GetWindowProps(win_handle);
+        float aspect = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
+
+        proj_matrix = glm::ortho(
+            -aspect,
+            aspect,
+            -1.0f,
+            1.0f,
+            0.1f,
+            100.0f
+        );
+
+        m_Instance->m_RectangleVao = Vao{vertices, indices};
     }
 
-    glm::mat4 const& Renderer::GetViewMatrix()
+    glm::mat4 const& Renderer::GetProjectionMatrix()
     {
-        return m_ViewMatrix;
+        return m_Instance->m_ProjectionMatrix;
+    }
+
+    pl::Vao& Renderer::GetRectangleVao()
+    {
+        return m_Instance->m_RectangleVao;
+    }
+
+    void RenderRectangle(
+        glm::mat4& model_matrix,
+        Shader& shader
+    )
+    {
+        auto& vao = Renderer::GetRectangleVao();
+
+        auto const& l_Shader = shader;
+
+        auto const& l_projection_matrix = Renderer::GetProjectionMatrix();
+        auto const l_view_matrix = Camera::GetViewMatrix();
+
+        l_Shader.Use();
+        l_Shader.SetUniform("u_Projection"_sid, l_projection_matrix);
+        l_Shader.SetUniform("u_View"_sid, l_view_matrix);
+        l_Shader.SetUniform("u_Model"_sid, model_matrix);
+
+        vao.Draw();
+        vao.Unbind();
+
+        l_Shader.Release();
     }
 
     void RenderTexture2D(
-        glm::vec2 position,
-        glm::vec2 rotation,
-        glm::mat4& model,
+        glm::mat4& model_matrix,
         TextureRef texture,
-        StringId const shader_name
+        Shader& shader
     )
     {
+        auto& vao = Renderer::GetRectangleVao();
 
+        auto const& l_Shader = shader;
+
+        auto const& l_projection_matrix = Renderer::GetProjectionMatrix();
+        auto const l_view_matrix = Camera::GetViewMatrix();
+
+        l_Shader.Use();
+        l_Shader.SetUniform("u_Projection"_sid, l_projection_matrix);
+        l_Shader.SetUniform("u_View"_sid, l_view_matrix);
+        l_Shader.SetUniform("u_Model"_sid, model_matrix);
+
+        glBindTextureUnit(0, texture->id);
+        vao.Draw();
+        vao.Unbind();
+
+        l_Shader.Release();
     }
 }

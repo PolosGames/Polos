@@ -53,6 +53,11 @@ namespace polos
         glUseProgram(m_ProgramId);
     }
 
+    void Shader::Release() const
+    {
+        glUseProgram(0);
+    }
+
 #pragma region UniformSetters
 
 #pragma region INT32
