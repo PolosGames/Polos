@@ -18,7 +18,7 @@ namespace polos
 
     private:
         friend class Engine;
-        static UpdateQueue* m_Instance;
+        static UpdateQueue* s_Instance;
         DArray<FuncType> m_UpdateList;
     };
 } // namespace polos

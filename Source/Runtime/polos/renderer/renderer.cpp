@@ -16,10 +16,10 @@ namespace polos
     // 2D Texture Rectangle
 
     static constexpr std::array<vertex, 5> vertices{
-            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-left
-            vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{1.0f}}, // Bottom-right
-            vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{1.0f}}, // Top-right
-            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{1.0f}}, // Top-left
+            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-left
+            vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-right
+            vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-right
+            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-left
     };
 
     static constexpr std::array<uint32, 6> indices{

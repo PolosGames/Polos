@@ -24,7 +24,7 @@ namespace polos
         static bool is_successful(uint32 id, uint32 action);
     private:
         friend class Engine;
-        static ShaderLib* m_Instance;
+        static ShaderLib* s_Instance;
         HashMap<StringId, Shader> m_Shaders;
     };
 }

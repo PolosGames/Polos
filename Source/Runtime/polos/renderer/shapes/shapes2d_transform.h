@@ -8,10 +8,19 @@ namespace polos
 {
     namespace shapes
     {
-        void MoveShape2DToPosition(glm::mat4& model_matrix, glm::vec3 position);
-        void MoveShape2DByDelta(glm::mat4& model_matrix, glm::vec3 position_delta);
+        glm::vec4 MoveShape2DToPosition(glm::mat4& model_matrix, glm::vec3 const& position);
+        glm::vec4 MoveShape2DByDelta(glm::mat4& model_matrix, glm::vec3 const& position_delta);
+        
         void RotateShape2D(glm::mat4& model_matrix, glm::vec3 rotation_in_degrees);
-        void ScaleShape2D(glm::mat4& model_matrix, glm::vec3 dimensions);
+        void RotateShape2D(
+            glm::mat4& model_matrix,
+            float x_rotation_in_degrees,
+            float y_rotation_in_degrees,
+            float z_rotation_in_degrees
+        );
+        
+        void ScaleShape2D(glm::mat4& model_matrix, glm::vec2 dimensions);
+        void ScaleShape2D(glm::mat4& model_matrix, float x_scale_amount, float y_scale_amount);
     } // namespace shapes
 } // namespace polos
 

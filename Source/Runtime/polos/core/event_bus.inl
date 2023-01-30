@@ -3,7 +3,7 @@ namespace polos
     template<EngineEvent event_type, typename... Args>
     inline void EventBus::RaiseEvent(Args&&... args)
     {
-        auto& cbs = m_Instance->m_Callbacks;
+        auto& cbs = s_Instance->m_Callbacks;
         if (cbs.contains(g_UniqueEventId<event_type>))
         {
             event_type e(std::forward<Args>(args)...);
@@ -18,7 +18,7 @@ namespace polos
     template<EngineEvent event_type>
     inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
     {
-        auto& cbs = m_Instance->m_Callbacks;
+        auto& cbs = s_Instance->m_Callbacks;
         auto& sub = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
 
         StringId id = g_UniqueEventId<event_type>;
@@ -29,7 +29,7 @@ namespace polos
     inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
     {
         StringId id = g_UniqueEventId<event_type>;
-        auto& cbs        = m_Instance->m_Callbacks;
+        auto& cbs        = s_Instance->m_Callbacks;
         auto& event_list = cbs.at(id);
         auto& sub        = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
         event_list.erase(

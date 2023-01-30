@@ -32,7 +32,7 @@ namespace polos
         static void UnsubscribeFromEvent(const Delegate<void(event_type &)>& cback);
 
     private:
-        static EventBus* m_Instance;
+        static EventBus* s_Instance;
 
         HashMap<StringId, DArray<EventSubscriber>> m_Callbacks;
     };

@@ -4,6 +4,7 @@
 
 namespace polos
 {
+
 } // namespace polos
 
 #endif /* POLOS_CORE_SCENE_SCENE_H_ */

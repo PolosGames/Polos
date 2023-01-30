@@ -9,7 +9,7 @@
 
 namespace polos
 {
-    Log* Log::m_Instance;
+    Log* Log::s_Instance;
 
     void Log::Startup()
     {
@@ -36,7 +36,7 @@ namespace polos
         m_Logger[kLoggerClient]->set_level(spdlog::level::trace);
         m_Logger[kLoggerClient]->flush_on(spdlog::level::trace);
 
-        m_Instance = this;
+        s_Instance = this;
     }
 
     void Log::Shutdown()
@@ -44,6 +44,6 @@ namespace polos
         spdlog::drop("ENGINE");
         spdlog::drop("EDITOR");
         spdlog::drop("CLIENT");
-        m_Instance = nullptr;
+        s_Instance = nullptr;
     }
 }

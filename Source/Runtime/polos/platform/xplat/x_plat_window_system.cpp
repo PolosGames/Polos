@@ -59,7 +59,7 @@ namespace polos
             win_props.width,
             win_props.height,
             win_props.title.c_str(),
-            monitor,
+            nullptr,
             nullptr
         );
 
@@ -72,22 +72,22 @@ namespace polos
 
         int32 pos_x, pos_y;
         glfwGetWindowPos(glfw_win_ptr, &pos_x, &pos_y);
+        
 
         if (win_props.fullscreen)
         {
-            win_props.width = mode->width;
-            win_props.height = mode->height;
-
             int32 refresh_rate = win_props.vsync ? mode->refreshRate : win_props.refreshRate;
 
-            glfwSetWindowMonitor(glfw_win_ptr, monitor, pos_x, pos_y, win_props.width, win_props.height, refresh_rate);
+            glfwSetWindowMonitor(glfw_win_ptr, monitor, pos_x, pos_y, mode->width, mode->height, refresh_rate);
         }
         else
         {
-            // We don't care about the refresh rate when it's windowed, because
-            // windowed mode makes the window match the refresh rate to that of
-            // the main screen refresh rate itself.
-            glfwSetWindowMonitor(glfw_win_ptr, nullptr, pos_x, pos_y, win_props.width, win_props.height, GLFW_DONT_CARE);
+            int32 window_width, window_height;
+            glfwGetWindowSize(glfw_win_ptr, &window_width, &window_height);
+            win_props.width = window_width;
+            win_props.height = window_height;
+
+            glfwMaximizeWindow(glfw_win_ptr);
         }
 
         // If it's the first window, it's the main window, so create the gfx

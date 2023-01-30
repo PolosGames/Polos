@@ -12,6 +12,11 @@ namespace polos
         
         static void Begin();
         static void End();
+
+        static void* GetContext();
+
+    private:
+        static void* s_Context;
     };
 }
 

@@ -4,21 +4,21 @@
 
 namespace polos
 {
-    UpdateQueue* UpdateQueue::m_Instance;
+    UpdateQueue* UpdateQueue::s_Instance;
 
     void UpdateQueue::PutLast(FuncType update_func)
     {
-        m_Instance->m_UpdateList.push_back(std::move(update_func));
+        s_Instance->m_UpdateList.push_back(std::move(update_func));
     }
 
     void UpdateQueue::PutFirst(FuncType update_func)
     {
-        m_Instance->m_UpdateList.insert(m_Instance->m_UpdateList.cbegin(), std::forward<FuncType>(update_func));
+        s_Instance->m_UpdateList.insert(s_Instance->m_UpdateList.cbegin(), std::forward<FuncType>(update_func));
     }
 
     void UpdateQueue::Update(float delta_time)
     {
-        for(const auto& func: m_Instance->m_UpdateList)
+        for(const auto& func: s_Instance->m_UpdateList)
         {
             std::invoke(func, std::forward<float>(delta_time));
         }

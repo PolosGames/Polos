@@ -2,27 +2,31 @@
 
 #ifdef GUI_USE_IMGUI
 
-#include <imgui.h>
-#include <GLFW/glfw3.h>
+#include <imgui/imgui_include.h>
 
-#include "polos/gui/imgui/imgui_impl_glfw.h"
-#include "polos/gui/imgui/imgui_impl_opengl3.h"
+#include <internal/imgui_impl_glfw.h>
+#include <internal/imgui_impl_opengl3.h>
+#include <internal/imgui_impl_opengl3_loader.h>
+
+#include <GLFW/glfw3.h>
 
 #include "polos/gui/gui.h"
 
 namespace polos
 {
+    void* Gui::s_Context;
+
     void Gui::Setup()
     {
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
+        s_Context = reinterpret_cast<void*>(ImGui::CreateContext());
         
         ImGuiIO &io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-        io.FontGlobalScale = 1.0f;
+        io.FontGlobalScale = 1.8f;
 
         ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -97,6 +101,11 @@ namespace polos
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+    }
+
+    void* Gui::GetContext()
+    {
+        return s_Context;
     }
 }
 

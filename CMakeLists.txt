@@ -28,7 +28,7 @@ configure_file(plconfig.h.in plconfig.h)
 add_compile_options(
     "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
     "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
-    "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
+    "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
 )
 
 add_subdirectory(Source)

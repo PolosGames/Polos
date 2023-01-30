@@ -26,7 +26,7 @@ namespace polos::containers
         }
         
         ConstReference PushBack(ValueType const& element)
-        requires IsCopyConstructible<ValueType>
+        requires CopyConstructible<ValueType>
         {
             if(m_Allocator.Capacity() == m_ElementCount)
             {

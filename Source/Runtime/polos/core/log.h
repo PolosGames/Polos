@@ -43,10 +43,10 @@ namespace polos
 
         static Log& Instance()
         {
-            return *m_Instance;
+            return *s_Instance;
         }
     private:
-        static Log* m_Instance;
+        static Log* s_Instance;
     private:
         std::array<SharedPtr<spdlog::logger>, kMaxLoggerType> m_Logger;
     };
@@ -76,5 +76,11 @@ namespace polos
 
 #define LOG_VAR_IMPL(Str, Variable)  LOG_ENGINE_INFO(Str, __FILE__, __LINE__, PL_STRINGIFY(Variable), Variable)
 #define LOG_VAR(Variable)            LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
+
+// TODO: Make events register their fields to somewhere? This way we can log
+// events.
+// This macro accepts the instance of the event, not the class of it
+#define LOG_EVENT(Event) \
+    static_assert(!std::is_base_of<pl::Event, decltype(Event)>::value, "[Logger] The passed argument is not an event!");
 
 #endif /* POLOS_CORE_LOG_H_ */

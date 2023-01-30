@@ -27,6 +27,7 @@
 #include <array>
 #include <span>
 #include <optional>
+#include <bitset>
 
 // glm stuff
 #include <glm/glm.hpp>
@@ -38,5 +39,6 @@
 #include "polos/utils/alias.h"
 #include "polos/utils/feature.h"
 #include "polos/core/log.h"
+#include "polos/engine/engine_config.h"
 
 namespace pl = ::polos;

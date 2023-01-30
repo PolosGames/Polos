@@ -42,6 +42,8 @@
 #define PL_NO_MOVE(Type)                            \
     Type(Type&&)                 noexcept = delete; \
     Type& operator=(Type&&)      noexcept = delete; \
+
+#define PL_VOID_CAST(Variable) static_cast<void>(Variable)
  
 
 #endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */

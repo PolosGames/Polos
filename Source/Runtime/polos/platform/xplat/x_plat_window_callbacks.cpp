@@ -68,6 +68,7 @@ namespace polos
     void FramebufferSizeCallback(GLFWwindow* /*window*/, int32 width, int32 height)
     {
         EventBus::RaiseEvent<window_framebuffer_size>();
+
         glViewport(0, 0, width, height);
     }
 
