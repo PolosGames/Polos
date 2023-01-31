@@ -63,9 +63,9 @@ namespace polos
         m_TextureEntityTexture2DComponent->texture = m_Texture;
         m_TextureEntityTexture2DComponent->uvCoordinates = glm::vec2(1, 1);
 
-        auto* info = m_Scene.Assign<ecs::info_component>(m_TextureEntity);
+        auto* info = m_Scene.Get<ecs::info_component>(m_TextureEntity);
         std::string name = "Texture";
-        std::copy(name.begin(), name.end(), info->name);
+        std::ranges::copy(name, info->name);
 
         glm::vec3 const moveTo = {
             m_TextureEntityTransformComponent->position.x,
@@ -174,7 +174,7 @@ namespace polos
             if(info != nullptr)
             {
                 const char* name = info->name;
-                if (ImGui::Selectable(name, &info->isSelectedOnEditor, 0, ImVec2{100.0f, .0f}))
+                if (ImGui::Selectable(name, &info->isSelectedOnEditor))
                 {
                     if(!info->isSelectedOnEditor)
                     {
@@ -336,8 +336,8 @@ namespace polos
     {
         window_props props;
         props.title = "Hello";
-        props.width = 3840;
-        props.height = 2160;
+        props.width = 1920;
+        props.height = 1080;
         props.refreshRate = 120;
         props.vsync = true;
         props.fullscreen = false;

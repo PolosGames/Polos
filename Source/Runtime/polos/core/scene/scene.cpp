@@ -35,9 +35,16 @@ namespace polos
         }
 
         ecs::EntityData& entt_data = m_Entities[entt_index];
-
+         
         // Lastly set up an empty component mask
         entt_data.mask = ecs::CompMask{};
+        
+        // Add the info component
+
+        std::string name = "Entity " + std::to_string(entt_index + 1);
+        auto* info = Assign<ecs::info_component>(entt_id);
+        std::ranges::copy(name, info->name);
+        info->isSelectedOnEditor = false;
 
         return entt_id;
     }

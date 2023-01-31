@@ -32,7 +32,8 @@ namespace polos::ecs
     template<EcsComponent T>
     void ComponentPool::Create()
     {
-        m_Data = ComponentMemory::Request<T>(), sizeof(T);
+        m_Data = ComponentMemory::Request<T>();
+        m_ElemSize = sizeof(T);
     }
 
     template<EcsComponent T>
