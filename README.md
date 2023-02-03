@@ -2,7 +2,9 @@
 
 WIP project.
 
-Roadmap can be found in [this](https://trello.com/b/frG6m0AQ) link.
+**Roadmap** can be found in [this](https://trello.com/b/frG6m0AQ) link.
+
+**Coding Guidelines** can be found in [Polos Engine C++ Coding Guidelines](https://bit.ly/3YpjIqH).
 
 ### To Build
 
