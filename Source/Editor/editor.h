@@ -31,7 +31,6 @@ namespace polos
 
         void DrawTransformComponent();
         void DrawTexture2DComponent();
-        void DrawInfoComponent();
     private:
         Shader* m_ShaderTexture;
         Shader* m_ShaderBasicColor;

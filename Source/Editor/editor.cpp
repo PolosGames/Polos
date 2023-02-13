@@ -174,13 +174,24 @@ namespace polos
             if(info != nullptr)
             {
                 const char* name = info->name;
+                
                 if (ImGui::Selectable(name, &info->isSelectedOnEditor))
                 {
-                    if(!info->isSelectedOnEditor)
+                    // Unselection
+                    if (!info->isSelectedOnEditor)
                     {
                         m_SelectedEntity = INVALID_ENTITY;
                         continue;
                     }
+
+                    // If we have selected an entity before, set the "selected"
+                    // state of old selected entity to "unselected"
+                    if(m_SelectedEntity != INVALID_ENTITY)
+                    {
+                        auto* l_OldSelectedEntityInfo = m_Scene.Get<ecs::info_component>(m_SelectedEntity);
+                        l_OldSelectedEntityInfo->isSelectedOnEditor = false;
+                    }
+                    // Now we can set the new selected entity.
                     m_SelectedEntity = entity_id;
                 }
             }
@@ -188,21 +199,36 @@ namespace polos
         ImGui::End();
 
         ImGui::Begin("Inspector");
-
         // Components
         if(ecs::IsEntityValid(m_SelectedEntity))
         {
+            if (ImGui::BeginMenu("Add Component"))
+            {
+                if (ImGui::MenuItem("Transform"))
+                {
+                    m_Scene.Assign<ecs::transform_component>(m_SelectedEntity);
+                }
+                if (ImGui::MenuItem("Texture"))
+                {
+                    m_Scene.Assign<ecs::texture2d_component>(m_SelectedEntity);
+                }
+
+                ImGui::EndMenu();
+            }
             DrawTransformComponent();
             DrawTexture2DComponent();
         }
         ImGui::End();
 
+        // Drawing the game framebuffer into an imgui image
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.0f, 0.0f});
         ImGui::Begin("Game");
         ImVec2 l_DrawableAreaDimensions = ImGui::GetContentRegionAvail();
         float  l_DrawableAreaAspectRatio = l_DrawableAreaDimensions.x / l_DrawableAreaDimensions.y;
 
         if (m_EditorFramebufferAspectRatioBefore != l_DrawableAreaAspectRatio)
         {
+
             if (m_AspectRatio >= l_DrawableAreaAspectRatio)
             {
                 m_EditorFramebufferDimensions.x = l_DrawableAreaDimensions.x;
@@ -218,7 +244,8 @@ namespace polos
         }
         
         auto l_FramebufferTextureId = reinterpret_cast<ImTextureID>(static_cast<uint64>(m_EditorFramebuffer.GetFrameBufferTextureHandle()));
-
+        
+        
         ImGui::Image(
             l_FramebufferTextureId,
             m_EditorFramebufferDimensions,
@@ -226,6 +253,7 @@ namespace polos
             m_EditorFramebufferUVCoords2
         );
         ImGui::End();
+        ImGui::PopStyleVar();
     }
 
     void Editor::OnKeyPress(key_press& e)
@@ -285,9 +313,11 @@ namespace polos
 
     void Editor::DrawTransformComponent()
     {
-        auto* l_TransformComponent = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
-        if(ImGui::CollapsingHeader("Transform") && l_TransformComponent != nullptr)
+        bool l_HasTransform = m_Scene.HasComponent<ecs::transform_component>(m_SelectedEntity);
+        if (l_HasTransform && ImGui::CollapsingHeader("Transform"))
         {
+            auto* l_TransformComponent = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
+
             bool l_PositionChange = false;
             l_PositionChange |= ImGui::DragFloat3("Position", glm::value_ptr(l_TransformComponent->position), 0.01f);
             glm::vec3 l_OldScale = l_TransformComponent->scale;
@@ -318,12 +348,14 @@ namespace polos
 
     void Editor::DrawTexture2DComponent()
     {
-        auto* l_Texture2dComponent = m_Scene.Get<ecs::texture2d_component>(m_SelectedEntity);
-        if(ImGui::CollapsingHeader("Texture 2D") && l_Texture2dComponent != nullptr)
+        bool l_HasTexture2D = m_Scene.HasComponent<ecs::texture2d_component>(m_SelectedEntity);
+        if (l_HasTexture2D && ImGui::CollapsingHeader("Texture 2D"))
         {
+            auto* l_Texture2dComponent = m_Scene.Get<ecs::texture2d_component>(m_SelectedEntity);
             ImGui::ImageButton(
-                reinterpret_cast<ImTextureID>(static_cast<uint64>(m_Texture->id)),
+                reinterpret_cast<ImTextureID>(static_cast<uint64>(l_Texture2dComponent->texture->id)),
                 ImVec2{200.0f, 200.0f},
+                // we reuse these to ensure correct rotation.
                 m_EditorFramebufferUVCoords1,
                 m_EditorFramebufferUVCoords2
             );

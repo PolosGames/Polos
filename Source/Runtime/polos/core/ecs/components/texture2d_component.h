@@ -9,7 +9,7 @@ namespace polos::ecs
     struct texture2d_component
     {
         TextureRef texture;
-        glm::vec2 uvCoordinates;
+        glm::vec2 uvCoordinates{};
     };
 } // namespace polos::ecs
 

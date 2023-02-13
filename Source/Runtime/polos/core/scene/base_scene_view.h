@@ -11,7 +11,7 @@ namespace polos
     {
         Scene*   m_Scene{};
         ecs::CompMask m_Mask;
-        bool     m_IterateAll;
+        bool     m_IterateAll{};
     };
 } // namespace polos
 

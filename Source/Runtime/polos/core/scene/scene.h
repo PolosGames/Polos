@@ -24,6 +24,9 @@ namespace polos
         T* Get(ecs::Entity entt);
 
         template<ecs::EcsComponent T>
+        bool HasComponent(ecs::Entity entt);
+
+        template<ecs::EcsComponent T>
         void Remove(ecs::Entity entt);
     private:
         friend class SceneViewIterator;
@@ -36,7 +39,7 @@ namespace polos
     };
 
     template<ecs::EcsComponent T, typename... Args>
-    inline T* Scene::Assign(ecs::Entity entt, Args&&... args)
+    T* Scene::Assign(ecs::Entity entt, Args&&... args)
     {
         int              comp_id    = ecs::g_ComponentId<T>;
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
@@ -48,7 +51,7 @@ namespace polos
 
         if (m_Entities[entt_index].mask.test(comp_id))
         {
-            LOG_ENGINE_WARN("Entity alrady has the requested component, returning null.");
+            LOG_ENGINE_WARN("[Scene::Assign] Entity alrady has the requested component, returning null.");
             return nullptr;
         }
 
@@ -58,8 +61,13 @@ namespace polos
             new (where) ecs::ComponentPool();
             std::launder(reinterpret_cast<ecs::ComponentPool*>(where))->Create<T>();
         }
-
+        
         auto* comp_ptr = new (m_CompPools[comp_id].Get(entt_index)) T(std::forward<Args>(args)...);
+        
+        if constexpr (std::is_same_v<T, ecs::texture2d_component>)
+        {
+            comp_ptr->texture = Texture::Load();
+        }
 
         m_Entities[entt_index].mask.set(comp_id);
 
@@ -67,7 +75,7 @@ namespace polos
     }
 
     template<ecs::EcsComponent T>
-    inline T* Scene::Get(ecs::Entity entt)
+    T* Scene::Get(ecs::Entity entt)
     {
         if (!ecs::IsEntityValid(entt))
         {
@@ -79,18 +87,27 @@ namespace polos
 
         if (m_Entities[entt_index].id != entt)
         {
-            LOG_ENGINE_WARN("Provided entity was not found, returning null.");
+            LOG_ENGINE_WARN("[Scene::Get] Provided entity was not found, returning null.");
             return nullptr;
         }
 
         if (!m_Entities[entt_index].mask.test(comp_id))
         {
-            LOG_ENGINE_WARN("Entity doesn't have requested component, returning null.");
+            LOG_ENGINE_WARN("[Scene::Get] Entity doesn't have \"{}\", returning null.", typeid(T).name());
             return nullptr;
         }
 
         auto* pComponent = static_cast<T*>(m_CompPools[comp_id].Get(entt_index));
         return pComponent;
+    }
+
+    template<ecs::EcsComponent T>
+    inline bool Scene::HasComponent(ecs::Entity entt)
+    {
+        int              comp_id = ecs::g_ComponentId<T>;
+        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
+
+        return m_Entities[entt_index].mask.test(comp_id);
     }
 
     template<ecs::EcsComponent T>
@@ -101,6 +118,7 @@ namespace polos
 
         if (m_Entities[entt_index].id != entt)
         {
+            LOG_ENGINE_WARN("[Scene::Remove] Provided entity was not found, returning null.");
             return;
         }
 

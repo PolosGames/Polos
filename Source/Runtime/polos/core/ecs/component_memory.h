@@ -38,7 +38,7 @@ namespace polos::ecs
             }
         }
     private:
-        void*  m_Data;
+        void*  m_Data{};
 
         std::vector<std::size_t> k_ComponentSizeArray;
         std::vector<std::size_t> k_ComponentOffset;
