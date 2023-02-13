@@ -23,3 +23,8 @@ vsbuild/
 # Optick generated files
 **.opt
 *.json
+
+!CMakePresets.json
+
+polos.cppcheck
+polos-cppcheck-build-dir
