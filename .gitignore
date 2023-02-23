@@ -5,7 +5,6 @@ vsbuild/
 
 
 **.txt
-!CMakeLists.txt
 
 # Ignore this on Sandbox
 **.log
@@ -23,3 +22,23 @@ vsbuild/
 # Optick generated files
 **.opt
 *.json
+
+# Keep cmakes!
+!CMakeLists.txt
+!CMakePresets.json
+
+#nvidia insight folder
+**.ngfx-proj
+
+#Cppcheck folder
+**.cppcheck
+**.a1
+**.clang-tidy-cmd
+**.clang-tidy-E
+**.clang-tidy-results
+**.ctu-info
+**.dump
+**.snalyzerinfo
+**.a2
+lastResults.xml
+**cppcheck**
