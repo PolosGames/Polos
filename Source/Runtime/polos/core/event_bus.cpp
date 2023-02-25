@@ -4,15 +4,15 @@
 
 namespace polos
 {
-    EventBus* EventBus::m_Instance;
+    EventBus* EventBus::s_Instance;
 
     void EventBus::Startup()
     {
-        m_Instance = this;
+        s_Instance = this;
     }
 
     void EventBus::Shutdown()
     {
-        m_Instance = nullptr;
+        s_Instance = nullptr;
     }
 }

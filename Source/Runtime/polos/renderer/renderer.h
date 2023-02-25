@@ -13,7 +13,7 @@ namespace polos
         void Startup();
         void Shutdown();
     private:
-        static Renderer* m_Instance;
+        static Renderer* s_Instance;
     };
 }
 

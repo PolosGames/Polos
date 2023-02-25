@@ -19,58 +19,58 @@ namespace polos
         void Startup();
         void Shutdown();
 
-        template<EngineEvent event_type, typename... Args>
+        template<EngineEvent EventType, typename... Args>
         static void RaiseEvent(Args&&... args);
         
-        template<EngineEvent event_type>
-        static void SubscribeToEvent(const Delegate<void(event_type &)>& cback);
+        template<EngineEvent EventType>
+        static void SubscribeToEvent(Delegate<void(EventType&)> cback);
 
-        template<EngineEvent event_type>
-        static void UnsubscribeFromEvent(const Delegate<void(event_type &)>& cback);
+        template<EngineEvent EventType>
+        static void UnsubscribeFromEvent(Delegate<void(EventType&)> cback);
 
     private:
-        static EventBus* m_Instance;
+        static EventBus* s_Instance;
 
         HashMap<StringId, DArray<EventSubscriber>> m_Callbacks;
     };
 
-    template<EngineEvent event_type, typename... Args>
+    template<EngineEvent EventType, typename... Args>
     inline void EventBus::RaiseEvent(Args&&... args)
     {
-        auto& cbs = m_Instance->m_Callbacks;
-        if (cbs.contains(g_UniqueEventId<event_type>))
+        auto& callbacks = s_Instance->m_Callbacks;
+        if (callbacks.contains(g_UniqueEventId<EventType>))
         {
-            event_type e(std::forward<Args>(args)...);
-            StringId id = g_UniqueEventId<event_type>;
-            for (auto const& subscriber_function : cbs[id])
+            EventType e(std::forward<Args>(args)...);
+            StringId id = g_UniqueEventId<EventType>;
+            for (auto const& subscriber_function : callbacks[id])
             {
                 std::invoke(subscriber_function, e);
             }
         }
     }
 
-    template<EngineEvent event_type>
-    inline void EventBus::SubscribeToEvent(const Delegate<void(event_type&)>& cback)
+    template<EngineEvent EventType>
+    inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> cback)
     {
-        auto& cbs = m_Instance->m_Callbacks;
-        auto& sub = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
+        auto& callbacks = s_Instance->m_Callbacks;
+        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
 
-        StringId id = g_UniqueEventId<event_type>;
-        cbs.try_emplace(id).first->second.push_back(std::move(sub));
+        StringId id = g_UniqueEventId<EventType>;
+        callbacks.try_emplace(id).first->second.push_back(std::move(subscriber));
     }
 
-    template<EngineEvent event_type>
-    inline void EventBus::UnsubscribeFromEvent(const Delegate<void(event_type&)>& cback)
+    template<EngineEvent EventType>
+    inline void EventBus::UnsubscribeFromEvent(Delegate<void(EventType&)> cback)
     {
-        StringId id      = g_UniqueEventId<event_type>;
-        auto& cbs        = m_Instance->m_Callbacks;
-        auto& event_list = cbs.at(id);
-        auto& sub        = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
+        StringId id      = g_UniqueEventId<EventType>;
+        auto& callbacks        = s_Instance->m_Callbacks;
+        auto& event_list = callbacks.at(id);
+        auto& subscriber       = *std::launder(reinterpret_cast<EventSubscriber*>(&cback));
         event_list.erase(
             std::remove(
                 event_list.begin(),
                 event_list.end(),
-                sub),
+                subscriber),
             event_list.end());
     }
 } // namespace polos

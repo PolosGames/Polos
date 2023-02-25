@@ -6,7 +6,7 @@
 
 namespace polos::time
 {
-    void Timer::OnStartUp()
+    void Timer::Startup()
     {
     }
     

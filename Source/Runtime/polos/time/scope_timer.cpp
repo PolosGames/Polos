@@ -4,19 +4,21 @@
 
 namespace polos::time
 {
-    ScopeTimer::ScopeTimer(const char* scope_name)
-        : m_Nom(1.0f), m_UnitName("ms"),
-          m_ScopeName(scope_name), m_IsStopped(false)
+    ScopeTimer::ScopeTimer(std::string_view p_ScopeName)
+        : m_Nom{1.0f}
+        , m_ScopeName{p_ScopeName}
+        , m_IsStopped{}
+        , m_Unit{ScopeTimerUnit::k_MilliSecond}
     {
-        calculate_den(ScopeTimerUnit::kMilliSecond);
+        calculate_den(m_Unit);
         m_Start = Timer::Now();
     }
 
-    ScopeTimer::ScopeTimer(const char* scope_name, ScopeTimerUnit unit)
-        : m_Nom(1.0f),
-          m_ScopeName(scope_name), m_IsStopped(false)
+    ScopeTimer::ScopeTimer(std::string_view p_ScopeName, ScopeTimerUnit p_Unit)
+        : m_Nom{1.0f}
+        , m_ScopeName{p_ScopeName}
     {
-        calculate_den(unit);
+        calculate_den(p_Unit);
         m_Start = Timer::Now();
     }
 
@@ -29,7 +31,7 @@ namespace polos::time
     {
         int64 end   = Timer::Now();
         m_IsStopped = true;
-        LOG_ENGINE_INFO("Scope \"{0}\" took: {1:.5} {2}", m_ScopeName, static_cast<float>(end - m_Start) * m_Nom, m_UnitName);
+        LOG_ENGINE_INFO("Scope \"{0}\" took: {1:.5} {2}", m_ScopeName.data(), static_cast<float>(end - m_Start) * m_Nom, m_UnitName.data());
     }
     
     void ScopeTimer::Reset()
@@ -39,14 +41,14 @@ namespace polos::time
         m_Start     = Timer::Now();
     }
 
-    void ScopeTimer::calculate_den(ScopeTimerUnit unit)
+    void ScopeTimer::calculate_den(ScopeTimerUnit p_Unit)
     {
-        switch (unit)
+        switch (p_Unit)
         {
             // Timer is in nanos, so nom should be other way around.
-        case ScopeTimerUnit::kSecond:		m_Nom = 1.0_us; m_UnitName = "secs";	break;
-        case ScopeTimerUnit::kMilliSecond:	m_Nom = 1.0_ms; m_UnitName = "ms";	break;
-        case ScopeTimerUnit::kMicroSecond:	m_Nom = 1.0f; m_UnitName = "us";	break;
+        case ScopeTimerUnit::k_Second:		m_Nom = 1.0_us; m_UnitName = "s"; break;
+        case ScopeTimerUnit::k_MilliSecond:	m_Nom = 1.0_ms; m_UnitName = "ms";   break;
+        case ScopeTimerUnit::k_MicroSecond:	m_Nom = 1.0f;   m_UnitName = "us";   break;
         }
     }
 } // namespace polos::time

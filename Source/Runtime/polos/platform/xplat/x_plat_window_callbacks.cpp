@@ -6,124 +6,125 @@
 #include "polos/core/event_bus.h"
 #include "polos/events/events.h"
 #include "polos/core/window.h"
+#include "polos/core/window_system.h"
 
 namespace polos
 {
-    void GLFWErrorCallback(int error_code, const char* description)
+    void GLFWErrorCallback(int p_ErrorCode, const char* p_Description)
     {
-        switch (error_code)
+        switch (p_ErrorCode)
         {
             case GLFW_INVALID_ENUM:
-                LOG_ENGINE_WARN("GLFW received an invalid enum to it's function! Desc: {0}", description);
+                LOG_ENGINE_WARN("GLFW received an invalid enum to it's function! Desc: {0}", p_Description);
                 break;
             case GLFW_INVALID_VALUE:
-                LOG_ENGINE_WARN("GLFW received an invalid value to it's function! Desc: {0}", description);
+                LOG_ENGINE_WARN("GLFW received an invalid value to it's function! Desc: {0}", p_Description);
                 break;
             case GLFW_OUT_OF_MEMORY:
-                LOG_ENGINE_CRITICAL("A memory allocation failed within GLFW or the operating system! Desc: {0}", description);
+                LOG_ENGINE_CRITICAL("A memory allocation failed within GLFW or the operating system! Desc: {0}", p_Description);
                 break;
             case GLFW_API_UNAVAILABLE:
-                LOG_ENGINE_ERROR("GLFW could not find support for the requested API on the system! Desc: {0}", description);
+                LOG_ENGINE_ERROR("GLFW could not find support for the requested API on the system! Desc: {0}", p_Description);
                 break;
             case GLFW_FORMAT_UNAVAILABLE:
-                LOG_ENGINE_ERROR("The requested pixel format is not supported! Desc: {0}", description);
+                LOG_ENGINE_ERROR("The requested pixel format is not supported! Desc: {0}", p_Description);
                 break;
         }
     }
 
-    void WindowCloseCallback(GLFWwindow* window)
+    void WindowCloseCallback(GLFWwindow* p_Window)
     {
         // Raise the event with the window handle so we know which window to
         // close.
-        EventBus::RaiseEvent<window_close>(window);
+        EventBus::RaiseEvent<window_close>(p_Window);
     }
 
-    void WindowFocusCallback(GLFWwindow* window, int32 focused)
+    void WindowFocusCallback(GLFWwindow* p_Window, int32 p_Focused)
     {
-        if (window != glfwGetCurrentContext())
+        if (p_Window != glfwGetCurrentContext())
         {
-            glfwMakeContextCurrent(window);
+            glfwMakeContextCurrent(p_Window);
         }
-        EventBus::RaiseEvent<window_focus>(focused);
+        EventBus::RaiseEvent<window_focus>(p_Focused);
     }
 
-    void WindowSizeCallback(GLFWwindow* window, int32 width, int32 height)
+    void WindowSizeCallback(GLFWwindow* p_Window, int32 p_Width, int32 p_Height)
     {
-        window_props* props = static_cast<window_props*>(glfwGetWindowUserPointer(window));
-        props->width        = width;
-        props->height       = height;
-        EventBus::RaiseEvent<window_resize>(width, height);
+        window_props* props = static_cast<window_props*>(glfwGetWindowUserPointer(p_Window));
+        props->width        = p_Width;
+        props->height       = p_Height;
+        EventBus::RaiseEvent<window_resize>(p_Width, p_Height);
     }
     
-    void WindowIconifyCallback(GLFWwindow* /*window*/, int32 iconified)
+    void WindowIconifyCallback(GLFWwindow* /*p_Window*/, int32 p_Iconified)
     {
-        EventBus::RaiseEvent<window_iconify>(iconified);
+        EventBus::RaiseEvent<window_iconify>(p_Iconified);
     }
 
-    void WindowMaximizeCallback(GLFWwindow* /*window*/, int32 maximized)
+    void WindowMaximizeCallback(GLFWwindow* /*p_Window*/, int32 p_Maximized)
     {
-        EventBus::RaiseEvent<window_maximize>(maximized);
+        EventBus::RaiseEvent<window_maximize>(p_Maximized);
     }
 
-    void FramebufferSizeCallback(GLFWwindow* /*window*/, int32 width, int32 height)
+    void FramebufferSizeCallback(GLFWwindow* /*p_Window*/, int32 p_Width, int32 p_Height)
     {
         EventBus::RaiseEvent<window_framebuffer_size>();
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, p_Width, p_Height);
     }
 
     void KeyCallback(
-        GLFWwindow* /*window*/,
-        int32 key,
-        int32 /*scancode*/,
-        int32 action,
-        int32 /*mods*/
+        GLFWwindow* /*p_Window*/,
+        int32 p_Key,
+        int32 /*p_Scancode*/,
+        int32 p_Action,
+        int32 /*p_Mods*/
     )
     {
-        switch (action)
+        switch (p_Action)
         {
             case GLFW_PRESS:
-                EventBus::RaiseEvent<key_press>(key);
+                EventBus::RaiseEvent<key_press>(p_Key);
                 break;
             case GLFW_RELEASE:
-                EventBus::RaiseEvent<key_release>(key);
+                EventBus::RaiseEvent<key_release>(p_Key);
                 break;
         }
     }
 
-    void CharCallback(GLFWwindow*, uint32 unicode)
+    void CharCallback(GLFWwindow* /*p_Window*/, uint32 p_Unicode)
     {
-        EventBus::RaiseEvent<char_type>(unicode);
+        EventBus::RaiseEvent<char_type>(p_Unicode);
     }
 
     void MouseButtonCallback(
-        GLFWwindow* /*window*/,
-        int32 button,
-        int32 action,
-        int32 /*mods*/
+        GLFWwindow* /*p_Window*/,
+        int32 p_Button,
+        int32 p_Action,
+        int32 /*p_Mods*/
     )
     {
-        switch (action)
+        switch (p_Action)
         {
             case GLFW_PRESS:
-                EventBus::RaiseEvent<mouse_button_press>(button);
+                EventBus::RaiseEvent<mouse_button_press>(p_Button);
                 break;
             case GLFW_RELEASE:
-                EventBus::RaiseEvent<mouse_button_release>(button);
+                EventBus::RaiseEvent<mouse_button_release>(p_Button);
                 break;
         }
     }
 
     void ScrollCallback(
-        GLFWwindow* /*window*/,
-        double x_offset,
-        double y_offset
+        GLFWwindow* /*p_Window*/,
+        double p_XOffset,
+        double p_YOffset
     )
     {
-        EventBus::RaiseEvent<mouse_scroll>(float(x_offset), static_cast<float>(y_offset));
+        EventBus::RaiseEvent<mouse_scroll>(static_cast<float>(p_XOffset), static_cast<float>(p_YOffset));
     }
 
-    void CursorPosCallback(GLFWwindow* /*window*/, double x, double y)
+    void CursorPosCallback(GLFWwindow* /*p_Window*/, double p_XOffset, double p_YOffset)
     {
-        EventBus::RaiseEvent<mouse_move>(static_cast<float>(x), static_cast<float>(y));
+        EventBus::RaiseEvent<mouse_move>(static_cast<float>(p_XOffset), static_cast<float>(p_YOffset));
     }
 } // namespace polos

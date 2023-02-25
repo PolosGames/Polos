@@ -4,12 +4,13 @@
 
 namespace polos
 {
-    class mouse_move : public Event<mouse_move>
+    class mouse_move final : public Event<mouse_move>
     {
     public:
-        float x, y;
-
         mouse_move() = default;
-        mouse_move(float x, float y) : x(x), y(y) {}
+        explicit mouse_move(float p_X, float p_Y) : x{p_X}, y{p_Y} {}
+    public:
+        float x{};
+        float y{};
     };
 }

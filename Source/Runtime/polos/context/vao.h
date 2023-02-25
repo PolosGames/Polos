@@ -11,7 +11,7 @@ namespace polos
     class Vao
     {
     public:
-        Vao(std::span<vertex const> vertices, std::span<uint32 const> indices);
+        Vao(std::span<vertex const> p_Vertices, std::span<uint32 const> p_Indices);
         ~Vao();
     
         void Bind() const;

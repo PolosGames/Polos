@@ -2,18 +2,18 @@
 
 #ifdef USE_OPENGL
 
+#include "polos/context/shader.h"
+
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "polos/utils/stringid.h"
 
-#include "polos/context/shader.h"
-
 namespace polos
 {
 
-    Shader::Shader(uint32 program_id)
-        : m_ProgramId(program_id)
+    Shader::Shader(uint32 m_ProgramId)
+        : m_ProgramId(m_ProgramId)
     {
         CreateUniformLookup();
     }
@@ -27,10 +27,11 @@ namespace polos
             return static_cast<GLuint>(u_count);
         }();
 
-        GLint max_name_len = 0;
-        GLsizei length     = 0;
-        GLsizei count      = 0;
-        GLenum type        = GL_NONE;
+
+        GLint   max_name_len{};
+        GLsizei length{};
+        GLsizei count{};
+        GLenum  type{GL_NONE};
         glGetProgramiv(m_ProgramId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_len);
 
         auto uniform_name = std::make_unique<char[]>(static_cast<std::size_t>(max_name_len));
@@ -53,215 +54,193 @@ namespace polos
         glUseProgram(m_ProgramId);
     }
 
-#pragma region UniformSetters
-
-#pragma region INT32
     // ========  INT32  ========
 
-    void Shader::SetUniform(StringId const name, int32 const value) const
+    void Shader::SetUniform(StringId const p_Name, int32 const p_Value) const
     {
-        glUniform1i(m_LookupTable.at(name).location, value);
+        glUniform1i(m_LookupTable.at(p_Name).location, p_Value);
     }
 
-    void Shader::SetUniform(StringId const name, glm::i32vec2 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::i32vec2 const& p_Value) const
     {
-        glUniform2iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform2iv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::i32vec3 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::i32vec3 const& p_Value) const
     {
-        glUniform3iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform3iv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::i32vec4 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::i32vec4 const& p_Value) const
     {
-        glUniform4iv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform4iv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, std::span<int32> value) const
+    void Shader::SetUniform(StringId const p_Name, std::span<int32> p_Value) const
     {
-        int32 size = static_cast<int32>(value.size());
+        int32 size = static_cast<int32>(p_Value.size());
         switch (size)
         {
             case 2:
-                glUniform2iv(m_LookupTable.at(name).location, 2, value.data());
+                glUniform2iv(m_LookupTable.at(p_Name).location, 2, p_Value.data());
                 break;
             case 3:
-                glUniform3iv(m_LookupTable.at(name).location, 3, value.data());
+                glUniform3iv(m_LookupTable.at(p_Name).location, 3, p_Value.data());
                 break;
             case 4:
-                glUniform4iv(m_LookupTable.at(name).location, 4, value.data());
+                glUniform4iv(m_LookupTable.at(p_Name).location, 4, p_Value.data());
                 break;
             default:
                 LOG_ENGINE_WARN("The size of the int32 array that's being passed to shader must be in range [2,4].");
                 break;
         }
     }
-
     // ======== ! INT32 ! ========
-#pragma endregion
 
-#pragma region UINT32
     // ========  UINT32  ========
-
-    void Shader::SetUniform(StringId const name, uint32 const value) const
+    void Shader::SetUniform(StringId const p_Name, uint32 const p_Value) const
     {
-        glUniform1ui(m_LookupTable.at(name).location, value);
+        glUniform1ui(m_LookupTable.at(p_Name).location, p_Value);
     }
 
-    void Shader::SetUniform(StringId const name, glm::u32vec2 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::u32vec2 const& p_Value) const
     {
-        glUniform2uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform2uiv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::u32vec3 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::u32vec3 const& p_Value) const
     {
-        glUniform3uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform3uiv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId name, glm::u32vec4 const& value) const
+    void Shader::SetUniform(StringId p_Name, glm::u32vec4 const& p_Value) const
     {
-        glUniform4uiv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform4uiv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId name, std::span<uint32> value) const
+    void Shader::SetUniform(StringId p_Name, std::span<uint32> p_Value) const
     {
-        int32 size = static_cast<int32>(value.size());
+        int32 size = static_cast<int32>(p_Value.size());
         switch (size)
         {
             case 2:
-                glUniform2uiv(m_LookupTable.at(name).location, 2, value.data());
+                glUniform2uiv(m_LookupTable.at(p_Name).location, 2, p_Value.data());
                 break;
             case 3:
-                glUniform3uiv(m_LookupTable.at(name).location, 3, value.data());
+                glUniform3uiv(m_LookupTable.at(p_Name).location, 3, p_Value.data());
                 break;
             case 4:
-                glUniform4uiv(m_LookupTable.at(name).location, 4, value.data());
+                glUniform4uiv(m_LookupTable.at(p_Name).location, 4, p_Value.data());
                 break;
             default:
                 LOG_ENGINE_WARN("The size of the uint32 array that's being passed to shader must be in range [2,4].");
                 break;
         }
     }
-
     /// ======= ! UINT32 ! =======
-#pragma endregion
 
-#pragma region FLOAT  
-    // ========  FLOAT  ========
-
-    void Shader::SetUniform(StringId const name, float const value) const
+    //  ========  FLOAT  ========
+    void Shader::SetUniform(StringId const p_Name, float const p_Value) const
     {
-        glUniform1f(m_LookupTable.at(name).location, value);
+        glUniform1f(m_LookupTable.at(p_Name).location, p_Value);
     }
 
-    void Shader::SetUniform(StringId const name, glm::vec2 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::vec2 const& p_Value) const
     {
-        glUniform2fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform2fv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::vec3 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::vec3 const& p_Value) const
     {
-        glUniform3fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform3fv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::vec4 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::vec4 const& p_Value) const
     {
-        glUniform4fv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform4fv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, std::span<float> value) const
+    void Shader::SetUniform(StringId const p_Name, std::span<float> p_Value) const
     {
-        int32  size = static_cast<int32>(value.size());
-        float* data = value.data();
+        int32 size  = static_cast<int32>(p_Value.size());
+        float* data = p_Value.data();
 
         switch (size)
         {
             case 2:
-                glUniform2fv(m_LookupTable.at(name).location, 2, data);
+                glUniform2fv(m_LookupTable.at(p_Name).location, 2, data);
                 break;
             case 3:
-                glUniform3fv(m_LookupTable.at(name).location, 3, data);
+                glUniform3fv(m_LookupTable.at(p_Name).location, 3, data);
                 break;
             case 4:
-                glUniform4fv(m_LookupTable.at(name).location, 4, data);
+                glUniform4fv(m_LookupTable.at(p_Name).location, 4, data);
                 break;
             default:
                 LOG_ENGINE_WARN("The size of the array that's being passed to shader must be in range [2,4].");
                 break;
         }
     }
-
     // ======== ! FLOAT ! ========
-#pragma endregion
 
-#pragma region DOUBLE
     // ========  DOUBLE  ========
-
-    void Shader::SetUniform(StringId const name, double const value) const
+    void Shader::SetUniform(StringId const p_Name, double const p_Value) const
     {
-        glUniform1d(m_LookupTable.at(name).location, value);
+        glUniform1d(m_LookupTable.at(p_Name).location, p_Value);
     }
 
-    void Shader::SetUniform(StringId const name, glm::dvec2 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::dvec2 const& p_Value) const
     {
-        glUniform2dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform2dv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::dvec3 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::dvec3 const& p_Value) const
     {
-        glUniform3dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform3dv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::dvec4 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::dvec4 const& p_Value) const
     {
-        glUniform3dv(m_LookupTable.at(name).location, 1, glm::value_ptr(value));
+        glUniform3dv(m_LookupTable.at(p_Name).location, 1, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, std::span<double> value) const
+    void Shader::SetUniform(StringId const p_Name, std::span<double> p_Value) const
     {
-        int32 size   = static_cast<int32>(value.size());
-        double* data = value.data();
+        int32 size   = static_cast<int32>(p_Value.size());
+        double* data = p_Value.data();
 
         switch (size)
         {
             case 2:
-                glUniform2dv(m_LookupTable.at(name).location, 2, data);
+                glUniform2dv(m_LookupTable.at(p_Name).location, 2, data);
                 break;
             case 3:
-                glUniform3dv(m_LookupTable.at(name).location, 3, data);
+                glUniform3dv(m_LookupTable.at(p_Name).location, 3, data);
                 break;
             case 4:
-                glUniform4dv(m_LookupTable.at(name).location, 4, data);
+                glUniform4dv(m_LookupTable.at(p_Name).location, 4, data);
                 break;
             default:
                 LOG_ENGINE_WARN("The size of the array that's being passed to shader must be in range [2,4].");
                 break;
         }
     }
-
     // ======== ! DOUBLE ! ========
-#pragma endregion
 
-#pragma region MATRIX
-    
-    void Shader::SetUniform(StringId const name, glm::mat2 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::mat2 const& p_Value) const
     {
-        glUniformMatrix2fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
+        glUniformMatrix2fv(m_LookupTable.at(p_Name).location, 1, GL_FALSE, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::mat3 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::mat3 const& p_Value) const
     {
-        glUniformMatrix3fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
+        glUniformMatrix3fv(m_LookupTable.at(p_Name).location, 1, GL_FALSE, glm::value_ptr(p_Value));
     }
 
-    void Shader::SetUniform(StringId const name, glm::mat4 const& value) const
+    void Shader::SetUniform(StringId const p_Name, glm::mat4 const& p_Value) const
     {
-        glUniformMatrix4fv(m_LookupTable.at(name).location, 1, GL_FALSE, glm::value_ptr(value));
+        glUniformMatrix4fv(m_LookupTable.at(p_Name).location, 1, GL_FALSE, glm::value_ptr(p_Value));
     }
-#pragma endregion
-
-#pragma endregion
 
 } // namespace polos
 

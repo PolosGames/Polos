@@ -4,12 +4,13 @@
 
 namespace polos
 {
-    class window_resize : public Event<window_resize>
+    class window_resize final : public Event<window_resize>
     {
     public:
-        int32 width, height;
-
         window_resize() = default;
-        window_resize(int32 width, int32 height) : width(width), height(height) {}
+        explicit window_resize(int32 p_Width, int32 p_Height) : width{p_Width}, height{p_Height} {}
+    public:
+        int32 width{};
+        int32 height{};
     };
 }

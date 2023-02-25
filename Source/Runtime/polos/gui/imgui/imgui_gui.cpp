@@ -2,13 +2,13 @@
 
 #ifdef GUI_USE_IMGUI
 
+#include "polos/gui/gui.h"
+
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
 #include "polos/gui/imgui/imgui_impl_glfw.h"
 #include "polos/gui/imgui/imgui_impl_opengl3.h"
-
-#include "polos/gui/gui.h"
 
 namespace polos
 {

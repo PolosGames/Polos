@@ -4,14 +4,13 @@
 
 #include <imgui.h>
 #include <glad/glad.h>
+#include <polos.h>
 
 #include "polos/core/update_queue.h"
 #include "polos/context/shader_lib.h"
 #include "polos/context/vertex.h"
 #include "polos/core/event_bus.h"
 #include "polos/core/window_system.h"
-
-#include <polos.h>
 
 namespace polos
 {
@@ -124,7 +123,7 @@ namespace polos
         //ImGui::ShowDemoWindow(&open);
     }
 
-    Application* CreateApplication(void* ptr)
+    Application* CreateApplication(void* p_PlacementPtr)
     {
         window_props props;
         props.title = "Hello";
@@ -136,7 +135,7 @@ namespace polos
 
         auto a = WindowSystem::NewWindow(props);
 
-        Application* app = !ptr ? new Editor() : new (ptr) Editor();
+        Application* app = p_PlacementPtr != nullptr ? new (p_PlacementPtr) Editor() : new Editor();
         return app;
     }
 }

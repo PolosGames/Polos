@@ -13,8 +13,8 @@ namespace polos
     {
     }
 
-    GUID::GUID(int64 guid)
-        : m_GUID(guid)
+    GUID::GUID(int64 p_Guid)
+        : m_GUID(p_Guid)
     {
     }
 
@@ -23,8 +23,8 @@ namespace polos
         return m_GUID; 
     }
 
-    bool operator==(GUID const& lhs, GUID const& rhs)
+    bool operator==(GUID const& p_Lhs, GUID const& p_Rhs)
     {
-        return lhs.m_GUID == rhs.m_GUID;
+        return p_Lhs.m_GUID == p_Rhs.m_GUID;
     }
 }// namespace polos

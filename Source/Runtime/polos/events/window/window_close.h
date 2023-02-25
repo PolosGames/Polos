@@ -7,11 +7,10 @@ namespace polos
     class window_close final : public Event<window_close>
     {
     public:
-        window_close(void* win_handle) : win_handle{win_handle} {}
-        window_close() : win_handle{nullptr} {}
-
+        window_close() = default;
+        explicit window_close(void* p_WinHandle) : winHandle{p_WinHandle} {}
     public:
-        void* win_handle;
+        void* winHandle{};
     };
 }
 

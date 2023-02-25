@@ -10,34 +10,61 @@ namespace polos
     static constexpr char seperator = '/';
 #endif
 
-    File::File(std::string full_path, FileMode mode) noexcept
-        : m_Mode(mode)
+    File::File(std::string p_FullPath, FileMode p_Mode) noexcept
+        : m_Mode{p_Mode}
     {
-        std::replace(full_path.begin(), full_path.end(), '/', seperator);
-        m_FileStream.open(full_path.c_str(), std::ios::openmode(mode));
-        
-        if(!m_FileStream.is_open())
+        std::replace(p_FullPath.begin(), p_FullPath.end(), '/', seperator);
+        m_FileStream.open(p_FullPath.c_str(), std::ios::openmode(p_Mode));
+
+        if (!m_FileStream.is_open())
         {
-            LOG_ENGINE_ERROR("File {} could not be opened", full_path);
+            LOG_ENGINE_ERROR("File {} could not be opened", p_FullPath);
             m_FileStream.close();
             return;
         }
-        
-        std::size_t full_name_loc = full_path.find_last_of(seperator) + 1;
-        std::string full_name = full_path.substr(full_name_loc, full_path.size() - full_name_loc);
+
+        std::size_t full_name_loc = p_FullPath.find_last_of(seperator) + 1;
+        std::string full_name     = p_FullPath.substr(full_name_loc, p_FullPath.size() - full_name_loc);
         std::size_t sep_loc = full_name.find_last_of('.') + 1;
-        file_ext  = full_name.substr(sep_loc, full_name.size() - sep_loc);
-        file_name = full_name.substr(0, full_name.size() - file_ext.size() - 1);
+        fileExtension  = full_name.substr(sep_loc, full_name.size() - sep_loc);
+        fileName = full_name.substr(0, full_name.size() - fileExtension.size() - 1);
     }
     
     std::string File::ReadLine()
     {
-        if(!( m_Mode & FileMode::kRead)) return "Could not read line";
+        if(!( m_Mode & FileMode::k_Read))
+        {
+            LOG_ENGINE_ERROR("Could not read line because the file is not in read mode.");
+            return ""; // TODO: Make the return type std::optional
+        }
+
+        if (m_FileStream.eof())
+        {
+            LOG_ENGINE_WARN("Could not read line because the file hit EOF.");
+            return "";
+        }
     
         std::string line;
         std::getline(m_FileStream, line);
         
         return line;
+    }
+
+    void File::ReadLine(std::string& p_Line)
+    {
+        if (!(m_Mode & FileMode::k_Read))
+        {
+            LOG_ENGINE_ERROR("Could not read line because the file is not in read mode.");
+            return;
+        }
+
+        if (m_FileStream.eof())
+        {
+            LOG_ENGINE_WARN("Could not read line because the file hit EOF.");
+            return;
+        }
+
+        std::getline(m_FileStream, p_Line);
     }
     
     std::string File::ReadStr()
@@ -49,12 +76,12 @@ namespace polos
     
     DArray<byte> File::ReadByte()
     {
-        ASSERT(m_Mode & (FileMode::kRead | FileMode::kBinary));
+        ASSERT(m_Mode & (FileMode::k_Read | FileMode::k_Binary));
+        // https://stackoverflow.com/questions/15138353/how-to-read-a-binary-file-into-a-vector-of-unsigned-chars
 
-        DArray<byte> byte_arr {
-            std::istreambuf_iterator<char>(m_FileStream), {}
-        };
-
-        return byte_arr;
+        return DArray<byte>(
+            std::istreambuf_iterator<char>(m_FileStream),
+            std::istreambuf_iterator<char>()
+        );
     }
 } // namespace polos

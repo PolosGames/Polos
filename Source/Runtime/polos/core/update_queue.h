@@ -7,16 +7,16 @@ namespace polos
 {
     class UpdateQueue
     {
+        friend class Engine;
     public:
         using FuncType = Delegate<void(float)>;
     public:
-        static void PutLast(FuncType update_func);
-        static void PutFirst(FuncType update_func);
-        static void Update(float delta_time);
+        static void PutLast(FuncType p_UpdateFunc);
+        static void PutFirst(FuncType p_UpdateFunc);
+        static void Update(float p_DeltaTime);
 
     private:
-        friend class Engine;
-        static UpdateQueue* m_Instance;
+        static UpdateQueue* s_Instance;
         DArray<FuncType> m_UpdateList;
     };
 } // namespace polos

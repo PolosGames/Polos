@@ -26,23 +26,24 @@
     Type(const Type&)            noexcept = default; \
     Type(Type&&)                 noexcept = default; \
     Type& operator=(const Type&) noexcept = default; \
-    Type& operator=(Type&&)      noexcept = default; \
+    Type& operator=(Type&&)      noexcept = default;
 
 #define PL_RULE_OF_FIVE(Type)                        \
     Type()                       noexcept = default; \
     Type(const Type&)            noexcept = default; \
     Type(Type&&)                 noexcept = default; \
     Type& operator=(const Type&) noexcept = default; \
-    Type& operator=(Type&&)      noexcept = default; \
+    Type& operator=(Type&&)      noexcept = default;
 
 #define PL_NO_COPY(Type)                            \
     Type(const Type&)            noexcept = delete; \
-    Type& operator=(const Type&) noexcept = delete; \
+    Type& operator=(const Type&) noexcept = delete;
 
 #define PL_NO_MOVE(Type)                            \
     Type(Type&&)                 noexcept = delete; \
-    Type& operator=(Type&&)      noexcept = delete; \
- 
+    Type& operator=(Type&&)      noexcept = delete;
+
+#define PL_VOID_CAST(Var) static_cast<void>(Var);
 
 #endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */
 

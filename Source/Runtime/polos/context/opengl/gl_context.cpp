@@ -1,12 +1,12 @@
 #include "polos/polos_pch.h"
 #ifdef USE_OPENGL
 
+#include "polos/context/graphics_context.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "polos/utils/feature.h"
-
-#include "polos/context/graphics_context.h"
 
 namespace polos
 {
@@ -61,13 +61,12 @@ namespace polos
 
     bool GraphicsContext::s_IsInitialized;
 
-    void GraphicsContext::Initialize(void* window_handle)
+    void GraphicsContext::Initialize(void* p_WindowHandle)
     {
-        m_Window = window_handle;
+        m_Window = p_WindowHandle;
         
-        int r = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-        static_cast<void>(r);
-        ASSERTSTR(r, "Failed to load OpenGL context!");
+        int result = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+        ASSERTSTR(result, "Failed to load OpenGL context!");
 
         int w;
         int h;
@@ -80,11 +79,10 @@ namespace polos
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
         glDebugMessageCallback(DebugCallback, nullptr);
-//        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-        // TODO: Filter some of the unnecessary messages here
-        // https://www.khronos.org/opengl/wiki/Debug_Output#Message_filtering
-        // glDebugMessageControl();
+        //Filter out the notifications
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+
 #endif
         if (!s_IsInitialized)
         {

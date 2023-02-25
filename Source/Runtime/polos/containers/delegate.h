@@ -80,7 +80,7 @@ namespace polos
         {
             return f_ptr;
         }
-#pragma region operators
+
     public: // operators
 
         bool operator==(Delegate const& other) const noexcept
@@ -120,8 +120,6 @@ namespace polos
                 return m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
             }
         }
-#pragma endregion
-
     private:
         template <FreeFuncPtr ffunc_ptr>
         static ReturnType function_stub(void* const, Args&&... args)

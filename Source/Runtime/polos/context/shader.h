@@ -20,42 +20,42 @@ namespace polos
         };
     public:
         Shader() : m_ProgramId{uint32(-1)} {}
-        explicit Shader(uint32 program_id);
+        explicit Shader(uint32 m_ProgramId);
 
         void CreateUniformLookup();
         void Use() const;
 
-        void SetUniform(StringId const name, int32 const value)         const;
-        void SetUniform(StringId const name, glm::i32vec2 const& value) const;
-        void SetUniform(StringId const name, glm::i32vec3 const& value) const;
-        void SetUniform(StringId const name, glm::i32vec4 const& value) const;
-        void SetUniform(StringId const name, std::span<int32> value)    const;
+        void SetUniform(StringId const p_Name, int32 const p_Value)         const;
+        void SetUniform(StringId const p_Name, glm::i32vec2 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::i32vec3 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::i32vec4 const& p_Value) const;
+        void SetUniform(StringId const p_Name, std::span<int32> p_Value)    const;
 
-        void SetUniform(StringId const name, uint32 const value)        const;
-        void SetUniform(StringId const name, glm::u32vec2 const& value) const;
-        void SetUniform(StringId const name, glm::u32vec3 const& value) const;
-        void SetUniform(StringId const name, glm::u32vec4 const& value) const;
-        void SetUniform(StringId const name, std::span<uint32> value)   const;
+        void SetUniform(StringId const p_Name, uint32 const p_Value)        const;
+        void SetUniform(StringId const p_Name, glm::u32vec2 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::u32vec3 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::u32vec4 const& p_Value) const;
+        void SetUniform(StringId const p_Name, std::span<uint32> p_Value)   const;
 
-        void SetUniform(StringId const name, float const value)      const;
-        void SetUniform(StringId const name, glm::vec2 const& value) const;
-        void SetUniform(StringId const name, glm::vec3 const& value) const;
-        void SetUniform(StringId const name, glm::vec4 const& value) const;
-        void SetUniform(StringId const name, std::span<float> value) const;
+        void SetUniform(StringId const p_Name, float const p_Value)      const;
+        void SetUniform(StringId const p_Name, glm::vec2 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::vec3 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::vec4 const& p_Value) const;
+        void SetUniform(StringId const p_Name, std::span<float> p_Value) const;
 
-        void SetUniform(StringId const name, double const value)      const;
-        void SetUniform(StringId const name, glm::dvec2 const& value) const;
-        void SetUniform(StringId const name, glm::dvec3 const& value) const;
-        void SetUniform(StringId const name, glm::dvec4 const& value) const;
-        void SetUniform(StringId const name, std::span<double> value) const;
+        void SetUniform(StringId const p_Name, double const p_Value)      const;
+        void SetUniform(StringId const p_Name, glm::dvec2 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::dvec3 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::dvec4 const& p_Value) const;
+        void SetUniform(StringId const p_Name, std::span<double> p_Value) const;
 
-        void SetUniform(StringId const name, glm::mat2 const& value) const;
-        void SetUniform(StringId const name, glm::mat3 const& value) const;
-        void SetUniform(StringId const name, glm::mat4 const& value) const;
+        void SetUniform(StringId const p_Name, glm::mat2 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::mat3 const& p_Value) const;
+        void SetUniform(StringId const p_Name, glm::mat4 const& p_Value) const;
         
     public:    
         uint32 m_ProgramId;
     private:
         HashMap<StringId, out_variable> m_LookupTable;
     };
-}
+} // namespace polos

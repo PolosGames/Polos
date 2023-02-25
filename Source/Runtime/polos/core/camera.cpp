@@ -4,52 +4,47 @@
 
 namespace polos
 {
-    constexpr float g_Yaw         = -90.0f;
-    constexpr float g_Pitch       =   0.0f;
-    constexpr float g_Speed       =   2.5f;
-    constexpr float g_Sensitivity =   0.1f;
-    constexpr float g_Zoom        =  45.0f;
     
-    Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
-        : position{position},
+    Camera::Camera(glm::vec3 p_Position, glm::vec3 p_WorldUp, float p_Yaw, float p_Pitch)
+        : position{p_Position},
           front{glm::vec3{0.0f, 0.0f, -1.0f}},
-          up{{}},
-          right{{}},
-          worldUp(up),
-          yaw(yaw),
-          pitch(pitch),
-          movementSpeed(g_Speed),
-          mouseSensitivity(g_Sensitivity),
-          zoom(g_Zoom)
+          up{},
+          right{},
+          worldUp{p_WorldUp},
+          yaw{p_Yaw},
+          pitch{p_Pitch},
+          movementSpeed{globals::k_Speed},
+          mouseSensitivity{globals::k_Sensitivity},
+          zoom{globals::k_Zoom}
     {
-        static_cast<void>(g_Yaw);
-        static_cast<void>(g_Pitch);
+        static_cast<void>(globals::k_Yaw);
+        static_cast<void>(globals::k_Pitch);
         update_camera_vectors();
     }
     
-    void Camera::ProcessKeyboard(CameraMovement direction, float delta_time)
+    void Camera::ProcessKeyboard(CameraMovement p_Direction, float p_DeltaTime)
     {
-        float velocity = movementSpeed * delta_time;
-        if (direction == kForward)
+        float velocity = movementSpeed * p_DeltaTime;
+        if (p_Direction == k_Forward)
             position += front * velocity;
-        if (direction == kBackward)
+        if (p_Direction == k_Backward)
             position -= front * velocity;
-        if (direction == kLeft)
+        if (p_Direction == k_Left)
             position -= right * velocity;
-        if (direction == kRight)
+        if (p_Direction == k_Right)
             position += right * velocity;
     }
     
-    void Camera::ProcessMouseMovement(float x_offset, float y_offset, GLboolean constrain_pitch)
+    void Camera::ProcessMouseMovement(float p_XOffset, float p_YOffset, GLboolean p_ConstrainPitch)
     {
-        x_offset *= mouseSensitivity;
-        y_offset *= mouseSensitivity;
+        p_XOffset *= mouseSensitivity;
+        p_YOffset *= mouseSensitivity;
     
-        yaw   += x_offset;
-        pitch += y_offset;
+        yaw   += p_XOffset;
+        pitch += p_YOffset;
     
         // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrain_pitch)
+        if (p_ConstrainPitch)
         {
             if (pitch > 89.0f)
                 pitch = 89.0f;
@@ -61,9 +56,9 @@ namespace polos
         update_camera_vectors();
     }
     
-    void Camera::ProcessMouseScroll(float y_offset)
+    void Camera::ProcessMouseScroll(float p_YOffset)
     {
-        zoom -= static_cast<float>(y_offset);
+        zoom -= static_cast<float>(p_YOffset);
         if (zoom < 1.0f)
             zoom = 1.0f;
         if (zoom > 45.0f)

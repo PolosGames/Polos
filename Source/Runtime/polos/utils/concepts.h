@@ -5,20 +5,20 @@
 namespace polos
 {
     template<typename T>
-    concept IsDefaultConstructible = std::is_default_constructible_v<T>;
+    concept DefaultConstructible = std::is_default_constructible_v<T>;
     
     template<typename T>
-    concept IsCopyConstructible = std::is_copy_constructible_v<T>;
+    concept CopyConstructible = std::is_copy_constructible_v<T>;
     template<typename T>
-    concept IsCopyAssignable    = std::is_copy_assignable_v<T>;
+    concept CopyAssignable    = std::is_copy_assignable_v<T>;
     
     template<typename T>
-    concept IsMoveConstructible = std::is_move_constructible_v<T>;
+    concept MoveConstructible = std::is_move_constructible_v<T>;
     template<typename T>
-    concept IsMoveAssignable    = std::is_move_assignable_v<T>;
+    concept MoveAssignable    = std::is_move_assignable_v<T>;
 
     template<typename T>
-    concept IsTriviallyDestructible = std::is_trivially_destructible_v<T>;
+    concept TriviallyDestructible = std::is_trivially_destructible_v<T>;
 
     template<typename Func>
     concept MemberFunctionPtr         = requires

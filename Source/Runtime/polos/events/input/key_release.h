@@ -4,12 +4,12 @@
 
 namespace polos
 {
-    class key_release : public Event<key_release>
+    class key_release final : public Event<key_release>
     {
     public:
-        int32 key;
-
         key_release() = default;
-        key_release(int32 key) : key(key) {}
+        explicit key_release(int32 p_Key) : key{p_Key} {}
+    public:
+        int32 key{};
     };
 }

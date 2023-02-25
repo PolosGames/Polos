@@ -43,7 +43,7 @@ set(Runtime_SOURCES
     polos/core/log.cpp
     polos/core/camera.cpp
     polos/core/update_queue.cpp
-    polos/core/resource_manager.cpp
+    
     polos/core/window_system.cpp
     polos/engine/engine.cpp
     polos/gui/imgui/imgui_impl_glfw.cpp

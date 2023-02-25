@@ -6,16 +6,16 @@ namespace polos::time
 {
     enum class ScopeTimerUnit : uint8_t
     {
-        kSecond,
-        kMilliSecond,
-        kMicroSecond,
+        k_Second,
+        k_MilliSecond,
+        k_MicroSecond,
     };
 
     class ScopeTimer
     {
     public:
-        ScopeTimer(cstring scope_name);
-        ScopeTimer(cstring scope_name, ScopeTimerUnit unit);
+        ScopeTimer(std::string_view p_ScopeName);
+        ScopeTimer(std::string_view p_ScopeName, ScopeTimerUnit p_Unit);
         ~ScopeTimer();
 
         void Stop();
@@ -23,10 +23,11 @@ namespace polos::time
     private:
         void calculate_den(ScopeTimerUnit unit);
     private:
-        float			m_Nom;
-        cstring			m_UnitName;
-        int64			m_Start;
-        cstring			m_ScopeName;
-        bool			m_IsStopped;
+        float            m_Nom{};
+        std::string_view m_UnitName;
+        ScopeTimerUnit   m_Unit;
+        int64            m_Start{};
+        std::string_view m_ScopeName;
+        bool             m_IsStopped{};
     };
 }

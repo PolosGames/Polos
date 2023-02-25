@@ -25,22 +25,22 @@ namespace polos
         PL_NODISCARD static Optional<window_props> GetAppWindowProps();
         PL_NODISCARD static void*                  GetAppWindowHandle();
 
-        PL_NODISCARD static Optional<window_props> GetWindowProps(polos::GUID window_guid);
-        PL_NODISCARD static void*                  GetWindowHandle(polos::GUID window_guid);
+        PL_NODISCARD static Optional<window_props> GetWindowProps(polos::GUID p_WindowGUID);
+        PL_NODISCARD static void*                  GetWindowHandle(polos::GUID p_WindowGUID);
         
         PL_NODISCARD static bool IsInitialized();
 
         static void Update();
     private:
         void on_window_close(window_close& e);
-        static std::size_t find_index_with_guid(polos::GUID window_guid);
+        static std::size_t   find_index_with_guid(polos::GUID p_WindowGUID);
     private:
-        static WindowSystem* m_Instance;
-        static bool          s_IsInitialized;
+        static WindowSystem* s_Instance;
 
-        DArray<polos::GUID>             m_WinGUIDs;
-        DArray<window_props> m_WinProps;
-        DArray<void*>                   m_WinHandles;
-        SharedPtr<GraphicsContext>      m_GfxContext;
+        bool                       m_IsInitialized{};
+        DArray<polos::GUID>        m_WinGUIDs;
+        DArray<window_props>       m_WinProps;
+        DArray<void*>              m_WinHandles;
+        SharedPtr<GraphicsContext> m_GfxContext;
     };
 } // namespace polos
