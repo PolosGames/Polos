@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_UTILS_GUID_H_
-#define POLOS_UTILS_GUID_H_
 
 #include <random>
 
@@ -44,5 +42,3 @@ namespace std
     };
 
 }// namespace std
-
-#endif// !POLOS_UTILS_GUID_H_

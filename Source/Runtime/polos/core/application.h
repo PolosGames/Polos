@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_APPLICATION_H_
-#define POLOS_CORE_APPLICATION_H_
-
 #include <memory>
 
 #include "polos/core/window.h"
@@ -26,6 +23,3 @@ namespace polos
 
     Application* CreateApplication(void* ptr = nullptr);
 } // namespace polos
-
-#endif /* POLOS_CORE_APPLICATION_H_ */
-

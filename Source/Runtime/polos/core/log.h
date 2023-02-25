@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_LOG_H_
-#define POLOS_CORE_LOG_H_
 
 #include <spdlog/spdlog.h>
 #include <spdlog/common.h>
@@ -50,9 +48,37 @@ namespace polos
     private:
         std::array<SharedPtr<spdlog::logger>, kMaxLoggerType> m_Logger;
     };
-} // namespace polos
 
-#include "log.inl"
+    template<typename... Args>
+    inline void Log::critical(uint8 type, spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        m_Logger[type]->critical(fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void Log::error(uint8 type, spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        m_Logger[type]->error(fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void Log::warn(uint8 type, spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        m_Logger[type]->warn(fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void Log::info(uint8 type, spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        m_Logger[type]->info(fmt, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    inline void Log::trace(uint8 type, spdlog::format_string_t<Args...> fmt, Args&&... args)
+    {
+        m_Logger[type]->trace(fmt, std::forward<Args>(args)...);
+    }
+} // namespace polos
 
 #define LOG_ENGINE_CRITICAL(...) ::polos::Log::Instance().critical(::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
 #define LOG_ENGINE_ERROR(...)    ::polos::Log::Instance().error(   ::polos::Log::logger_type::kLoggerEngine, __VA_ARGS__)
@@ -74,7 +100,5 @@ namespace polos
 
 #include "polos/utils/macro_util.h"
 
-#define LOG_VAR_STR(Str, Variable)   LOG_INFO(Str, PL_STRINGIFY(Variable), Variable)
+#define LOG_VAR_STR(Str, Variable)   LOG_ENGINE_INFO(Str, PL_STRINGIFY(Variable), Variable)
 #define LOG_VAR(Variable)            LOG_VAR_STR("value of {0} = {1}", Variable)
-
-#endif /* POLOS_CORE_LOG_H_ */

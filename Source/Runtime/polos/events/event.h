@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_EVENT_H
-#define POLOS_EVENTS_EVENT_H
-
 #include "polos/utils/type_util.h"
 #include "polos/utils/alias.h"
 
@@ -33,5 +30,3 @@ namespace polos
         StringId _id() override { return g_UniqueEventId<T>; }//never going to be accessed, just for vtable
     };
 }
-
-#endif /* POLOS_EVENTS_EVENT_H */

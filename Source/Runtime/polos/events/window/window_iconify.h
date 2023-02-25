@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWICONIFY_H
-#define POLOS_EVENTS_WINDOW_WINDOWICONIFY_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         window_iconify(int32 iconified) : iconified(iconified) {}
     };
 }
-
-#endif /* POLOS_EVENTS_WINDOW_WINDOWICONIFY_H */

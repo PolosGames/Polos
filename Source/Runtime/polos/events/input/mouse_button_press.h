@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_INPUT_MOUSEBUTTONPRESS_H
-#define POLOS_EVENTS_INPUT_MOUSEBUTTONPRESS_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         mouse_button_press(int32 button) : button(button) {}
     };
 }
-
-#endif /* POLOS_EVENTS_INPUT_MOUSEBUTTONPRESS_H */

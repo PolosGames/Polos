@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.24)
 
 set(EXTRA_LIBS)
 
@@ -114,8 +114,6 @@ target_compile_definitions(
         PUBLIC
             GLFW_INCLUDE_NONE
             _CRT_SECURE_NO_WARNINGS
-            $<$<CONFIG:Debug,RelWithDebInfo>:PL_DEBUG>
-            $<$<CONFIG:Release,MinSizeRel>:PL_RELEASE>
 )
 
 build_options(Runtime true)

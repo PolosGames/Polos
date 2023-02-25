@@ -1,5 +1,4 @@
-#ifndef POLOS_UTILS_STRINGID_H_
-#define POLOS_UTILS_STRINGID_H_
+#pragma once
 
 #include "alias.h"
 #include "polos/containers/containers.h"
@@ -40,5 +39,3 @@ namespace polos
 } // namespace polos
 
 consteval polos::StringId operator""_sid(char const* str, std::size_t /**/) { return polos::hash_function(str); }
-
-#endif //POLOSUTILS__STRINGID_H_

@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CONTEXT_GRAPHICSCONTEXT_H
-#define POLOS_CONTEXT_GRAPHICSCONTEXT_H
-
 namespace polos
 {
     class GraphicsContext
@@ -15,5 +12,3 @@ namespace polos
         void* m_Window;
     };
 }
-
-#endif /* POLOS_CONTEXT_GRAPHICSCONTEXT_H */

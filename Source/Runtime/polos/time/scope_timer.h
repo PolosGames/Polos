@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_TIME_SCOPETIMER_H_
-#define POLOS_CORE_TIME_SCOPETIMER_H_
 
 #include "polos/time/timer.h"
 
@@ -32,5 +30,3 @@ namespace polos::time
         bool			m_IsStopped;
     };
 }
-
-#endif /* POLOS_CORE_TIME_SCOPETIMER_H_ */

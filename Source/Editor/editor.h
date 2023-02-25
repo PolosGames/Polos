@@ -1,5 +1,4 @@
-#ifndef POLOS_EDITOR_H_
-#define POLOS_EDITOR_H_
+#pragma once
 
 #include "polos/core/application.h"
 #include "polos/context/shader.h"
@@ -31,5 +30,3 @@ namespace polos
         bool open;
     };
 }
-
-#endif // POLOS_EDITOR_H_

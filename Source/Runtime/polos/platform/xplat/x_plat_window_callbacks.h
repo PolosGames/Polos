@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_
-#define POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_
 
 #include <GLFW/glfw3.h>
 
@@ -45,5 +43,3 @@ namespace polos
 
     void CursorPosCallback(GLFWwindow* /*window*/, double x, double y);
 } // namespace polos
-
-#endif// !POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_

@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWFOCUS_H
-#define POLOS_EVENTS_WINDOW_WINDOWFOCUS_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         window_focus(int32 focused) : is_focused(focused) {}
     };
 }
-
-#endif /* POLOS_EVENTS_WINDOW_WINDOWFOCUS_H */

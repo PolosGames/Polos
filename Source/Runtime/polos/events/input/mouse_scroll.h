@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_INPUT_MOUSESCROLL_H
-#define POLOS_EVENTS_INPUT_MOUSESCROLL_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         mouse_scroll(float x_offset, float y_offset) : x_offset(x_offset), y_offset(y_offset) {}
     };
 }
-
-#endif /* POLOS_EVENTS_INPUT_MOUSESCROLL_H */

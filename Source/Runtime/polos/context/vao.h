@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CONTEXT_VBO_H
-#define POLOS_CONTEXT_VBO_H
-
 #include <glm/glm.hpp>
 
 #include "polos/utils/alias.h"
@@ -27,5 +24,3 @@ namespace polos
         int64  m_IndOffset{};
     };
 }
-
-#endif /* POLOS_CONTEXT_VBO_H */

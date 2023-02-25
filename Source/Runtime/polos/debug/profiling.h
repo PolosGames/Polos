@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_DEBUG_PROFILING_H_
-#define POLOS_CORE_DEBUG_PROFILING_H_
 
 #include "polos/platform/platform_detection.h"
 
@@ -48,5 +46,3 @@
 #	define PROFILE_FUNC(...)
 #	define PROFILE_TAG(TAG_NAME, ...)
 #endif
-
-#endif /* POLOS_CORE_DEBUG_PROFILING_H_ */

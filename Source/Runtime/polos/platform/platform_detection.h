@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_UTILS_PLATFORMDEFINES_H_
-#define POLOS_UTILS_PLATFORMDEFINES_H_
-
 #if defined(_WIN64)
 #	define POLOS_WIN
 
@@ -23,12 +20,16 @@
 #	error Platform not supported by Polos.
 #endif
 
-#if defined(__clang__) && (__clang_major__ == 13)
+#if defined(__clang__) && (__clang_major__ >= 13)
 #   define POLOS_CLANG
-#elif defined(__GNUC__) && (__GNUC__ == 11)
+#elif defined(__GNUC__) && (__GNUC__ >= 11)
 #   define POLOS_GNUC
 #elif defined(_MSC_VER) && (_MSC_VER >= 1900)
 #   define POLOS_MSC
 #endif
 
-#endif /* POLOS_UTILS_PLATFORMDEFINES_H_ */
+#if defined(NDEBUG)
+#   define PL_RELEASE
+#else
+#   define PL_DEBUG
+#endif

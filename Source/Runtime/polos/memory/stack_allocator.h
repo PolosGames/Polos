@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_MEMORY_STACKALLOCATOR_H_
-#define POLOS_CORE_MEMORY_STACKALLOCATOR_H_
 
 #include "polos/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
@@ -41,8 +39,18 @@ namespace polos::memory
         uint64  m_PrevOffset;
         uintptr m_Bottom;
     };
+
+        template<typename T, typename... Args>
+    inline T* StackAllocator::Push(Args&&... args)
+    {
+        PROFILE_FUNC();
+        return new (align(sizeof(T))) T(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    inline T* StackAllocator::PushArr(uint64 count)
+    {
+        PROFILE_FUNC();
+        return new (align(sizeof(T) * count)) T[count];
+    }
 } // namespace polos
-
-#include "stack_allocator.inl"
-
-#endif /* POLOS_CORE_MEMORY_STACKALLOCATOR_H_ */

@@ -1,5 +1,4 @@
-#ifndef POLOS_VERTEX_H_
-#define POLOS_VERTEX_H_
+#pragma once
 
 namespace polos
 {
@@ -11,5 +10,3 @@ namespace polos
         glm::vec3 color;
     };
 }
-
-#endif //POLOS_VERTEX_H_

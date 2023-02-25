@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_TIME_CLOCK_H_
-#define POLOS_CORE_TIME_CLOCK_H_
 
 #include <ratio>
 
@@ -22,5 +20,3 @@ namespace polos::time
         Timer();
     };
 } // namespace polos::core::time
-
-#endif /* POLOS_CORE_TIME_CLOCK_H_ */

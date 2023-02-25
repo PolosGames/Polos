@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWPOSITION_H
-#define POLOS_EVENTS_WINDOW_WINDOWPOSITION_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         window_position(int32 x, int32 y) : x(x), y(y) {}
     };
 }
-
-#endif /* POLOS_EVENTS_WINDOW_WINDOWPOSITION_H */

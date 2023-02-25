@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_WINDOWSYSTEM_H_
-#define POLOS_CORE_WINDOWSYSTEM_H_
-
 #include "polos/core/window.h"
 #include "polos/containers/containers.h"
 #include "polos/context/graphics_context.h"
@@ -47,5 +44,3 @@ namespace polos
         SharedPtr<GraphicsContext>      m_GfxContext;
     };
 } // namespace polos
-
-#endif /* POLOS_CORE_WINDOWSYSTEM_H_ */

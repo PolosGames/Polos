@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
-#define POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
 
 #include "polos/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
@@ -25,8 +23,7 @@ namespace polos::memory
         PL_NODISCARD void* Allocate(size_t size);
         PL_NODISCARD void* Align(size_t size, size_t offset) const;
         
-        template<typename T>
-        requires IsDefaultConstructible<T>
+        template<IsDefaultConstructible T>
         PL_NODISCARD T* New();
 
         template<typename T, typename... Args>
@@ -52,8 +49,39 @@ namespace polos::memory
         size_t     m_Offset;
         std::mutex m_BufferMutex;
     };
+
+    template<IsDefaultConstructible T>
+    inline T* LinearAllocator::New()
+    {
+        return new (Allocate(sizeof(T))) T();
+    }
+
+    template<typename T, typename... Args>
+    inline T* LinearAllocator::New(Args&&... args)
+    {
+        PROFILE_FUNC();
+        return new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
+    }
+
+    template<typename T>
+    inline T* LinearAllocator::NewArr(uint64 count)
+    {
+        PROFILE_FUNC();
+        return new (Allocate(sizeof(T) * count)) T[count];
+    }
+
+    template<typename T>
+    inline void LinearAllocator::Delete(T* ptr)
+    {
+        ptr->~T();
+    }
+
+    template<typename T>
+    inline void LinearAllocator::DeleteArr(T* ptr, size_t size)
+    {
+        for (size_t i = 0; i < size; i++)
+        {
+            ptr[i].~T();
+        }
+    }
 } // namespace polos
-
-#include "linear_allocator.inl"
-
-#endif /* POLOS_CORE_MEMORY_LINEARALLOCATOR_H_ */

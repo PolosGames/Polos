@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_INPUT_KEYRELEASE_H
-#define POLOS_EVENTS_INPUT_KEYRELEASE_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -16,5 +13,3 @@ namespace polos
         key_release(int32 key) : key(key) {}
     };
 }
-
-#endif /* POLOS_EVENTS_INPUT_KEYRELEASE_H */

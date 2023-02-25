@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_RESOURCEMANAGER_H_
-#define POLOS_CORE_RESOURCEMANAGER_H_
-
 namespace polos
 {
     enum ResourceType
@@ -23,5 +20,3 @@ namespace polos
         static ResourceManager* m_Instance;
     };
 }// namespace polos
-
-#endif /* POLOS_CORE_RESOURCEMANAGER_H_ */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_MEMORY_MEMUTILS_H_
-#define POLOS_CORE_MEMORY_MEMUTILS_H_
 
 #include "polos/utils/alias.h"
 
@@ -38,5 +36,3 @@ namespace polos::memory
         return kMemoryAlignment - static_cast<uint32>(p & static_cast<uintptr>(kMemoryAlignment - 1));
     }
 } // namespace polos
-
-#endif /* POLOS_CORE_MEMORY_MEMUTILS_H_ */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CONTEXT_TEXTURE_H_
-#define POLOS_CONTEXT_TEXTURE_H_
 
 namespace polos
 {
@@ -23,5 +21,3 @@ namespace polos
 
     using TextureRef = std::shared_ptr<Texture>;
 }// namespace polos
-
-#endif /* POLOS_CONTEXT_TEXTURE_H_ */

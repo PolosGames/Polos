@@ -1,5 +1,4 @@
-#ifndef POLOS_SHADER_H_
-#define POLOS_SHADER_H_
+#pragma once
 
 namespace polos
 {
@@ -60,4 +59,3 @@ namespace polos
         HashMap<StringId, out_variable> m_LookupTable;
     };
 }
-#endif //POLOS_SHADER_H_

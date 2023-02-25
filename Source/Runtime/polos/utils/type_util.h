@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_UTILS_TYPEUTIL_H_
-#define POLOS_CORE_UTILS_TYPEUTIL_H_
 
 #include <typeinfo>
 
@@ -18,6 +16,3 @@ namespace polos
         return id;
     }
 }
-
-
-#endif /* POLOS_CORE_UTILS_TYPEUTIL_H_ */

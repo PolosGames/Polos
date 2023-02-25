@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_GUI_H_
-#define POLOS_GUI_H_
 
 namespace polos
 {
@@ -14,5 +12,3 @@ namespace polos
         static void End();
     };
 }
-
-#endif //POLOS_GUI_H_

@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_UTILS_ALIAS_H_
-#define POLOS_CORE_UTILS_ALIAS_H_
-
 #include <cstdint>
 #include <cstddef>
 
@@ -37,5 +34,3 @@ namespace polos
 
 inline constexpr float operator""_ms(long double time) { return 0.001f * static_cast<float>(time); }
 inline constexpr float operator""_us(long double time) { return 0.001f * 0.001f * static_cast<float>(time); }
-
-#endif /* POLOS_CORE_UTILS_ALIAS_H_ */

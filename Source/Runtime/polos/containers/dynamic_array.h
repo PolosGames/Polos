@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_CONTAINERS_DARRAY_H_
-#define POLOS_CORE_CONTAINERS_DARRAY_H_
 
 #include "polos/memory/pool_allocator.h"
 #include "polos/utils/concepts.h"
@@ -83,5 +81,3 @@ namespace polos::containers
         size_t m_ResizeAmountBytes;
     };
 }
-
-#endif /* POLOS_CORE_CONTAINERS_DARRAY_H_ */

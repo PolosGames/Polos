@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_WINDOW_H
-#define POLOS_CORE_WINDOW_H
-
 #include "polos/utils/alias.h"
 #include "polos/utils/feature.h"
 #include "polos/utils/guid.h"
@@ -22,5 +19,3 @@ namespace polos
         char m_holder[2] = {44, 34};
     };
 }
-
-#endif /* POLOS_CORE_WINDOW_H */

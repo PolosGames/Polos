@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_DEBUG_H_
-#define POLOS_CORE_DEBUG_H_
 
 #include "polos/utils/macro_util.h"
 #include "polos/core/log.h"
@@ -22,5 +20,3 @@
 #	define ASSERT(check)         static_cast<void>(check)
 #	define STATIC_ASSERT(check)  static_cast<void>(check)
 #endif
-
-#endif /* POLOS_CORE_DEBUG_H_ */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_RENDERER_CONTEXT_SHADER_H_
-#define POLOS_RENDERER_CONTEXT_SHADER_H_
 
 #include <glm/glm.hpp>
 
@@ -28,5 +26,3 @@ namespace polos
         HashMap<StringId, Shader> m_Shaders;
     };
 }
-
-#endif /* POLOS_RENDERER_CONTEXT_SHADER_H_ */

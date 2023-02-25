@@ -1,5 +1,4 @@
-#ifndef POLOS_CORE_IO_FILE_H_
-#define POLOS_CORE_IO_FILE_H_
+#pragma once
 
 #include "polos/utils/alias.h"
 
@@ -29,5 +28,3 @@ namespace polos
         
     };
 } // namespace polos
-
-#endif //POLOS_CORE_IO_FILE_H_

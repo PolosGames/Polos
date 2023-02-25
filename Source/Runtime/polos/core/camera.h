@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CAMERA_H_
-#define POLOS_CAMERA_H_
 
 #include <glad/glad.h>
 
@@ -60,5 +58,3 @@ namespace polos
         void update_camera_vectors();
     };
 }
-
-#endif //POLOS_CAMERA_H_

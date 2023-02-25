@@ -1,5 +1,7 @@
 #include "polos/polos_pch.h"
 
+#include "editor.h"
+
 #include <imgui.h>
 #include <glad/glad.h>
 
@@ -8,8 +10,6 @@
 #include "polos/context/vertex.h"
 #include "polos/core/event_bus.h"
 #include "polos/core/window_system.h"
-
-#include "editor.h"
 
 #include <polos.h>
 

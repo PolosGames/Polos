@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
-#define POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -18,4 +15,3 @@ namespace polos
     };
 }
 
-#endif /* POLOS_EVENTS_WINDOW_WINDOWCLOSE_H */

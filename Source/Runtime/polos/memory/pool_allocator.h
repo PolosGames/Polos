@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_MEMORY_POOLALLOCATOR_H_
-#define POLOS_CORE_MEMORY_POOLALLOCATOR_H_
 
 #include "polos/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
@@ -181,5 +179,3 @@ namespace polos::memory
         size_t     m_ChunkAmount;
     };
 } // namespace polos::memory
-
-#endif /* POLOS_CORE_MEMORY_POOLALLOCATOR_H_ */
