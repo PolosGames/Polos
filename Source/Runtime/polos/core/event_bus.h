@@ -20,13 +20,13 @@ namespace polos
         void Shutdown();
 
         template<EngineEvent EventType, typename... Args>
-        static void RaiseEvent(Args&&... args);
+        static void RaiseEvent(Args&&... p_Args);
         
         template<EngineEvent EventType>
-        static void SubscribeToEvent(Delegate<void(EventType&)> cback);
+        static void SubscribeToEvent(Delegate<void(EventType&)> p_Callback);
 
         template<EngineEvent EventType>
-        static void UnsubscribeFromEvent(Delegate<void(EventType&)> cback);
+        static void UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback);
 
     private:
         static EventBus* s_Instance;
@@ -35,12 +35,12 @@ namespace polos
     };
 
     template<EngineEvent EventType, typename... Args>
-    inline void EventBus::RaiseEvent(Args&&... args)
+    inline void EventBus::RaiseEvent(Args&&... p_Args)
     {
         auto& callbacks = s_Instance->m_Callbacks;
         if (callbacks.contains(g_UniqueEventId<EventType>))
         {
-            EventType e(std::forward<Args>(args)...);
+            EventType e(std::forward<Args>(p_Args)...);
             StringId id = g_UniqueEventId<EventType>;
             for (auto const& subscriber_function : callbacks[id])
             {
@@ -50,22 +50,22 @@ namespace polos
     }
 
     template<EngineEvent EventType>
-    inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> cback)
+    inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> p_Callback)
     {
-        auto& callbacks = s_Instance->m_Callbacks;
-        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber const*>(&cback));
+        auto& callbacks  = s_Instance->m_Callbacks;
+        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber const*>(&p_Callback));
 
         StringId id = g_UniqueEventId<EventType>;
         callbacks.try_emplace(id).first->second.push_back(std::move(subscriber));
     }
 
     template<EngineEvent EventType>
-    inline void EventBus::UnsubscribeFromEvent(Delegate<void(EventType&)> cback)
+    inline void EventBus::UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback)
     {
         StringId id      = g_UniqueEventId<EventType>;
-        auto& callbacks        = s_Instance->m_Callbacks;
+        auto& callbacks  = s_Instance->m_Callbacks;
         auto& event_list = callbacks.at(id);
-        auto& subscriber       = *std::launder(reinterpret_cast<EventSubscriber*>(&cback));
+        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber*>(&p_Callback));
         event_list.erase(
             std::remove(
                 event_list.begin(),

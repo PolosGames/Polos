@@ -16,8 +16,8 @@ namespace polos
         void Startup();
         void Shutdown();
 
-        PL_NODISCARD static polos::GUID NewWindow(window_props& props);
-        static void SwitchWindow(polos::GUID guid);
+        PL_NODISCARD static polos::GUID NewWindow(window_props& p_NewProps);
+        static void SwitchWindow(polos::GUID p_Guid);
 
         // This is also the main window for the current app. Whether it is the
         // editor or the game itself.
@@ -32,7 +32,7 @@ namespace polos
 
         static void Update();
     private:
-        void on_window_close(window_close& e);
+        void on_window_close(window_close& p_Event);
         static std::size_t   find_index_with_guid(polos::GUID p_WindowGUID);
     private:
         static WindowSystem* s_Instance;
