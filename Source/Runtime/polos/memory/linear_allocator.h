@@ -20,11 +20,8 @@ namespace polos::memory
         void Initialize(size_t p_Size);
         PL_NODISCARD void* Allocate(size_t p_Size);
         PL_NODISCARD void* Align(size_t p_Size, size_t p_Offset) const;
-        
-        template<DefaultConstructible T>
-        PL_NODISCARD T* New();
 
-        template<typename T, typename... Args>
+        template<DefaultConstructible T, typename... Args>
         requires std::is_constructible_v<T, Args...>
         PL_NODISCARD T* New(Args&&... p_Args);
 
@@ -50,13 +47,7 @@ namespace polos::memory
         std::mutex m_BufferMutex;
     };
 
-    template<DefaultConstructible T>
-    T* LinearAllocator::New()
-    {
-        return new (Allocate(sizeof(T))) T();
-    }
-
-    template<typename T, typename... Args>
+    template<DefaultConstructible T, typename... Args>
     requires std::is_constructible_v<T, Args...>
     T* LinearAllocator::New(Args&&... p_Args)
     {

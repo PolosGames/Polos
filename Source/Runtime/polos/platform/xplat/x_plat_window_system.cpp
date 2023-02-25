@@ -38,9 +38,9 @@ namespace polos
         s_Instance = nullptr;
     }
 
-    polos::GUID WindowSystem::NewWindow(window_props& new_props)
+    polos::GUID WindowSystem::NewWindow(window_props& p_NewProps)
     {
-        s_Instance->m_WinProps.push_back(std::move(new_props));
+        s_Instance->m_WinProps.push_back(std::move(p_NewProps));
         auto& win_guid  = s_Instance->m_WinGUIDs.emplace_back();
         auto& win_props = s_Instance->m_WinProps.back();
 
@@ -103,9 +103,9 @@ namespace polos
         return win_guid;
     }
 
-    void WindowSystem::SwitchWindow(polos::GUID guid)
+    void WindowSystem::SwitchWindow(polos::GUID p_Guid)
     {
-        auto* handle = static_cast<GLFWwindow*>(GetWindowHandle(guid));
+        auto* handle = static_cast<GLFWwindow*>(GetWindowHandle(p_Guid));
         glfwMakeContextCurrent(handle);
     }
 
@@ -142,9 +142,9 @@ namespace polos
         return s_Instance->m_WinHandles.front();
     }
 
-    Optional<window_props> WindowSystem::GetWindowProps(polos::GUID window_guid)
+    Optional<window_props> WindowSystem::GetWindowProps(polos::GUID p_WindowGuid)
     {
-        auto i = find_index_with_guid(window_guid);
+        auto i = find_index_with_guid(p_WindowGuid);
 
         if (i == s_Instance->m_WinProps.size())
         {
@@ -155,9 +155,9 @@ namespace polos
         return s_Instance->m_WinProps[i];
     }
 
-    void* WindowSystem::GetWindowHandle(polos::GUID window_guid)
+    void* WindowSystem::GetWindowHandle(polos::GUID p_WindowGuid)
     {
-        auto i = find_index_with_guid(window_guid);
+        auto i = find_index_with_guid(p_WindowGuid);
 
         if (i == s_Instance->m_WinHandles.size())
         {
@@ -184,12 +184,12 @@ namespace polos
         }
     }
 
-    void WindowSystem::on_window_close(window_close& e)
+    void WindowSystem::on_window_close(window_close& p_Event)
     {
         int i = 0;
         for (; i < m_WinHandles.size(); i++)
         {
-            if (m_WinHandles[i] == e.winHandle)
+            if (m_WinHandles[i] == p_Event.winHandle)
             {
                 break;
             }
@@ -200,17 +200,17 @@ namespace polos
         m_WinProps.erase(m_WinProps.begin() + i);
 
         // Finally, destroy it with glfw function.
-        glfwDestroyWindow(static_cast<GLFWwindow*>(e.winHandle));
+        glfwDestroyWindow(static_cast<GLFWwindow*>(p_Event.winHandle));
     }
 
-    std::size_t WindowSystem::find_index_with_guid(polos::GUID window_guid)
+    std::size_t WindowSystem::find_index_with_guid(polos::GUID p_WindowGuid)
     {
         auto& guid_list = s_Instance->m_WinGUIDs;
 
         std::size_t i = 0;
         for (; i < guid_list.size(); i++)
         {
-            if (guid_list[i] == window_guid)
+            if (guid_list[i] == p_WindowGuid)
             {
                 break;
             }
