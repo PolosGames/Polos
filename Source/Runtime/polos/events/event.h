@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_EVENT_H
-#define POLOS_EVENTS_EVENT_H
-
 #include "polos/utils/type_util.h"
 #include "polos/utils/alias.h"
 
@@ -15,7 +12,8 @@ namespace polos
     {
     public:
         virtual ~BaseEvent() = default;
-        virtual StringId _id() = 0;
+    protected:
+        virtual StringId id() = 0;
     };
 
     template<typename T>
@@ -30,8 +28,6 @@ namespace polos
             }
         }
     private:
-        StringId _id() override { return g_UniqueEventId<T>; }//never going to be accessed, just for vtable
+        StringId id() override { return g_UniqueEventId<T>; }//never going to be accessed, just for vtable
     };
 }
-
-#endif /* POLOS_EVENTS_EVENT_H */

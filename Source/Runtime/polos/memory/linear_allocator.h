@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
-#define POLOS_CORE_MEMORY_LINEARALLOCATOR_H_
 
 #include "polos/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
@@ -11,82 +9,80 @@ namespace polos::memory
     class LinearAllocator
     {
     public:
-        internal_buffer iBuffer;
-    public:
         LinearAllocator();
-        explicit LinearAllocator(size_t size);
+        explicit LinearAllocator(size_t p_Size);
         ~LinearAllocator();
         
-        LinearAllocator(LinearAllocator&& other) noexcept;
-        LinearAllocator& operator=(LinearAllocator&& rhs) noexcept;
+        LinearAllocator(LinearAllocator&& p_Other) noexcept;
+        LinearAllocator& operator=(LinearAllocator&& p_Rhs) noexcept;
         PL_NO_COPY(LinearAllocator)
 
-        void  Initialize(size_t size);
-        PL_NODISCARD void* Allocate(size_t size);
-        PL_NODISCARD void* Align(size_t size, size_t offset) const;
+        void Initialize(size_t p_Size);
+        PL_NODISCARD void* Allocate(size_t p_Size);
+        PL_NODISCARD void* Align(size_t p_Size, size_t p_Offset) const;
         
         template<DefaultConstructible T>
         PL_NODISCARD T* New();
 
         template<typename T, typename... Args>
-        PL_NODISCARD T* New(Args&&... args);
+        requires std::is_constructible_v<T, Args...>
+        PL_NODISCARD T* New(Args&&... p_Args);
+
+        template<DefaultConstructible T>
+        PL_NODISCARD T* NewArr(size_t p_Count);
 
         template<typename T>
-        PL_NODISCARD T* NewArr(size_t count);
+        void Delete(T* p_Ptr);
 
         template<typename T>
-        void Delete(T* ptr);
-
-        template<typename T>
-        void DeleteArr(T* ptr, size_t size);
+        void DeleteArr(T* p_Ptr, size_t p_Size);
         
         PL_NODISCARD byte*  Data() const;
         PL_NODISCARD size_t Capacity() const;
 
-        void Resize(uint64 size);
+        void Resize(uint64 p_Size);
         void Clear();
-    private:
+    public:
+        internal_buffer internalBuffer;
     private:
         uintptr    m_Bottom;
         size_t     m_Offset;
         std::mutex m_BufferMutex;
     };
 
-    // Implementations
     template<DefaultConstructible T>
-    inline T* LinearAllocator::New()
+    T* LinearAllocator::New()
     {
         return new (Allocate(sizeof(T))) T();
     }
 
     template<typename T, typename... Args>
-    inline T* LinearAllocator::New(Args&&... args)
+    requires std::is_constructible_v<T, Args...>
+    T* LinearAllocator::New(Args&&... p_Args)
     {
         PROFILE_FUNC();
-        return new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
+        return new (Allocate(sizeof(T))) T(std::forward<Args>(p_Args)...);
     }
 
-    template<typename T>
-    inline T* LinearAllocator::NewArr(uint64 count)
+    template<DefaultConstructible T>
+    inline T* LinearAllocator::NewArr(size_t p_Count)
     {
         PROFILE_FUNC();
-        return new (Allocate(sizeof(T) * count)) T[count];
+        return new (Allocate(sizeof(T) * p_Count)) T[p_Count];
     }
 
     template<typename T>
-    inline void LinearAllocator::Delete(T* ptr)
+    void LinearAllocator::Delete(T* p_Ptr)
     {
-        ptr->~T();
+        p_Ptr->~T();
     }
 
     template<typename T>
-    inline void LinearAllocator::DeleteArr(T* ptr, size_t size)
+    void LinearAllocator::DeleteArr(T* p_Ptr, size_t p_Size)
     {
-        for(size_t i = 0; i < size; i++)
+        for (size_t i = 0; i < p_Size; i++)
         {
-            ptr[i].~T();
+            p_Ptr[i].~T();
         }
     }
 } // namespace polos
-
-#endif /* POLOS_CORE_MEMORY_LINEARALLOCATOR_H_ */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_RENDERER_CONTEXT_SHADER_H_
-#define POLOS_RENDERER_CONTEXT_SHADER_H_
 
 #include <glm/glm.hpp>
 
@@ -13,20 +11,18 @@ namespace polos
     class ShaderLib
     {
     public:
-        static void    Load(std::string_view glsl_file);
-        static void    Load(std::string_view vert_file, std::string_view frag_file);
+        static void    Load(std::string_view p_GlslFile);
+        static void    Load(std::string_view p_VertFile, std::string_view p_FragFile);
         static void    Finalize();
 
-        static Shader& Get(StringId shader_name);
+        static Shader& Get(StringId p_ShaderNameSid);
         
     private:
-        static uint32 compile_shader(cstring source, uint32 shader_type);
-        static bool is_successful(uint32 id, uint32 action);
+        static uint32 compile_shader(std::string_view p_Source, uint32 p_ShaderType);
+        static bool   is_successful(uint32 p_Id, uint32 p_Action);
     private:
         friend class Engine;
         static ShaderLib* s_Instance;
         HashMap<StringId, Shader> m_Shaders;
     };
 }
-
-#endif /* POLOS_RENDERER_CONTEXT_SHADER_H_ */

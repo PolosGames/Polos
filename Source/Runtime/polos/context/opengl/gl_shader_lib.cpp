@@ -1,24 +1,24 @@
 #include "polos/polos_pch.h"
 
-#ifdef USE_OPENGL
+#if defined(USE_OPENGL)
+
+#include "polos/context/shader_lib.h"
 
 #include <glad/glad.h>
 
 #include "polos/io/file.h"
 #include "polos/utils/stringid.h"
 
-#include "polos/context/shader_lib.h"
-
 namespace polos
 {
     ShaderLib* ShaderLib::s_Instance;
 
-    void ShaderLib::Load(std::string_view glsl_file)
+    void ShaderLib::Load(std::string_view p_GlslFile)
     {
         StringId shader_name;
-        std::string const shader_code = [&glsl_file, &shader_name] {
-            File file(glsl_file.data(), kRead);
-            shader_name = get_string_id(file.file_name);
+        std::string const shader_code = [&p_GlslFile, &shader_name] {
+            File file(p_GlslFile.data(), k_Read);
+            shader_name = get_string_id(file.fileName);
             return file.ReadStr();
         }();
         
@@ -27,7 +27,7 @@ namespace polos
         int32 i = 0; // how many shaders are created
         uint32 shader_ids[kShaderTypeMax];
         std::size_t pos = 0;
-        for(;pos != std::string::npos; pos = shader_code.find_first_of("#shader", pos), i++)
+        for(; pos != std::string::npos; pos = shader_code.find_first_of("#shader", pos), i++)
         {
             std::size_t eol = shader_code.find_first_of('\n', pos);
             std::size_t type_start = pos + 8;
@@ -53,8 +53,10 @@ namespace polos
         }
         
         uint32 program_id = glCreateProgram();
-        for(int k = 0; k < i; k++)
+        for (int k = 0; k < i; k++)
+        {
             glAttachShader(program_id, shader_ids[k]);
+        }
         glLinkProgram(program_id);
 
         if (!is_successful(program_id, GL_LINK_STATUS)) return;
@@ -62,19 +64,19 @@ namespace polos
         s_Instance->m_Shaders.insert({shader_name, Shader{program_id}});
     }
 
-    void ShaderLib::Load(std::string_view vert_file, std::string_view frag_file)
+    void ShaderLib::Load(std::string_view p_VertFile, std::string_view p_FragFile)
     {
         StringId shader_name;
-        std::string const vert_code = [&vert_file, &shader_name] {
-            File file(vert_file.data(), kRead);
-            shader_name = get_string_id(file.file_name);
+        std::string const vert_code = [&p_VertFile, &shader_name] {
+            File file(p_VertFile.data(), k_Read);
+            shader_name = get_string_id(file.fileName);
             return file.ReadStr();
         }();
 
         if (s_Instance->m_Shaders.contains(shader_name)) return;
 
-        std::string const frag_code = [&frag_file] {
-            File file(frag_file.data(), kRead);
+        std::string const frag_code = [&p_FragFile] {
+            File file(p_FragFile.data(), k_Read);
             return file.ReadStr();
         }();
 
@@ -92,46 +94,46 @@ namespace polos
         s_Instance->m_Shaders.insert({shader_name, Shader{program_id}});
     }
     
-    Shader& ShaderLib::Get(StringId shader_name)
+    Shader& ShaderLib::Get(StringId p_ShaderNameSid)
     {
-        if (!s_Instance->m_Shaders.contains(shader_name))
+        if (!s_Instance->m_Shaders.contains(p_ShaderNameSid))
         {
-            LOG_ENGINE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", shader_name); 
+            LOG_ENGINE_WARN(R"(SHADER "{}" DOESN'T EXIST!)", p_ShaderNameSid); 
         }
-        return s_Instance->m_Shaders[shader_name];
+        return s_Instance->m_Shaders[p_ShaderNameSid];
     }
     
-    uint32 ShaderLib::compile_shader(cstring source, uint32 shader_type)
+    uint32 ShaderLib::compile_shader(std::string_view p_Source, uint32 p_ShaderType)
     {
-        cstring shader_source = source;
-        uint32 shader_id = glCreateShader(shader_type);
+        cstring shader_source = p_Source.data();
+        uint32 shader_id = glCreateShader(p_ShaderType);
         glShaderSource(shader_id, 1, &shader_source, nullptr);
         glCompileShader(shader_id);
         
-        if (!is_successful(shader_id, GL_COMPILE_STATUS)) return uint32(-1);
+        if (!is_successful(shader_id, GL_COMPILE_STATUS)) return static_cast<uint32>(-1);
         
         return shader_id;
     }
 
-    bool ShaderLib::is_successful(uint32 id, uint32 action)
+    bool ShaderLib::is_successful(uint32 p_Id, uint32 p_Action)
     {
         int32 success = -1;
         char info_log[512];
-        if (action == GL_COMPILE_STATUS)
+        if (p_Action == GL_COMPILE_STATUS)
         {
-            glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+            glGetShaderiv(p_Id, GL_COMPILE_STATUS, &success);
             if (!success)
             {
-                glGetShaderInfoLog(id, 512, nullptr, info_log);
+                glGetShaderInfoLog(p_Id, 512, nullptr, info_log);
                 LOG_ENGINE_ERROR("Shader Compilation Error: {0}", info_log);
             }
         }
-        else if (action == GL_LINK_STATUS)
+        else if (p_Action == GL_LINK_STATUS)
         {
-            glGetProgramiv(id, GL_LINK_STATUS, &success);
+            glGetProgramiv(p_Id, GL_LINK_STATUS, &success);
             if (!success)
             {
-                glGetProgramInfoLog(id, 512, nullptr, info_log);
+                glGetProgramInfoLog(p_Id, 512, nullptr, info_log);
                 LOG_ENGINE_ERROR("Shader Linking Error: ", info_log);
             }
         }

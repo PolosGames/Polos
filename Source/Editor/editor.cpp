@@ -1,5 +1,7 @@
 #include "polos/polos_pch.h"
 
+#include "editor.h"
+
 #include <bitset>
 
 #include <glad/glad.h>
@@ -15,10 +17,6 @@
 #include "polos/renderer/shapes/shapes2d_transform.h"
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/scene/scene_view.h"
-
-#include "editor.h"
-
-#include <polos.h>
 
 namespace polos
 {
@@ -364,7 +362,7 @@ namespace polos
         }
     }
 
-    Application* CreateApplication(void* ptr)
+    Application* CreateApplication(void* p_PlacementPtr)
     {
         window_props props;
         props.title = "Hello";
@@ -376,7 +374,7 @@ namespace polos
 
         auto a = WindowSystem::NewWindow(props);
 
-        Application* app = !ptr ? new Editor() : new (ptr) Editor();
+        Application* app = p_PlacementPtr != nullptr ? new (p_PlacementPtr) Editor() : new Editor();
         return app;
     }
 }

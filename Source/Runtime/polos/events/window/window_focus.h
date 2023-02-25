@@ -1,20 +1,15 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWFOCUS_H
-#define POLOS_EVENTS_WINDOW_WINDOWFOCUS_H
-
 #include "polos/events/event.h"
 
 namespace polos
 {
-    class window_focus : public Event<window_focus>
+    class window_focus final : public Event<window_focus>
     {
     public:
-        int32 is_focused;
-
         window_focus() = default;
-        window_focus(int32 focused) : is_focused(focused) {}
+        explicit window_focus(int32 p_IsFocused) : isFocused{p_IsFocused} {}
+    public:
+        int32 isFocused;
     };
 }
-
-#endif /* POLOS_EVENTS_WINDOW_WINDOWFOCUS_H */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CONTAINERS_CONTAINERS_H_
-#define POLOS_CONTAINERS_CONTAINERS_H_
 
 #include <vector>
 #include <unordered_map>
@@ -42,5 +40,3 @@ namespace polos
     template<typename T>
     using Optional = std::optional<T>;
 }
-
-#endif //POLOS_CONTAINERS_H

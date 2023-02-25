@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_TIME_CLOCK_H_
-#define POLOS_CORE_TIME_CLOCK_H_
 
 #include <ratio>
 
@@ -11,16 +9,14 @@ namespace polos::time
 {
     class Timer
     {
+    private:
         using Period = std::micro;
+    private:
+        Timer();
     public:
-        static void  OnStartUp();
-    
+        static void  Startup();
         static int64 Now();
     private:
-        static int64 m_Freq;
-        
-        Timer();
+        static int64 s_Freq;
     };
 } // namespace polos::core::time
-
-#endif /* POLOS_CORE_TIME_CLOCK_H_ */

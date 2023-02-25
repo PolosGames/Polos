@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_UTILS_FEATURE_H_
-#define POLOS_CORE_UTILS_FEATURE_H_
 
 #if defined(__has_cpp_attribute)
 #	define PL_HAS_CPP_ATTR(x) __has_cpp_attribute(x)
@@ -33,5 +31,3 @@
 #else
 #	define PL_UNLIKELY
 #endif
-
-#endif /* POLOS_CORE_UTILS_FEATURE_H_ */

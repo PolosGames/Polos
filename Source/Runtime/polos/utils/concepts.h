@@ -1,5 +1,4 @@
-#ifndef POLOS_CONCEPTS_H
-#define POLOS_CONCEPTS_H
+#pragma once
 
 #include <type_traits>
 
@@ -33,5 +32,3 @@ namespace polos
         !std::is_member_function_pointer_v<Func>;
     };
 }
-
-#endif //POLOS_CONCEPTS_H

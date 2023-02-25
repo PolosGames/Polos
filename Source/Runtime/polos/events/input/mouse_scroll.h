@@ -1,20 +1,16 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_INPUT_MOUSESCROLL_H
-#define POLOS_EVENTS_INPUT_MOUSESCROLL_H
-
 #include "polos/events/event.h"
 
 namespace polos
 {
-    class mouse_scroll : public Event<mouse_scroll>
+    class mouse_scroll final : public Event<mouse_scroll>
     {
     public:
-        float x_offset, y_offset;
-
         mouse_scroll() = default;
-        mouse_scroll(float x_offset, float y_offset) : x_offset(x_offset), y_offset(y_offset) {}
+        explicit mouse_scroll(float p_XOffset, float p_YOffset) : xOffset{p_XOffset}, yOffset{p_YOffset} {}
+    public:
+        float xOffset{};
+        float yOffset{};
     };
 }
-
-#endif /* POLOS_EVENTS_INPUT_MOUSESCROLL_H */

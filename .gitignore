@@ -5,7 +5,6 @@ vsbuild/
 
 
 **.txt
-!CMakeLists.txt
 
 # Ignore this on Sandbox
 **.log
@@ -24,7 +23,22 @@ vsbuild/
 **.opt
 *.json
 
-!CMakePresets.json
+# Keep cmakes!
+!CMakeLists.txt
+!CMakeSettings.json
 
-polos.cppcheck
-polos-cppcheck-build-dir
+#nvidia insight folder
+**.ngfx-proj
+
+#Cppcheck folder
+**.cppcheck
+**.a1
+**.clang-tidy-cmd
+**.clang-tidy-E
+**.clang-tidy-results
+**.ctu-info
+**.dump
+**.snalyzerinfo
+**.a2
+lastResults.xml
+**cppcheck**

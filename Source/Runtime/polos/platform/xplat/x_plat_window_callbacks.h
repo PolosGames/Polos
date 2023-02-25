@@ -1,49 +1,45 @@
 #pragma once
-#ifndef POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_
-#define POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_
 
 #include <GLFW/glfw3.h>
 
 namespace polos
 {
-    void GLFWErrorCallback(int error_code, const char* description);
+    void GLFWErrorCallback(int p_ErrorCode, char const* p_Description);
 
-    void WindowCloseCallback(GLFWwindow* window);
+    void WindowCloseCallback(GLFWwindow* p_Window);
 
-    void WindowFocusCallback(GLFWwindow* window, int32 focused);
+    void WindowFocusCallback(GLFWwindow* p_Window, int32 p_Focused);
 
-    void WindowSizeCallback(GLFWwindow* window, int32 width, int32 height);
+    void WindowSizeCallback(GLFWwindow* p_Window, int32 p_Width, int32 p_Height);
 
-    void WindowIconifyCallback(GLFWwindow* /*window*/, int32 iconified);
+    void WindowIconifyCallback(GLFWwindow* p_Window, int32 p_Iconified);
 
-    void WindowMaximizeCallback(GLFWwindow* /*window*/, int32 maximized);
+    void WindowMaximizeCallback(GLFWwindow* p_Window, int32 p_Maximized);
 
-    void FramebufferSizeCallback(GLFWwindow* /*window*/, int32 width, int32 height);
+    void FramebufferSizeCallback(GLFWwindow* p_Window, int32 p_Width, int32 p_Height);
 
     void KeyCallback(
-        GLFWwindow* /*window*/,
-        int32 key,
-        int32 /*scancode*/,
-        int32 action,
-        int32 /*mods*/
+        GLFWwindow* p_Window,
+        int32 p_Key,
+        int32 p_Scancode,
+        int32 p_Action,
+        int32 p_Mods
     );
 
-    void CharCallback(GLFWwindow*, uint32 unicode);
+    void CharCallback(GLFWwindow* p_Window, uint32 unicode);
 
     void MouseButtonCallback(
-        GLFWwindow* /*window*/,
-        int32 button,
-        int32 action,
-        int32 /*mods*/
+        GLFWwindow* p_Window,
+        int32 p_Button,
+        int32 p_Action,
+        int32 p_Mods
     );
 
     void ScrollCallback(
-        GLFWwindow* /*window*/,
-        double x_offset,
-        double y_offset
+        GLFWwindow* p_Window,
+        double p_XOffset,
+        double p_YOffset
     );
 
-    void CursorPosCallback(GLFWwindow* /*window*/, double x, double y);
+    void CursorPosCallback(GLFWwindow* p_Window, double p_X, double p_Y);
 } // namespace polos
-
-#endif// !POLOS_PLATFORM_XPLAT_WINDOW_CALLBACKS_H_

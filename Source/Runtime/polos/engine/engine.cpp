@@ -8,6 +8,7 @@
 #include "polos/core/application.h"
 #include "polos/context/shader_lib.h"
 #include "polos/core/update_queue.h"
+#include "polos/utils/stringid.h"
 #include "polos/events/events.h"
 #include "polos/core/window_system.h"
 #include "polos/core/sound/sound_engine.h"
@@ -40,43 +41,41 @@ namespace polos
 
     void Engine::Run()
     {
-        time::Timer::OnStartUp();
+        time::Timer::Startup();
 
         // Allocate enough memory for the whole engine.
-        size_t l_needed_memory = 512
+        size_t needed_memory = 512
             + sizeof(Log)
             + sizeof(EventBus)
             + sizeof(Renderer)
             + sizeof(ShaderLib)
             + sizeof(UpdateQueue)
-            + sizeof(WindowSystem)
-            + sizeof(SoundEngine)
         ;
             
-        memory::LinearAllocator l_EngineMemory(l_needed_memory);
+        memory::LinearAllocator engine_memory(needed_memory);
 
         // Allocate memory for the systems
-        auto* l_Log       = l_EngineMemory.New<Log>();
-        auto* l_EventBus = l_EngineMemory.New<EventBus>();
-        auto* l_Renderer  = l_EngineMemory.New<Renderer>();
-        auto* l_WindowSystem = l_EngineMemory.New<WindowSystem>();
-        auto* l_SoundEngine = l_EngineMemory.New<SoundEngine>();
-        auto* l_ComponentMemory = l_EngineMemory.New<ecs::ComponentMemory>();
+        auto* log              = engine_memory.New<Log>();
+        auto* event_bus        = engine_memory.New<EventBus>();
+        auto* renderer         = engine_memory.New<Renderer>();
+        auto* window_system    = engine_memory.New<WindowSystem>();
+        auto* sound_engine     = engine_memory.New<SoundEngine>();
+        auto* component_memory = engine_memory.New<ecs::ComponentMemory>();
 
         // Single instance subsystems
-        auto* l_ShaderLib = l_EngineMemory.New<ShaderLib>();
-        auto* l_UpdateQueue  = l_EngineMemory.New<UpdateQueue>();
+        auto* shader_lib = engine_memory.New<ShaderLib>();
+        auto* update_queue  = engine_memory.New<UpdateQueue>();
 
         // Startup for systems
-        l_Log            ->Startup();
-        l_EventBus       ->Startup();
-        l_WindowSystem   ->Startup();
-        l_Renderer       ->Startup();
-        l_ComponentMemory->Startup();
+        log             ->Startup();
+        event_bus       ->Startup();
+        renderer        ->Startup();
+        window_system   ->Startup();
+        sound_engine    ->Startup();
+        component_memory->Startup();
 
-        ShaderLib::s_Instance       = l_ShaderLib;
-        UpdateQueue::s_Instance     = l_UpdateQueue;
-        l_SoundEngine->Startup();
+        ShaderLib::s_Instance       = shader_lib;
+        UpdateQueue::s_Instance     = update_queue;
 
         // This ensures that all events are fired (instantiated) once,
         // so that every one of their id's get created.
@@ -87,20 +86,19 @@ namespace polos
         delete l_App;
 
         // Shutdown sequence
-        l_ComponentMemory->Shutdown();
-        l_SoundEngine    ->Shutdown();
-        l_Renderer       ->Shutdown();
-        l_WindowSystem   ->Shutdown();
-        l_EventBus       ->Shutdown();
-        l_Log            ->Shutdown();
-
-        l_EngineMemory.Delete(l_ComponentMemory);
-        l_EngineMemory.Delete(l_SoundEngine);
-        l_EngineMemory.Delete(l_UpdateQueue);
-        l_EngineMemory.Delete(l_ShaderLib);
-        l_EngineMemory.Delete(l_WindowSystem);
-        l_EngineMemory.Delete(l_Renderer);
-        l_EngineMemory.Delete(l_EventBus);
-        l_EngineMemory.Delete(l_Log);
+        component_memory->Shutdown();
+        sound_engine    ->Shutdown();
+        renderer        ->Shutdown();
+        window_system   ->Shutdown();
+        event_bus       ->Shutdown();
+        log             ->Shutdown();
+        
+        engine_memory.Delete(component_memory);
+        engine_memory.Delete(sound_engine);
+        engine_memory.Delete(update_queue);
+        engine_memory.Delete(shader_lib);
+        engine_memory.Delete(renderer);
+        engine_memory.Delete(event_bus);
+        engine_memory.Delete(log);
     }
 } // namespace polos

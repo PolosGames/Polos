@@ -6,29 +6,27 @@
 
 namespace polos::time
 {
-    int64 Timer::m_Freq;
+    int64 Timer::s_Freq;
 
-    void Timer::OnStartUp()
+    void Timer::Startup()
     {
         LARGE_INTEGER freq;
         BOOL ret = QueryPerformanceFrequency(&freq);
         ASSERTSTR(ret, "QueryPerformanceFrequency didn't work.");
-        static_cast<void>(ret);
 
-        m_Freq = freq.QuadPart;
+        s_Freq = freq.QuadPart;
     }
 
     int64 Timer::Now()
     {
-        LARGE_INTEGER Counter;
+        LARGE_INTEGER counter;
 
-        BOOL ret = QueryPerformanceCounter(&Counter);
+        BOOL ret = QueryPerformanceCounter(&counter);
         ASSERTSTR(ret, "QueryPerformanceCounter didn't work.");
-        static_cast<void>(ret);
 
         // steady_clock's implementation.
-        const int64 Whole = (Counter.QuadPart / m_Freq) * Period::den;
-        const int64 Part = (Counter.QuadPart % m_Freq) * Period::den / m_Freq;
+        const int64 Whole = (counter.QuadPart / s_Freq) * Period::den;
+        const int64 Part  = (counter.QuadPart % s_Freq) * Period::den / s_Freq;
 
         return Whole + Part;
     }

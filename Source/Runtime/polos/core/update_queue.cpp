@@ -6,21 +6,21 @@ namespace polos
 {
     UpdateQueue* UpdateQueue::s_Instance;
 
-    void UpdateQueue::PutLast(FuncType update_func)
+    void UpdateQueue::PutLast(FuncType p_UpdateFunc)
     {
-        s_Instance->m_UpdateList.push_back(std::move(update_func));
+        s_Instance->m_UpdateList.push_back(std::move(p_UpdateFunc));
     }
 
-    void UpdateQueue::PutFirst(FuncType update_func)
+    void UpdateQueue::PutFirst(FuncType p_UpdateFunc)
     {
-        s_Instance->m_UpdateList.insert(s_Instance->m_UpdateList.cbegin(), std::forward<FuncType>(update_func));
+        s_Instance->m_UpdateList.insert(s_Instance->m_UpdateList.cbegin(), std::forward<FuncType>(p_UpdateFunc));
     }
 
-    void UpdateQueue::Update(float delta_time)
+    void UpdateQueue::Update(float p_DeltaTime)
     {
         for(const auto& func: s_Instance->m_UpdateList)
         {
-            std::invoke(func, std::forward<float>(delta_time));
+            std::invoke(func, std::forward<float>(p_DeltaTime));
         }
     }
 }// namespace polos

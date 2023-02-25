@@ -1,5 +1,7 @@
 #include "polos/polos_pch.h"
 
+#include "application.h"
+
 #include <glad/glad.h>
 
 #include "polos/core/event_bus.h"
@@ -8,8 +10,6 @@
 #include "polos/time/timer.h"
 #include "polos/gui/gui.h"
 #include "polos/core/window_system.h"
-
-#include "application.h"
 
 namespace polos
 {
@@ -29,8 +29,8 @@ namespace polos
     {
         
         float delta_time{};
-        int64 end  { time::Timer::Now() };
-        int64 start{ time::Timer::Now() };
+        int64 end   = time::Timer::Now();
+        int64 start = time::Timer::Now();
         
         glClearColor(0.45f, 0.55f, 0.6f, 1.0f);
 

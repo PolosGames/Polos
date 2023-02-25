@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_CONTAINERS_DELEGATE_H_
-#define POLOS_CORE_CONTAINERS_DELEGATE_H_
 
 /**
     Main concept is From Sergey Ryazanov's "The Impossibly Fast C++ Delegates"
@@ -8,8 +6,6 @@
 
     Currently, there is no type safety in template functions, but it should be
     added.
-
-    Most of this implementation is From Rythe-Interactive/LegionEngine repo.
 */
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
@@ -84,7 +80,7 @@ namespace polos
         {
             return f_ptr;
         }
-#pragma region operators
+
     public: // operators
 
         bool operator==(Delegate const& other) const noexcept
@@ -124,8 +120,6 @@ namespace polos
                 return m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
             }
         }
-#pragma endregion
-
     private:
         template <FreeFuncPtr ffunc_ptr>
         static ReturnType function_stub(void* const, Args&&... args)
@@ -154,5 +148,3 @@ namespace polos
         StubType m_StubPointer;
     };
 }
-
-#endif /* POLOS_CORE_CONTAINERS_DELEGATE_H_ */

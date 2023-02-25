@@ -11,7 +11,7 @@
 
 namespace polos
 {
-    Renderer* Renderer::m_Instance;
+    Renderer* Renderer::s_Instance;
 
     // 2D Texture Rectangle
 
@@ -31,12 +31,12 @@ namespace polos
 
     void Renderer::Startup()
     {
-        m_Instance = this;
+        s_Instance = this;
     }
     
     void Renderer::Shutdown()
     {
-        m_Instance = nullptr;
+        s_Instance = nullptr;
     }
 
     void Renderer::SetMainWindowHandle(pl::GUID handle)

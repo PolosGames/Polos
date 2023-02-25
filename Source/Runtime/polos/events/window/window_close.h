@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
-#define POLOS_EVENTS_WINDOW_WINDOWCLOSE_H
-
 #include "polos/events/event.h"
 
 namespace polos
@@ -10,12 +7,10 @@ namespace polos
     class window_close final : public Event<window_close>
     {
     public:
-        window_close(void* win_handle) : win_handle{win_handle} {}
-        window_close() : win_handle{nullptr} {}
-
+        window_close() = default;
+        explicit window_close(void* p_WinHandle) : winHandle{p_WinHandle} {}
     public:
-        void* win_handle;
+        void* winHandle{};
     };
 }
 
-#endif /* POLOS_EVENTS_WINDOW_WINDOWCLOSE_H */

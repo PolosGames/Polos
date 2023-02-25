@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_DEBUG_H_
-#define POLOS_CORE_DEBUG_H_
 
 #include "polos/utils/macro_util.h"
 #include "polos/core/log.h"
@@ -19,8 +17,6 @@
 #else
 #   define DEBUGBRK
 #	define ASSERTSTR(check, ...) PL_VOID_CAST(check)
-#	define ASSERT(check)         PL_VOID_CAST(check)
-#	define STATIC_ASSERT(check)  PL_VOID_CAST(check)
+#   define ASSERT(check)         PL_VOID_CAST(check)
+#   define STATIC_ASSERT(check)  PL_VOID_CAST(check)
 #endif
-
-#endif /* POLOS_CORE_DEBUG_H_ */

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CONTEXT_TEXTURE_H_
-#define POLOS_CONTEXT_TEXTURE_H_
 
 namespace polos
 {
@@ -8,11 +6,10 @@ namespace polos
     struct Texture
     {
         Texture();
-        Texture(uint32 id, int32 w, int32 h, int32 c);
+        Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels);
         ~Texture();
 
-        static std::shared_ptr<Texture> Load(cstring path = nullptr);
-        static std::shared_ptr<Texture> Load(std::string const& path);
+        static std::shared_ptr<Texture> Load(std::string_view p_Path);
 
         static int32 s_IsFlipped;
 
@@ -24,5 +21,3 @@ namespace polos
 
     using TextureRef = std::shared_ptr<Texture>;
 }// namespace polos
-
-#endif /* POLOS_CONTEXT_TEXTURE_H_ */

@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_UTILS_MACROUTIL_H_
-#define POLOS_CORE_UTILS_MACROUTIL_H_
-
 #define PL_EXPAND_IMPL(x) x
 #define PL_EXPAND(x) PL_EXPAND_IMPL(x)
 
@@ -26,25 +23,21 @@
     Type(const Type&)            noexcept = default; \
     Type(Type&&)                 noexcept = default; \
     Type& operator=(const Type&) noexcept = default; \
-    Type& operator=(Type&&)      noexcept = default; \
+    Type& operator=(Type&&)      noexcept = default;
 
 #define PL_RULE_OF_FIVE(Type)                        \
     Type()                       noexcept = default; \
     Type(const Type&)            noexcept = default; \
     Type(Type&&)                 noexcept = default; \
     Type& operator=(const Type&) noexcept = default; \
-    Type& operator=(Type&&)      noexcept = default; \
+    Type& operator=(Type&&)      noexcept = default;
 
 #define PL_NO_COPY(Type)                            \
     Type(const Type&)            noexcept = delete; \
-    Type& operator=(const Type&) noexcept = delete; \
+    Type& operator=(const Type&) noexcept = delete;
 
 #define PL_NO_MOVE(Type)                            \
     Type(Type&&)                 noexcept = delete; \
     Type& operator=(Type&&)      noexcept = delete; \
 
 #define PL_VOID_CAST(Variable) static_cast<void>(Variable)
- 
-
-#endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */
-

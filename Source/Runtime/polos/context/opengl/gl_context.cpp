@@ -1,6 +1,8 @@
 #include "polos/polos_pch.h"
 #ifdef USE_OPENGL
 
+#include "polos/context/graphics_context.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -63,13 +65,12 @@ namespace polos
 
     bool GraphicsContext::s_IsInitialized;
 
-    void GraphicsContext::Initialize(void* window_handle)
+    void GraphicsContext::Initialize(void* p_WindowHandle)
     {
-        m_Window = window_handle;
+        m_Window = p_WindowHandle;
         
-        int r = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-        static_cast<void>(r);
-        ASSERTSTR(r, "Failed to load OpenGL context!");
+        int result = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+        ASSERTSTR(result, "Failed to load OpenGL context!");
 
         int w;
         int h;

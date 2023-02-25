@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_UPDATEQUEUE_H_
-#define POLOS_CORE_UPDATEQUEUE_H_
 
 #include "polos/containers/containers.h"
 #include "polos/containers/delegate.h"
@@ -9,15 +7,15 @@ namespace polos
 {
     class UpdateQueue
     {
+        friend class Engine;
     public:
         using FuncType = Delegate<void(float)>;
     public:
-        static void PutLast(FuncType update_func);
-        static void PutFirst(FuncType update_func);
-        static void Update(float delta_time);
+        static void PutLast(FuncType p_UpdateFunc);
+        static void PutFirst(FuncType p_UpdateFunc);
+        static void Update(float p_DeltaTime);
 
     private:
-        friend class Engine;
         static UpdateQueue* s_Instance;
         DArray<FuncType> m_UpdateList;
     };
@@ -42,5 +40,3 @@ namespace polos
         ::polos::UpdateQueue::FuncType::From<&Func>())
 #define UPDATE_Q_NMEM_ADD_FIRST(Func) ::polos::UpdateQueue::PutFirst( \
         ::polos::UpdateQueue::FuncType::From<&Func>())
-
-#endif // POLOS_CORE_UPDATEQUEUE_H_

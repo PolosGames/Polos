@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.24)
 
 project(
     Polos
@@ -22,8 +22,6 @@ if(NOT ${EXPORT_ENGINE} AND ${BUILD_EDITOR})
 endif()
 
 include(CMake/target_build.cmake)
-
-configure_file(plconfig.h.in plconfig.h)
 
 # ================================== #
 #       Build the whole source       #

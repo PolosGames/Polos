@@ -1,20 +1,15 @@
 #pragma once
 
-#ifndef POLOS_EVENTS_WINDOW_WINDOWICONIFY_H
-#define POLOS_EVENTS_WINDOW_WINDOWICONIFY_H
-
 #include "polos/events/event.h"
 
 namespace polos
 {
-    class window_iconify : public Event<window_iconify>
+    class window_iconify final : public Event<window_iconify>
     {
     public:
-        int32 iconified;
-
         window_iconify() = default;
-        window_iconify(int32 iconified) : iconified(iconified) {}
+        window_iconify(int32 p_Iconified) : iconified{p_Iconified} {}
+    public:
+        int32 iconified{};
     };
 }
-
-#endif /* POLOS_EVENTS_WINDOW_WINDOWICONIFY_H */

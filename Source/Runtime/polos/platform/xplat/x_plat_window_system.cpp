@@ -15,18 +15,17 @@
 
 namespace polos
 {
-    WindowSystem* WindowSystem::m_Instance;
-    bool          WindowSystem::s_IsInitialized = false;
+    WindowSystem* WindowSystem::s_Instance;
 
     void WindowSystem::Startup()
     {
-        m_Instance = this;
-        if (!s_IsInitialized)
+        s_Instance = this;
+        if (!m_IsInitialized)
         {
             glfwSetErrorCallback(GLFWErrorCallback);
             int r = glfwInit(); static_cast<void>(r);
             ASSERTSTR(r == GLFW_TRUE, "Failed to initialize GLFW!");
-            s_IsInitialized = true;
+            m_IsInitialized = true;
 
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -42,14 +41,14 @@ namespace polos
     void WindowSystem::Shutdown()
     {
         glfwTerminate();
-        m_Instance = nullptr;
+        s_Instance = nullptr;
     }
 
     polos::GUID WindowSystem::NewWindow(window_props& new_props)
     {
-        m_Instance->m_WinProps.push_back(std::move(new_props));
-        auto& win_guid  = m_Instance->m_WinGUIDs.emplace_back();
-        auto& win_props = m_Instance->m_WinProps.back();
+        s_Instance->m_WinProps.push_back(std::move(new_props));
+        auto& win_guid  = s_Instance->m_WinGUIDs.emplace_back();
+        auto& win_props = s_Instance->m_WinProps.back();
 
         // Create the GLFW window and attach its callbacks.
         GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
@@ -63,9 +62,9 @@ namespace polos
             nullptr
         );
 
-        m_Instance->m_WinHandles.push_back(glfw_win_ptr);
+        s_Instance->m_WinHandles.push_back(glfw_win_ptr);
 
-        auto* win_handle = static_cast<GLFWwindow*>(m_Instance->m_WinHandles.back());
+        auto* win_handle = static_cast<GLFWwindow*>(s_Instance->m_WinHandles.back());
 
         glfwSetWindowUserPointer(win_handle, &win_props);
         glfwMakeContextCurrent(win_handle);
@@ -92,9 +91,9 @@ namespace polos
 
         // If it's the first window, it's the main window, so create the gfx
         // context with it.
-        if (m_Instance->m_WinProps.size() == 1)
+        if (s_Instance->m_WinProps.size() == 1)
         {
-            m_Instance->m_GfxContext->Initialize(win_handle);
+            s_Instance->m_GfxContext->Initialize(win_handle);
 
             // Also set the renderer's window handle here.
             Renderer::SetMainWindowHandle(win_guid);
@@ -127,71 +126,71 @@ namespace polos
 
     polos::GUID WindowSystem::GetAppWindowGUID()
     {
-        if (m_Instance->m_WinGUIDs.size() < 1)
+        if (s_Instance->m_WinGUIDs.size() < 1)
         {
             LOG_ENGINE_ERROR("There is no main app window! Returning nullopt.");
             return GUID{};
         }
 
-        return m_Instance->m_WinGUIDs.front();
+        return s_Instance->m_WinGUIDs.front();
     }
 
     Optional<window_props> WindowSystem::GetAppWindowProps()
     {
-        if (m_Instance->m_WinGUIDs.size() < 1)
+        if (s_Instance->m_WinGUIDs.size() < 1)
         {
             LOG_ENGINE_ERROR("There is no main app window! Returning nullopt.");
             return std::nullopt;
         }
 
-        return m_Instance->m_WinProps.front();
+        return s_Instance->m_WinProps.front();
     }
 
     void* WindowSystem::GetAppWindowHandle()
     {
-        if (m_Instance->m_WinGUIDs.size() < 1)
+        if (s_Instance->m_WinGUIDs.size() < 1)
         {
             LOG_ENGINE_ERROR("There is no main app window! Returning NULL.");
             return nullptr;
         }
 
-        return m_Instance->m_WinHandles.front();
+        return s_Instance->m_WinHandles.front();
     }
 
     Optional<window_props> WindowSystem::GetWindowProps(polos::GUID window_guid)
     {
         auto i = find_index_with_guid(window_guid);
 
-        if (i == m_Instance->m_WinProps.size())
+        if (i == s_Instance->m_WinProps.size())
         {
             LOG_ENGINE_WARN("A window with the given guid could not be found. Returning nullopt.");
             return std::nullopt;
         };
 
-        return m_Instance->m_WinProps[i];
+        return s_Instance->m_WinProps[i];
     }
 
     void* WindowSystem::GetWindowHandle(polos::GUID window_guid)
     {
         auto i = find_index_with_guid(window_guid);
 
-        if (i == m_Instance->m_WinHandles.size())
+        if (i == s_Instance->m_WinHandles.size())
         {
             LOG_ENGINE_WARN("A window with the given guid could not be found. Returning null.");
             return nullptr;
         };
 
-        return m_Instance->m_WinHandles[i];
+        return s_Instance->m_WinHandles[i];
     }
 
     bool WindowSystem::IsInitialized()
     {
-        return s_IsInitialized;
+        return s_Instance->m_IsInitialized;
     }
 
     void WindowSystem::Update()
     {
-        auto& windows = m_Instance->m_WinHandles;
+        auto& windows = s_Instance->m_WinHandles;
         for (auto const& handle : windows)
         {
             glfwMakeContextCurrent(static_cast<GLFWwindow*>(handle));
@@ -205,7 +204,7 @@ namespace polos
         int i = 0;
         for (; i < m_WinHandles.size(); i++)
         {
-            if (m_WinHandles[i] == e.win_handle)
+            if (m_WinHandles[i] == e.winHandle)
             {
                 break;
             }
@@ -216,12 +215,12 @@ namespace polos
         m_WinProps.erase(m_WinProps.begin() + i);
 
         // Finally, destroy it with glfw function.
-        glfwDestroyWindow(static_cast<GLFWwindow*>(e.win_handle));
+        glfwDestroyWindow(static_cast<GLFWwindow*>(e.winHandle));
     }
 
     std::size_t WindowSystem::find_index_with_guid(polos::GUID window_guid)
     {
-        auto& guid_list = m_Instance->m_WinGUIDs;
+        auto& guid_list = s_Instance->m_WinGUIDs;
 
         std::size_t i = 0;
         for (; i < guid_list.size(); i++)

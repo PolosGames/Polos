@@ -24,7 +24,7 @@ namespace polos
         static pl::Vao& GetRectangleVao();
 
     private:
-        static Renderer* m_Instance;
+        static Renderer* s_Instance;
 
         pl::GUID  m_MainWinHandle;
         pl::Vao   m_RectangleVao;

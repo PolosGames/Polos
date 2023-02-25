@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_WINDOW_H
-#define POLOS_CORE_WINDOW_H
-
 #include "polos/utils/alias.h"
 #include "polos/utils/feature.h"
 #include "polos/utils/guid.h"
@@ -12,15 +9,13 @@ namespace polos
 {
     struct window_props
     {
-        std::string title  = "Polos";
-        int32 width        = 1280;
-        int32 height       = 720;
-        int32 refreshRate = 60;
-        bool vsync         = true;
-        bool fullscreen    = false;
+        std::string title{};
+        int32 width{};
+        int32 height{};
+        int32 refreshRate{60};
+        bool  vsync{};
+        bool  fullscreen{};
     private:
-        char m_holder[2] = {44, 34};
+        uint8 m_holder[2]{44, 34};
     };
 }
-
-#endif /* POLOS_CORE_WINDOW_H */

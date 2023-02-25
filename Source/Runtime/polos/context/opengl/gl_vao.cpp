@@ -1,46 +1,44 @@
 #include <polos/polos_pch.h>
 #ifdef USE_OPENGL
 
-#include <glad/glad.h>
-
 #include "polos/context/vao.h"
+
+#include <glad/glad.h>
 
 namespace polos
 {
-    constexpr auto align = [](int64 const length, int64 const alignment) -> int64
+    static auto Align(int64 const p_Length, int64 const p_Alignment) -> int64
     {
-        const int64  misalignment{length & (alignment - 1)};
-        const int64  padding{(alignment - misalignment) & (alignment - 1)};
-        return length + padding;
-    };
+        int64 const misalignment = p_Length & (p_Alignment - 1);
+        int64 const padding      = (p_Alignment - misalignment) & (p_Alignment - 1);
+        return p_Length + padding;
+    }
 
     Vao::Vao()
         : bound{false}
-    {
+    {}
 
-    }
-
-    Vao::Vao(std::span<vertex const> vertices, std::span<uint32 const> indices)
-        : m_IndCount{ static_cast<int32>(indices.size()) }, bound{true}
+    Vao::Vao(std::span<vertex const> p_Vertices, std::span<uint32 const> p_Indices)
+        : m_IndCount{ static_cast<int32>(p_Indices.size()) }
     {
         int32 alignment { GL_NONE };
         glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &alignment);
     
-        auto const vrt_size = static_cast<int64>(vertices.size_bytes());
-        auto const ind_size = static_cast<int64>(indices.size_bytes());
+        auto const vrt_size = static_cast<int64>(p_Vertices.size_bytes());
+        auto const ind_size = static_cast<int64>(p_Indices.size_bytes());
         
-        int64 const vrt_size_aligned{ align(vrt_size, alignment) };
-        int64 const ind_size_aligned{ align(ind_size, alignment) };
+        int64 const vrt_size_aligned = Align(vrt_size, alignment);
+        int64 const ind_size_aligned = Align(ind_size, alignment);
         
-        int64 const vrt_offset{0};
+        int64 const vrt_offset{};
         int64 const ind_offset{vrt_size_aligned};
         m_IndOffset = ind_offset;
         
         glCreateBuffers(1, &m_BufferId);
         glNamedBufferStorage(m_BufferId, vrt_size_aligned + ind_size_aligned, nullptr, GL_DYNAMIC_STORAGE_BIT);
         
-        glNamedBufferSubData(m_BufferId, vrt_offset, vrt_size_aligned, vertices.data());
-        glNamedBufferSubData(m_BufferId, ind_offset, ind_size_aligned, indices.data());
+        glNamedBufferSubData(m_BufferId, vrt_offset, vrt_size_aligned, p_Vertices.data());
+        glNamedBufferSubData(m_BufferId, ind_offset, ind_size_aligned, p_Indices.data());
     
         glCreateVertexArrays(1, &m_VaoId);
         glVertexArrayVertexBuffer(m_VaoId, 0, m_BufferId, vrt_offset, sizeof(vertex));

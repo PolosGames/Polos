@@ -1,20 +1,20 @@
 #include "polos/polos_pch.h"
+#if defined(USE_OPENGL)
+
+#include "polos/context/texture.h"
 
 #include <glad/glad.h>
 #include <stb_image.h>
-
-#include "polos/context/texture.h"
 
 namespace polos
 {
     int32 Texture::s_IsFlipped = 0;
 
     Texture::Texture()
-    {
-    }
+    {}
 
-    Texture::Texture(uint32 id, int32 w, int32 h, int32 c)
-        : id{id}, width{w}, height{h}, channels{c}
+    Texture::Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels)
+        : id{p_Id}, width{p_Width}, height{p_Height}, channels{p_Channels}
     {}
 
     Texture::~Texture()
@@ -22,9 +22,11 @@ namespace polos
         glDeleteTextures(1, &id);
     }
 
-    std::shared_ptr<Texture> Texture::Load(cstring path)
+    std::shared_ptr<Texture> Texture::Load(std::string_view p_Path)
     {
         if (!Texture::s_IsFlipped) stbi_set_flip_vertically_on_load(1);
+
+        cstring path = p_Path.data();
 
         uint32 handle;
         glCreateTextures(GL_TEXTURE_2D, 1, &handle);
@@ -78,8 +80,6 @@ namespace polos
         return std::make_shared<Texture>(0, 0, 0, 0);
     }
 
-    std::shared_ptr<Texture> Texture::Load(std::string const& path)
-    {
-        return Load(path.c_str());
-    }
 }// namespace polos
+
+#endif // USE_OPENGL
