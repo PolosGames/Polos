@@ -13,19 +13,19 @@ namespace polos
         Scene();
 
         ecs::Entity NewEntity();
-        void   DestroyEntity(ecs::Entity entt);
+        void   DestroyEntity(ecs::Entity p_Entity);
 
         template<ecs::EcsComponent T, typename... Args>
-        T* Assign(ecs::Entity entt, Args&&... args);
+        T* Assign(ecs::Entity p_Entity, Args&&... p_Args);
 
         template<ecs::EcsComponent T>
-        T* Get(ecs::Entity entt);
+        T* Get(ecs::Entity p_Entity);
 
         template<ecs::EcsComponent T>
-        bool HasComponent(ecs::Entity entt);
+        bool HasComponent(ecs::Entity p_Entity);
 
         template<ecs::EcsComponent T>
-        void Remove(ecs::Entity entt);
+        void Remove(ecs::Entity p_Entity);
     private:
         friend class SceneViewIterator;
         friend class Editor;
@@ -37,17 +37,17 @@ namespace polos
     };
 
     template<ecs::EcsComponent T, typename... Args>
-    T* Scene::Assign(ecs::Entity entt, Args&&... args)
+    T* Scene::Assign(ecs::Entity p_Entity, Args&&... p_Args)
     {
         int              comp_id    = ecs::g_ComponentId<T>;
-        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
+        ecs::EntityIndex entity_index = ecs::GetEntityIndex(p_Entity);
 
-        if (m_Entities[entt_index].id != entt)
+        if (m_Entities[entity_index].id != p_Entity)
         {
             return nullptr;
         }
 
-        if (m_Entities[entt_index].mask.test(comp_id))
+        if (m_Entities[entity_index].mask.test(comp_id))
         {
             LOG_ENGINE_WARN("[Scene::Assign] Entity alrady has the requested component, returning null.");
             return nullptr;
@@ -60,30 +60,30 @@ namespace polos
             std::launder(reinterpret_cast<ecs::ComponentPool*>(where))->Create<T>();
         }
         
-        auto* comp_ptr = new (m_CompPools[comp_id].Get(entt_index)) T(std::forward<Args>(args)...);
+        auto* comp_ptr = new (m_CompPools[comp_id].Get(entity_index)) T(std::forward<Args>(p_Args)...);
         
         if constexpr (std::is_same_v<T, ecs::texture2d_component>)
         {
             comp_ptr->texture = Texture::Load(std::string_view{});
         }
 
-        m_Entities[entt_index].mask.set(comp_id);
+        m_Entities[entity_index].mask.set(comp_id);
 
         return comp_ptr;
     }
 
     template<ecs::EcsComponent T>
-    T* Scene::Get(ecs::Entity entt)
+    T* Scene::Get(ecs::Entity p_Entity)
     {
-        if (!ecs::IsEntityValid(entt))
+        if (!ecs::IsEntityValid(p_Entity))
         {
             return nullptr;
         }
 
         int              comp_id    = ecs::g_ComponentId<T>;
-        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
+        ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
-        if (m_Entities[entt_index].id != entt)
+        if (m_Entities[entt_index].id != p_Entity)
         {
             LOG_ENGINE_WARN("[Scene::Get] Provided entity was not found, returning null.");
             return nullptr;
@@ -100,21 +100,21 @@ namespace polos
     }
 
     template<ecs::EcsComponent T>
-    inline bool Scene::HasComponent(ecs::Entity entt)
+    inline bool Scene::HasComponent(ecs::Entity p_Entity)
     {
-        int              comp_id = ecs::g_ComponentId<T>;
-        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
+        int              comp_id    = ecs::g_ComponentId<T>;
+        ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         return m_Entities[entt_index].mask.test(comp_id);
     }
 
     template<ecs::EcsComponent T>
-    inline void Scene::Remove(ecs::Entity entt)
+    inline void Scene::Remove(ecs::Entity p_Entity)
     {
-        int         comp_id = ecs::g_ComponentId<T>;
-        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
+        int              comp_id    = ecs::g_ComponentId<T>;
+        ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
-        if (m_Entities[entt_index].id != entt)
+        if (m_Entities[entt_index].id != p_Entity)
         {
             LOG_ENGINE_WARN("[Scene::Remove] Provided entity was not found, returning null.");
             return;

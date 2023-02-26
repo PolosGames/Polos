@@ -4,8 +4,8 @@
 
 namespace polos
 {
-    SceneViewIterator::SceneViewIterator(base_scene_view const* view, ecs::EntityIndex index)
-        : m_Index{index}, m_View{view}
+    SceneViewIterator::SceneViewIterator(base_scene_view const* p_View, ecs::EntityIndex p_Index)
+        : m_Index{p_Index}, m_View{p_View}
     {
 
     }
@@ -15,21 +15,21 @@ namespace polos
         return(m_View->m_Scene->m_Entities[m_Index].id);
     }
 
-    bool SceneViewIterator::operator==(const SceneViewIterator& other) const
+    bool SceneViewIterator::operator==(const SceneViewIterator& p_Other) const
     {
-        return m_Index == other.m_Index || m_Index == m_View->m_Scene->m_Entities.size();
+        return m_Index == p_Other.m_Index || m_Index == m_View->m_Scene->m_Entities.size();
     }
 
-    bool SceneViewIterator::operator!=(const SceneViewIterator& other) const
+    bool SceneViewIterator::operator!=(const SceneViewIterator& p_Other) const
     {
-        return m_Index != other.m_Index && m_Index != m_View->m_Scene->m_Entities.size();
+        return m_Index != p_Other.m_Index && m_Index != m_View->m_Scene->m_Entities.size();
     }
 
     SceneViewIterator& SceneViewIterator::operator++()
     {
         do
         {
-            m_Index++;
+            ++m_Index;
         } while (m_Index < m_View->m_Scene->m_Entities.size() && !CheckValid());
 
         return *this;

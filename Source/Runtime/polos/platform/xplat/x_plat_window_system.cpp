@@ -222,8 +222,8 @@ namespace polos
     {
         auto& guid_list = s_Instance->m_WinGUIDs;
 
-        std::size_t i = 0;
-        for (; i < guid_list.size(); i++)
+        std::size_t i{};
+        for (; i < guid_list.size(); ++i)
         {
             if (guid_list[i] == p_WindowGuid)
             {

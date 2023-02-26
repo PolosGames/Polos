@@ -15,7 +15,6 @@ namespace polos
     }
 
     Vao::Vao()
-        : bound{false}
     {}
 
     Vao::Vao(std::span<vertex const> p_Vertices, std::span<uint32 const> p_Indices)
@@ -58,6 +57,7 @@ namespace polos
         glVertexArrayAttribBinding(m_VaoId, 1, 0);
         glVertexArrayAttribBinding(m_VaoId, 2, 0);
         glVertexArrayAttribBinding(m_VaoId, 3, 0);
+        m_Bound = true;
     }
 
     Vao& Vao::operator=(Vao& rhs) noexcept
@@ -70,8 +70,8 @@ namespace polos
         m_IndCount = rhs.m_IndCount;
         m_IndOffset = rhs.m_IndOffset;
 
-        rhs.bound = false;
-        bound = true;
+        rhs.m_Bound = false;
+        m_Bound = true;
 
         return *this;
     }
@@ -86,15 +86,15 @@ namespace polos
         m_IndCount = rhs.m_IndCount;
         m_IndOffset = rhs.m_IndOffset;
 
-        rhs.bound = false;
-        bound = true;
+        rhs.m_Bound = false;
+        m_Bound = true;
 
         return *this;
     }
     
     Vao::~Vao()
     {
-        if (bound)
+        if (m_Bound)
         {
             glDeleteVertexArrays(1, &m_VaoId);
             glDeleteBuffers(1, &m_BufferId);

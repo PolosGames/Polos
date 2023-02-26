@@ -30,6 +30,6 @@ namespace polos
         uint32 m_BufferId{};
         int32  m_IndCount{};
         int64  m_IndOffset{};
-        bool bound;
+        bool   m_Bound{};
     };
 }

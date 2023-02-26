@@ -15,7 +15,7 @@ namespace polos
         // Loop to calculate the hash value
         // by iterating over the elements of string
         char c = 0;
-        for (size_t i = 0; p_Str[i] != '\0'; i++)
+        for (size_t i = 0; p_Str[i] != '\0'; ++i)
         {
             c          = p_Str[i];
             hash_val   = (hash_val + static_cast<int64>(c) * power_of_p) % m;

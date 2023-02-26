@@ -8,12 +8,12 @@ namespace polos
     class SceneViewIterator
     {
     public:
-        SceneViewIterator(base_scene_view const* view, ecs::EntityIndex index);
+        SceneViewIterator(base_scene_view const* p_View, ecs::EntityIndex p_Index);
 
         ecs::Entity& operator*() const;
 
-        bool operator==(const SceneViewIterator& other) const;
-        bool operator!=(const SceneViewIterator& other) const;
+        bool operator==(const SceneViewIterator& p_Other) const;
+        bool operator!=(const SceneViewIterator& p_Other) const;
 
         SceneViewIterator& operator++();
         SceneViewIterator  operator++(int);

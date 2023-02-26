@@ -71,7 +71,7 @@ namespace polos::memory
     template<typename T>
     void LinearAllocator::DeleteArr(T* p_Ptr, size_t p_Size)
     {
-        for (size_t i = 0; i < p_Size; i++)
+        for (size_t i = 0; i < p_Size; ++i)
         {
             p_Ptr[i].~T();
         }
