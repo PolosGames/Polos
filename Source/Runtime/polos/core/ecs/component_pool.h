@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_ECS_COMPONENTPOOL_H_
-#define POLOS_CORE_ECS_COMPONENTPOOL_H_
 
 #include "polos/core/ecs/component_memory.h"
 #include "polos/core/ecs/component.h"
@@ -24,6 +22,8 @@ namespace polos::ecs
 
         void* Get(std::size_t index);
         bool IsInitialized();
+    public:
+        int32 componentId{};
     private:
         void* m_Data{};
         std::size_t m_ElemSize{};
@@ -32,8 +32,9 @@ namespace polos::ecs
     template<EcsComponent T>
     void ComponentPool::Create()
     {
-        m_Data = ComponentMemory::Request<T>();
-        m_ElemSize = sizeof(T);
+        m_Data      = ComponentMemory::Request<T>();
+        m_ElemSize  = sizeof(T);
+        componentId = g_ComponentId<T>;
     }
 
     template<EcsComponent T>
@@ -46,5 +47,3 @@ namespace polos::ecs
     }
 
 } // namespace polos::ecs
-
-#endif /* ICOMPONENTPOOL_H_ POLOS_CORE_ECS_ */

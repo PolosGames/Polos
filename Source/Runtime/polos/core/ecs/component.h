@@ -1,20 +1,26 @@
 #pragma once
-#ifndef POLOS_CORE_ECS_COMPONENT_H_
-#define POLOS_CORE_ECS_COMPONENT_H_
-
-#include "polos/core/ecs/components/components.h"
 
 namespace polos::ecs
 {
-    template<typename T>
-    int32 g_ComponentId = -1;
-
-    template<> int32 g_ComponentId<transform_component> = 0;
-    template<> int32 g_ComponentId<texture2d_component> = 1;
-    template<> int32 g_ComponentId<info_component>      = 2;
+    extern int32 s_ComponentCounter;
 
     template<typename T>
-    concept EcsComponent = requires { g_ComponentId<T> != -1; };
+    int32 g_ComponentId = 0;
+
+    template<typename T>
+    int32 GetComponentId()
+    {
+        if (g_ComponentId<T> != 0)
+        {
+            return g_ComponentId<T>;
+        }
+        return s_ComponentCounter++;
+    }
+
+    template<typename T>
+    concept EcsComponent = requires { g_ComponentId<T> != 0; };
 } // namespace polos::ecs
 
-#endif /* POLOS_CORE_ECS_COMPONENT_H_ */
+#define SET_COMPONENT_ID(ComponentType) \
+    template<>                          \
+    polos::int32 polos::ecs::g_ComponentId<ComponentType> = ::polos::ecs::GetComponentId<ComponentType>();

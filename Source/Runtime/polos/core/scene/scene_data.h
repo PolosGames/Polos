@@ -1,5 +1,4 @@
-#ifndef POLOS_CORE_SCENE_SCENEDATA_H_
-#define POLOS_CORE_SCENE_SCENEDATA_H_
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -10,5 +9,3 @@ namespace polos
         glm::vec3 cameraPosition;
     };
 } // namespace polos
-
-#endif /* POLOS_CORE_SCENE_SCENEDATA_H_ */

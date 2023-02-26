@@ -1,5 +1,6 @@
-#ifndef  POLOS_CORE_ECS_COMPONENTS_INFO_COMPONENT_H
-#define  POLOS_CORE_ECS_COMPONENTS_INFO_COMPONENT_H
+#pragma once
+
+#include "polos/core/ecs/component.h"
 
 namespace polos::ecs
 {
@@ -8,6 +9,7 @@ namespace polos::ecs
         char name[128];
         bool isSelectedOnEditor;
     };
+
 } // namespace polos::ecs
 
-#endif// POLOS_CORE_ECS_COMPONENTS_INFO_COMPONENT_H
+SET_COMPONENT_ID(polos::ecs::info_component)

@@ -1,7 +1,4 @@
 #pragma once
-#ifndef POLOS_CORE_ECS_COMPONENTS_COMPONENTTRANSFORM_H_
-#define POLOS_CORE_ECS_COMPONENTS_COMPONENTTRANSFORM_H_
-
 
 namespace polos::ecs
 {
@@ -13,4 +10,4 @@ namespace polos::ecs
     };
 } // namespace polos::ecs
 
-#endif /* POLOS_CORE_ECS_COMPONENTS_COMPONENTTRANSFORM_H_ */
+SET_COMPONENT_ID(polos::ecs::transform_component)

@@ -66,6 +66,7 @@ namespace polos
         auto* shader_lib = engine_memory.New<ShaderLib>();
         auto* update_queue  = engine_memory.New<UpdateQueue>();
 
+        UpdateQueue::s_Instance     = update_queue;
         // Startup for systems
         log             ->Startup();
         event_bus       ->Startup();
@@ -75,7 +76,6 @@ namespace polos
         component_memory->Startup();
 
         ShaderLib::s_Instance       = shader_lib;
-        UpdateQueue::s_Instance     = update_queue;
 
         // This ensures that all events are fired (instantiated) once,
         // so that every one of their id's get created.

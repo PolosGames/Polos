@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ENTITY_H_
-#define ENTITY_H_
 
 #define INVALID_ENTITY ::polos::ecs::CreateEntity(static_cast<::polos::ecs::EntityIndex>(-1), 0)
 
@@ -38,7 +36,4 @@ namespace polos::ecs
         // Check if the index is our invalid index
         return (id >> 32) != EntityIndex(-1);
     }
-} // namespace polos
-
-
-#endif /* ENTITY_H_ */
+} // namespace polos::ecs

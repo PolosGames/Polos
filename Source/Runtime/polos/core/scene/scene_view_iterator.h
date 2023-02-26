@@ -1,6 +1,4 @@
 #pragma once
-#ifndef SCENEVIEWITERATOR_H_
-#define SCENEVIEWITERATOR_H_
 
 #include "polos/core/scene/base_scene_view.h"
 #include "polos/core/ecs/entity.h"
@@ -26,5 +24,3 @@ namespace polos
         base_scene_view const* m_View;
     };
 } // namespace polos
-
-#endif /* SCENEVIEWITERATOR_H_ */

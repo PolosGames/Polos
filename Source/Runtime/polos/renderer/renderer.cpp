@@ -41,8 +41,8 @@ namespace polos
 
     void Renderer::SetMainWindowHandle(pl::GUID handle)
     {
-        auto& win_handle = m_Instance->m_MainWinHandle;
-        auto& proj_matrix = m_Instance->m_ProjectionMatrix;
+        auto& win_handle = s_Instance->m_MainWinHandle;
+        auto& proj_matrix = s_Instance->m_ProjectionMatrix;
 
         win_handle = handle;
 
@@ -58,17 +58,17 @@ namespace polos
             100.0f
         );
 
-        m_Instance->m_RectangleVao = Vao{vertices, indices};
+        s_Instance->m_RectangleVao = Vao{vertices, indices};
     }
 
     glm::mat4 const& Renderer::GetProjectionMatrix()
     {
-        return m_Instance->m_ProjectionMatrix;
+        return s_Instance->m_ProjectionMatrix;
     }
 
     pl::Vao& Renderer::GetRectangleVao()
     {
-        return m_Instance->m_RectangleVao;
+        return s_Instance->m_RectangleVao;
     }
 
     void RenderRectangle(

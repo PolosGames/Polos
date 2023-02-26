@@ -34,13 +34,13 @@ namespace polos
             position -= front * velocity;
         if (p_Direction == k_Left)
             position -= right * velocity;
-        else if (p_Direction == k_Right)
+        if (p_Direction == k_Right)
             position += right * velocity;
-        else if (direction == kRight)
+        else if (p_Direction == k_Right)
             position -= right * velocity;
-        if (direction == k_Up)
+        if (p_Direction == k_Up)
             position -= up * velocity;
-        else if (direction == k_Down)
+        else if (p_Direction == k_Down)
             position += up * velocity;
     }
     

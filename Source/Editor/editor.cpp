@@ -18,6 +18,8 @@
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/scene/scene_view.h"
 
+#include <polos.h>
+
 namespace polos
 {
     Editor::Editor()
@@ -90,24 +92,24 @@ namespace polos
     {
         static_cast<void>(p_DeltaTime);
 
-        CameraMovement l_camera_move = kNone;
+        CameraMovement l_camera_move = k_None;
 
         if ((m_Key & (1)) != 0)
         {
-            l_camera_move = kUp;
+            l_camera_move = k_Up;
         }
         else if ((m_Key & (2)) != 0)
         {
-            l_camera_move = kDown;
+            l_camera_move = k_Down;
         }
         m_EditorCamera.ProcessKeyboard(l_camera_move, p_DeltaTime);
         if ((m_Key & (4)) != 0)
         {
-            l_camera_move = kLeft;
+            l_camera_move = k_Left;
         }
         else if ((m_Key & (8)) != 0)
         {
-            l_camera_move = kRight;
+            l_camera_move = k_Right;
         }
         m_EditorCamera.ProcessKeyboard(l_camera_move, p_DeltaTime);
 

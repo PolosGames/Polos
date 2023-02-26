@@ -1,11 +1,9 @@
 #pragma once
 
-#ifndef SCENE_H_
-#define SCENE_H_
-
 #include "polos/core/ecs/component_pool.h"
 #include "polos/core/ecs/entity.h"
 #include "polos/core/ecs/component.h"
+#include "polos/core/ecs/components/components.h"
 
 namespace polos
 {
@@ -66,7 +64,7 @@ namespace polos
         
         if constexpr (std::is_same_v<T, ecs::texture2d_component>)
         {
-            comp_ptr->texture = Texture::Load();
+            comp_ptr->texture = Texture::Load(std::string_view{});
         }
 
         m_Entities[entt_index].mask.set(comp_id);
@@ -125,4 +123,3 @@ namespace polos
         m_Entities[entt_index].mask.reset(comp_id);
     }
 } // namespace polos
-#endif /* SCENE_H_ */

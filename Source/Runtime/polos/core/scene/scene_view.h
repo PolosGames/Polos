@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SCENEVIEW_H_
-#define SCENEVIEW_H_
-
 #include "polos/core/scene/scene.h"
 #include "polos/core/ecs/entity.h"
 #include "polos/core/scene/base_scene_view.h"
@@ -20,7 +17,6 @@ namespace polos
         SceneView(Scene& scene);
 
         PL_NODISCARD auto begin() const noexcept -> iterator;
-
         PL_NODISCARD auto end() const noexcept -> iterator;
     };
 
@@ -53,5 +49,3 @@ namespace polos
         return iterator{reinterpret_cast<base_scene_view const*>(this), static_cast<ecs::EntityIndex>(MAX_ENTITY_COUNT_IN_SCENE)};
     }
 } // namespace polos
-
-#endif /* SCENEVIEW_H_ */

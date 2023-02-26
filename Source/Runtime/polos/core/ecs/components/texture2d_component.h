@@ -1,8 +1,7 @@
 #pragma once
-#ifndef POLOS_CORE_ECS_COMPONENTS_COMPONENTTEXTURE2D_H_
-#define POLOS_CORE_ECS_COMPONENTS_COMPONENTTEXTURE2D_H_
 
 #include "polos/context/texture.h"
+#include "polos/core/ecs/component.h"
 
 namespace polos::ecs
 {
@@ -11,6 +10,7 @@ namespace polos::ecs
         TextureRef texture;
         glm::vec2 uvCoordinates{};
     };
+
 } // namespace polos::ecs
 
-#endif /* POLOS_CORE_ECS_COMPONENTS_COMPONENTTEXTURE2D_H_ */
+SET_COMPONENT_ID(polos::ecs::texture2d_component)

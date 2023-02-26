@@ -43,6 +43,7 @@ set(Runtime_HEADERS
     "polos/context/texture.h"
     "polos/context/vao.h"
     "polos/context/vertex.h"
+    "polos/core/ecs/components/camera_component.h"
     "polos/core/ecs/components/transform_component.h"
     "polos/core/ecs/components/texture2d_component.h"
     "polos/core/ecs/components/info_component.h"

@@ -10,6 +10,7 @@
 #include "polos/events/input/key_release.h"
 #include "polos/context/framebuffer.h"
 #include "polos/core/scene/scene.h"
+#include "imgui/imgui_include.h"
 
 namespace polos
 {   
