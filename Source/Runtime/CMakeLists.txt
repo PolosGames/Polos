@@ -128,7 +128,7 @@ set(Runtime_SOURCES
     "polos/utils/type_util.cpp"
     "polos/utils/stringid.cpp"
     "polos/utils/guid.cpp"
-)
+ "polos/core/ecs/component.cpp")
 
 add_library(Runtime STATIC)
 
