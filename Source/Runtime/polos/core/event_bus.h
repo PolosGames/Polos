@@ -12,7 +12,6 @@ namespace polos
 
     class EventBus
     {
-        using EventSubscriber = Delegate<void(BaseEvent&)>;
     public:
         EventBus() noexcept = default;
 
@@ -31,7 +30,7 @@ namespace polos
     private:
         static EventBus* s_Instance;
 
-        HashMap<StringId, DArray<EventSubscriber>> m_Callbacks;
+        HashMap<StringId, DArray<Delegate<void(BaseEvent&)>>> m_Callbacks;
     };
 
     template<EngineEvent EventType, typename... Args>
@@ -53,10 +52,9 @@ namespace polos
     inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> p_Callback)
     {
         auto& callbacks  = s_Instance->m_Callbacks;
-        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber const*>(&p_Callback));
 
         StringId id = g_UniqueEventId<EventType>;
-        callbacks.try_emplace(id).first->second.push_back(std::move(subscriber));
+        callbacks.try_emplace(id).first->second.push_back(std::move(*std::launder(reinterpret_cast<Delegate<void(BaseEvent&)>*>(&p_Callback))));
     }
 
     template<EngineEvent EventType>
@@ -65,13 +63,16 @@ namespace polos
         StringId id      = g_UniqueEventId<EventType>;
         auto& callbacks  = s_Instance->m_Callbacks;
         auto& event_list = callbacks.at(id);
-        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber*>(&p_Callback));
+
+        // Check for the same delegate in the subscribers, then delete it
         event_list.erase(
             std::remove(
                 event_list.begin(),
                 event_list.end(),
-                subscriber),
-            event_list.end());
+                *std::launder(reinterpret_cast<Delegate<void(BaseEvent&)>*>(&p_Callback))
+            ),
+            event_list.end()
+        );
     }
 } // namespace polos
 

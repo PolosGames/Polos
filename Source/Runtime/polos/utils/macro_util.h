@@ -38,6 +38,6 @@
 
 #define PL_NO_MOVE(Type)                            \
     Type(Type&&)                 noexcept = delete; \
-    Type& operator=(Type&&)      noexcept = delete; \
+    Type& operator=(Type&&)      noexcept = delete;
 
 #define PL_VOID_CAST(Variable) static_cast<void>(Variable)
