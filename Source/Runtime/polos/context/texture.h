@@ -17,6 +17,7 @@ namespace polos
         int32  width{};
         int32  height{};
         int32  channels{};
+        std::string_view textureName;
     };
 
     using TextureRef = std::shared_ptr<Texture>;

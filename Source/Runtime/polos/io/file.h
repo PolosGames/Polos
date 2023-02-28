@@ -19,7 +19,7 @@ namespace polos
         std::string  ReadStr();
         DArray<byte> ReadByte();
         std::string  ReadLine();
-        void         ReadLine(std::string& p_Line);
+        bool         ReadLineIntoString(std::string& p_Line);
     public:
         std::string fileName;
         std::string fileExtension;

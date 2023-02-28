@@ -26,6 +26,8 @@ namespace polos
 
         template<ecs::EcsComponent T>
         void Remove(ecs::Entity p_Entity);
+
+        std::vector<byte> Serialize();
     private:
         friend class SceneViewIterator;
         friend class Editor;

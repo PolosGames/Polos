@@ -50,21 +50,22 @@ namespace polos
         return line;
     }
 
-    void File::ReadLine(std::string& p_Line)
+    bool File::ReadLineIntoString(std::string& p_Line)
     {
         if (!(m_Mode & FileMode::k_Read))
         {
             LOG_ENGINE_ERROR("Could not read line because the file is not in read mode.");
-            return;
+            return false;
         }
 
         if (m_FileStream.eof())
         {
             LOG_ENGINE_WARN("Could not read line because the file hit EOF.");
-            return;
+            return false;
         }
 
         std::getline(m_FileStream, p_Line);
+        return true;
     }
     
     std::string File::ReadStr()

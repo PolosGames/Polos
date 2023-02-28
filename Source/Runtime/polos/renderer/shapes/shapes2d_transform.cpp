@@ -8,10 +8,13 @@ namespace polos
 {
     namespace shapes
     {
-        static glm::vec3 g_ScaleDimension = {0.0f, 0.0f, 1.0f};
-        static constexpr glm::vec3 g_RotationAxisX = {1.0f, 0.0f, 0.0f};
-        static constexpr glm::vec3 g_RotationAxisY = {0.0f, 1.0f, 0.0f};
-        static constexpr glm::vec3 g_RotationAxisZ = {0.0f, 0.0f, 1.0f};
+        namespace
+        {
+            glm::vec3 g_ScaleDimension          = {0.0f, 0.0f, 1.0f};
+            constexpr glm::vec3 g_RotationAxisX = {1.0f, 0.0f, 0.0f};
+            constexpr glm::vec3 g_RotationAxisY = {0.0f, 1.0f, 0.0f};
+            constexpr glm::vec3 g_RotationAxisZ = {0.0f, 0.0f, 1.0f};
+        }        
 
         glm::vec4 MoveShape2DToPosition(glm::mat4& model_matrix, glm::vec3 const& position)
         {
@@ -44,20 +47,22 @@ namespace polos
             model_matrix = glm::rotate(model_matrix, glm::radians(z_rotation_in_degrees), g_RotationAxisZ);
         }
 
-        void ScaleShape2D(glm::mat4& model_matrix, glm::vec2 dimensions)
+        glm::mat4 ScaleShape2D(glm::mat4& model_matrix, glm::vec2 dimensions)
         {
             g_ScaleDimension.x = dimensions.x;
             g_ScaleDimension.y = dimensions.y;
             glm::mat4 scale_matrix = glm::mat4(1.0f);
             scale_matrix = glm::scale(scale_matrix, g_ScaleDimension);
-            model_matrix = model_matrix * scale_matrix;
+            return model_matrix * scale_matrix;
         }
 
-        void ScaleShape2D(glm::mat4& model_matrix, float x_scale_amount, float y_scale_amount)
+        glm::mat4 ScaleShape2D(glm::mat4& model_matrix, float x_scale_amount, float y_scale_amount)
         {
-            g_ScaleDimension.x = x_scale_amount;
-            g_ScaleDimension.y = y_scale_amount;
-            model_matrix = glm::scale(model_matrix, g_ScaleDimension);
+            g_ScaleDimension.x     = x_scale_amount;
+            g_ScaleDimension.y     = y_scale_amount;
+            glm::mat4 scale_matrix = glm::mat4(1.0f);
+            scale_matrix           = glm::scale(scale_matrix, g_ScaleDimension);
+            return model_matrix * scale_matrix;
         }
     }
 } // namespace polos

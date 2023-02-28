@@ -70,7 +70,10 @@ namespace polos
 
             stbi_image_free(pixel_data);
 
-            return std::make_shared<Texture>(handle, i_width, i_height, i_channels);
+            auto texture         = std::make_shared<Texture>(handle, i_width, i_height, i_channels);
+            texture->textureName = p_Path;
+
+            return texture;
         }
 
         LOG_ENGINE_ERROR("[Texture::Load] Failed to create a texture from the provided path");

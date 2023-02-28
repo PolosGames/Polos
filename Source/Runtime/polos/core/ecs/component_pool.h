@@ -22,6 +22,8 @@ namespace polos::ecs
 
         void* Get(std::size_t index);
         bool IsInitialized();
+
+        std::vector<byte> Serialize();
     public:
         int32 componentId{};
     private:

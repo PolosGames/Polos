@@ -54,7 +54,7 @@ set(Runtime_HEADERS
     "polos/core/scene/base_scene_view.h"
     "polos/core/scene/scene.h"
     "polos/core/scene/scene_data.h"
-    "polos/core/scene/scene_exporter.h"
+    "polos/core/scene/scene_export.h"
     "polos/core/scene/scene_loader.h"
     "polos/core/scene/scene_view.h"
     "polos/core/scene/scene_view_iterator.h"
@@ -128,7 +128,7 @@ set(Runtime_SOURCES
     "polos/utils/type_util.cpp"
     "polos/utils/stringid.cpp"
     "polos/utils/guid.cpp"
- "polos/core/ecs/component.cpp")
+ "polos/core/ecs/component.cpp" "polos/core/scene/scene_loader.cpp")
 
 add_library(Runtime STATIC)
 

@@ -19,8 +19,8 @@ namespace polos
             float z_rotation_in_degrees
         );
         
-        void ScaleShape2D(glm::mat4& model_matrix, glm::vec2 dimensions);
-        void ScaleShape2D(glm::mat4& model_matrix, float x_scale_amount, float y_scale_amount);
+        PL_NODISCARD glm::mat4 ScaleShape2D(glm::mat4& model_matrix, glm::vec2 dimensions);
+        PL_NODISCARD glm::mat4 ScaleShape2D(glm::mat4& model_matrix, float x_scale_amount, float y_scale_amount);
     } // namespace shapes
 } // namespace polos
 

@@ -23,14 +23,15 @@
 namespace polos
 {
     Editor::Editor()
-        : m_EditorCamera{{0.0f, 0.0f, 5.0f}, {0.0f, 1.0f, 0.0f}},
-        m_GuiFontScale{1.8f},
-        m_Key{0},
-        m_Model{glm::mat4{1.0f}},
-        m_EditorFramebufferAspectRatioBefore{0.0f},
-        m_EditorFramebufferDimensions{ImVec2{0.0f, 0.0f}},
-        m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}},
-        m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
+        : m_EditorCamera{{0.0f, 0.0f, 5.0f}, {0.0f, 1.0f, 0.0f}}
+        , m_GuiFontScale{1.8f}
+        , m_Key{0}
+        , m_Model{glm::mat4(1.0f)}
+        , m_ScaledModel{glm::mat4(1.0f)}
+        , m_EditorFramebufferAspectRatioBefore{0.0f}
+        , m_EditorFramebufferDimensions{ImVec2{0.0f, 0.0f}}
+        , m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}}
+        , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
     {
         UPDATE_Q_MEM_ADD_LAST(Update);
         
@@ -75,7 +76,7 @@ namespace polos
 
         // move to initial position
         shapes::MoveShape2DToPosition(m_Model, moveTo);
-        shapes::ScaleShape2D(m_Model, m_TextureEntityTransformComponent->scale.x, m_TextureEntityTransformComponent->scale.y);
+        m_ScaledModel = shapes::ScaleShape2D(m_Model, m_TextureEntityTransformComponent->scale.x, m_TextureEntityTransformComponent->scale.y);
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
         SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
@@ -92,31 +93,31 @@ namespace polos
     {
         static_cast<void>(p_DeltaTime);
 
-        CameraMovement l_camera_move = k_None;
+        CameraMovement camera_move = k_None;
 
         if ((m_Key & (1)) != 0)
         {
-            l_camera_move = k_Up;
+            camera_move = k_Up;
         }
         else if ((m_Key & (2)) != 0)
         {
-            l_camera_move = k_Down;
+            camera_move = k_Down;
         }
-        m_EditorCamera.ProcessKeyboard(l_camera_move, p_DeltaTime);
+        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
         if ((m_Key & (4)) != 0)
         {
-            l_camera_move = k_Left;
+            camera_move = k_Left;
         }
         else if ((m_Key & (8)) != 0)
         {
-            l_camera_move = k_Right;
+            camera_move = k_Right;
         }
-        m_EditorCamera.ProcessKeyboard(l_camera_move, p_DeltaTime);
+        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
 
         m_EditorFramebuffer.Clear();
 
         m_EditorFramebuffer.Bind();
-        RenderTexture2D(m_Model, m_Texture, *m_ShaderTexture);
+        RenderTexture2D(m_ScaledModel, m_Texture, *m_ShaderTexture);
         //RenderRectangle(m_Model, *m_ShaderBasicColor);
         m_EditorFramebuffer.Unbind();
 
@@ -140,6 +141,10 @@ namespace polos
                 ImGui::MenuItem("Open");
                 ImGui::MenuItem("Import...");
                 ImGui::MenuItem("Export...");
+                /*if (ImGui::MenuItem("Show entity size"))
+                {
+                    auto v = m_Scene.Serialize();
+                }*/
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("View"))
@@ -320,28 +325,11 @@ namespace polos
 
             bool l_PositionChange = false;
             l_PositionChange |= ImGui::DragFloat3("Position", glm::value_ptr(l_TransformComponent->position), 0.01f);
-            glm::vec3 l_OldScale = l_TransformComponent->scale;
             l_PositionChange |= ImGui::DragFloat3("Scale", glm::value_ptr(l_TransformComponent->scale), 0.01f);
-            glm::vec3 l_ScaleVector = glm::vec3(0.0f);
-            if(l_OldScale.x == 0.0f && l_OldScale.y != 0.0f)
-            {
-                l_ScaleVector.x = l_TransformComponent->scale.x;
-                l_ScaleVector.y = l_TransformComponent->scale.y / l_OldScale.y;
-            }
-            else if(l_OldScale.x != 0.0f && l_OldScale.y == 0.0f)
-            {
-                l_ScaleVector.x = l_TransformComponent->scale.x / l_OldScale.x;
-                l_ScaleVector.y = l_TransformComponent->scale.y;
-            }
-            else if(l_OldScale.x == 0.0f && l_OldScale.y == 0.0f)
-            {
-                l_ScaleVector = l_TransformComponent->scale;
-            }
-            l_ScaleVector = l_TransformComponent->scale / l_OldScale;
             if (l_PositionChange)
             {
                 l_TransformComponent->position = shapes::MoveShape2DToPosition(m_Model, l_TransformComponent->position);
-                shapes::ScaleShape2D(m_Model, l_ScaleVector);
+                m_ScaledModel                  = shapes::ScaleShape2D(m_Model, l_TransformComponent->scale);
             }
         }
     }

@@ -37,6 +37,7 @@ namespace polos
         TextureRef m_Texture;
         
         glm::mat4 m_Model;
+        glm::mat4 m_ScaledModel;
 
         int32 m_Key;
 

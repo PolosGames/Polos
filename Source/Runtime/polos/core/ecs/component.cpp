@@ -1,3 +1,5 @@
+#include "polos/polos_pch.h"
+
 #include "component.h"
 
 namespace polos::ecs

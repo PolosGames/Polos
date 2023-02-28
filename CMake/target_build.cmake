@@ -2,6 +2,28 @@ cmake_minimum_required(VERSION 3.24)
 
 function(build_options target warnings)
 
+    if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(
+            ${target}
+                PRIVATE
+                    $<$<CONFIG:Debug>:/Od>
+                    $<$<CONFIG:RelWithDebInfo>:/Ot>
+                    $<$<CONFIG:Release>:/O2>
+                    $<$<CONFIG:MinSizeRel>:/O1>
+        )
+    elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
+            CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+            CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+        target_compile_options(
+            ${target}
+                PRIVATE
+                    $<$<CONFIG:Debug>:-Og>
+                    $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+                    $<$<CONFIG:Release>:-O2>
+                    $<$<CONFIG:MinSizeRel>:-O3>
+        )
+    endif()
+
     string(REGEX REPLACE "/DNDEBUG " "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /DDEBUG" )
     string(REGEX REPLACE "/DNDEBUG " "" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /DDEBUG" )
 
