@@ -20,8 +20,6 @@ namespace polos
 
     template<typename Fn> class Delegate {};
 
-    static void hello();
-
     template<typename Return, typename... Args>
     class Delegate<Return(Args...)>
     {
@@ -42,7 +40,7 @@ namespace polos
     public:
         Delegate() = default;
 
-        Delegate(Delegate const&) = delete;
+        Delegate(Delegate const&)            = delete;
         Delegate& operator=(Delegate const&) = delete;
         
         Delegate(Delegate&& other)
@@ -66,7 +64,6 @@ namespace polos
 
             return *this;
         }
-
 
         Delegate(std::nullptr_t) noexcept : Delegate() {}
 
