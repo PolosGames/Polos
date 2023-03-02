@@ -53,10 +53,10 @@ namespace polos
     inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> p_Callback)
     {
         auto& callbacks  = s_Instance->m_Callbacks;
-        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber const*>(&p_Callback));
+        auto delegate   = std::launder(reinterpret_cast<EventSubscriber*>(&p_Callback));
 
         StringId id = g_UniqueEventId<EventType>;
-        callbacks.try_emplace(id).first->second.push_back(std::move(subscriber));
+        callbacks.try_emplace(id).first->second.push_back(std::move(*delegate));
     }
 
     template<EngineEvent EventType>
@@ -65,13 +65,15 @@ namespace polos
         StringId id      = g_UniqueEventId<EventType>;
         auto& callbacks  = s_Instance->m_Callbacks;
         auto& event_list = callbacks.at(id);
-        auto& subscriber = *std::launder(reinterpret_cast<EventSubscriber*>(&p_Callback));
+        auto delegate    = std::launder(reinterpret_cast<EventSubscriber*>(&p_Callback));
         event_list.erase(
             std::remove(
                 event_list.begin(),
                 event_list.end(),
-                subscriber),
-            event_list.end());
+                *delegate
+            ),
+            event_list.end()
+        );
     }
 } // namespace polos
 
