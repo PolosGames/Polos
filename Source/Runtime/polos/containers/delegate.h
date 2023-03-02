@@ -12,24 +12,20 @@
 
 namespace polos
 {
-    template<typename Fn> class Delegate {};
+    template<typename T, typename... Args>
+    concept Functor = requires {
+        std::invocable<Args&&...>;
+        std::is_class_v<T>;
+    };
 
-    /*namespace detail
-    {
-        template<typename R, typename T, typename... Args>
-        concept Lambda = requires {
-            std::is_invocable_v<R, T, Args...>;
-            !std::is_same_v<T, Delegate<R(Args...)>>;
-        };
-    }*/
+    template<typename Fn> class Delegate {};
 
     template<typename Return, typename... Args>
     class Delegate<Return(Args...)>
     {
     private:
-        
         using ReturnType = Return;
-        using StubType = ReturnType(*)(void*, Args&&...);
+        using StubType = ReturnType(*)(void* const, Args&&...);
         
         using FreeFuncPtr = ReturnType(* const)(Args...);
 
@@ -38,11 +34,57 @@ namespace polos
 
         template<typename T>
         using ConstMethodPtr = ReturnType(T::* const)(Args...) const;
-
-    public: // constructors
         
-        PL_RULE_OF_FIVE(Delegate)
+        using FunctorDeleter  = void(*)(void* const);
 
+    public:
+        Delegate() = default;
+
+        Delegate(Delegate const&)            = delete;
+        Delegate& operator=(Delegate const&) = delete;
+        
+        Delegate(Delegate&& other)
+        {
+            m_ObjectPointer  = std::exchange(other.m_ObjectPointer, nullptr);
+            m_StubPointer    = std::exchange(other.m_StubPointer, nullptr); // Not a problem since they are static
+            m_FunctorDeleter = std::exchange(other.m_FunctorDeleter, nullptr);
+            m_FunctorSize    = std::exchange(other.m_FunctorSize, 0);
+            m_IsMoved        = std::exchange(other.m_IsMoved, true);
+        }
+
+        Delegate& operator=(Delegate&& rhs)
+        {
+            if (&rhs == this) return *this;
+
+            m_ObjectPointer  = std::exchange(rhs.m_ObjectPointer, nullptr);
+            m_StubPointer    = std::exchange(rhs.m_StubPointer, nullptr);// Not a problem since they are static
+            m_FunctorDeleter = std::exchange(rhs.m_FunctorDeleter, nullptr);
+            m_FunctorSize    = std::exchange(rhs.m_FunctorSize, 0);
+            m_IsMoved        = std::exchange(rhs.m_IsMoved, true);
+
+            return *this;
+        }
+
+        Delegate(std::nullptr_t) noexcept : Delegate() {}
+
+        template<Functor<Args...> F>
+        Delegate(F&& functor)
+            : m_FunctorSize{sizeof(decltype(functor))}
+        {
+            m_ObjectPointer = std::malloc(m_FunctorSize);
+            new (m_ObjectPointer) F(std::move(functor));
+            m_FunctorDeleter = &functor_deleter<F>;
+            m_StubPointer    = &functor_stub<F>;
+        }
+
+        ~Delegate()
+        {
+            if (m_FunctorDeleter != nullptr && !m_IsMoved)
+            {
+                m_FunctorDeleter(m_ObjectPointer);
+                std::free(m_ObjectPointer);
+            }
+        }
     public: 
         // Factory methods
         
@@ -53,98 +95,102 @@ namespace polos
         }
         
         template<class ObjType, MethodPtr<ObjType> method_ptr>
-        static Delegate From(ObjType* const obj_ptr) noexcept
+        static Delegate From(ObjType* const p_ObjPtr) noexcept
         {
-            return { obj_ptr, method_stub<ObjType, method_ptr> };
+            return { p_ObjPtr, method_stub<ObjType, method_ptr> };
         }
         
         template <typename ObjType, MethodPtr<ObjType> method_ptr>
-        static Delegate From(ObjType& object) noexcept
+        static Delegate From(ObjType& p_Object) noexcept
         {
-            return { &object, method_stub<ObjType, method_ptr> };
+            return { &p_Object, method_stub<ObjType, method_ptr> };
         }
 
         template<class ObjType, ConstMethodPtr<ObjType> method_ptr>
-        static Delegate From(ObjType const* const obj_ptr) noexcept
+        static Delegate From(ObjType const* const p_ObjPtr) noexcept
         {
-            return {const_cast<ObjType*>(&obj_ptr), const_method_stub<ObjType, method_ptr> };
+            return {const_cast<ObjType*>(&p_ObjPtr), const_method_stub<ObjType, method_ptr> };
         }
 
         template <typename ObjType, ConstMethodPtr<ObjType> method_ptr>
-        static Delegate From(ObjType const& object) noexcept
+        static Delegate From(ObjType const& p_Object) noexcept
         {
-            return { const_cast<ObjType*>(&object), const_method_stub<ObjType, method_ptr> };
+            return { const_cast<ObjType*>(&p_Object), const_method_stub<ObjType, method_ptr> };
         }
 
-        static Delegate From(ReturnType(* const f_ptr)(Args...))
+        static Delegate From(Functor<Args...> auto&& f)
         {
-            return f_ptr;
+            using functor_type = typename std::decay_t<decltype(f)>;
+            return Delegate(std::forward<functor_type>(f));
         }
 
-    public: // operators
-
-        bool operator==(Delegate const& other) const noexcept
+        bool operator==(Delegate const& p_Other) const noexcept
         {
-            return (m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer == other.m_StubPointer);
+            return (m_ObjectPointer == p_Other.m_ObjectPointer) && (m_StubPointer == p_Other.m_StubPointer);
         }
 
-        bool operator!=(Delegate const& other) const noexcept
+        bool operator!=(Delegate const& p_Other) const noexcept
         {
-            return *this != other;
+            return *this != p_Other;
         }
 
-        bool operator<(Delegate const& other) const noexcept
+        bool operator<(Delegate const& p_Other) const noexcept
         {
-            return (m_ObjectPointer < other.m_ObjectPointer)
-                || ((m_ObjectPointer == other.m_ObjectPointer) && (m_StubPointer < other.m_StubPointer));
+            return (m_ObjectPointer < p_Other.m_ObjectPointer)
+                || ((m_ObjectPointer == p_Other.m_ObjectPointer) && (m_StubPointer < p_Other.m_StubPointer));
         }
 
-        bool operator==(std::nullptr_t const) const noexcept
-        {
-            return !m_StubPointer;
-        }
-
-        bool operator!=(std::nullptr_t const) const noexcept
-        {
-            return m_StubPointer;
-        }
-
-        auto operator()(Args&&... args) const noexcept
+        decltype(auto) operator()(Args&&... p_Args) const noexcept
         {
             if constexpr (std::is_same_v<ReturnType, void>)
             {
-                if (m_StubPointer) m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
+                if (m_StubPointer) m_StubPointer(m_ObjectPointer, std::forward<Args>(p_Args)...);
             }
             else
             {
-                return m_StubPointer(m_ObjectPointer, std::forward<Args>(args)...);
+                return m_StubPointer(m_ObjectPointer, std::forward<Args>(p_Args)...);
             }
         }
     private:
+        Delegate(void* const p_ObjectPtr, StubType const p_StubPtr) noexcept
+            : m_ObjectPointer(p_ObjectPtr), m_StubPointer(p_StubPtr)
+        {}
+
         template <FreeFuncPtr ffunc_ptr>
-        static ReturnType function_stub(void* const, Args&&... args)
+        static ReturnType function_stub(void* const, Args&&... p_Args)
         {
-            return ffunc_ptr(std::forward<Args>(args)...);
+            return ffunc_ptr(std::forward<Args>(p_Args)...);
         }
 
         template <typename ObjType, MethodPtr<ObjType> method_ptr>
-        static ReturnType method_stub(void* const object_ptr, Args&&... args)
+        static ReturnType method_stub(void* const p_ObjectPtr, Args&&... p_Args)
         {
-            return (static_cast<ObjType*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
+            return (static_cast<ObjType*>(p_ObjectPtr)->*method_ptr)(std::forward<Args>(p_Args)...);
         }
 
         template <typename ObjType, ConstMethodPtr<ObjType> method_ptr>
-        static ReturnType const_method_stub(void* const object_ptr, Args&&... args)
+        static ReturnType const_method_stub(void* const p_ObjectPtr, Args&&... p_Args)
         {
-            return (reinterpret_cast<ObjType const*>(object_ptr)->*method_ptr)(std::forward<Args>(args)...);
+            return (reinterpret_cast<ObjType const*>(p_ObjectPtr)->*method_ptr)(std::forward<Args>(p_Args)...);
+        }
+
+        template<typename T>
+        static ReturnType functor_stub(void* const p_FunctorPtr, Args&&... p_Args)
+        {
+            return static_cast<T*>(p_FunctorPtr)->operator()(std::forward<Args>(p_Args)...);
+        }
+
+        template<typename T>
+        static void functor_deleter(void* const p)
+        {
+            static_cast<T*>(p)->~T();
         }
 
     private:
-        Delegate(void* const object_pointer, StubType const stub_ptr) noexcept
-            : m_ObjectPointer(object_pointer), m_StubPointer(stub_ptr)
-        {}
-    private:
-        void*    m_ObjectPointer;
-        StubType m_StubPointer;
+        void*          m_ObjectPointer{};
+        StubType       m_StubPointer{};
+        FunctorDeleter m_FunctorDeleter{};
+        std::size_t    m_FunctorSize{};
+        bool           m_IsMoved{};
     };
 }
