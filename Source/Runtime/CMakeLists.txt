@@ -43,7 +43,6 @@ set(Runtime_SOURCES
     polos/core/log.cpp
     polos/core/camera.cpp
     polos/core/update_queue.cpp
-    
     polos/core/window_system.cpp
     polos/engine/engine.cpp
     polos/gui/imgui/imgui_impl_glfw.cpp
@@ -64,7 +63,6 @@ set(Runtime_SOURCES
     polos/context/opengl/gl_shader.cpp
     polos/context/opengl/gl_texture.cpp
     polos/platform/xplat/x_plat_window_system.cpp
-    polos/platform/xplat/x_plat_window_callbacks.cpp
     polos/io/file.cpp
 )
 
