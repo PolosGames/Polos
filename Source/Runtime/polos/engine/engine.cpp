@@ -1,5 +1,7 @@
 #include "polos/polos_pch.h"
 
+#include "engine.h"
+
 #include "polos/core/log.h"
 #include "polos/time/timer.h"
 #include "polos/memory/linear_allocator.h"
@@ -11,8 +13,6 @@
 #include "polos/utils/stringid.h"
 #include "polos/events/events.h"
 #include "polos/core/window_system.h"
-
-#include "engine.h"
 
 namespace polos
 {

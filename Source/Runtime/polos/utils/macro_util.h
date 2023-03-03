@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef POLOS_CORE_UTILS_MACROUTIL_H_
-#define POLOS_CORE_UTILS_MACROUTIL_H_
-
 #define PL_EXPAND_IMPL(x) x
 #define PL_EXPAND(x) PL_EXPAND_IMPL(x)
 
@@ -44,6 +41,3 @@
     Type& operator=(Type&&)      noexcept = delete;
 
 #define PL_VOID_CAST(Var) static_cast<void>(Var);
-
-#endif /* POLOS_CORE_UTILS_MACROUTIL_H_ */
-
