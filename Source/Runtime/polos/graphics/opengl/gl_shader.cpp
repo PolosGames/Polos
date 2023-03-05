@@ -1,8 +1,6 @@
-#include "polos/polos_pch.h"
-
 #ifdef USE_OPENGL
 
-#include "polos/context/shader.h"
+#include "polos/graphics/shader.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>

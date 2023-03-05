@@ -1,11 +1,10 @@
-#include "polos/polos_pch.h"
+#include "log.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "polos/containers/containers.h"
 
-#include "log.h"
 
 namespace polos
 {

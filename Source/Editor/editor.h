@@ -1,14 +1,14 @@
 #pragma once
 
 #include "polos/core/application.h"
-#include "polos/context/shader.h"
-#include "polos/context/vao.h"
+#include "polos/graphics/shader.h"
+#include "polos/graphics/vao.h"
 #include "polos/core/window.h"
 #include "polos/core/camera.h"
-#include "polos/events/input/mouse_move.h"
-#include "polos/events/input/key_press.h"
-#include "polos/events/input/key_release.h"
-#include "polos/context/framebuffer.h"
+#include "polos/core/events/input/mouse_move.h"
+#include "polos/core/events/input/key_press.h"
+#include "polos/core/events/input/key_release.h"
+#include "polos/graphics/framebuffer.h"
 #include "polos/core/scene/scene.h"
 #include "imgui/imgui_include.h"
 

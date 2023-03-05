@@ -16,6 +16,9 @@ set_target_properties(stb_textedit PROPERTIES FOLDER "ThirdParty")
 add_subdirectory(ThirdParty/rapidjson)
 set_target_properties(RapidJSON    PROPERTIES FOLDER "ThirdParty")
 
+add_subdirectory(ThirdParty/spdlog)
+set_target_properties(spdlog       PROPERTIES FOLDER "ThirdParty")
+
 if(USE_OPENGL OR USE_VULKAN)
     add_subdirectory(ThirdParty/GLFW)
     set_target_properties(glfw PROPERTIES FOLDER "ThirdParty")
@@ -29,12 +32,6 @@ endif()
 
 if(USE_VULKAN)
     add_compile_definitions(USE_VULKAN)
-endif()
-
-if(ENABLE_LOGGING)
-    add_compile_definitions(ENABLE_LOGGING)
-    add_subdirectory(ThirdParty/spdlog)
-    set_target_properties(spdlog PROPERTIES FOLDER "ThirdParty")
 endif()
 
 if(GUI_USE_IMGUI)
@@ -65,41 +62,11 @@ set_target_properties(
 
 add_subdirectory(Runtime)
 
+# =================================== #
+#       Build Polos with Editor       #
+# =================================== #
 if(BUILD_EDITOR)
-    # =================================== #
-    #       Build Polos with Editor       #
-    # =================================== #
-
     add_subdirectory(Editor)
-
-    if(MSVC)
-        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
-    endif()
-
-    set_target_properties(
-        Polos
-            PROPERTIES
-                CXX_STANDARD 20
-                CXX_STANDARD_REQUIRED True
-    )
-
-    set(EXTRA_LIBS)
-    if(STATIC_STD)
-        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-            list(APPEND EXTRA_LIBS -static-libstdc++)
-        endif()
-    endif()
-
-    target_link_libraries(
-        Polos
-            PUBLIC
-                Runtime
-                ${EXTRA_LIBS}
-    )
-    
-    build_options(Polos true)
-
-    install(TARGETS Polos DESTINATION ${INSTALL_DIR})
 endif()
 
 install(DIRECTORY resources DESTINATION ${INSTALL_DIR})

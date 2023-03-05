@@ -19,8 +19,8 @@ namespace polos::memory
         ~PoolAllocator();
 
         explicit PoolAllocator(size_t p_Amount);
-        PoolAllocator(PoolAllocator&& other) noexcept;
-        PoolAllocator& operator=(PoolAllocator&& rhs) noexcept;
+        PoolAllocator(PoolAllocator&& other) noexcept = default;
+        PoolAllocator& operator=(PoolAllocator&& rhs) noexcept = default;
 
         PL_NO_COPY(PoolAllocator);
 
@@ -73,26 +73,6 @@ namespace polos::memory
         ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
         // FreeListHead gets created in Clear function
         Clear();
-    }
-
-    template<typename T>
-    PoolAllocator<T>::PoolAllocator(PoolAllocator&& other) noexcept
-        : internalBuffer(std::exchange(other.internalBuffer, {nullptr, 0}))
-        , m_FreeListHead(std::exchange(other.m_FreeListHead, nullptr))
-        , m_ChunkSize(std::exchange(other.m_ChunkSize, 0))
-        , m_ChunkAmount(std::exchange(other.m_ChunkAmount, 0))
-    {
-    }
-    
-    template<typename T>
-    PoolAllocator& PoolAllocator<T>::operator=(PoolAllocator&& rhs) noexcept
-    {
-        if (&rhs == this) return *this;
-        internalBuffer = std::exchange(rhs.internalBuffer, {nullptr, 0});
-        m_FreeListHead = std::exchange(rhs.m_FreeListHead, nullptr);
-        m_ChunkSize    = std::exchange(rhs.m_ChunkSize, 0);
-        m_ChunkAmount  = std::exchange(rhs.m_ChunkAmount, 0);
-        return *this;
     }
 
     template<typename T>

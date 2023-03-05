@@ -1,6 +1,4 @@
 #pragma once
-#ifndef POLOS_CONTEXT_FRAMEBUFFER_H_
-#define POLOS_CONTEXT_FRAMEBUFFER_H_
 
 namespace polos
 {
@@ -29,5 +27,3 @@ namespace polos
         std::array<float, 1> m_ClearDepth;
     };
 } // namespace polos
-
-#endif /* POLOS_CONTEXT_FRAMEBUFFER_H_ */

@@ -7,8 +7,9 @@
     Currently, there is no type safety in template functions, but it should be
     added.
 */
-#include "polos/utils/macro_util.h"
-#include "polos/utils/concepts.h"
+
+#include "utils/macro_util.h"
+#include "utils/concepts.h"
 
 namespace polos
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "polos/utils/macro_util.h"
-#include "polos/core/log.h"
-#include "polos/platform/platform_detection.h"
+#include "utils/macro_util.h"
+#include "core/log.h"
+#include "platform/platform_detection.h"
 
 #ifdef PL_DEBUG
 #   if defined(POLOS_MSC)

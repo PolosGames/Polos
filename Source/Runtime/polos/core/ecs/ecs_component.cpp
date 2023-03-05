@@ -1,6 +1,6 @@
 #include "polos/polos_pch.h"
 
-#include "component.h"
+#include "ecs_component.h"
 
 namespace polos::ecs
 {

@@ -1,10 +1,8 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
 #include "polos/utils/alias.h"
 #include "polos/utils/macro_util.h"
-#include "polos/context/vertex.h"
+#include "polos/graphics/vertex.h"
 
 namespace polos
 {

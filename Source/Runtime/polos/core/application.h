@@ -4,8 +4,7 @@
 
 #include "polos/core/window.h"
 #include "polos/utils/alias.h"
-#include "polos/events/window/window_close.h"
-#include "polos/core/scene/scene_data.h"
+#include "polos/core/events/window/window_close.h"
 
 namespace polos
 {

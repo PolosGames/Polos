@@ -1,8 +1,4 @@
-#include "polos/polos_pch.h"
-
 #include "editor.h"
-
-#include <bitset>
 
 #include <glad/glad.h>
 #include <imgui/imgui_include.h>
@@ -10,11 +6,11 @@
 #include <GLFW/glfw3.h>
 
 #include "polos/core/update_queue.h"
-#include "polos/context/shader_lib.h"
+#include "polos/graphics/shader_lib.h"
 #include "polos/core/event_bus.h"
 #include "polos/core/window_system.h"
-#include "polos/renderer/renderer.h"
-#include "polos/renderer/shapes/shapes2d_transform.h"
+#include "polos/graphics/renderer.h"
+#include "polos/graphics/shapes/shapes2d_transform.h"
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/scene/scene_view.h"
 

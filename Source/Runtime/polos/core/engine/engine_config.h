@@ -1,0 +1,4 @@
+#pragma once
+
+#define MAX_ENTITY_COUNT_IN_SCENE 256
+#define MAX_COMPONENT_COUNT_FOR_ENTITY 16
