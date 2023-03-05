@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 set(
     POLOS_INCLUDE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_LIST_DIR}"
 )
 
 set(PCH_LIBRARY_NAME RuntimePCH)

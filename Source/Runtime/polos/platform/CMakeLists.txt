@@ -1,23 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(PolosPlatform STATIC)
+file(GLOB_RECURSE PolosPlatform_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE PolosPlatform_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-set(
-    PolosPlatform_SOURCE
-        "linux/linux_timer.cpp"
-        "windows/windows_timer.cpp"
-        "xplat/x_plat_window_system.cpp"
-)
-
-set(
-    PolosPlatform_HEADERS
-        "platform_detection.h"
-)
-
-target_sources(
-    PolosPlatform
-        PRIVATE
-            ${PolosPlatform_SOURCE}
+add_library(
+    PolosPlatform STATIC
+        ${PolosPlatform_SOURCES} ${PolosPlatform_HEADERS}
 )
 
 target_include_directories(

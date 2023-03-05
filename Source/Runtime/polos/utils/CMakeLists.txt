@@ -1,29 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(PolosUtils STATIC)
+file(GLOB_RECURSE PolosUtils_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE PolosUtils_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-set(
-    PolosUtils_SOURCE
-        "guid.cpp"
-        "stringid.cpp"
-        "type_util.cpp"
-)
-
-set(
-    PolosUtils_HEADERS
-        "alias.h"
-        "concepts.h"
-        "feature.h"
-        "guid.h"
-        "macro_util.h"
-        "stringid.h"
-        "type_util.h"
-)
-
-target_sources(
-    PolosUtils
-        PRIVATE
-            ${PolosUtils_SOURCE}
+add_library(
+    PolosUtils STATIC
+        ${PolosUtils_SOURCES} ${PolosUtils_HEADERS}
 )
 
 target_include_directories(

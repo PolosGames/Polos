@@ -4,7 +4,10 @@ file(GLOB_RECURSE PolosCore_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 file(GLOB_RECURSE PolosCore_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 list(REMOVE_ITEM PolosCore_HEADERS "${CMAKE_CURRENT_LIST_DIR}/entry_point.h")
 
-add_library(PolosCore STATIC ${PolosCore_SOURCES} ${PolosCore_HEADERS})
+add_library(
+    PolosCore STATIC
+        ${PolosCore_SOURCES} ${PolosCore_HEADERS}
+)
 
 target_link_libraries(
     PolosCore

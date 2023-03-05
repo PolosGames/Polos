@@ -1,23 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(PolosContainers STATIC)
+file(GLOB_RECURSE PolosContainers_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE PolosContainers_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-set(
-    PolosContainers_SOURCE
-        "dynamic_array.cpp"
-)
-
-set(
-    PolosContainers_HEADERS
-        "containers.h"
-        "delegate.h"
-        "dynamic_array.h"
-)
-
-target_sources(
-    PolosContainers
-        PRIVATE
-            ${PolosContainers_SOURCE}
+add_library(
+    PolosContainers STATIC
+        ${PolosContainers_SOURCES} ${PolosContainers_HEADERS}
 )
 
 target_include_directories(
@@ -38,7 +26,7 @@ set_target_properties(
             PUBLIC_HEADER "${PolosContainers_HEADERS}"
             CXX_STANDARD 20
             CXX_STANDARD_REQUIRED True
-            POSITION_INDEPENDENT_CODE TRUE
+            POSITION_INDEPENDENT_CODE True
             OUTPUT_NAME "PolosContainers"
 )
 

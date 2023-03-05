@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "polos/core/window.h"
 #include "polos/utils/alias.h"
 #include "polos/core/events/window/window_close.h"

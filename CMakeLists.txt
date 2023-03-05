@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(
     Polos
     VERSION 0.1.0
+    LANGUAGES CXX C
 )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

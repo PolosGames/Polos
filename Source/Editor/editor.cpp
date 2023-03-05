@@ -32,7 +32,6 @@ namespace polos
         UPDATE_Q_MEM_ADD_LAST(Update);
         
         m_AppWindow     = WindowSystem::GetAppWindowGUID();
-
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         ShaderLib::Load("resources/shaders/texture.vert", "resources/shaders/texture.frag");
         m_ShaderTexture    = &ShaderLib::Get("texture"_sid);

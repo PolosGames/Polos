@@ -1,21 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(PolosGUI STATIC)
+file(GLOB_RECURSE PolosGUI_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE PolosGUI_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-set(
-    PolosGUI_SOURCE
-        "imgui/imgui_gui.cpp"
-)
-
-set(
-    PolosGUI_HEADERS
-        "gui.h"
-)
-
-target_sources(
-    PolosGUI
-        PRIVATE
-            ${PolosGUI_SOURCE}
+add_library(
+    PolosGUI STATIC
+        ${PolosGUI_SOURCES} ${PolosGUI_HEADERS}
 )
 
 target_include_directories(

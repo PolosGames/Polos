@@ -1,36 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(PolosGraphics STATIC)
+file(GLOB_RECURSE PolosGraphics_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE PolosGraphics_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-set(
-    PolosGraphics_SOURCE
-        "opengl/gl_context.cpp"
-        "opengl/gl_framebuffer.cpp"
-        "opengl/gl_shader.cpp"
-        "opengl/gl_shader_lib.cpp"
-        "opengl/gl_texture.cpp"
-        "opengl/gl_vao.cpp"
-        "shapes/shapes2d_transform.cpp"
-        "renderer.cpp"
-)
-
-set(
-    PolosGraphics_HEADERS
-        "shapes/shapes2d_transform.h"
-        "framebuffer.h"
-        "graphics_context.h"
-        "renderer.h"
-        "shader.h"
-        "shader_lib.h"
-        "texture.h"
-        "vao.h"
-        "vertex.h"
-)
-
-target_sources(
-    PolosGraphics
-        PRIVATE
-            ${PolosGraphics_SOURCE}
+add_library(
+    PolosGraphics STATIC
+        ${PolosGraphics_SOURCES} ${PolosGraphics_HEADERS}
 )
 
 target_include_directories(
