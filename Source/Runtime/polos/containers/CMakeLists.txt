@@ -17,17 +17,17 @@ target_include_directories(
 target_link_libraries(
     PolosContainers
         PRIVATE
-            ${PCH_LIBRARY_NAME}
+            glm::glm_interface
 )
 
 set_target_properties(
     PolosContainers
         PROPERTIES
             PUBLIC_HEADER "${PolosContainers_HEADERS}"
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
+            CXX_STANDARD              20
+            CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True
-            OUTPUT_NAME "PolosContainers"
+            OUTPUT_NAME               "PolosContainers"
 )
 
 target_precompile_headers(
@@ -40,6 +40,8 @@ build_options(PolosContainers true)
 
 install(
     TARGETS PolosContainers 
-    LIBRARY DESTINATION "${INSTALL_DIR}"
-    PUBLIC_HEADER DESTINATION "${INSTALL_DIR}/include"
+    LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/containers"
 )

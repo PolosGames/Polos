@@ -51,6 +51,11 @@
                     "name": "BUILD_EDITOR",
                     "value": "True",
                     "type": "BOOL"
+                },
+                {
+                    "name": "EXPORT_ENGINE",
+                    "value": "True",
+                    "type": "BOOL"
                 }
             ]
         }

@@ -28,6 +28,9 @@ if(NOT ${EXPORT_ENGINE} AND ${BUILD_EDITOR})
     set(INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/Source/Editor")
 endif()
 
+set(POLOS_INSTALL_INCLUDES_DIR "${INSTALL_DIR}/include/polos")
+set(POLOS_INSTALL_LIBS_DIR "${INSTALL_DIR}")
+
 include(CMake/target_build.cmake)
 
 add_compile_options(

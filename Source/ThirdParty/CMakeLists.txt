@@ -15,29 +15,22 @@ add_subdirectory(spdlog)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
 
-# to create a unified shared library out of every static library
-file(WRITE empty.cpp "")
-add_library(PolosThirdParty SHARED "empty.cpp")
+add_library(PolosThirdParty INTERFACE)
 
-set(
-    POLOS_TP_LIBRARIES
-        "/WHOLEARCHIVE:FMOD"
-        "/WHOLEARCHIVE:FMODL"
-        "/WHOLEARCHIVE:glad_static"
-        "/WHOLEARCHIVE:glfw_static"
-        "/WHOLEARCHIVE:glm_static"
-        "/WHOLEARCHIVE:ImGui_static"
-        "/WHOLEARCHIVE:spdlog_static"
-        "/WHOLEARCHIVE:stb_image_static"
-        "/WHOLEARCHIVE:stb_textedit_static"
-)
-string(REPLACE ";" " " POLOS_TP_LIBRARIES_SEPERATED "${POLOS_TP_LIBRARIES}")
-
-set_target_properties(
+target_link_libraries(
     PolosThirdParty
-        PROPERTIES
-            SHARED_LINKER_FLAGS ${POLOS_TP_LIBRARIES_SEPERATED}
+        INTERFACE
+            fmod::fmod
+            fmod::fmodL
+            glad::glad_static
+            glfw::glfw_static
+            glm::glm_static
+            ImGui::ImGui_static
+            spdlog::spdlog_static
+            stb_image::stb_image_static
+            stb_textedit::stb_textedit_static
 )
+
 install(
     TARGETS PolosThirdParty
     LIBRARY DESTINATION "${INSTALL_DIR}"

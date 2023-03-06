@@ -23,11 +23,11 @@ target_link_libraries(
 set_target_properties(
     PolosUtils
         PROPERTIES
-            PUBLIC_HEADER "${PolosUtils_HEADERS}"
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
-            POSITION_INDEPENDENT_CODE TRUE
-            OUTPUT_NAME "PolosUtils"
+            PUBLIC_HEADER             "${PolosUtils_HEADERS}"
+            CXX_STANDARD              20
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "PolosUtils"
 )
 
 target_precompile_headers(
@@ -40,6 +40,8 @@ build_options(PolosUtils true)
 
 install(
     TARGETS PolosUtils 
-    LIBRARY DESTINATION "${INSTALL_DIR}"
-    PUBLIC_HEADER DESTINATION "${INSTALL_DIR}/include"
+    LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/utils"
 )

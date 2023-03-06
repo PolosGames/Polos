@@ -26,11 +26,11 @@ target_link_libraries(
 set_target_properties(
     PolosGraphics
         PROPERTIES
-            PUBLIC_HEADER "${PolosGraphics_HEADERS}"
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
+            PUBLIC_HEADER             "${PolosGraphics_HEADERS}"
+            CXX_STANDARD              20
+            CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE TRUE
-            OUTPUT_NAME "PolosGraphics"
+            OUTPUT_NAME               "PolosGraphics"
 )
 
 target_precompile_headers(
@@ -43,6 +43,9 @@ build_options(PolosGraphics true)
 
 install(
     TARGETS PolosGraphics 
-    LIBRARY DESTINATION "${INSTALL_DIR}"
-    PUBLIC_HEADER DESTINATION "${INSTALL_DIR}/include"
+    LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/graphics"
 )
+

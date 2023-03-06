@@ -1,31 +1,31 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(FMOD_interface INTERFACE)
-target_include_directories(FMOD_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
+add_library(fmod_interface INTERFACE)
+target_include_directories(fmod_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
 
-add_library(FMOD SHARED IMPORTED)
+add_library(fmod SHARED IMPORTED GLOBAL)
 set_target_properties(
-    FMOD
+    fmod
         PROPERTIES
-            IMPORTED_LOCATION         "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmod.dll"
-            IMPORTED_IMPLIB           "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmod_vc.lib"
+            IMPORTED_LOCATION         "${CMAKE_CURRENT_LIST_DIR}/lib/fmod.dll"
+            IMPORTED_IMPLIB           "${CMAKE_CURRENT_LIST_DIR}/lib/fmod_vc.lib"
             FOLDER                    "ThirdParty"
             POSITION_INDEPENDENT_CODE ON
 )
 
-add_library(FMODL SHARED IMPORTED)
+add_library(fmodL SHARED IMPORTED GLOBAL)
 set_target_properties(
-    FMODL
+    fmodL
         PROPERTIES
-            IMPORTED_LOCATION         "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmodL.dll"
-            IMPORTED_IMPLIB           "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fmod/lib/fmodL_vc.lib"
+            IMPORTED_LOCATION         "${CMAKE_CURRENT_LIST_DIR}/lib/fmodL.dll"
+            IMPORTED_IMPLIB           "${CMAKE_CURRENT_LIST_DIR}/lib/fmodL_vc.lib"
             FOLDER                    "ThirdParty"
             POSITION_INDEPENDENT_CODE ON
 )
 
-add_library(fmod::FMOD ALIAS FMOD)
-add_library(fmod::FMODL ALIAS FMODL)
-add_library(fmod::FMOD_interface ALIAS FMOD_interface)
+add_library(fmod::fmod ALIAS fmod)
+add_library(fmod::fmodL ALIAS fmodL)
+add_library(fmod::fmod_interface ALIAS fmod_interface)
 
 install(
     FILES lib/fmod.dll

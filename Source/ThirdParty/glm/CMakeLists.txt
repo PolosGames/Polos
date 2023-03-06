@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 add_library(glm_interface INTERFACE)
 target_include_directories(glm_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
 
-add_library(glm_static STATIC IMPORTED)
+add_library(glm_static STATIC IMPORTED GLOBAL)
 set_target_properties(
     glm_static
         PROPERTIES

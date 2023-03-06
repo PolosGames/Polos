@@ -12,26 +12,26 @@ add_library(
 target_include_directories(
     PolosCore
         PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/../..
+            ${POLOS_INCLUDE_DIR}
 )
 
 target_link_libraries(
     PolosCore
         PRIVATE
-            ${PCH_LIBRARY_NAME}
             spdlog::spdlog_interface
             glm::glm_interface
             glad::glad_interface
-            fmod::FMOD_interface
+            fmod::fmod_interface
 )
 
 set_target_properties(
     PolosCore
         PROPERTIES
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
-            POSITION_INDEPENDENT_CODE TRUE
-            OUTPUT_NAME "PolosCore"
+            PUBLIC_HEADER             "${PolosCore_HEADERS}"
+            CXX_STANDARD              20
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "PolosCore"
 )
 
 target_precompile_headers(
@@ -44,6 +44,8 @@ build_options(PolosCore true)
 
 install(
     TARGETS PolosCore 
-    LIBRARY DESTINATION "${INSTALL_DIR}"
-    ARCHIVE DESTINATION "${INSTALL_DIR}/include"
+    LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/core"
 )

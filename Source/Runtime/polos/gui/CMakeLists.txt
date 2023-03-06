@@ -24,11 +24,11 @@ target_link_libraries(
 set_target_properties(
     PolosGUI
         PROPERTIES
-            PUBLIC_HEADER "${PolosGUI_HEADERS}"
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
-            POSITION_INDEPENDENT_CODE TRUE
-            OUTPUT_NAME "PolosGUI"
+            PUBLIC_HEADER             "${PolosGUI_HEADERS}"
+            CXX_STANDARD              20
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "PolosGUI"
 )
 
 target_precompile_headers(
@@ -41,6 +41,8 @@ build_options(PolosGUI true)
 
 install(
     TARGETS PolosGUI 
-    LIBRARY DESTINATION "${INSTALL_DIR}"
-    PUBLIC_HEADER DESTINATION "${INSTALL_DIR}/include"
+    LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
+    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/gui"
 )

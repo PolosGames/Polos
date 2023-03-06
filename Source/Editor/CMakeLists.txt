@@ -19,7 +19,7 @@ target_link_libraries(
         PRIVATE
             PolosThirdParty
             Runtime
-            fmod::FMOD_interface
+            fmod::fmod_interface
             glad::glad_interface
             glfw::glfw_interface
             glm::glm_interface
