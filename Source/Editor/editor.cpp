@@ -1,7 +1,7 @@
 #include "editor.h"
 
 #include <glad/glad.h>
-#include <imgui/imgui_include.h>
+#include <imgui/imgui_backend.h>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 

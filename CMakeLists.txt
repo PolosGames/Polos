@@ -16,6 +16,13 @@ option(GUI_USE_IMGUI    "Use ImGui for default Gui implementation" ON)
 option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" OFF)
 option(EXPORT_ENGINE    "Will install everything under bin folder." OFF)
 
+add_compile_definitions(
+    $<$<BOOL:${GUI_USE_IMGUI}>:GUI_USE_IMGUI>
+    $<$<BOOL:${USE_VULKAN}>:USE_VULKAN>
+    $<$<BOOL:${USE_OPENGL}>:USE_OPENGL>
+    $<$<BOOL:${ENABLE_PROFILING}>:ENABLE_PROFILING>
+)
+
 set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 if(NOT ${EXPORT_ENGINE} AND ${BUILD_EDITOR})
     set(INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/Source/Editor")
@@ -23,14 +30,14 @@ endif()
 
 include(CMake/target_build.cmake)
 
-# ================================== #
-#       Build the whole source       #
-# ================================== #
-
 add_compile_options(
     "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
     "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
     "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
 )
+
+# ================================== #
+#       Build the whole source       #
+# ================================== #
 
 add_subdirectory(Source)

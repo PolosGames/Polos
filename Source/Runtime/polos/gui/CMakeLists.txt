@@ -11,13 +11,14 @@ add_library(
 target_include_directories(
     PolosGUI
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${POLOS_INCLUDE_DIR}
 )
 
 target_link_libraries(
     PolosGUI
         PRIVATE
-            ${PCH_LIBRARY_NAME}
+            ImGui::ImGui_interface
+            glfw::glfw_interface
 )
 
 set_target_properties(

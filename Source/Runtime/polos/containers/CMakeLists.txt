@@ -11,7 +11,7 @@ add_library(
 target_include_directories(
     PolosContainers
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${POLOS_INCLUDE_DIR}
 )
 
 target_link_libraries(

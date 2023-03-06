@@ -1,38 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(
-    POLOS_INCLUDE_DIR
-        "${CMAKE_CURRENT_LIST_DIR}"
-)
-
-set(PCH_LIBRARY_NAME RuntimePCH)
-add_library(${PCH_LIBRARY_NAME} STATIC "polos.cpp")
-
-target_precompile_headers(
-    ${PCH_LIBRARY_NAME}
-        PUBLIC
-            polos/polos_pch.h
-)
-
-set_target_properties(
-    ${PCH_LIBRARY_NAME}
-        PROPERTIES
-            CXX_STANDARD 20
-            CXX_STANDARD_REQUIRED True
-)
-
-target_link_libraries(
-    ${PCH_LIBRARY_NAME}
-        PUBLIC
-            glm
-)
-
-target_include_directories(
-    ${PCH_LIBRARY_NAME}
-        INTERFACE
-            ${POLOS_INCLUDE_DIR}
-)
-
 add_compile_definitions(
     GLFW_INCLUDE_NONE
     _CRT_SECURE_NO_WARNINGS

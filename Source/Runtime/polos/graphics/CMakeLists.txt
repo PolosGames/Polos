@@ -11,15 +11,16 @@ add_library(
 target_include_directories(
     PolosGraphics
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${POLOS_INCLUDE_DIR}
 )
 
 target_link_libraries(
     PolosGraphics
         PRIVATE
-            ${PCH_LIBRARY_NAME}
-            glad
-            glm
+            glm::glm_interface
+            glad::glad_interface
+            glfw::glfw_interface
+            stb_image::stb_image_interface
 )
 
 set_target_properties(

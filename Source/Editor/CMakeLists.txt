@@ -17,11 +17,16 @@ target_include_directories(
 target_link_libraries(
     Polos
         PRIVATE
-            glm_static
-            glfw
-            ImGui
-            glad
+            PolosThirdParty
             Runtime
+            fmod::FMOD_interface
+            glad::glad_interface
+            glfw::glfw_interface
+            glm::glm_interface
+            ImGui::ImGui_interface
+            spdlog::spdlog_interface
+            stb_image::stb_image_interface
+            stb_textedit::stb_textedit_interface
 )
 
 set_target_properties(
@@ -29,6 +34,7 @@ set_target_properties(
         PROPERTIES
             CXX_STANDARD 20
             CXX_STANDARD_REQUIRED True
+            PRECOMPILE_HEADERS_REUSE_FROM ${PCH_LIBRARY_NAME}
 )
 
 if(MSVC)

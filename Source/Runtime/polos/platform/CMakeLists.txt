@@ -11,13 +11,15 @@ add_library(
 target_include_directories(
     PolosPlatform
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${POLOS_INCLUDE_DIR}
 )
 
 target_link_libraries(
     PolosPlatform
         PRIVATE
-            ${PCH_LIBRARY_NAME}
+            glfw::glfw_interface
+            glad::glad_interface
+            glm::glm_interface
 )
 
 set_target_properties(

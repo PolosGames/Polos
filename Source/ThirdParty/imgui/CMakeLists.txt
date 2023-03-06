@@ -1,42 +1,15 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_library(ImGui STATIC)
+add_library(ImGui_interface INTERFACE)
+target_include_directories(ImGui_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
 
-set(ImGui_HEADERS
-    imconfig.h
-    imgui.h
-    imgui_internal.h
-    imstb_rectpack.h
-    imstb_textedit.h
-    imstb_truetype.h
-    "include/internal/imgui_impl_glfw.h"
-    "include/internal/imgui_impl_opengl3.h"
-    "include/internal/imgui_impl_opengl3_loader.h"
+add_library(ImGui_static STATIC IMPORTED)
+set_target_properties(
+    ImGui_static
+        PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/${CMAKE_BUILD_TYPE}/ImGui.lib"
+            FOLDER            "ThirdParty"
 )
 
-
-set(ImGui_SOURCES
-    imgui.cpp
-    imgui_draw.cpp
-    imgui_tables.cpp
-    imgui_widgets.cpp
-    imgui_demo.cpp
-    imgui_impl_glfw.cpp
-    imgui_impl_opengl3.cpp
-)
-
-target_sources(ImGui PRIVATE ${ImGui_SOURCES} ${ImGui_HEADERS})
-
-target_include_directories(
-    ImGui
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
-            "${CMAKE_CURRENT_SOURCE_DIR}/../GLFW/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/internal"
-        PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-target_compile_features(ImGui PRIVATE cxx_std_20)
-
-build_options(ImGui false)
+add_library(ImGui::ImGui_static ALIAS ImGui_static)
+add_library(ImGui::ImGui_interface ALIAS ImGui_interface)
