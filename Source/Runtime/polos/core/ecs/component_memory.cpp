@@ -1,5 +1,3 @@
-#include "polos/polos_pch.h"
-
 #include "component_memory.h"
 
 #include "polos/core/ecs/components/components.h"

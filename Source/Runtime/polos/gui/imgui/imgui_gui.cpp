@@ -1,4 +1,3 @@
-#include "polos/polos_pch.h"
 
 #ifdef GUI_USE_IMGUI
 

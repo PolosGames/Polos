@@ -2,9 +2,9 @@
 
 #include "polos/core/window.h"
 #include "polos/containers/containers.h"
-#include "polos/context/graphics_context.h"
 #include "polos/containers/delegate.h"
-#include "polos/events/window/window_close.h"
+#include "polos/graphics/graphics_context.h"
+#include "polos/core/events/window/window_close.h"
 #include "polos/utils/guid.h"
 
 namespace polos

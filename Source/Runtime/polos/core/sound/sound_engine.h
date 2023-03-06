@@ -1,5 +1,4 @@
-#ifndef POLOS_CORE_SOUND_SOUNDENGINE_H_
-#define POLOS_CORE_SOUND_SOUNDENGINE_H_
+#pragma once
 
 #include <fmod.hpp>
 
@@ -35,5 +34,3 @@ namespace polos
         std::map<StringId, sound_attributes> m_Sounds;
     };
 }// namespace polos
-
-#endif /* POLOS_CORE_SOUND_SOUNDENGINE_H_ */

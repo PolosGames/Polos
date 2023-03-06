@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polos/memory/mem_utils.h"
+#include "polos/core/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
 

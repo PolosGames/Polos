@@ -4,7 +4,7 @@
 
 #include "polos/utils/alias.h"
 #include "polos/containers/containers.h"
-#include "polos/context/shader.h"
+#include "polos/graphics/shader.h"
 
 namespace polos
 {

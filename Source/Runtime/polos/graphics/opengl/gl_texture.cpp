@@ -1,7 +1,6 @@
-#include "polos/polos_pch.h"
 #if defined(USE_OPENGL)
 
-#include "polos/context/texture.h"
+#include "polos/graphics/texture.h"
 
 #include <glad/glad.h>
 #include <stb_image.h>

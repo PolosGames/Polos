@@ -2,7 +2,7 @@
 
 #include "polos/core/ecs/component_pool.h"
 #include "polos/core/ecs/entity.h"
-#include "polos/core/ecs/component.h"
+#include "polos/core/ecs/ecs_component.h"
 #include "polos/core/ecs/components/components.h"
 
 namespace polos

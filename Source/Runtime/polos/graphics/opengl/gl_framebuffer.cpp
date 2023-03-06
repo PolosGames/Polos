@@ -1,8 +1,7 @@
-#include "polos/polos_pch.h"
 
 #include <glad/glad.h>
 
-#include "polos/context/framebuffer.h"
+#include "polos/graphics/framebuffer.h"
 
 namespace polos
 {

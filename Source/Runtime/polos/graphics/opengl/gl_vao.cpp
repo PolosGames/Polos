@@ -1,7 +1,6 @@
-#include <polos/polos_pch.h>
 #ifdef USE_OPENGL
 
-#include "polos/context/vao.h"
+#include "polos/graphics/vao.h"
 
 #include <glad/glad.h>
 

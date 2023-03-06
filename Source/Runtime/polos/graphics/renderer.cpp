@@ -1,13 +1,13 @@
-#include "polos/polos_pch.h"
+
+#include "renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "polos/core/window_system.h"
-#include "polos/context/vertex.h"
-#include "polos/context/shader_lib.h"
 #include "polos/core/camera.h"
+#include "polos/graphics/vertex.h"
+#include "polos/graphics/shader_lib.h"
 
-#include "renderer.h"
 
 namespace polos
 {

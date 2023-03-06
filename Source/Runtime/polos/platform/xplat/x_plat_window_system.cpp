@@ -1,17 +1,18 @@
-#include "polos/polos_pch.h"
 
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include "core/window_system.h"
-#include "core/window.h"
-#include "core/log.h"
-#include "core/event_bus.h"
-#include "platform/xplat/x_plat_window_callbacks.h"
-#include "utils/guid.h"
-#include "renderer/renderer.h"
+#include "polos/core/window_system.h"
+#include "polos/core/window.h"
+#include "polos/core/log.h"
+#include "polos/core/event_bus.h"
+#include "polos/utils/guid.h"
+#include "polos/graphics/renderer.h"
+
+#include "polos/core/events/input/input_events.h"
+#include "polos/core/events/window/window_events.h"
 
 namespace polos
 {

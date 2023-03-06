@@ -1,7 +1,7 @@
 #pragma once
 
-#include "polos/context/texture.h"
-#include "polos/core/ecs/component.h"
+#include "polos/graphics/texture.h"
+#include "polos/core/ecs/ecs_component.h"
 
 namespace polos::ecs
 {

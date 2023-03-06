@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polos/events/event.h"
+#include "polos/core/events/event.h"
 #include "polos/utils/alias.h"
 
 namespace polos

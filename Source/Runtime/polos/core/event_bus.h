@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polos/events/event.h"
+#include "polos/core/events/event.h"
 #include "polos/utils/concepts.h"
 #include "polos/containers/containers.h"
 #include "polos/containers/delegate.h"

@@ -1,14 +1,11 @@
-#include "polos/polos_pch.h"
 #ifdef USE_OPENGL
 
-#include "polos/context/graphics_context.h"
+#include "polos/graphics/graphics_context.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "polos/utils/feature.h"
-
-#include "polos/context/graphics_context.h"
 
 #define PL_FILTER_OPENGL_NOTIFICATIONS 1
 

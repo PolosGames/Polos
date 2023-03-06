@@ -1,4 +1,3 @@
-#include "polos/polos_pch.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

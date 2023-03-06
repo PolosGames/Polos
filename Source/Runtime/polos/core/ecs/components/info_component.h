@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polos/core/ecs/component.h"
+#include "polos/core/ecs/ecs_component.h"
 
 namespace polos::ecs
 {

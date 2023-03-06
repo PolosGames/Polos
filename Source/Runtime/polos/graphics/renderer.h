@@ -5,10 +5,10 @@
 #include <glm/glm.hpp>
 
 #include "polos/containers/containers.h"
-#include "polos/context/texture.h"
-#include "polos/context/shader.h"
+#include "polos/graphics/texture.h"
+#include "polos/graphics/shader.h"
 #include "polos/utils/guid.h"
-#include "polos/context/vao.h"
+#include "polos/graphics/vao.h"
 
 namespace polos
 {

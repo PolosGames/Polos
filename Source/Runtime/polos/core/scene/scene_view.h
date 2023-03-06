@@ -4,7 +4,7 @@
 #include "polos/core/ecs/entity.h"
 #include "polos/core/scene/base_scene_view.h"
 #include "polos/core/scene/scene_view_iterator.h"
-#include "polos/core/ecs/component.h"
+#include "polos/core/ecs/ecs_component.h"
 
 namespace polos
 {

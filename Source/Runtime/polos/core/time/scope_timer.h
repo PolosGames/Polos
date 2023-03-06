@@ -1,7 +1,5 @@
 #pragma once
 
-#include "polos/time/timer.h"
-
 namespace polos::time
 {
     enum class ScopeTimerUnit : uint8_t
