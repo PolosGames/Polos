@@ -4,12 +4,8 @@
 
 namespace polos
 {
-    class window_close final : public Event<window_close>
+    struct window_close final : public Event<window_close>
     {
-    public:
-        window_close() = default;
-        explicit window_close(void* p_WinHandle) : winHandle{p_WinHandle} {}
-    public:
         void* winHandle{};
     };
 }
