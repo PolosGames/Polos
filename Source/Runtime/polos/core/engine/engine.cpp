@@ -87,9 +87,9 @@ namespace polos
         component_memory->Shutdown();
         sound_engine    ->Shutdown();
         renderer        ->Shutdown();
-        window_system   ->Shutdown();
         event_bus       ->Shutdown();
         log             ->Shutdown();
+        window_system   ->Shutdown();
         
         engine_memory.Delete(component_memory);
         engine_memory.Delete(sound_engine);

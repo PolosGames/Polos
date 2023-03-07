@@ -32,8 +32,6 @@ namespace polos
         else if (p_Direction == k_Backward)
             position -= front * velocity;
         if (p_Direction == k_Left)
-            position -= right * velocity;
-        if (p_Direction == k_Right)
             position += right * velocity;
         else if (p_Direction == k_Right)
             position -= right * velocity;
@@ -88,7 +86,9 @@ namespace polos
         p_front.z = glm::sin(yaw) * glm::cos(pitch);
         p_front = glm::normalize(p_front);
         // also re-calculate the Right and Up vector
-        right = glm::normalize(glm::cross(p_front, worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+        // normalize the vectors, because their length gets closer to 0 the
+        // more you look up or down which results in slower movement.
+        right = glm::normalize(glm::cross(p_front, worldUp));
         up    = glm::normalize(glm::cross(right, p_front));
     }
 }

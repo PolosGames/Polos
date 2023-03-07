@@ -63,14 +63,8 @@ namespace polos
         std::string name = "Texture";
         std::ranges::copy(name, info->name);
 
-        glm::vec3 const moveTo = {
-            m_TextureEntityTransformComponent->position.x,
-            m_TextureEntityTransformComponent->position.y,
-            m_TextureEntityTransformComponent->position.z
-        };
-
         // move to initial position
-        shapes::MoveShape2DToPosition(m_Model, moveTo);
+        shapes::MoveShape2DToPosition(m_Model, m_TextureEntityTransformComponent->position);
         m_ScaledModel = shapes::ScaleShape2D(m_Model, m_TextureEntityTransformComponent->scale.x, m_TextureEntityTransformComponent->scale.y);
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
@@ -86,8 +80,6 @@ namespace polos
 
     void Editor::Update(float p_DeltaTime)
     {
-        static_cast<void>(p_DeltaTime);
-
         CameraMovement camera_move = k_None;
 
         if ((m_Key & (1)) != 0)

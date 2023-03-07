@@ -286,7 +286,7 @@ namespace polos
         {
             LOG_ENGINE_WARN("A window with the given guid could not be found. Returning nullopt.");
             return std::nullopt;
-        };
+        }
 
         return s_Instance->m_WinProps[i];
     }
