@@ -1,4 +1,3 @@
-
 #include "renderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,17 +14,24 @@ namespace polos
 
     // 2D Texture Rectangle
 
-    static constexpr std::array<vertex, 5> vertices{
-            vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-left
-            vertex{glm::vec3(0.5f, -0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-right
+    namespace
+    {
+        static constexpr std::array<vertex, 5> vertices{
+            vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-left
+            vertex{glm::vec3(0.5f,  -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-right
             vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-right
-            vertex{glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-left
-    };
+            vertex{glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-left
+        };
 
-    static constexpr std::array<uint32, 6> indices{
-            0, 1, 2,
-            2, 3, 0,
-    };
+        static constexpr std::array<uint32, 6> indices{
+            0,
+            1,
+            2,
+            2,
+            3,
+            0,
+        };
+    }// namespace
 
     // !2D Texture Rectangle
 
@@ -39,7 +45,7 @@ namespace polos
         s_Instance = nullptr;
     }
 
-    void Renderer::SetMainWindowHandle(pl::GUID handle)
+    void Renderer::SetMainWindowHandle(polos::GUID handle)
     {
         auto& win_handle = s_Instance->m_MainWinHandle;
         auto& proj_matrix = s_Instance->m_ProjectionMatrix;

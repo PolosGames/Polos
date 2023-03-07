@@ -9,15 +9,10 @@ add_library(
         ${PolosCore_SOURCES} ${PolosCore_HEADERS}
 )
 
-target_include_directories(
-    PolosCore
-        PRIVATE
-            ${POLOS_INCLUDE_DIR}
-)
-
 target_link_libraries(
     PolosCore
         PRIVATE
+            ${POLOS_INCLUDE_LIB}
             spdlog::spdlog_interface
             glm::glm_interface
             glad::glad_interface

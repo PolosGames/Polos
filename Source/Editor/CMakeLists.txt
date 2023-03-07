@@ -17,6 +17,7 @@ target_include_directories(
 target_link_libraries(
     Polos
         PRIVATE
+            ${POLOS_INCLUDE_LIB}
             PolosThirdParty
             Runtime
             fmod::fmod_interface

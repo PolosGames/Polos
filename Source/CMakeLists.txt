@@ -7,9 +7,13 @@ add_subdirectory(ThirdParty)
 
 set(POLOS_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/Runtime")
 set(PCH_LIBRARY_NAME RuntimePCH)
+set(POLOS_INCLUDE_LIB PolosIncludes)
+
+add_library(${POLOS_INCLUDE_LIB} INTERFACE)
+target_include_directories(${POLOS_INCLUDE_LIB} INTERFACE ${POLOS_INCLUDE_DIR})
 
 file(WRITE polos.cpp "")
-add_library(${PCH_LIBRARY_NAME} OBJECT "polos.cpp")
+add_library(${PCH_LIBRARY_NAME} STATIC "polos.cpp")
 
 target_precompile_headers(
     ${PCH_LIBRARY_NAME}
@@ -29,12 +33,7 @@ target_link_libraries(
         PRIVATE
             glm::glm_interface
             spdlog::spdlog_interface
-)
-
-target_include_directories(
-    ${PCH_LIBRARY_NAME}
-        PRIVATE
-            ${POLOS_INCLUDE_DIR}
+            ${POLOS_INCLUDE_LIB}
 )
 
 build_options(${PCH_LIBRARY_NAME} true)
