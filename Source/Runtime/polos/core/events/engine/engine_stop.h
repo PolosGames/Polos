@@ -5,7 +5,8 @@
 
 namespace polos
 {
-    struct engine_stop final : public Event<engine_stop>
+    struct engine_stop : public Event<engine_stop>
     {
+        engine_stop() = default;
     };
 }
