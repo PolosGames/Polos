@@ -8,6 +8,7 @@
 #include "polos/core/ecs/component_memory.h"
 #include "polos/core/application.h"
 #include "polos/core/update_queue.h"
+#include "polos/core/ecs/components/components.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/utils/stringid.h"
@@ -37,6 +38,14 @@ namespace polos
         window_resize{};
     }
 
+    static void InitializeComponentIds()
+    {
+        ecs::info_component{};
+        ecs::transform_component{};
+        ecs::texture2d_component{};
+        ecs::camera_component{};
+    }
+
     void Engine::Run()
     {
         time::Timer::Startup();
@@ -51,6 +60,8 @@ namespace polos
         ;
             
         memory::LinearAllocator engine_memory(needed_memory);
+
+        InitializeComponentIds();
 
         // Allocate memory for the systems
         auto* log              = engine_memory.New<Log>();

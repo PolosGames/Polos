@@ -4,17 +4,11 @@
 
 namespace polos::ecs
 {
-    static constexpr std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> GetComponentSizeArray()
+    static std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> GetComponentOffsetArray()
     {
-        return {
-            sizeof(transform_component), sizeof(texture2d_component), sizeof(info_component), sizeof(camera_component)};
-    }
+        auto const component_size = base_component::s_ComponentSizeArray;
 
-    static constexpr std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> GetComponentOffsetArray()
-    {
-        auto const component_size = GetComponentSizeArray();
-
-        std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> component_offsets;
+        std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> component_offsets{};
 
         std::size_t cumulative_size = 0;
 
@@ -31,11 +25,11 @@ namespace polos::ecs
 
     ComponentMemory::ComponentMemory()
     {
-        constexpr auto offsets = GetComponentOffsetArray();
-        constexpr auto sizes   = GetComponentSizeArray();
+        auto const offsets = GetComponentOffsetArray();
+        auto const sizes   = base_component::s_ComponentSizeArray;
 
-        k_ComponentOffset.assign(offsets.begin(), offsets.end());
-        k_ComponentSizeArray.assign(sizes.begin(), sizes.end());
+        k_ComponentOffset.assign(offsets.cbegin(), offsets.cend());
+        k_ComponentSizeArray.assign(sizes.cbegin(), sizes.cend());
         s_Instance = this;
     }
 

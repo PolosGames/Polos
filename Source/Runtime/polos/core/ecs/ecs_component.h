@@ -2,25 +2,38 @@
 
 namespace polos::ecs
 {
-    extern int32 s_ComponentCounter;
-
-    template<typename T>
-    int32 g_ComponentId = 0;
-
-    template<typename T>
-    int32 GetComponentId()
+    struct base_component
     {
-        if (g_ComponentId<T> != 0)
-        {
-            return g_ComponentId<T>;
-        }
-        return s_ComponentCounter++;
+        static int32 s_ComponentCounter;
+        static std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> s_ComponentSizeArray;
+    };
+
+    template<typename T>
+    class Component : base_component
+    {
+    public:
+        Component();
+
+        static int32 GetId();
+    private:
+        static int32 s_Id;
+    };
+
+    template<typename T>
+    int32 Component<T>::s_Id = s_ComponentCounter++;
+
+    template<typename T>
+    Component<T>::Component()
+    {
+        s_ComponentSizeArray[s_Id] = sizeof(T);
     }
 
     template<typename T>
-    concept EcsComponent = requires { g_ComponentId<T> != 0; };
-} // namespace polos::ecs
+    int32 Component<T>::GetId()
+    {
+        return s_Id;
+    }
 
-#define SET_COMPONENT_ID(ComponentType) \
-    template<>                          \
-    polos::int32 polos::ecs::g_ComponentId<ComponentType> = ::polos::ecs::GetComponentId<ComponentType>();
+    template<typename T>
+    concept EcsComponent = std::is_base_of_v<Component<T>, T>;
+} // namespace polos::ecs

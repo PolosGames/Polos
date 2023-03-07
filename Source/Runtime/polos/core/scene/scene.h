@@ -41,7 +41,7 @@ namespace polos
     template<ecs::EcsComponent T, typename... Args>
     T* Scene::Assign(ecs::Entity p_Entity, Args&&... p_Args)
     {
-        int              comp_id    = ecs::g_ComponentId<T>;
+        int32            comp_id    = ecs::Component<T>::GetId();
         ecs::EntityIndex entity_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entity_index].id != p_Entity)
@@ -82,7 +82,7 @@ namespace polos
             return nullptr;
         }
 
-        int              comp_id    = ecs::g_ComponentId<T>;
+        int32            comp_id    = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entt_index].id != p_Entity)
@@ -104,7 +104,7 @@ namespace polos
     template<ecs::EcsComponent T>
     inline bool Scene::HasComponent(ecs::Entity p_Entity)
     {
-        int              comp_id    = ecs::g_ComponentId<T>;
+        int32            comp_id    = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         return m_Entities[entt_index].mask.test(comp_id);
@@ -113,7 +113,7 @@ namespace polos
     template<ecs::EcsComponent T>
     inline void Scene::Remove(ecs::Entity p_Entity)
     {
-        int              comp_id    = ecs::g_ComponentId<T>;
+        int32            comp_id    = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entt_index].id != p_Entity)

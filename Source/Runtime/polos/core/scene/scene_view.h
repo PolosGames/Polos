@@ -29,7 +29,7 @@ namespace polos
             m_IterateAll = true;
         }
 
-        int comp_ids[] = { ecs::g_ComponentId<Components>...};
+        int comp_ids[] = { ecs::Component<Components>::GetId()...};
 
         for (int const& id : comp_ids)
         {

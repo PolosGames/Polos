@@ -1,10 +1,11 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "polos/core/ecs/ecs_component.h"
 
 namespace polos::ecs
 {
-    struct camera_component
+    struct camera_component final : Component<camera_component>
     {
         // camera Attributes
         glm::vec3 position;
@@ -24,5 +25,3 @@ namespace polos::ecs
     };
 
 } // namespace polos::ecs
-
-SET_COMPONENT_ID(polos::ecs::camera_component)

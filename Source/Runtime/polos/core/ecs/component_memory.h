@@ -29,7 +29,7 @@ namespace polos::ecs
     template<EcsComponent T>
     void* ComponentMemory::Request()
     {
-        return static_cast<char*>(s_Instance->m_Data) + (s_Instance->k_ComponentOffset[g_ComponentId<T>]);
+        return static_cast<char*>(s_Instance->m_Data) + (s_Instance->k_ComponentOffset[ecs::Component<T>::GetId()]);
     }
     
     template<EcsComponent T>

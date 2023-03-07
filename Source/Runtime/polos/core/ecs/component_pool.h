@@ -36,7 +36,7 @@ namespace polos::ecs
     {
         m_Data      = ComponentMemory::Request<T>();
         m_ElemSize  = sizeof(T);
-        componentId = g_ComponentId<T>;
+        componentId = ecs::Component<T>::GetId();
     }
 
     template<EcsComponent T>
