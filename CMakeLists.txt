@@ -16,12 +16,11 @@ option(GUI_USE_IMGUI    "Use ImGui for default Gui implementation" ON)
 option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" OFF)
 option(EXPORT_ENGINE    "Will install everything under bin folder." OFF)
 
-add_compile_definitions(
-    $<$<BOOL:${GUI_USE_IMGUI}>:GUI_USE_IMGUI>
-    $<$<BOOL:${USE_VULKAN}>:USE_VULKAN>
-    $<$<BOOL:${USE_OPENGL}>:USE_OPENGL>
-    $<$<BOOL:${ENABLE_PROFILING}>:ENABLE_PROFILING>
-)
+set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
+set(POLOS_DIR         "${CMAKE_CURRENT_LIST_DIR}/Source")
+set(POLOS_INCLUDE_DIR "${POLOS_DIR}/Runtime")
+
+configure_file(polos_config.h.in ${POLOS_INCLUDE_DIR}/polos_config.h USE_SOURCE_PERMISSIONS)
 
 set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 if(NOT ${EXPORT_ENGINE} AND ${BUILD_EDITOR})

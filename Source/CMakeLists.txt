@@ -5,12 +5,7 @@ cmake_minimum_required(VERSION 3.24)
 # ================================== #
 add_subdirectory(ThirdParty)
 
-set(POLOS_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/Runtime")
 set(PCH_LIBRARY_NAME RuntimePCH)
-set(POLOS_INCLUDE_LIB PolosIncludes)
-
-add_library(${POLOS_INCLUDE_LIB} INTERFACE)
-target_include_directories(${POLOS_INCLUDE_LIB} INTERFACE ${POLOS_INCLUDE_DIR})
 
 file(WRITE polos.cpp "")
 add_library(${PCH_LIBRARY_NAME} STATIC "polos.cpp")
@@ -28,12 +23,17 @@ set_target_properties(
             CXX_STANDARD_REQUIRED True
 )
 
+target_include_directories(
+    ${PCH_LIBRARY_NAME}
+        PRIVATE
+            ${POLOS_INCLUDE_DIR}
+)
+
 target_link_libraries(
     ${PCH_LIBRARY_NAME}
         PRIVATE
             glm::glm_interface
             spdlog::spdlog_interface
-            ${POLOS_INCLUDE_LIB}
 )
 
 build_options(${PCH_LIBRARY_NAME} true)
