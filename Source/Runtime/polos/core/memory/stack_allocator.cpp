@@ -1,7 +1,7 @@
 
 #include "stack_allocator.h"
 
-namespace polos::memory
+namespace polos
 {
     StackAllocator::StackAllocator(uint64 p_Size)
         : internalBuffer({static_cast<byte*>(std::malloc(p_Size)), p_Size})
@@ -82,9 +82,9 @@ namespace polos::memory
         void* ptr = &internalBuffer.buffer[m_Offset + header_size];
 
         uintptr new_top     = m_Bottom + end_of_new_element;
-        uint64 misalignment = new_top & (MemUtils::k_MemoryAlignment - 1);
-        uint64 padding      = MemUtils::k_MemoryAlignment - misalignment;
-        padding             = padding & (MemUtils::k_MemoryAlignment - 1);
+        uint64 misalignment = new_top & (memory::k_MemoryAlignment - 1);
+        uint64 padding      = memory::k_MemoryAlignment - misalignment;
+        padding             = padding & (memory::k_MemoryAlignment - 1);
 
         m_Offset = end_of_new_element + padding;
 

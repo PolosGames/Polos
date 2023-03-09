@@ -49,10 +49,10 @@ namespace polos
         return entt_id;
     }
 
-    void Scene::DestroyEntity(ecs::Entity entt)
+    void Scene::DestroyEntity(ecs::Entity p_Entity)
     {
-        ecs::EntityIndex entt_index = ecs::GetEntityIndex(entt);
-        ecs::Entity      newID = ecs::CreateEntity(static_cast<ecs::EntityIndex>(-1), ecs::GetEntityVersion(entt) + 1);
+        ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
+        ecs::Entity      newID = ecs::CreateEntity(static_cast<ecs::EntityIndex>(-1), ecs::GetEntityVersion(p_Entity) + 1);
 
         // Invalidate the entity
         m_Entities[entt_index].id = newID;

@@ -3,8 +3,8 @@
 
 namespace polos
 {
-    std::random_device GUID::s_RngDevice;
-    std::mt19937_64 GUID::s_RngEngine{s_RngDevice()};
+    std::random_device                   GUID::s_RngDevice;
+    std::mt19937_64                      GUID::s_RngEngine{s_RngDevice()};
     std::uniform_int_distribution<int64> GUID::s_UniDist;
 
     GUID::GUID()

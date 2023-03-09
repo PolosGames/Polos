@@ -8,7 +8,7 @@ namespace polos
         FrameBuffer();
         ~FrameBuffer();
 
-        void Initialize(int32 width, int32 height);
+        void Initialize(int32 p_Width, int32 pHeight);
 
         uint32 GetFrameBufferHandle();
         uint32 GetFrameBufferTextureHandle();

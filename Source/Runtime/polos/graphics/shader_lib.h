@@ -18,7 +18,7 @@ namespace polos
         static Shader& Get(StringId p_ShaderNameSid);
         
     private:
-        static uint32 compile_shader(std::string_view p_Source, uint32 p_ShaderType);
+        static uint32 compile_shader(cstring p_Source, uint32 p_ShaderType);
         static bool   is_successful(uint32 p_Id, uint32 p_Action);
     private:
         friend class Engine;

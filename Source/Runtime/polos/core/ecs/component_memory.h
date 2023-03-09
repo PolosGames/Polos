@@ -17,7 +17,7 @@ namespace polos::ecs
         static void* Request();
 
         template<EcsComponent T>
-        static void Clear(void* offset_ptr);
+        static void Clear(void* p_OffsetPtr);
     private:
         void*  m_Data{};
 
@@ -33,11 +33,11 @@ namespace polos::ecs
     }
     
     template<EcsComponent T>
-    void ComponentMemory::Clear(void* offset_ptr)
+    void ComponentMemory::Clear(void* p_OffsetPtr)
     {
-        auto* list = static_cast<T*>(offset_ptr);
+        auto* list = static_cast<T*>(p_OffsetPtr);
 
-        if (static_cast<char*>(offset_ptr) != (static_cast<char*>(s_Instance->m_Data) + s_Instance->k_ComponentOffset[ecs::Component<T>::GetId()]))
+        if (static_cast<char*>(p_OffsetPtr) != (static_cast<char*>(s_Instance->m_Data) + s_Instance->k_ComponentOffset[ecs::Component<T>::GetId()]))
         {
             LOG_ENGINE_ERROR("Component array's pointer and it's predefined start don't match.");
         }

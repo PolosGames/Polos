@@ -9,14 +9,14 @@ namespace polos
     class Vao
     {
     public:
-        Vao();
+        Vao() = default;
         Vao(std::span<vertex const> p_Vertices, std::span<uint32 const> p_Indices);
-        
-        Vao(Vao&)  noexcept = default;
-        Vao(Vao&&) noexcept = default;
 
-        Vao& operator=(Vao& rhs) noexcept;
-        Vao& operator=(Vao&& rhs) noexcept;
+        Vao(Vao const&)     = delete;
+        Vao(Vao&&) noexcept;
+
+        Vao& operator=(Vao const& p_Rhs) = delete;
+        Vao& operator=(Vao&& p_Rhs) noexcept;
 
         ~Vao();
     

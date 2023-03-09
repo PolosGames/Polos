@@ -38,9 +38,9 @@ namespace polos
         m_ShaderBasicColor = &ShaderLib::Get("basic_color"_sid);
         m_Texture = Texture::Load("resources/textures/linux-22621.png");
 
-        auto l_AppWindowProps = WindowSystem::GetWindowProps(m_AppWindow);
-        m_AppWindowWidth  = l_AppWindowProps->width;
-        m_AppWindowHeight = l_AppWindowProps->height;
+        auto app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
+        m_AppWindowWidth  = app_window_props->width;
+        m_AppWindowHeight = app_window_props->height;
         m_AspectRatio     = static_cast<float>(m_AppWindowWidth) / m_AppWindowHeight;
 
         m_EditorFramebuffer.Initialize(m_AppWindowWidth, m_AppWindowHeight);
@@ -59,7 +59,7 @@ namespace polos
         m_TextureEntityTexture2DComponent->texture = m_Texture;
         m_TextureEntityTexture2DComponent->uvCoordinates = glm::vec2(1, 1);
 
-        auto* info = m_Scene.Get<ecs::info_component>(m_TextureEntity);
+        auto* info       = m_Scene.Get<ecs::info_component>(m_TextureEntity);
         std::string name = "Texture";
         std::ranges::copy(name, info->name);
 
@@ -80,7 +80,7 @@ namespace polos
 
     void Editor::Update(float p_DeltaTime)
     {
-        CameraMovement camera_move = k_None;
+        CameraMovement camera_move{k_None};
 
         if ((m_Key & (1)) != 0)
         {
@@ -130,7 +130,7 @@ namespace polos
                 ImGui::MenuItem("Export...");
                 /*if (ImGui::MenuItem("Show entity size"))
                 {
-                    auto v = m_Scene.Serialize();
+                    auto v = scene.Serialize();
                 }*/
                 ImGui::EndMenu();
             }
@@ -165,7 +165,7 @@ namespace polos
             auto* info = m_Scene.Get<ecs::info_component>(entity_id);
             if(info != nullptr)
             {
-                const char* name = info->name;
+                char const* name = info->name;
                 
                 if (ImGui::Selectable(name, &info->isSelectedOnEditor))
                 {
@@ -180,8 +180,8 @@ namespace polos
                     // state of old selected entity to "unselected"
                     if(m_SelectedEntity != INVALID_ENTITY)
                     {
-                        auto* l_OldSelectedEntityInfo = m_Scene.Get<ecs::info_component>(m_SelectedEntity);
-                        l_OldSelectedEntityInfo->isSelectedOnEditor = false;
+                        auto* ols_selected_entity_info = m_Scene.Get<ecs::info_component>(m_SelectedEntity);
+                        ols_selected_entity_info->isSelectedOnEditor = false;
                     }
                     // Now we can set the new selected entity.
                     m_SelectedEntity = entity_id;
@@ -215,31 +215,31 @@ namespace polos
         // Drawing the game framebuffer into an imgui image
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.0f, 0.0f});
         ImGui::Begin("Game");
-        ImVec2 l_DrawableAreaDimensions = ImGui::GetContentRegionAvail();
-        float  l_DrawableAreaAspectRatio = l_DrawableAreaDimensions.x / l_DrawableAreaDimensions.y;
+        ImVec2 drawable_area_dimensions   = ImGui::GetContentRegionAvail();
+        float  drawable_area_aspect_ratio = drawable_area_dimensions.x / drawable_area_dimensions.y;
 
-        if (m_EditorFramebufferAspectRatioBefore != l_DrawableAreaAspectRatio)
+        if (m_EditorFramebufferAspectRatioBefore != drawable_area_aspect_ratio)
         {
 
-            if (m_AspectRatio >= l_DrawableAreaAspectRatio)
+            if (m_AspectRatio >= drawable_area_aspect_ratio)
             {
-                m_EditorFramebufferDimensions.x = l_DrawableAreaDimensions.x;
-                m_EditorFramebufferDimensions.y = l_DrawableAreaDimensions.x / m_AspectRatio;
+                m_EditorFramebufferDimensions.x = drawable_area_dimensions.x;
+                m_EditorFramebufferDimensions.y = drawable_area_dimensions.x / m_AspectRatio;
             }
             else
             {
-                m_EditorFramebufferDimensions.x = l_DrawableAreaDimensions.y * m_AspectRatio;
-                m_EditorFramebufferDimensions.y = l_DrawableAreaDimensions.y;
+                m_EditorFramebufferDimensions.x = drawable_area_dimensions.y * m_AspectRatio;
+                m_EditorFramebufferDimensions.y = drawable_area_dimensions.y;
             }
 
-            m_EditorFramebufferAspectRatioBefore = l_DrawableAreaAspectRatio;
+            m_EditorFramebufferAspectRatioBefore = drawable_area_aspect_ratio;
         }
         
-        auto l_FramebufferTextureId = reinterpret_cast<ImTextureID>(static_cast<uint64>(m_EditorFramebuffer.GetFrameBufferTextureHandle()));
+        auto framebuffer_texture_id = reinterpret_cast<ImTextureID>(static_cast<uint64>(m_EditorFramebuffer.GetFrameBufferTextureHandle()));
         
         
         ImGui::Image(
-            l_FramebufferTextureId,
+            framebuffer_texture_id,
             m_EditorFramebufferDimensions,
             m_EditorFramebufferUVCoords1,
             m_EditorFramebufferUVCoords2
@@ -305,37 +305,37 @@ namespace polos
 
     void Editor::DrawTransformComponent()
     {
-        bool l_HasTransform = m_Scene.HasComponent<ecs::transform_component>(m_SelectedEntity);
-        if (l_HasTransform && ImGui::CollapsingHeader("Transform"))
+        bool has_transform = m_Scene.HasComponent<ecs::transform_component>(m_SelectedEntity);
+        if (has_transform && ImGui::CollapsingHeader("Transform"))
         {
-            auto* l_TransformComponent = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
+            auto* transform_component = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
 
-            bool l_PositionChange = false;
-            l_PositionChange |= ImGui::DragFloat3("Position", glm::value_ptr(l_TransformComponent->position), 0.01f);
-            l_PositionChange |= ImGui::DragFloat3("Scale", glm::value_ptr(l_TransformComponent->scale), 0.01f);
-            if (l_PositionChange)
+            bool transform_changed{};
+            transform_changed |= ImGui::DragFloat3("Position", glm::value_ptr(transform_component->position), 0.01f);
+            transform_changed |= ImGui::DragFloat3("Scale", glm::value_ptr(transform_component->scale), 0.01f);
+            if (transform_changed)
             {
-                l_TransformComponent->position = shapes::MoveShape2DToPosition(m_Model, l_TransformComponent->position);
-                m_ScaledModel                  = shapes::ScaleShape2D(m_Model, l_TransformComponent->scale);
+                transform_component->position = shapes::MoveShape2DToPosition(m_Model, transform_component->position);
+                m_ScaledModel                  = shapes::ScaleShape2D(m_Model, transform_component->scale);
             }
         }
     }
 
     void Editor::DrawTexture2DComponent()
     {
-        bool l_HasTexture2D = m_Scene.HasComponent<ecs::texture2d_component>(m_SelectedEntity);
-        if (l_HasTexture2D && ImGui::CollapsingHeader("Texture 2D"))
+        bool has_texture2d = m_Scene.HasComponent<ecs::texture2d_component>(m_SelectedEntity);
+        if (has_texture2d && ImGui::CollapsingHeader("Texture 2D"))
         {
-            auto* l_Texture2dComponent = m_Scene.Get<ecs::texture2d_component>(m_SelectedEntity);
+            auto* texture2d_component = m_Scene.Get<ecs::texture2d_component>(m_SelectedEntity);
             ImGui::ImageButton(
-                reinterpret_cast<ImTextureID>(static_cast<uint64>(l_Texture2dComponent->texture->id)),
+                reinterpret_cast<ImTextureID>(static_cast<uint64>(texture2d_component->texture->id)),
                 ImVec2{200.0f, 200.0f},
                 // we reuse these to ensure correct rotation.
                 m_EditorFramebufferUVCoords1,
                 m_EditorFramebufferUVCoords2
             );
 
-            ImGui::DragFloat2("UV Coords", glm::value_ptr(l_Texture2dComponent->uvCoordinates), 0.01f);
+            ImGui::DragFloat2("UV Coords", glm::value_ptr(texture2d_component->uvCoordinates), 0.01f);
         }
     }
 

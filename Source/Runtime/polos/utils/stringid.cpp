@@ -28,7 +28,7 @@ namespace polos
     std::string_view get_string_from_id(StringId p_Sid)
     {
         std::size_t i{};
-        auto        it = std::ranges::find_if(g_StringIdTable, [p_Sid, &i](auto const& p_Sid) { i++; return p_Sid == p_Sid; });
+        auto        it = std::ranges::find_if(g_StringIdTable, [sid = p_Sid, &i](auto const& p_Sid) { i++; return p_Sid == sid; });
         if (it != g_StringIdTable.end())
         {
             return g_StringTable.at(i);

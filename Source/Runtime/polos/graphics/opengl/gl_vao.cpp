@@ -1,4 +1,4 @@
-#ifdef USE_OPENGL
+#if defined(USE_OPENGL)
 
 #include "polos/graphics/vao.h"
 
@@ -13,8 +13,36 @@ namespace polos
         return p_Length + padding;
     }
 
-    Vao::Vao()
+    Vao::Vao(Vao&& p_Rhs) noexcept
+        : m_VaoId{std::exchange(p_Rhs.m_VaoId, 0)}
+        , m_BufferId{std::exchange(p_Rhs.m_BufferId, 0)}
+        , m_IndCount{std::exchange(p_Rhs.m_IndCount, 0)}
+        , m_IndOffset{std::exchange(p_Rhs.m_IndOffset, 0)}
+        , m_Bound{std::exchange(p_Rhs.m_Bound, false)}
     {}
+
+    Vao& Vao::operator=(Vao&& p_Rhs) noexcept
+    {
+        if (&p_Rhs == this)
+            return *this;
+
+        m_VaoId     = std::exchange(p_Rhs.m_VaoId, 0);
+        m_BufferId  = std::exchange(p_Rhs.m_BufferId, 0);
+        m_IndCount  = std::exchange(p_Rhs.m_IndCount, 0);
+        m_IndOffset = std::exchange(p_Rhs.m_IndOffset, 0);
+        m_Bound     = std::exchange(p_Rhs.m_Bound, false);
+
+        return *this;
+    }
+
+    Vao::~Vao()
+    {
+        if (m_Bound)
+        {
+            glDeleteVertexArrays(1, &m_VaoId);
+            glDeleteBuffers(1, &m_BufferId);
+        }
+    }
 
     Vao::Vao(std::span<vertex const> p_Vertices, std::span<uint32 const> p_Indices)
         : m_IndCount{ static_cast<int32>(p_Indices.size()) }
@@ -57,47 +85,6 @@ namespace polos
         glVertexArrayAttribBinding(m_VaoId, 2, 0);
         glVertexArrayAttribBinding(m_VaoId, 3, 0);
         m_Bound = true;
-    }
-
-    Vao& Vao::operator=(Vao& rhs) noexcept
-    {
-        if (&rhs == this)
-            return *this;
-
-        m_VaoId = rhs.m_VaoId;
-        m_BufferId = rhs.m_BufferId;
-        m_IndCount = rhs.m_IndCount;
-        m_IndOffset = rhs.m_IndOffset;
-
-        rhs.m_Bound = false;
-        m_Bound = true;
-
-        return *this;
-    }
-
-    Vao& Vao::operator=(Vao&& rhs) noexcept
-    {
-        if (&rhs == this)
-            return *this;
-
-        m_VaoId = rhs.m_VaoId;
-        m_BufferId = rhs.m_BufferId;
-        m_IndCount = rhs.m_IndCount;
-        m_IndOffset = rhs.m_IndOffset;
-
-        rhs.m_Bound = false;
-        m_Bound = true;
-
-        return *this;
-    }
-    
-    Vao::~Vao()
-    {
-        if (m_Bound)
-        {
-            glDeleteVertexArrays(1, &m_VaoId);
-            glDeleteBuffers(1, &m_BufferId);
-        }
     }
 
     void Vao::Bind() const

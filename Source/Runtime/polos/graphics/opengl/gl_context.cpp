@@ -1,4 +1,4 @@
-#ifdef USE_OPENGL
+#if defined(USE_OPENGL)
 
 #include "polos/graphics/graphics_context.h"
 
@@ -11,11 +11,11 @@
 
 namespace polos
 {
-#ifdef PL_DEBUG
-    static void DebugCallback(GLenum source, GLenum type, GLuint /*id*/, GLenum severity, GLsizei /*length*/, GLchar const* message, void const* /*user_param*/)
+#if defined(PL_DEBUG)
+    static void DebugCallback(GLenum p_Source, GLenum p_Type, GLuint /*id*/, GLenum p_Severity, GLsizei /*length*/, GLchar const* p_Message, void const* /*user_param*/)
     {
-        auto const message_source = [source] {
-            switch (source)
+        auto const message_source = [p_Source] {
+            switch (p_Source)
             {
                 case GL_DEBUG_SOURCE_API:             return "OpenGL API";
                 case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "Window System";
@@ -26,8 +26,8 @@ namespace polos
             }
         }();
     
-        auto const message_type = [type] {
-            switch (type)
+        auto const message_type = [p_Type] {
+            switch (p_Type)
             {
                 case GL_DEBUG_TYPE_ERROR:				return "Error";
                 case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	return "Deprecated Behaviour";
@@ -42,19 +42,19 @@ namespace polos
         }();
         
         LOG_ENGINE_TRACE("OpenGL Context");
-        switch (severity)
+        switch (p_Severity)
         {
         case GL_DEBUG_SEVERITY_HIGH:
-            LOG_ENGINE_CRITICAL("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_CRITICAL("{0} on {1},\n{2}", message_type, message_source, p_Message);
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
-            LOG_ENGINE_ERROR("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_ERROR("{0} on {1},\n{2}", message_type, message_source, p_Message);
             break;
         case GL_DEBUG_SEVERITY_LOW:
-            LOG_ENGINE_WARN("{0} on {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_WARN("{0} on {1},\n{2}", message_type, message_source, p_Message);
             break;
         case GL_DEBUG_SEVERITY_NOTIFICATION:
-            LOG_ENGINE_INFO("Notification: {0}, Source: {1},\n{2}", message_type, message_source, message);
+            LOG_ENGINE_INFO("Notification: {0}, Source: {1},\n{2}", message_type, message_source, p_Message);
             break;
         }
     }
@@ -75,7 +75,6 @@ namespace polos
         glViewport(0, 0, w, h);
 
 #ifdef PL_DEBUG
-//        glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 

@@ -1,3 +1,4 @@
+#include "polos_config.h"
 #include "polos/platform/platform_detection.h"
 
 #if defined(POLOS_WIN)

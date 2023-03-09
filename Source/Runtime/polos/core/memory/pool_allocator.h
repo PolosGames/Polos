@@ -1,10 +1,10 @@
 #pragma once
 
-#include "polos/memory/mem_utils.h"
+#include "polos/core/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
 
-namespace polos::memory
+namespace polos
 {
     template<typename T>
     class PoolAllocator
@@ -17,17 +17,18 @@ namespace polos::memory
     public:
         PoolAllocator();
         ~PoolAllocator();
-
         explicit PoolAllocator(size_t p_Amount);
-        PoolAllocator(PoolAllocator&& other) noexcept = default;
-        PoolAllocator& operator=(PoolAllocator&& rhs) noexcept = default;
-
-        PL_NO_COPY(PoolAllocator);
-
-        void Initialize(size_t amount);
-        void Resize(size_t amount);
         
-        PL_NODISCARD size_t Capacity() const
+        PoolAllocator(PoolAllocator const&) = delete;
+        PoolAllocator(PoolAllocator&& p_Other) noexcept = default;
+
+        PoolAllocator& operator=(PoolAllocator const& p_Rhs) = delete;
+        PoolAllocator& operator=(PoolAllocator&& p_Rhs) noexcept = default;
+
+        void Initialize(size_t p_Amount);
+        void Resize(size_t p_Amount);
+        
+        PL_NODISCARD size_t Capacity() const;
         PL_NODISCARD size_t ByteCapacity() const;
         
         PL_NODISCARD T* Data() const;
@@ -37,7 +38,7 @@ namespace polos::memory
     private:
         PL_NODISCARD void* get_next_free();
     public:
-        internal_buffer internalBuffer;
+        memory::internal_buffer internalBuffer;
     private:
         free_node*  m_FreeListHead;
         std::size_t m_ChunkSize;
@@ -76,11 +77,11 @@ namespace polos::memory
     }
 
     template<typename T>
-    void PoolAllocator<T>::Initialize(size_t amount)
+    void PoolAllocator<T>::Initialize(size_t p_Amount)
     {
         PROFILE_FUNC();
         m_ChunkSize               = sizeof(T);
-        m_ChunkAmount             = amount;
+        m_ChunkAmount             = p_Amount;
         internalBuffer.bufferSize = m_ChunkSize * m_ChunkAmount;
         internalBuffer.buffer     = static_cast<byte*>(std::malloc(internalBuffer.bufferSize));
 
@@ -91,12 +92,12 @@ namespace polos::memory
     }
     
     template<typename T>
-    void PoolAllocator<T>::Resize(size_t amount)
+    void PoolAllocator<T>::Resize(size_t p_Amount)
     {
-        if (amount <= m_ChunkAmount)
+        if (p_Amount <= m_ChunkAmount)
         {
             // just shrink the buffer size instead of reallocating the buffer.
-            internalBuffer.bufferSize = amount * m_ChunkSize;
+            internalBuffer.bufferSize = p_Amount * m_ChunkSize;
             // Clear with the new buffer size
             Clear();
             return;
@@ -104,7 +105,7 @@ namespace polos::memory
 
         byte* old_buffer = internalBuffer.buffer;
 
-        size_t new_buffer_size = amount * m_ChunkSize;
+        size_t new_buffer_size = p_Amount * m_ChunkSize;
         internalBuffer.buffer  = static_cast<byte*>(std::malloc(new_buffer_size));
 
         // destruct all objects inside
@@ -114,7 +115,7 @@ namespace polos::memory
         }
 
         internalBuffer.bufferSize = new_buffer_size;
-        m_ChunkAmount             = amount;
+        m_ChunkAmount             = p_Amount;
         std::free(old_buffer);
 
         Clear();

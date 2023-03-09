@@ -11,7 +11,10 @@ namespace polos
     
     template<typename Key, typename Value>
     using HashMap = std::unordered_map<Key, Value>;
-    
+
+    template<typename Key, typename Value>
+    using Map = std::unordered_map<Key, Value>;
+
     template<typename T>
     using PmrVector = std::pmr::vector<T>;
     
@@ -30,7 +33,7 @@ namespace polos
     
     template<typename T, typename... Args>
     [[nodiscard]]
-    inline UniquePtr<T> MakeUniq(Args&&... args)
+    inline UniquePtr<T> MakeUnique(Args&&... args)
     {
         return std::make_unique<T>(std::forward<Args>(args)...);
     }

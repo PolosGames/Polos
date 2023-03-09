@@ -59,7 +59,7 @@ namespace polos
             + sizeof(UpdateQueue)
         ;
             
-        memory::LinearAllocator engine_memory(needed_memory);
+        LinearAllocator engine_memory(needed_memory);
 
         InitializeComponentIds();
 

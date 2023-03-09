@@ -4,7 +4,7 @@
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
 
-namespace polos::memory
+namespace polos
 {
     class StackAllocator
     {
@@ -14,29 +14,29 @@ namespace polos::memory
             uint64 prevOffset; /// Stores previous element's header's start
         };
     public:
-        explicit StackAllocator(uint64 size);
+        explicit StackAllocator(uint64 p_Size);
         ~StackAllocator();
-        
-        StackAllocator(StackAllocator&& other) noexcept;
-        StackAllocator& operator=(StackAllocator&& rhs) noexcept;
-        
-        PL_NO_COPY(StackAllocator)
+
+        StackAllocator(StackAllocator const&) = delete;
+        StackAllocator& operator=(StackAllocator const&) = delete;
+        StackAllocator(StackAllocator&& p_Other) noexcept;
+        StackAllocator& operator=(StackAllocator&& p_Rhs) noexcept;
 
         template<typename T, typename... Args>
             requires(std::is_constructible_v<T, Args...>)
         T* Push(Args&&... p_Args);
 
         template<DefaultConstructible T>
-        T* PushArr(uint64 count);
+        T* PushArr(uint64 p_Count);
         
         byte* Data();
 
         void Pop();
         void Clear();
     private:
-        PL_NODISCARD void* align(uint64 size);
+        PL_NODISCARD void* align(uint64 p_Size);
     public:
-        internal_buffer internalBuffer;
+        memory::internal_buffer internalBuffer;
     private:
         uint64  m_Offset;
         uint64  m_PrevOffset;

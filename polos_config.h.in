@@ -1,0 +1,6 @@
+#pragma once
+
+#cmakedefine USE_OPENGL
+#cmakedefine USE_VULKAN
+#cmakedefine ENABLE_PROFILING
+#cmakedefine GUI_USE_IMGUI

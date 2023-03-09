@@ -16,7 +16,7 @@ namespace polos
         void Startup();
         void Shutdown();
 
-        static void SetMainWindowHandle(polos::GUID handle);
+        static void SetMainWindowHandle(polos::GUID p_Handle);
         
         static glm::mat4 const& GetProjectionMatrix();
         static polos::Vao& GetRectangleVao();
@@ -26,7 +26,7 @@ namespace polos
 
         polos::GUID  m_MainWinHandle;
         polos::Vao   m_RectangleVao;
-        glm::mat4 m_ProjectionMatrix;
+        glm::mat4    m_ProjectionMatrix;
     };
 
     void RenderRectangle(

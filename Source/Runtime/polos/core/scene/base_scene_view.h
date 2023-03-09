@@ -7,8 +7,8 @@ namespace polos
 {
     struct base_scene_view
     {
-        Scene*   m_Scene{};
-        ecs::CompMask m_Mask;
-        bool     m_IterateAll{};
+        Scene*        scene{};
+        ecs::CompMask mask;
+        bool          iterateAll{};
     };
 } // namespace polos

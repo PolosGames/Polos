@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_OPENGL 1
-#define USE_VULKAN 0
+#define USE_OPENGL
+/* #undef USE_VULKAN */
 /* #undef ENABLE_PROFILING */
 #define GUI_USE_IMGUI

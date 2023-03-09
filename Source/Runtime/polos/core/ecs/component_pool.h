@@ -9,10 +9,10 @@ namespace polos::ecs
     {
     public:
         ComponentPool() = default;
-        ComponentPool(ComponentPool const& other) = delete;
-        ComponentPool(ComponentPool&& other) noexcept ;
-        ComponentPool& operator==(ComponentPool const& rhs) = delete;
-        ComponentPool& operator==(ComponentPool&& rhs) noexcept;
+        ComponentPool(ComponentPool const& p_Other) = delete;
+        ComponentPool(ComponentPool&& p_Other) noexcept;
+        ComponentPool& operator==(ComponentPool const& p_Rhs) = delete;
+        ComponentPool& operator==(ComponentPool&& p_Rhs) noexcept;
 
         template<EcsComponent T>
         void Create();
@@ -20,14 +20,14 @@ namespace polos::ecs
         template<EcsComponent T>
         void Destroy();
 
-        void* Get(std::size_t index);
+        void* Get(std::size_t p_Index);
         bool IsInitialized();
 
-        std::vector<byte> Serialize();
+        DArray<byte> Serialize();
     public:
         int32 componentId{};
     private:
-        void* m_Data{};
+        void*       m_Data{};
         std::size_t m_ElemSize{};
     };
 

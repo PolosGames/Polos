@@ -4,7 +4,7 @@
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
 
-namespace polos::memory
+namespace polos
 {
     class LinearAllocator
     {
@@ -12,11 +12,13 @@ namespace polos::memory
         LinearAllocator();
         explicit LinearAllocator(size_t p_Size);
         ~LinearAllocator();
-        
-        LinearAllocator(LinearAllocator&& p_Other) noexcept;
-        LinearAllocator& operator=(LinearAllocator&& p_Rhs) noexcept;
-        PL_NO_COPY(LinearAllocator)
 
+        LinearAllocator(LinearAllocator const&) = delete;
+        LinearAllocator(LinearAllocator&& p_Other) noexcept;
+
+        LinearAllocator& operator=(LinearAllocator const& p_Rhs) = delete;
+        LinearAllocator& operator=(LinearAllocator&& p_Rhs) noexcept;
+    public:
         void Initialize(size_t p_Size);
         PL_NODISCARD void* Allocate(size_t p_Size);
         PL_NODISCARD void* Align(size_t p_Size, size_t p_Offset) const;
@@ -40,7 +42,7 @@ namespace polos::memory
         void Resize(uint64 p_Size);
         void Clear();
     public:
-        internal_buffer internalBuffer;
+        memory::internal_buffer internalBuffer;
     private:
         uintptr    m_Bottom;
         size_t     m_Offset;

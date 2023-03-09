@@ -3,28 +3,28 @@
 
 namespace polos::ecs
 {
-    ComponentPool::ComponentPool(ComponentPool&& other) noexcept
+    ComponentPool::ComponentPool(ComponentPool&& p_Other) noexcept
     {
-        m_ElemSize = std::exchange(other.m_ElemSize, 0);
-        m_Data = std::exchange(other.m_Data, nullptr);
+        m_ElemSize = std::exchange(p_Other.m_ElemSize, 0);
+        m_Data     = std::exchange(p_Other.m_Data, nullptr);
     }
 
-    ComponentPool& ComponentPool::operator==(ComponentPool&& other) noexcept
+    ComponentPool& ComponentPool::operator==(ComponentPool&& p_Other) noexcept
     {
-        if (this == &other) return *this;
-        m_ElemSize = std::exchange(other.m_ElemSize, 0);
-        m_Data = std::exchange(other.m_Data, nullptr);
+        if (this == &p_Other) return *this;
+        m_ElemSize = std::exchange(p_Other.m_ElemSize, 0);
+        m_Data     = std::exchange(p_Other.m_Data, nullptr);
 
         return *this;
     }
-    void* ComponentPool::Get(size_t index)
+    void* ComponentPool::Get(size_t p_Index)
     {
-        if (index >= MAX_ENTITY_COUNT_IN_SCENE)
+        if (p_Index >= MAX_ENTITY_COUNT_IN_SCENE)
         {
             LOG_ENGINE_ERROR("[ComponentPool::Get] Entity index out of range.");
             return nullptr;
         }
-        return static_cast<std::byte*>(m_Data) + (index * m_ElemSize);
+        return static_cast<std::byte*>(m_Data) + (p_Index * m_ElemSize);
     }
 
     bool ComponentPool::IsInitialized()
@@ -32,9 +32,9 @@ namespace polos::ecs
         return m_Data != nullptr;
     }
 
-    std::vector<byte> ComponentPool::Serialize()
+    DArray<byte> ComponentPool::Serialize()
     {
-        std::vector<byte> pool_data;
+        DArray<byte> pool_data;
         pool_data.reserve(
             componentId
           + m_ElemSize
@@ -44,9 +44,10 @@ namespace polos::ecs
         auto push_to_pool_data_as_bytes = [&pool_data](auto number) -> bool {
             static_assert(
                 std::is_trivially_constructible_v<decltype(number)>,
-                "The passed argument is not trivially constructible, therefore cannot be converted to a byte array!");
-            std::size_t i{sizeof(number) * 8};
-            std::array<byte, sizeof(number)> byte_array;
+                "The passed argument is not trivially constructible, therefore cannot be converted to a byte array!"
+            );
+            std::size_t i = sizeof(number) * 8;
+            std::array<byte, sizeof(number)> byte_array{};
             while (i != 0)
             {
                 byte_array[(i / 8) - 1] = static_cast<byte>(number >> i);

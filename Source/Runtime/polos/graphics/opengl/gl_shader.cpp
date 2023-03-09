@@ -1,4 +1,4 @@
-#ifdef USE_OPENGL
+#if defined(USE_OPENGL)
 
 #include "polos/graphics/shader.h"
 

@@ -27,38 +27,38 @@ namespace polos
         m_System->update();
     }
 
-    void SoundEngine::LoadSound(std::string sound_name)
+    void SoundEngine::LoadSound(std::string const p_SoundName)
     {
-        FMOD_RESULT l_result;
+        FMOD_RESULT result;
 
-        StringId l_sound_string_id = get_string_id(sound_name);
+        StringId sound_string_id = get_string_id(p_SoundName);
         
-        auto  l_iterator_pair    = m_Sounds.insert({l_sound_string_id, sound_attributes{} });
-        auto& l_sound_attributes = l_iterator_pair.first->second;
+        auto  iterator_pair    = m_Sounds.insert({sound_string_id, sound_attributes{} });
+        auto& sound_attributes = iterator_pair.first->second;
 
-        l_result = m_System->createSound(("resources/media/" + sound_name).c_str(), FMOD_DEFAULT, 0, &l_sound_attributes.soundPtr);
-        auto* l_sound_ptr = l_sound_attributes.soundPtr;
+        result = m_System->createSound(("resources/media/" + p_SoundName).c_str(), FMOD_DEFAULT, 0, &sound_attributes.soundPtr);
+        auto* sound_ptr = sound_attributes.soundPtr;
 
         // Initialize the sound's channel
-        m_System->playSound(l_sound_ptr, nullptr, true, &l_sound_attributes.channelPtr);
-        auto* l_channel_ptr = l_sound_attributes.channelPtr;
+        m_System->playSound(sound_ptr, nullptr, true, &sound_attributes.channelPtr);
+        auto* channel_ptr = sound_attributes.channelPtr;
 
         // Initialize the rest of the sound_attributes struct's variables.
-        l_channel_ptr->getPosition(&l_sound_attributes.currentPositionInMillis, FMOD_TIMEUNIT_MS);
-        l_sound_ptr->getLength(&l_sound_attributes.durationInMillis, FMOD_TIMEUNIT_MS);
-        l_sound_attributes.paused = false;
+        channel_ptr->getPosition(&sound_attributes.currentPositionInMillis, FMOD_TIMEUNIT_MS);
+        sound_ptr->getLength(&sound_attributes.durationInMillis, FMOD_TIMEUNIT_MS);
+        sound_attributes.paused = false;
     }
 
-    void SoundEngine::PlaySoundById(StringId const sound_name)
+    void SoundEngine::PlaySoundById(StringId const p_SoundName)
     {
-        auto& sound = m_Sounds.at(sound_name);
+        auto& sound = m_Sounds.at(p_SoundName);
 
         m_System->playSound(sound.soundPtr, nullptr, false, &sound.channelPtr);
     }
 
-    void SoundEngine::PlaySoundByName(std::string sound_name)
+    void SoundEngine::PlaySoundByName(std::string const& p_SoundName)
     {
-        StringId sound_id = get_string_id(sound_name);
+        StringId sound_id = get_string_id(p_SoundName);
 
         PlaySoundById(sound_id);
     }
@@ -75,7 +75,6 @@ namespace polos
         );
 
         result = m_System->close();
-
         result = m_System->release();
     
         s_Instance = nullptr;

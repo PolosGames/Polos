@@ -14,26 +14,26 @@ namespace polos
         using iterator = SceneViewIterator;
         using const_iterator = iterator const;
     public:
-        SceneView(Scene& scene);
+        SceneView(Scene& p_Scene);
 
         PL_NODISCARD auto begin() const noexcept -> iterator;
         PL_NODISCARD auto end() const noexcept -> iterator;
     };
 
     template<typename... Components>
-    SceneView<Components...>::SceneView(Scene& scene)
+    SceneView<Components...>::SceneView(Scene& p_Scene)
     {
-        m_Scene = &scene;
+        scene = &p_Scene;
         if constexpr (sizeof...(Components) == 0)
         {
-            m_IterateAll = true;
+            iterateAll = true;
         }
 
         int comp_ids[] = { ecs::Component<Components>::GetId()...};
 
         for (int const& id : comp_ids)
         {
-            m_Mask.set(id);
+            mask.set(id);
         }
     }
 
