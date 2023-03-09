@@ -41,9 +41,10 @@ namespace polos
     void StackAllocator::Pop()
     {
         PROFILE_FUNC();
-        if (!internalBuffer.buffer || internalBuffer.bufferSize == 0 || m_Offset == 0)
+        
+        if (internalBuffer.buffer == nullptr || internalBuffer.bufferSize == 0 || m_Offset == 0)
         {
-            ASSERTSTR(0, "[StackAllocator::Pop] Cannot pop because the buffer is empty!");
+            LOG_ENGINE_ERROR("[StackAllocator::Pop] Couldn't pop, because the buffer was empty!");
             return;
         }
 
@@ -71,7 +72,7 @@ namespace polos
 
         if (end_of_new_element > internalBuffer.bufferSize)
         {
-            ASSERTSTR(0, "Stack Allocator is out of memory! Returning null. (StackAllocator::Align)");
+            LOG_ENGINE_ERROR("[StackAllocator::Align] Stack Allocator is out of memory! Returning null.");
             return nullptr;
         }
 

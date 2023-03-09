@@ -21,7 +21,8 @@ namespace polos
     public:
         void Initialize(size_t p_Size);
         PL_NODISCARD void* Allocate(size_t p_Size);
-        PL_NODISCARD void* Align(size_t p_Size, size_t p_Offset) const;
+
+        PL_NODISCARD void* Allocate(size_t p_Size, size_t p_Offset) const;
 
         template<DefaultConstructible T, typename... Args>
         requires std::is_constructible_v<T, Args...>
@@ -46,7 +47,6 @@ namespace polos
     private:
         uintptr    m_Bottom;
         size_t     m_Offset;
-        std::mutex m_BufferMutex;
     };
 
     template<DefaultConstructible T, typename... Args>

@@ -58,7 +58,7 @@ namespace polos
 
         if (new_offset > internalBuffer.bufferSize)
         {
-            ASSERTSTR(0, "LinearAllocator is full. (LinearAllocator::Allocate)");
+            LOG_ENGINE_ERROR("[LinearAllocator::Allocate] Buffer is full!");
             return nullptr;
         }
 
@@ -73,28 +73,47 @@ namespace polos
         return ptr;
     }
 
+    void* LinearAllocator::Allocate(size_t size, size_t offset) const
+    {
+        const uint64 new_offset = offset + size;
+
+        if (new_offset > internalBuffer.bufferSize)
+        {
+            LOG_ENGINE_ERROR("[LinearAllocator::Align] Buffer is full!");
+            return nullptr;
+        }
+
+        const uintptr curr_ptr     = m_Bottom + offset;
+        const uint64  misalignment = curr_ptr & (memory::k_MemoryAlignment - 1);
+        // if misalignment == 0, padding becomes 16
+        const uint64 padding = (memory::k_MemoryAlignment - misalignment) & (memory::k_MemoryAlignment - 1);
+
+        void* ptr = &internalBuffer.buffer[new_offset + padding];
+
+        return ptr;
+    }
+
     void LinearAllocator::Resize(uint64 p_Size)
     {
-        if (p_Size <= internalBuffer.bufferSize)
+        if (internalBuffer.buffer == nullptr)
         {
-            ASSERTSTR(0, "Cannot shrink the size! (LinearAllocator::Resize)");
+            LOG_ENGINE_ERROR("[LinearAllocator::Resize] Buffer was not initialized, so it cannot be resized.");
             return;
         }
+
+        if (p_Size <= internalBuffer.bufferSize)
+        {
+            LOG_ENGINE_WARN("[LinearAllocator::Resize] Size shrinking is not implemented yet, returning.");
+            return;
+        }
+
         void* old_mem  = internalBuffer.buffer;
         internalBuffer.buffer = static_cast<byte*>(std::malloc(p_Size));
 
-        if (!internalBuffer.buffer)
-        {
-            ASSERTSTR(0, "Buffer is null! (LinearAllocator::Resize)");
-            return;
-        }
+        std::memcpy(internalBuffer.buffer, old_mem, internalBuffer.bufferSize);
+        std::free(old_mem);
 
-        {
-            std::lock_guard<std::mutex> lock(m_BufferMutex);
-            std::memcpy(internalBuffer.buffer, old_mem, internalBuffer.bufferSize);
-            std::free(old_mem);
-            m_Bottom = reinterpret_cast<uintptr>(internalBuffer.buffer);
-        }
+        m_Bottom                   = reinterpret_cast<uintptr>(internalBuffer.buffer);
         uintptr const curr_ptr     = m_Bottom + internalBuffer.bufferSize;
         uint64 const  misalignment = curr_ptr & (memory::k_MemoryAlignment - 1);
         uint64 const  padding      = (memory::k_MemoryAlignment - misalignment) & (memory::k_MemoryAlignment - 1);
@@ -118,26 +137,6 @@ namespace polos
     size_t LinearAllocator::Capacity() const
     {
         return internalBuffer.bufferSize;
-    }
-
-    void* LinearAllocator::Align(size_t size, size_t offset) const
-    {
-        const uint64 new_offset = offset + size;
-
-        if (new_offset > internalBuffer.bufferSize)
-        {
-            ASSERTSTR(0, "LinearAllocator is full.");
-            return nullptr;
-        }
-
-        const uintptr curr_ptr     = m_Bottom + offset;
-        const uint64  misalignment = curr_ptr & (memory::k_MemoryAlignment - 1);
-        // if misalignment == 0, padding becomes 16
-        const uint64 padding = (memory::k_MemoryAlignment - misalignment) & (memory::k_MemoryAlignment - 1);
-    
-        void* ptr = &internalBuffer.buffer[new_offset + padding];
-    
-        return ptr;
     }
     
 } // namespace polos

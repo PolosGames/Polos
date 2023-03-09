@@ -38,7 +38,7 @@ namespace polos
         m_ShaderBasicColor = &ShaderLib::Get("basic_color"_sid);
         m_Texture = Texture::Load("resources/textures/linux-22621.png");
 
-        auto app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
+        Optional<window_props> app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
         m_AppWindowWidth  = app_window_props->width;
         m_AppWindowHeight = app_window_props->height;
         m_AspectRatio     = static_cast<float>(m_AppWindowWidth) / m_AppWindowHeight;

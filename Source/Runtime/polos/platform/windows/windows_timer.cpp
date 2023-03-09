@@ -1,4 +1,3 @@
-
 #ifdef POLOS_WIN
 
 #include "polos/core/time/timer.h"
@@ -11,7 +10,7 @@ namespace polos::time
     {
         LARGE_INTEGER freq;
         BOOL ret = QueryPerformanceFrequency(&freq);
-        ASSERTSTR(ret, "QueryPerformanceFrequency didn't work.");
+        ASSERT(ret, "QueryPerformanceFrequency didn't work.");
 
         s_Freq = freq.QuadPart;
     }
@@ -21,7 +20,7 @@ namespace polos::time
         LARGE_INTEGER counter;
 
         BOOL ret = QueryPerformanceCounter(&counter);
-        ASSERTSTR(ret, "QueryPerformanceCounter didn't work.");
+        ASSERT(ret, "QueryPerformanceCounter didn't work.");
 
         // steady_clock's implementation.
         const int64 whole = (counter.QuadPart / s_Freq) * Period::den;
