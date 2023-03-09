@@ -4,13 +4,12 @@
 namespace polos
 {
     Scene::Scene()
-        : m_EntitySize{5}
     {
         // Initialize the free entities array with all the entities array.
-        for(int i = 0; i < MAX_ENTITY_COUNT_IN_SCENE ; i++)
+        /*for(int i = 0; i < MAX_ENTITY_COUNT_IN_SCENE ; i++)
         {
             m_FreeEntities.push_back(i);
-        }
+        }*/
     }
 
     ecs::Entity Scene::NewEntity()
@@ -38,13 +37,14 @@ namespace polos
          
         // Lastly set up an empty component mask
         entt_data.mask = ecs::CompMask{};
+        entt_data.id   = entt_id;
         
         // Add the info component
 
-        std::string name = "Entity " + std::to_string(entt_index + 1);
+        std::string name = "Entity " + std::to_string(entt_index);
         auto* info = Assign<ecs::info_component>(entt_id);
         std::ranges::copy(name, info->name);
-        info->isSelectedOnEditor = false;
+
 
         return entt_id;
     }

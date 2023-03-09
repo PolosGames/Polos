@@ -32,7 +32,7 @@ namespace polos
 
         static void Update();
     private:
-        void on_window_close(window_close& p_Event);
+        void                 on_window_close(window_close& p_Event);
         static std::size_t   find_index_with_guid(polos::GUID p_WindowGUID);
     private:
         static WindowSystem* s_Instance;

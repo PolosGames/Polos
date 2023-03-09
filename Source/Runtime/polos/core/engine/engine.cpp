@@ -43,6 +43,7 @@ namespace polos
         ecs::info_component{};
         ecs::transform_component{};
         ecs::texture2d_component{};
+        ecs::material_component{};
         ecs::camera_component{};
     }
 

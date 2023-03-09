@@ -30,7 +30,8 @@ namespace polos
         std::vector<byte> Serialize();
     private:
         friend class SceneViewIterator;
-        friend class Editor;
+        template<typename...T> friend class SceneView;
+
         uint32_t                      m_EntitySize{};
         std::vector<ecs::EntityIndex> m_FreeEntities;
 
@@ -41,13 +42,14 @@ namespace polos
     template<ecs::EcsComponent T, typename... Args>
     T* Scene::Assign(ecs::Entity p_Entity, Args&&... p_Args)
     {
-        int32            comp_id    = ecs::Component<T>::GetId();
-        ecs::EntityIndex entity_index = ecs::GetEntityIndex(p_Entity);
-
-        if (m_Entities[entity_index].id != p_Entity)
+        if (!ecs::IsEntityValid(p_Entity))
         {
+            LOG_ENGINE_ERROR("[Scene::Assign] Provided entity was not valid, returning null.");
             return nullptr;
         }
+
+        int32            comp_id      = ecs::Component<T>::GetId();
+        ecs::EntityIndex entity_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entity_index].mask.test(comp_id))
         {
@@ -79,6 +81,7 @@ namespace polos
     {
         if (!ecs::IsEntityValid(p_Entity))
         {
+            LOG_ENGINE_ERROR("[Scene::Get] Provided entity was not valid, returning null.");
             return nullptr;
         }
 

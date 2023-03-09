@@ -7,7 +7,8 @@ namespace polos::ecs
     struct info_component final : Component<info_component>
     {
         char name[128];
-        bool isSelectedOnEditor;
+        bool isSelectedOnEditor{};
+        bool isVisible{};
     };
 
 } // namespace polos::ecs

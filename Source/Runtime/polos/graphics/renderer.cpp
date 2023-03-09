@@ -6,24 +6,22 @@
 #include "polos/core/camera.h"
 #include "polos/graphics/vertex.h"
 #include "polos/graphics/shader_lib.h"
-
+#include "polos/core/scene/scene_view.h"
+#include "polos/graphics/shapes/shapes2d_transform.h"
 
 namespace polos
 {
-    Renderer* Renderer::s_Instance;
-
-    // 2D Texture Rectangle
 
     namespace
     {
-        static constexpr std::array<vertex, 5> vertices{
+        static constexpr std::array<vertex, 4> k_QuadVertices{
             vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-left
             vertex{glm::vec3(0.5f,  -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Bottom-right
             vertex{glm::vec3(0.5f,  0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-right
             vertex{glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f), glm::vec3{97.0f, 40.0f, 36.0f}}, // Top-left
         };
 
-        static constexpr std::array<uint32, 6> indices{
+        static constexpr std::array<uint32, 6> k_QuadIndices{
             0,
             1,
             2,
@@ -31,9 +29,9 @@ namespace polos
             3,
             0,
         };
-    }// namespace
+    }
 
-    // !2D Texture Rectangle
+    Renderer* Renderer::s_Instance;
 
     void Renderer::Startup()
     {
@@ -45,26 +43,64 @@ namespace polos
         s_Instance = nullptr;
     }
 
+    void Renderer::RenderScene(Scene& scene)
+    {
+        auto scene_view = SceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene);
+        for (auto entity : scene_view)
+        {
+            auto const& quad_vao       = Renderer::GetQuadVao();
+            auto* texture2d_comp = scene.Get<ecs::texture2d_component>(entity);
+            if (texture2d_comp->hasUvChanged)
+            {
+                std::array<vertex, 4> new_quad_vertices{
+                    k_QuadVertices[0], // Bottom-left
+                    k_QuadVertices[1], // Bottom-right
+                    k_QuadVertices[2], // Top-right
+                    k_QuadVertices[3]  // Top-left
+                };
+
+                new_quad_vertices[0].textureCoord = texture2d_comp->uvBottomLeft;
+                new_quad_vertices[1].textureCoord = texture2d_comp->uvBottomRight;
+                new_quad_vertices[2].textureCoord = texture2d_comp->uvTopRight;
+                new_quad_vertices[3].textureCoord = texture2d_comp->uvTopLeft;
+
+                quad_vao.SetVertexBufferData(new_quad_vertices);
+            }
+
+            auto* material_comp = scene.Get<ecs::material_component>(entity);
+            auto* shader        = material_comp->shader;
+            shader->Use();
+            shader->SetUniform("u_Projection"_sid, Renderer::GetProjectionMatrix());
+            shader->SetUniform("u_View"_sid, Camera::GetViewMatrix());
+
+            auto*     transform_comp = scene.Get<ecs::transform_component>(entity);
+            glm::mat4 model_matrix(1.0f);
+            model_matrix = glm::translate(model_matrix, glm::vec3(transform_comp->position));
+            shapes::RotateShape2D(model_matrix, transform_comp->rotation);
+            model_matrix = glm::scale(model_matrix, transform_comp->scale);
+
+            shader->SetUniform("u_Model"_sid, model_matrix);
+
+            glBindTextureUnit(0, texture2d_comp->texture->id);
+            quad_vao.Draw();
+            quad_vao.Unbind();
+
+            shader->Release();
+        }
+    }
+
     void Renderer::SetMainWindowHandle(polos::GUID handle)
     {
-        auto& win_handle = s_Instance->m_MainWinHandle;
-        auto& proj_matrix = s_Instance->m_ProjectionMatrix;
+        s_Instance->m_MainWinHandle = handle;
 
-        win_handle = handle;
-
-        auto win_props = WindowSystem::GetWindowProps(win_handle);
+        auto  win_props = WindowSystem::GetWindowProps(s_Instance->m_MainWinHandle);
         float aspect = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
 
-        proj_matrix = glm::ortho(
-            -aspect,
-            aspect,
-            -1.0f,
-            1.0f,
-            0.1f,
-            100.0f
+        s_Instance->m_ProjectionMatrix = glm::ortho(
+            -aspect, aspect,
+              -1.0f,   1.0f,
+               0.1f, 100.0f
         );
-
-        s_Instance->m_RectangleVao = Vao{vertices, indices};
     }
 
     glm::mat4 const& Renderer::GetProjectionMatrix()
@@ -72,56 +108,18 @@ namespace polos
         return s_Instance->m_ProjectionMatrix;
     }
 
-    pl::Vao& Renderer::GetRectangleVao()
+    polos::Vao& Renderer::GetQuadVao()
     {
-        return s_Instance->m_RectangleVao;
+        return *s_Instance->m_QuadVao;
     }
 
-    void RenderRectangle(
-        glm::mat4& model_matrix,
-        Shader& shader
-    )
+    SharedPtr<GraphicsContext> Renderer::InitializeGfxContext()
     {
-        auto& vao = Renderer::GetRectangleVao();
+        s_Instance->m_GfxContext = std::make_shared<GraphicsContext>();
+        s_Instance->m_GfxContext->Initialize(nullptr);
 
-        auto const& l_Shader = shader;
+        s_Instance->m_QuadVao = MakeUnique<polos::Vao>(k_QuadVertices, k_QuadIndices);
 
-        auto const& l_projection_matrix = Renderer::GetProjectionMatrix();
-        auto const l_view_matrix = Camera::GetViewMatrix();
-
-        l_Shader.Use();
-        l_Shader.SetUniform("u_Projection"_sid, l_projection_matrix);
-        l_Shader.SetUniform("u_View"_sid, l_view_matrix);
-        l_Shader.SetUniform("u_Model"_sid, model_matrix);
-
-        vao.Draw();
-        vao.Unbind();
-
-        l_Shader.Release();
-    }
-
-    void RenderTexture2D(
-        glm::mat4& model_matrix,
-        TextureRef texture,
-        Shader& shader
-    )
-    {
-        auto& vao = Renderer::GetRectangleVao();
-
-        auto const& l_Shader = shader;
-
-        auto const& l_projection_matrix = Renderer::GetProjectionMatrix();
-        auto const l_view_matrix = Camera::GetViewMatrix();
-
-        l_Shader.Use();
-        l_Shader.SetUniform("u_Projection"_sid, l_projection_matrix);
-        l_Shader.SetUniform("u_View"_sid, l_view_matrix);
-        l_Shader.SetUniform("u_Model"_sid, model_matrix);
-
-        glBindTextureUnit(0, texture->id);
-        vao.Draw();
-        vao.Unbind();
-
-        l_Shader.Release();
+        return s_Instance->m_GfxContext;
     }
 }

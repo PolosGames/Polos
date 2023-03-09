@@ -9,4 +9,12 @@ namespace polos
         glm::vec2 textureCoord;
         glm::vec3 color;
     };
+
+    enum class QuadVertexIndex
+    {
+        k_BottomLeft,
+        k_BottomRight,
+        k_TopLeft,
+        k_TopRight
+    };
 }

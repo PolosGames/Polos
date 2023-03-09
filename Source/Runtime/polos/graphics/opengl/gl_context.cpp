@@ -62,17 +62,10 @@ namespace polos
 
     bool GraphicsContext::s_IsInitialized;
 
-    void GraphicsContext::Initialize(void* p_WindowHandle)
+    void GraphicsContext::Initialize(void* /*p_WindowHandle*/)
     {
-        m_Window = p_WindowHandle;
-        
         int result = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         ASSERT(result, "Failed to load OpenGL context!");
-
-        int w;
-        int h;
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_Window), &w, &h);
-        glViewport(0, 0, w, h);
 
 #ifdef PL_DEBUG
         glEnable(GL_DEBUG_OUTPUT);

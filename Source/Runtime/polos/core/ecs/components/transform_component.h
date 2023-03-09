@@ -6,8 +6,8 @@ namespace polos::ecs
 {
     struct transform_component final : Component<transform_component>
     {
-        glm::vec4 position;
-        glm::vec3 rotation;
-        glm::vec3 scale;
+        glm::vec4 position{};
+        glm::vec3 rotation{};
+        glm::vec3 scale{};
     };
 } // namespace polos::ecs

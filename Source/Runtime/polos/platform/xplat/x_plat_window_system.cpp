@@ -155,8 +155,6 @@ namespace polos
         }
         
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
-
-        m_GfxContext = std::make_shared<GraphicsContext>();
     }
     
     void WindowSystem::Shutdown()
@@ -214,9 +212,8 @@ namespace polos
         // context with it.
         if (s_Instance->m_WinProps.size() == 1)
         {
-            s_Instance->m_GfxContext->Initialize(win_handle);
+            s_Instance->m_GfxContext = Renderer::InitializeGfxContext();
 
-            // Also set the renderer's window handle here.
             Renderer::SetMainWindowHandle(win_guid);
         }
 

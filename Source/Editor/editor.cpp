@@ -48,24 +48,27 @@ namespace polos
         glViewport(0, 0, m_AppWindowWidth, m_AppWindowHeight);
         m_EditorFramebuffer.Unbind();
 
-        m_TextureEntity = m_Scene.NewEntity();
+        ecs::Entity texture_entity = m_Scene.NewEntity();
 
-        m_TextureEntityTransformComponent = m_Scene.Assign<ecs::transform_component>(m_TextureEntity);
-        m_TextureEntityTransformComponent->position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        m_TextureEntityTransformComponent->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-        m_TextureEntityTransformComponent->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
+        auto* entity_transform_component = m_Scene.Assign<ecs::transform_component>(texture_entity);
+        auto* entity_texture_component   = m_Scene.Assign<ecs::texture2d_component>(texture_entity);
+        auto* entity_material_component  = m_Scene.Assign<ecs::material_component>(texture_entity);
 
-        m_TextureEntityTexture2DComponent = m_Scene.Assign<ecs::texture2d_component>(m_TextureEntity);
-        m_TextureEntityTexture2DComponent->texture = m_Texture;
-        m_TextureEntityTexture2DComponent->uvCoordinates = glm::vec2(1, 1);
+        entity_transform_component->position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        entity_transform_component->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        entity_transform_component->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        auto* info       = m_Scene.Get<ecs::info_component>(m_TextureEntity);
-        std::string name = "Texture";
-        std::ranges::copy(name, info->name);
+        entity_texture_component->texture = m_Texture;
+
+        entity_material_component->shader = m_ShaderTexture;
+
+        auto* info_component = m_Scene.Get<ecs::info_component>(texture_entity);
+        std::string name("Texture");
+        std::ranges::copy(name, info_component->name);
 
         // move to initial position
-        shapes::MoveShape2DToPosition(m_Model, m_TextureEntityTransformComponent->position);
-        m_ScaledModel = shapes::ScaleShape2D(m_Model, m_TextureEntityTransformComponent->scale.x, m_TextureEntityTransformComponent->scale.y);
+        shapes::MoveShape2DToPosition(m_Model, entity_transform_component->position);
+        m_ScaledModel = shapes::ScaleShape2D(m_Model, entity_transform_component->scale.x, entity_transform_component->scale.y);
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
         SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
@@ -104,7 +107,7 @@ namespace polos
         m_EditorFramebuffer.Clear();
 
         m_EditorFramebuffer.Bind();
-        RenderTexture2D(m_ScaledModel, m_Texture, *m_ShaderTexture);
+        Renderer::RenderScene(m_Scene);
         //RenderRectangle(m_Model, *m_ShaderBasicColor);
         m_EditorFramebuffer.Unbind();
 
@@ -334,8 +337,10 @@ namespace polos
                 m_EditorFramebufferUVCoords1,
                 m_EditorFramebufferUVCoords2
             );
-
-            ImGui::DragFloat2("UV Coords", glm::value_ptr(texture2d_component->uvCoordinates), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Bottom Left", glm::value_ptr(texture2d_component->uvBottomLeft), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Bottom Right", glm::value_ptr(texture2d_component->uvBottomRight), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Top Right", glm::value_ptr(texture2d_component->uvTopRight), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Top Left", glm::value_ptr(texture2d_component->uvTopLeft), 0.01f);
         }
     }
 

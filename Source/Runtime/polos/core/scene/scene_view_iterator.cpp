@@ -7,7 +7,7 @@ namespace polos
         : m_Index{p_Index}, m_View{p_View}
     {}
 
-    ecs::Entity& SceneViewIterator::operator*() const
+    ecs::Entity SceneViewIterator::operator*() const
     {
         return(m_View->scene->m_Entities[m_Index].id);
     }
@@ -45,11 +45,9 @@ namespace polos
         auto& entities = m_View->scene->m_Entities;
         auto& all = m_View->iterateAll;
 
-        return ecs::IsEntityValid(
-                   entities[m_Index].id) &&
-               // It has the correct component mask
-               (all || (mask == (mask & entities[m_Index].mask))
-        );
+        bool has_correct_mask = (all || (mask == (mask & entities[m_Index].mask)));
+
+        return ecs::IsEntityValid(entities[m_Index].id) && has_correct_mask;
     }
 } // namespace polos
 

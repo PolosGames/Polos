@@ -8,7 +8,11 @@ namespace polos::ecs
     struct texture2d_component final : Component<texture2d_component>
     {
         TextureRef texture;
-        glm::vec2 uvCoordinates{};
+        glm::vec2  uvBottomLeft  = glm::vec2(0.0f, 0.0f);   
+        glm::vec2  uvBottomRight = glm::vec2(1.0f, 0.0f);  
+        glm::vec2  uvTopRight    = glm::vec2(1.0f, 1.0f);     
+        glm::vec2  uvTopLeft     = glm::vec2(0.0f, 1.0f);      
+        bool       hasUvChanged{};
     };
 
 } // namespace polos::ecs

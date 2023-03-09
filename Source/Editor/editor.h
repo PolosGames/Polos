@@ -59,7 +59,5 @@ namespace polos
         Scene m_Scene;
         ecs::Entity m_SelectedEntity;
         ecs::Entity m_TextureEntity;
-        ecs::transform_component* m_TextureEntityTransformComponent;
-        ecs::texture2d_component* m_TextureEntityTexture2DComponent;
     };
 }
