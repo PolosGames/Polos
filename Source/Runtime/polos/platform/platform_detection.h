@@ -27,9 +27,3 @@
 #elif defined(_MSC_VER) && (_MSC_VER >= 1900)
 #   define POLOS_MSC
 #endif
-
-#if defined(NDEBUG)
-#   define PL_RELEASE
-#else
-#   define PL_DEBUG
-#endif
