@@ -4,9 +4,8 @@ REM Change below stuff with as you need
 
 :: Build type categories: 
 :: Release
-:: RelWithDebInfo (Recommended when developing)
+:: RelWithDebInfo
 :: Debug
-:: MinSizeRel
 SET BUILD_TYPE=Release
 SET BUILD_DIR=build
 SET ENGINE_INSTALL_DIR=bin
@@ -22,12 +21,15 @@ SET /A ENABLE_PROFILING=0
 SET /A ENABLE_LOGGING=1
 SET /A GUI_USE_IMGUI=1
 SET /A BUILD_EDITOR=1
+::Will export the engine to bin folder
+SET /A EXPORT_ENGINE=1
 
 
 :: DONT CHANGE THESE TWO
 SET BUILD_FOLDER=%BUILD_DIR%/%BUILD_TYPE%
 SET INSTALL_PREFIX=%ENGINE_INSTALL_DIR%/%BUILD_TYPE%
 
+pushd %~dp0\..\
 :: Configure cmake
 cmake .^
  -D CMAKE_BUILD_TYPE=%BUILD_TYPE%^
@@ -36,9 +38,9 @@ cmake .^
  -D USE_OPENGL=%USE_OPENGL%^
  -D USE_VULKAN=%USE_VULKAN%^
  -D ENABLE_PROFILING=%ENABLE_PROFILING%^
- -D ENABLE_LOGGING=%ENABLE_LOGGING%^
  -D GUI_USE_IMGUI=%GUI_USE_IMGUI%^
  -D BUILD_EDITOR=%BUILD_EDITOR%^
+ -D EXPORT_ENGINE=%EXPORT_ENGINE%^
  -D CMAKE_EXPORT_COMPILE_COMMANDS=1^
  -G %GENERATOR%^
  -D CMAKE_C_COMPILER=%C_COMPILER%^
@@ -46,5 +48,7 @@ cmake .^
  -B %BUILD_FOLDER%
 
 cmake --build %BUILD_FOLDER% -j %NUMBER_OF_PROCESSORS% --target=install --config=%BUILD_TYPE%
+
+popd
 
 pause

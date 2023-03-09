@@ -2,9 +2,8 @@
 
 # Build type categories: 
 # Release
-# RelWithDebInfo (Recommended when developing)
+# RelWithDebInfo
 # Debug
-# MinSizeRel
 BUILD_TYPE=Release
 BUILD_DIR=build
 ENGINE_INSTALL_DIR=bin
@@ -19,10 +18,14 @@ ENABLE_PROFILING=0
 ENABLE_LOGGING=1
 GUI_USE_IMGUI=1
 BUILD_EDITOR=1
+# Will export the engine to the bin folder
+EXPORT_ENGINE=1
 
 # You don't have to change these
 BUILD_FOLDER=$BUILD_DIR/$BUILD_TYPE
 INSTALL_PREFIX=$ENGINE_INSTALL_DIR/$BUILD_TYPE
+
+cd ../
 
 #Configure cmake
 cmake . -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
@@ -34,6 +37,7 @@ cmake . -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
 -D ENABLE_LOGGING=$ENABLE_LOGGING \
 -D GUI_USE_IMGUI=$GUI_USE_IMGUI \
 -D BUILD_EDITOR=$BUILD_EDITOR \
+-D EXPORT_ENGINE=$EXPORT_ENGINE \
 -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
 -G $GENERATOR \
 -D CMAKE_C_COMPILER=$C_COMPILER% \
