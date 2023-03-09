@@ -26,6 +26,6 @@
 #   define STATIC_ASSERT(check) static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else
 #   define DEBUGBRK
-#   define ASSERT(check)        PL_VOID_CAST(check)
+#   define ASSERT(check, ...)   PL_VOID_CAST(check)
 #   define STATIC_ASSERT(check) PL_VOID_CAST(check)
 #endif
