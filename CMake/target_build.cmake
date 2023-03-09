@@ -23,10 +23,7 @@ function(build_options target warnings)
                     $<$<CONFIG:MinSizeRel>:-O3>
         )
     endif()
-
-    string(REGEX REPLACE "/DNDEBUG " "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /DDEBUG" )
-    string(REGEX REPLACE "/DNDEBUG " "" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /DDEBUG" )
-
+    
     # if we are compiling a third party library, we don't care about the
     # warnings, so turn them off
     if(NOT ${warnings})
