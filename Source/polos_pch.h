@@ -42,5 +42,6 @@
 #include "polos/utils/feature.h"
 #include "polos/core/log.h"
 #include "polos/core/engine/engine_config.h"
+#include "polos/utils/type_util.h"
 
 namespace pl = ::polos;
