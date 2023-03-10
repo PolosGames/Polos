@@ -24,4 +24,6 @@ namespace polos::ecs
         float zoom{};
     };
 
+    template<> void SerializeComponent(std::vector<byte>& p_OutVector, camera_component* p_Component);
+    template<> camera_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
 } // namespace polos::ecs

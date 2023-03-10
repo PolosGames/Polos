@@ -17,7 +17,7 @@ namespace polos
         StringId          shader_name;
         std::string const shader_code = [&p_GlslFile, &shader_name] {
             File file(p_GlslFile.data(), k_Read);
-            shader_name = get_string_id(file.fileName);
+            shader_name = GetStringId(file.fileName);
             return file.ReadStr();
         }();
 
@@ -32,7 +32,7 @@ namespace polos
             std::size_t eol        = shader_code.find_first_of('\n', pos);
             std::size_t type_start = pos + 8;
             ASSERT(eol != std::string::npos);
-            StringId s_shader_type = get_string_id(shader_code.substr(type_start, eol - type_start));
+            StringId s_shader_type = GetStringId(shader_code.substr(type_start, eol - type_start));
 
             std::size_t start_of_shader = shader_code.find_first_of("#version", eol);
             std::size_t end_of_shader   = shader_code.find("#shader", eol);
@@ -70,7 +70,7 @@ namespace polos
         StringId          shader_name;
         std::string const vert_code = [&p_VertFile, &shader_name] {
             File file(p_VertFile.data(), k_Read);
-            shader_name = get_string_id(file.fileName);
+            shader_name = GetStringId(file.fileName);
             return file.ReadStr();
         }();
 

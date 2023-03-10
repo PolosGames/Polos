@@ -11,4 +11,6 @@ namespace polos::ecs
         bool isVisible{};
     };
 
+    template<> void SerializeComponent(std::vector<byte>& p_OutVector, info_component* p_Component);
+    template<> info_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
 } // namespace polos::ecs

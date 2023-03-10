@@ -40,7 +40,7 @@ namespace polos
 
             m_LookupTable.insert(
                 {
-                    get_string_id(uniform_name.get()),
+                    GetStringId(uniform_name.get()),
                     { glGetUniformLocation(m_ProgramId, uniform_name.get()), count }
                 }
             );

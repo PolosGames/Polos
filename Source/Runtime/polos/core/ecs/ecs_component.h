@@ -13,11 +13,14 @@ namespace polos::ecs
     {
     public:
         Component();
-
+    public:
         static int32 GetId();
     private:
         static int32 s_Id;
     };
+
+    template<typename T>
+    concept EcsComponent = std::is_base_of_v<Component<T>, T>;
 
     template<typename T>
     int32 Component<T>::s_Id = s_ComponentCounter++;
@@ -34,6 +37,10 @@ namespace polos::ecs
         return s_Id;
     }
 
-    template<typename T>
-    concept EcsComponent = std::is_base_of_v<Component<T>, T>;
-} // namespace polos::ecs
+    template<EcsComponent T>
+    inline void SerializeComponent(std::vector<byte>& p_OutVector, T* p_Component);
+
+    template<EcsComponent T>
+    inline T DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
+
+}// namespace polos::ecs
