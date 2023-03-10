@@ -33,31 +33,26 @@ namespace polos
         void DrawTransformComponent();
         void DrawTexture2DComponent();
     private:
-        Shader* m_ShaderTexture;
-        Shader* m_ShaderBasicColor;
-        TextureRef m_Texture;
-        
-        glm::mat4 m_Model;
-        glm::mat4 m_ScaledModel;
+        Shader* m_ShaderTexture{};
+        Shader* m_ShaderBasicColor{};
 
-        int32 m_Key;
+        int32 m_Key{};
 
         polos::GUID m_AppWindow;
-        int32 m_AppWindowWidth;
-        int32 m_AppWindowHeight;
-        float m_AspectRatio;
+        int32 m_AppWindowWidth{};
+        int32 m_AppWindowHeight{};
+        float m_AspectRatio{};
 
-        float m_GuiFontScale;
+        float m_GuiFontScale{};
 
         pl::Camera m_EditorCamera;
         FrameBuffer m_EditorFramebuffer;
-        float  m_EditorFramebufferAspectRatioBefore;
-        ImVec2 m_EditorFramebufferDimensions;
-        ImVec2 m_EditorFramebufferUVCoords1;
-        ImVec2 m_EditorFramebufferUVCoords2;
+        float  m_EditorFramebufferAspectRatioBefore{};
+        ImVec2 m_EditorFramebufferDimensions{};
+        ImVec2 m_EditorFramebufferUVCoords1{};
+        ImVec2 m_EditorFramebufferUVCoords2{};
 
         Scene m_Scene;
-        ecs::Entity m_SelectedEntity;
-        ecs::Entity m_TextureEntity;
+        ecs::Entity m_SelectedEntity{};
     };
 }

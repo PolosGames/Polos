@@ -17,7 +17,7 @@ AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakAfterReturnType: None
-AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: No
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel: false
@@ -30,7 +30,7 @@ BraceWrapping:
   AfterNamespace: true
   AfterUnion: true
   BeforeCatch: false
-  BeforeElse: false
+  BeforeElse: true
   BeforeLambdaBody: true
   IndentBraces: false
   SplitEmptyFunction: false

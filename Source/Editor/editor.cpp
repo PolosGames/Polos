@@ -21,11 +21,7 @@ namespace polos
     Editor::Editor()
         : m_EditorCamera{{0.0f, 0.0f, 5.0f}, {0.0f, 1.0f, 0.0f}}
         , m_GuiFontScale{1.8f}
-        , m_Key{0}
-        , m_Model{glm::mat4(1.0f)}
-        , m_ScaledModel{glm::mat4(1.0f)}
         , m_EditorFramebufferAspectRatioBefore{0.0f}
-        , m_EditorFramebufferDimensions{ImVec2{0.0f, 0.0f}}
         , m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}}
         , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
     {
@@ -36,7 +32,6 @@ namespace polos
         ShaderLib::Load("resources/shaders/texture.vert", "resources/shaders/texture.frag");
         m_ShaderTexture    = &ShaderLib::Get("texture"_sid);
         m_ShaderBasicColor = &ShaderLib::Get("basic_color"_sid);
-        m_Texture = Texture::Load("resources/textures/linux-22621.png");
 
         Optional<window_props> app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
         m_AppWindowWidth  = app_window_props->width;
@@ -58,17 +53,13 @@ namespace polos
         entity_transform_component->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         entity_transform_component->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        entity_texture_component->texture = m_Texture;
+        entity_texture_component->texture = Texture::Load("resources/textures/linux-22621.png");
 
         entity_material_component->shader = m_ShaderTexture;
 
         auto* info_component = m_Scene.Get<ecs::info_component>(texture_entity);
         std::string name("Texture");
         std::ranges::copy(name, info_component->name);
-
-        // move to initial position
-        shapes::MoveShape2DToPosition(m_Model, entity_transform_component->position);
-        m_ScaledModel = shapes::ScaleShape2D(m_Model, entity_transform_component->scale.x, entity_transform_component->scale.y);
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
         SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
@@ -237,10 +228,10 @@ namespace polos
 
             m_EditorFramebufferAspectRatioBefore = drawable_area_aspect_ratio;
         }
-        
+
         auto framebuffer_texture_id = reinterpret_cast<ImTextureID>(static_cast<uint64>(m_EditorFramebuffer.GetFrameBufferTextureHandle()));
-        
-        
+
+
         ImGui::Image(
             framebuffer_texture_id,
             m_EditorFramebufferDimensions,
@@ -313,14 +304,8 @@ namespace polos
         {
             auto* transform_component = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
 
-            bool transform_changed{};
-            transform_changed |= ImGui::DragFloat3("Position", glm::value_ptr(transform_component->position), 0.01f);
-            transform_changed |= ImGui::DragFloat3("Scale", glm::value_ptr(transform_component->scale), 0.01f);
-            if (transform_changed)
-            {
-                transform_component->position = shapes::MoveShape2DToPosition(m_Model, transform_component->position);
-                m_ScaledModel                  = shapes::ScaleShape2D(m_Model, transform_component->scale);
-            }
+            ImGui::DragFloat3("Position", glm::value_ptr(transform_component->position), 0.01f);
+            ImGui::DragFloat3("Scale", glm::value_ptr(transform_component->scale), 0.01f);
         }
     }
 
