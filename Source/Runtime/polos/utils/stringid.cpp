@@ -10,7 +10,7 @@ namespace polos
         std::size_t                   g_Counter{};
     }
 
-    StringId get_string_id(std::string const& p_Str)
+    StringId GetStringId(std::string const& p_Str)
     {
         StringId    sid  = hash_function(p_Str.c_str());
         std::size_t i{};

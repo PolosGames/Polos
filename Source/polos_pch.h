@@ -14,6 +14,7 @@
 #include <mutex>
 #include <utility>
 #include <variant>
+#include <ranges>
 
 #include <fstream>
 #include <sstream>

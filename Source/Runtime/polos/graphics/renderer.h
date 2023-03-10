@@ -15,6 +15,8 @@ namespace polos
     class Renderer
     {
     public:
+        Renderer();
+    public:
         void Startup();
         void Shutdown();
 

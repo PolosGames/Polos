@@ -1,6 +1,8 @@
+
 #include "component_memory.h"
 
 #include "polos/core/ecs/components/components.h"
+#include "polos/core/engine/engine.h"
 
 namespace polos::ecs
 {
@@ -25,6 +27,9 @@ namespace polos::ecs
 
     ComponentMemory::ComponentMemory()
     {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+
         auto const offsets = GetComponentOffsetArray();
         auto const sizes   = base_component::s_ComponentSizeArray;
 

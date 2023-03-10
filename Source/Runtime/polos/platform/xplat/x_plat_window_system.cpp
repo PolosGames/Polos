@@ -1,18 +1,18 @@
-
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
+
+#include "polos/core/window_system.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include "polos/core/window_system.h"
 #include "polos/core/window.h"
 #include "polos/core/log.h"
 #include "polos/core/event_bus.h"
 #include "polos/utils/guid.h"
 #include "polos/graphics/renderer.h"
-
 #include "polos/core/events/input/input_events.h"
 #include "polos/core/events/window/window_events.h"
+#include "polos/core/engine/engine.h"
 
 namespace polos
 {
@@ -137,6 +137,12 @@ namespace polos
     }
 
     WindowSystem* WindowSystem::s_Instance;
+
+    WindowSystem::WindowSystem()
+    {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+    }
 
     void WindowSystem::Startup()
     {

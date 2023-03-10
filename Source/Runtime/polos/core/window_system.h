@@ -13,6 +13,8 @@ namespace polos
     class WindowSystem
     {
     public:
+        WindowSystem();
+    public:
         void Startup();
         void Shutdown();
 

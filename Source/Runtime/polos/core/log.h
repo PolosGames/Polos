@@ -21,6 +21,8 @@ namespace polos
             k_LoggerNone
         };
     public:
+        Log();
+    public:
         void Startup();
         void Shutdown();
 

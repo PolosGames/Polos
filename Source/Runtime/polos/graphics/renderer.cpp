@@ -8,6 +8,7 @@
 #include "polos/graphics/shader_lib.h"
 #include "polos/core/scene/scene_view.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
+#include "polos/core/engine/engine.h"
 
 namespace polos
 {
@@ -32,6 +33,12 @@ namespace polos
     }
 
     Renderer* Renderer::s_Instance;
+
+    Renderer::Renderer()
+    {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+    }
 
     void Renderer::Startup()
     {

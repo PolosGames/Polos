@@ -5,11 +5,17 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "polos/containers/containers.h"
-
+#include "polos/core/engine/engine.h"
 
 namespace polos
 {
     Log* Log::s_Instance;
+
+    Log::Log()
+    {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+    }
 
     void Log::Startup()
     {

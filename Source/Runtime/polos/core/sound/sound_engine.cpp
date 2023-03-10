@@ -3,10 +3,17 @@
 
 #include "polos/core/update_queue.h"
 #include "polos/utils/stringid.h"
+#include "polos/core/engine/engine.h"
 
 namespace polos
 {
     SoundEngine* SoundEngine::s_Instance;
+
+    SoundEngine::SoundEngine()
+    {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+    }
 
     void SoundEngine::Startup()
     {
@@ -31,7 +38,7 @@ namespace polos
     {
         FMOD_RESULT result;
 
-        StringId sound_string_id = get_string_id(p_SoundName);
+        StringId sound_string_id = GetStringId(p_SoundName);
         
         auto  iterator_pair    = m_Sounds.insert({sound_string_id, sound_attributes{} });
         auto& sound_attributes = iterator_pair.first->second;
@@ -58,7 +65,7 @@ namespace polos
 
     void SoundEngine::PlaySoundByName(std::string const& p_SoundName)
     {
-        StringId sound_id = get_string_id(p_SoundName);
+        StringId sound_id = GetStringId(p_SoundName);
 
         PlaySoundById(sound_id);
     }

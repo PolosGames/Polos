@@ -13,7 +13,7 @@ namespace polos
     class EventBus
     {
     public:
-        EventBus() noexcept = default;
+        EventBus();
 
         void Startup();
         void Shutdown();

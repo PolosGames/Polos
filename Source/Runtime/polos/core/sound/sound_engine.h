@@ -9,6 +9,8 @@ namespace polos
 	class SoundEngine
     {
     public:
+        SoundEngine();
+    public:
         void Startup();
         void Shutdown();
 
