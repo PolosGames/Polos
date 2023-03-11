@@ -82,7 +82,7 @@ namespace polos
 
             auto*     transform_comp = scene.Get<ecs::transform_component>(entity);
             glm::mat4 model_matrix(1.0f);
-            model_matrix = glm::translate(model_matrix, glm::vec3(transform_comp->position));
+            model_matrix = glm::translate(model_matrix, transform_comp->position);
             shapes::RotateShape2D(model_matrix, transform_comp->rotation);
             model_matrix = glm::scale(model_matrix, transform_comp->scale);
 
