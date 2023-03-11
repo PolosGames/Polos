@@ -68,7 +68,7 @@ namespace polos
         
         if constexpr (std::is_same_v<T, ecs::texture2d_component>)
         {
-            comp_ptr->texture = Texture::Load(std::string_view{});
+            comp_ptr->texture = Texture::Load({});
         }
 
         m_Entities[entity_index].mask.set(comp_id);
