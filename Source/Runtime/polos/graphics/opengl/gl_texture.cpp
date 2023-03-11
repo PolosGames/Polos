@@ -74,6 +74,7 @@ namespace polos
             {
                 std::copy(p_Path.begin(), p_Path.end(), texture->textureName.begin());
             }
+            texture->textureName[p_Path.size()] = '\0';
 
             return texture;
         }
