@@ -45,6 +45,7 @@ namespace polos
         ecs::texture2d_component{};
         ecs::material_component{};
         ecs::camera_component{};
+        ecs::animator_component{};
     }
 
     Engine* Engine::s_Instance;
