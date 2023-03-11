@@ -32,13 +32,13 @@ namespace polos
         else if (p_Direction == k_Backward)
             position -= front * velocity;
         if (p_Direction == k_Left)
-            position += right * velocity;
-        else if (p_Direction == k_Right)
             position -= right * velocity;
+        else if (p_Direction == k_Right)
+            position += right * velocity;
         if (p_Direction == k_Up)
-            position -= up * velocity;
-        else if (p_Direction == k_Down)
             position += up * velocity;
+        else if (p_Direction == k_Down)
+            position -= up * velocity;
     }
     
     void Camera::ProcessMouseMovement(float p_XOffset, float p_YOffset, GLboolean p_ConstrainPitch)
