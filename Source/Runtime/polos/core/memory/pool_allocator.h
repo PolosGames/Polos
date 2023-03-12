@@ -71,7 +71,7 @@ namespace polos
         , m_ChunkSize{sizeof(T)}
         , m_ChunkAmount{p_Amount}
     {
-        ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
+        PL_ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
         // FreeListHead gets created in Clear function
         Clear();
     }
@@ -85,7 +85,7 @@ namespace polos
         internalBuffer.bufferSize = m_ChunkSize * m_ChunkAmount;
         internalBuffer.buffer     = static_cast<byte*>(std::malloc(internalBuffer.bufferSize));
 
-        ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
+        PL_ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
 
         // FreeListHead gets created in Clear function
         Clear();
@@ -142,7 +142,7 @@ namespace polos
     void PoolAllocator<T>::Free(void*& ptr)
     {
         PROFILE_FUNC();
-        ASSERT(!(internalBuffer.buffer <= ptr && ptr < internalBuffer.buffer + internalBuffer.bufferSize));
+        PL_ASSERT(!(internalBuffer.buffer <= ptr && ptr < internalBuffer.buffer + internalBuffer.bufferSize));
 
         static_cast<T*>(ptr)->~T();
         auto* node     = new (ptr) free_node{m_FreeListHead};

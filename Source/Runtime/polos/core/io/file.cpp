@@ -76,7 +76,7 @@ namespace polos
     
     DArray<byte> File::ReadByte()
     {
-        ASSERT(m_Mode & (FileMode::k_Read | FileMode::k_Binary));
+        PL_ASSERT(m_Mode & (FileMode::k_Read | FileMode::k_Binary));
         // https://stackoverflow.com/questions/15138353/how-to-read-a-binary-file-into-a-vector-of-unsigned-chars
 
         return DArray<byte>(

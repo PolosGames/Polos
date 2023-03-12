@@ -10,7 +10,7 @@ namespace polos::time
     {
         LARGE_INTEGER freq;
         BOOL ret = QueryPerformanceFrequency(&freq);
-        ASSERT(ret, "QueryPerformanceFrequency didn't work.");
+        PL_ASSERT(ret, "QueryPerformanceFrequency didn't work.");
 
         s_Freq = freq.QuadPart;
     }
@@ -20,7 +20,7 @@ namespace polos::time
         LARGE_INTEGER counter;
 
         BOOL ret = QueryPerformanceCounter(&counter);
-        ASSERT(ret, "QueryPerformanceCounter didn't work.");
+        PL_ASSERT(ret, "QueryPerformanceCounter didn't work.");
 
         // steady_clock's implementation.
         const int64 whole = (counter.QuadPart / s_Freq) * Period::den;

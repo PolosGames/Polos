@@ -151,7 +151,7 @@ namespace polos
         {
             glfwSetErrorCallback(GLFWErrorCallback);
             int r = glfwInit(); static_cast<void>(r);
-            ASSERT(r == GLFW_TRUE, "Failed to initialize GLFW!");
+            PL_ASSERT(r == GLFW_TRUE, "Failed to initialize GLFW!");
             m_IsInitialized = true;
 
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

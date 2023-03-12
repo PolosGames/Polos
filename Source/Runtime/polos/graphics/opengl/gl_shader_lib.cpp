@@ -31,7 +31,7 @@ namespace polos
         {
             std::size_t eol        = shader_code.find_first_of('\n', pos);
             std::size_t type_start = pos + 8;
-            ASSERT(eol != std::string::npos);
+            PL_ASSERT(eol != std::string::npos);
             StringId s_shader_type = GetStringId(shader_code.substr(type_start, eol - type_start));
 
             std::size_t start_of_shader = shader_code.find_first_of("#version", eol);

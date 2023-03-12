@@ -11,7 +11,7 @@
 #       include <assert.h>
 #       define DEBUGBRK assert(0);
 #   endif
-#   define ASSERT(check, ...)                                                                \
+#   define PL_ASSERT(check, ...)                                                             \
         {                                                                                    \
             if (!(check))                                                                    \
             {                                                                                \
@@ -26,6 +26,6 @@
 #   define STATIC_ASSERT(check) static_assert(check, "Compile time assertion fail: " PL_STRINGIFY(check))
 #else
 #   define DEBUGBRK
-#   define ASSERT(check, ...)   PL_VOID_CAST(check)
+#   define PL_ASSERT(check, ...)   PL_VOID_CAST(check)
 #   define STATIC_ASSERT(check) PL_VOID_CAST(check)
 #endif

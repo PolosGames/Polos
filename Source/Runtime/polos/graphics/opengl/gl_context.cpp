@@ -65,7 +65,7 @@ namespace polos
     void GraphicsContext::Initialize(void* /*p_WindowHandle*/)
     {
         int result = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-        ASSERT(result, "Failed to load OpenGL context!");
+        PL_ASSERT(result, "Failed to load OpenGL context!");
 
 #ifdef PL_DEBUG
         glEnable(GL_DEBUG_OUTPUT);
