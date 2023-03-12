@@ -14,22 +14,27 @@ namespace polos
         k_Down,
         k_None
     };
-    
-    namespace globals
-    {
-        inline constexpr float k_Yaw{-90.0f};
-        inline constexpr float k_Pitch{0.0f};
-        inline constexpr float k_Speed{2.5f};
-        inline constexpr float k_Sensitivity{0.1f};
-        inline constexpr float k_Zoom{45.0f};
-    }
 
     // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
     class Camera
     {
+    private:
+        static constexpr float k_Yaw{-90.0f};
+        static constexpr float k_Pitch{0.0f};
+        static constexpr float k_Speed{2.5f};
+        static constexpr float k_Sensitivity{0.1f};
+        static constexpr float k_Zoom{45.0f};
     public:
         // constructor with vectors
-        Camera(glm::vec3 p_Position, glm::vec3 p_WorldUp, float p_Yaw = globals::k_Yaw, float p_Pitch = globals::k_Pitch);
+        Camera(
+            glm::vec3 p_Position,
+            glm::vec3 p_WorldUp,
+            float p_Yaw = k_Yaw,
+            float p_Pitch = k_Pitch,
+            float p_Speed = k_Speed,
+            float p_Sensitivity = k_Sensitivity,
+            float p_Zoom = k_Zoom
+        );
 
         // returns the view matrix calculated using Euler Angles and the LookAt Matrix
         static PL_NODISCARD glm::mat4 GetViewMatrix();
@@ -42,7 +47,10 @@ namespace polos
         
         // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
         void ProcessMouseScroll(float p_YOffset);
-        
+    private:
+        // calculates the front vector from the Camera's (updated) Euler Angles
+        void update_camera_vectors();
+    public:
         // camera Attributes
         glm::vec3 position;
         glm::vec3 front;
@@ -60,8 +68,5 @@ namespace polos
         float zoom;
     private:
         static Camera* s_Instance;
-
-        // calculates the front vector from the Camera's (updated) Euler Angles
-        void update_camera_vectors();
     };
 }

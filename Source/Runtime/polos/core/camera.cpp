@@ -5,7 +5,15 @@ namespace polos
 {
     Camera* Camera::s_Instance;
 
-    Camera::Camera(glm::vec3 p_Position, glm::vec3 p_WorldUp, float p_Yaw, float p_Pitch)
+    Camera::Camera(
+        glm::vec3 p_Position,
+        glm::vec3 p_WorldUp,
+        float     p_Yaw,
+        float     p_Pitch,
+        float     p_Speed,
+        float     p_Sensitivity,
+        float     p_Zoom
+    )
         : position{p_Position},
           front{glm::vec3{0.0f, 0.0f, -1.0f}},
           up{},
@@ -13,14 +21,12 @@ namespace polos
           worldUp{p_WorldUp},
           yaw{p_Yaw},
           pitch{p_Pitch},
-          movementSpeed{globals::k_Speed},
-          mouseSensitivity{globals::k_Sensitivity},
-          zoom{globals::k_Zoom}
+          movementSpeed{p_Speed},
+          mouseSensitivity{p_Sensitivity},
+          zoom{p_Zoom}
     {
         s_Instance = this;
-        
-        static_cast<void>(globals::k_Yaw);
-        static_cast<void>(globals::k_Pitch);
+
         update_camera_vectors();
     }
     
