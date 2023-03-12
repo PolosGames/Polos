@@ -13,7 +13,6 @@ namespace polos
     public:
         static void    Load(std::string_view p_GlslFile);
         static void    Load(std::string_view p_VertFile, std::string_view p_FragFile);
-        static void    Finalize();
 
         static Shader& Get(StringId p_ShaderNameSid);
         
