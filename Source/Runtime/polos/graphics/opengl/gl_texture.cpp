@@ -12,8 +12,8 @@ namespace polos
     Texture::Texture()
     {}
 
-    Texture::Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels)
-        : id{p_Id}, width{p_Width}, height{p_Height}, channels{p_Channels}
+    Texture::Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels, std::string_view p_Name)
+        : id{p_Id}, width{p_Width}, height{p_Height}, channels{p_Channels}, textureName(p_Name)
     {}
 
     Texture::~Texture()
@@ -46,7 +46,7 @@ namespace polos
 
             LOG_ENGINE_WARN("[Texture::Load] Creating a empty texture because the path provided was nullptr.");
 
-            return std::make_shared<Texture>(handle, 0, 0, 4);
+            return std::make_shared<Texture>(handle, 0, 0, 4, "NoPathProvided");
         }
         
         auto* const pixel_data = stbi_load(path, &i_width, &i_height, &i_channels, 4);
@@ -69,12 +69,7 @@ namespace polos
 
             stbi_image_free(pixel_data);
 
-            auto texture         = std::make_shared<Texture>(handle, i_width, i_height, i_channels);
-            if (p_Path.size() <= k_MaxTextureNameSize)
-            {
-                std::copy(p_Path.begin(), p_Path.end(), texture->textureName.begin());
-            }
-            texture->textureName[p_Path.size()] = '\0';
+            auto texture = std::make_shared<Texture>(handle, i_width, i_height, i_channels, p_Path);
 
             return texture;
         }
@@ -83,7 +78,7 @@ namespace polos
 
         glDeleteTextures(1, &handle);
 
-        return std::make_shared<Texture>(0, 0, 0, 0);
+        return std::make_shared<Texture>(0, 0, 0, 0, "PathIsNotATexture");
     }
 
 }// namespace polos

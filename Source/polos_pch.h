@@ -15,6 +15,8 @@
 #include <utility>
 #include <variant>
 #include <ranges>
+#include <iterator>
+#include <compare>
 
 #include <fstream>
 #include <sstream>
@@ -44,5 +46,6 @@
 #include "polos/core/log.h"
 #include "polos/core/engine/engine_config.h"
 #include "polos/utils/type_util.h"
+#include "polos/containers/containers.h"
 
 namespace pl = ::polos;

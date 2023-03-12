@@ -8,7 +8,7 @@ namespace polos
         inline static constexpr std::size_t k_MaxTextureNameSize = 256;
 
         Texture();
-        Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels);
+        Texture(uint32 p_Id, int32 p_Width, int32 p_Height, int32 p_Channels, std::string_view p_Name);
         ~Texture();
         
         static std::shared_ptr<Texture> Load(std::string p_Path);
@@ -19,7 +19,7 @@ namespace polos
         int32  width{};
         int32  height{};
         int32  channels{};
-        std::array<char, k_MaxTextureNameSize> textureName;
+        CharArray<k_MaxTextureNameSize> textureName;
     };
 
     using TextureRef = std::shared_ptr<Texture>;

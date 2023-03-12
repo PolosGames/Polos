@@ -58,8 +58,7 @@ namespace polos
         entity_material_component->shader = m_ShaderTexture;
 
         auto* info_component = m_Scene.Get<ecs::info_component>(texture_entity);
-        std::string name("Texture");
-        std::ranges::copy(name, info_component->name);
+        info_component->name = "Texture";
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
         SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
@@ -159,9 +158,7 @@ namespace polos
             auto* info = m_Scene.Get<ecs::info_component>(entity_id);
             if(info != nullptr)
             {
-                char const* name = info->name;
-                
-                if (ImGui::Selectable(name, &info->isSelectedOnEditor))
+                if (ImGui::Selectable(info->name.c_str(), &info->isSelectedOnEditor))
                 {
                     // Unselection
                     if (!info->isSelectedOnEditor)

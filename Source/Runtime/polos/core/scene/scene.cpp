@@ -41,9 +41,8 @@ namespace polos
         
         // Add the info component
 
-        std::string name = "Entity " + std::to_string(entt_index);
         auto* info = Assign<ecs::info_component>(entt_id);
-        std::ranges::copy(name, info->name);
+        info->name = "Entity " + std::to_string(entt_index);
 
 
         return entt_id;

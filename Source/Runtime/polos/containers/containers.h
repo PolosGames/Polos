@@ -1,8 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <unordered_map>
-#include <optional>
+#include "polos/containers/char_array.h"
 
 namespace polos
 {
