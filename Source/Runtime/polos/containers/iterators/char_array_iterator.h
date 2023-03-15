@@ -152,7 +152,7 @@ namespace polos
         constexpr CharArrayIterator operator++(int) noexcept
         {
             CharArrayIterator tmp = *this;
-            base::operator++();
+            base::operator++(0);
             return tmp;
         }
 

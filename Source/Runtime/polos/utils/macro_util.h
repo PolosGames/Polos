@@ -34,3 +34,6 @@
 
 
 #define PL_VOID_CAST(Variable) static_cast<void>(Variable)
+
+#define PL_EMPTY()
+#define PL_DEFER(...) __VA_ARGS__ PL_EMPTY()

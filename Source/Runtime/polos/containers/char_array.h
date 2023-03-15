@@ -31,6 +31,7 @@ namespace polos
             {
                 std::copy(p_Str.begin(), p_Str.end(), std::begin(m_Elems));
                 m_Elems[p_Str.size()] = '\0';
+                m_RealSize = p_Str.size();
             }
         }
 
@@ -60,12 +61,12 @@ namespace polos
 
         constexpr auto end() noexcept -> iterator
         {
-            return iterator(m_Elems, Size);
+            return iterator(m_Elems, m_RealSize + 1);
         }
 
         constexpr auto end() const noexcept -> const_iterator
         {
-            return const_iterator(m_Elems, Size);
+            return const_iterator(m_Elems, m_RealSize + 1);
         }
 
         constexpr auto cbegin() const noexcept -> const_iterator
@@ -110,7 +111,7 @@ namespace polos
 
         constexpr auto size() const noexcept -> size_type
         {
-            return Size;
+            return m_RealSize;
         }
 
         constexpr auto max_size() const noexcept -> size_type
@@ -182,12 +183,21 @@ namespace polos
             {
                 std::copy(p_Str.begin(), p_Str.end(), std::begin(m_Elems));
                 m_Elems[p_Str.size()] = '\0';
+                m_RealSize = p_Str.size();
             }
 
             return *this;
         }
 
+        constexpr operator std::string() const
+        {
+            std::string s;
+            s = m_Elems;
+            return s;
+        }
+
     private:
         char m_Elems[Size];
+        std::size_t m_RealSize{};
     };
 }// namespace polos
