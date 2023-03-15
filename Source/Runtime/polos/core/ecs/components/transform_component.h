@@ -11,6 +11,8 @@ namespace polos::ecs
         glm::vec3 scale{};
     };
 
+    template<> inline constexpr int32 k_ComponentId<transform_component> = 1;
+
     template<> void SerializeComponent(std::vector<byte>& p_OutVector, transform_component* p_Component);
     template<> transform_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
 

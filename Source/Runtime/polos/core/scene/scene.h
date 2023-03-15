@@ -13,7 +13,11 @@ namespace polos
         Scene();
 
         ecs::Entity NewEntity();
-        void   DestroyEntity(ecs::Entity p_Entity);
+        void        DestroyEntity(ecs::Entity p_Entity);
+
+        ecs::Entity      GetEntityByIndex(ecs::EntityIndex p_Index);
+        ecs::EntityData& GetEntityDataByIndex(ecs::EntityIndex p_Index);
+        std::size_t      GetEntityPoolSize();
 
         template<ecs::EcsComponent T, typename... Args>
         T* Assign(ecs::Entity p_Entity, Args&&... p_Args);
@@ -29,9 +33,6 @@ namespace polos
 
         std::vector<byte> Serialize();
     private:
-        friend class SceneViewIterator;
-        template<typename...T> friend class SceneView;
-
         uint32_t                      m_EntitySize{};
         std::vector<ecs::EntityIndex> m_FreeEntities;
 
@@ -63,9 +64,9 @@ namespace polos
             new (where) ecs::ComponentPool();
             std::launder(reinterpret_cast<ecs::ComponentPool*>(where))->Create<T>();
         }
-        
+
         auto* comp_ptr = new (m_CompPools[comp_id].Get(entity_index)) T(std::forward<Args>(p_Args)...);
-        
+
         if constexpr (std::is_same_v<T, ecs::texture2d_component>)
         {
             comp_ptr->texture = Texture::Load({});
@@ -85,7 +86,7 @@ namespace polos
             return nullptr;
         }
 
-        int32            comp_id    = ecs::Component<T>::GetId();
+        int32            comp_id = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entt_index].id != p_Entity)
@@ -107,7 +108,7 @@ namespace polos
     template<ecs::EcsComponent T>
     inline bool Scene::HasComponent(ecs::Entity p_Entity)
     {
-        int32            comp_id    = ecs::Component<T>::GetId();
+        int32            comp_id = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         return m_Entities[entt_index].mask.test(comp_id);
@@ -116,7 +117,7 @@ namespace polos
     template<ecs::EcsComponent T>
     inline void Scene::Remove(ecs::Entity p_Entity)
     {
-        int32            comp_id    = ecs::Component<T>::GetId();
+        int32            comp_id = ecs::Component<T>::GetId();
         ecs::EntityIndex entt_index = ecs::GetEntityIndex(p_Entity);
 
         if (m_Entities[entt_index].id != p_Entity)

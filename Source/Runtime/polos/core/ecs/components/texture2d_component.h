@@ -15,4 +15,5 @@ namespace polos::ecs
         bool       hasUvChanged{};
     };
 
+    template<> inline constexpr int32 k_ComponentId<texture2d_component> = 2;
 } // namespace polos::ecs

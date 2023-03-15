@@ -13,6 +13,7 @@
 #include "polos/graphics/shapes/shapes2d_transform.h"
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/scene/scene_view.h"
+#include "polos/core/ecs/sets/info_set.h"
 
 #include <polos.h>
 
@@ -152,16 +153,14 @@ namespace polos
         ImGui::End();
 
         ImGui::Begin("Scene");
-        auto it = SceneView<ecs::info_component>(m_Scene);
-        for(auto const& entity_id : it)
+        for(auto info : SceneView<ecs::info_set>(m_Scene))
         {
-            auto* info = m_Scene.Get<ecs::info_component>(entity_id);
-            if(info != nullptr)
+            if(info.infoComponent != nullptr)
             {
-                if (ImGui::Selectable(info->name.c_str(), &info->isSelectedOnEditor))
+                if (ImGui::Selectable(info.infoComponent->name.c_str(), &info.infoComponent->isSelectedOnEditor))
                 {
                     // Unselection
-                    if (!info->isSelectedOnEditor)
+                    if (!info.infoComponent->isSelectedOnEditor)
                     {
                         m_SelectedEntity = INVALID_ENTITY;
                         continue;
@@ -175,7 +174,7 @@ namespace polos
                         ols_selected_entity_info->isSelectedOnEditor = false;
                     }
                     // Now we can set the new selected entity.
-                    m_SelectedEntity = entity_id;
+                    m_SelectedEntity = info.entity;
                 }
             }
         }

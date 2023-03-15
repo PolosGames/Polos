@@ -9,4 +9,7 @@ namespace polos::ecs
     {
         Shader* shader;
     };
+
+    template<> inline constexpr int32 k_ComponentId<material_component> = 3;
+
 }// namespace polos

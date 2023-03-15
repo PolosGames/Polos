@@ -52,11 +52,9 @@ namespace polos
 
     void Renderer::RenderScene(Scene& scene)
     {
-        auto scene_view = SceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene);
-        for (auto entity : scene_view)
+        for (auto [texture2d_comp, material_comp, transform_comp] : SceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene))
         {
             auto const& quad_vao       = Renderer::GetQuadVao();
-            auto* texture2d_comp = scene.Get<ecs::texture2d_component>(entity);
             if (texture2d_comp->hasUvChanged)
             {
                 std::array<vertex, 4> new_quad_vertices{
@@ -74,13 +72,11 @@ namespace polos
                 quad_vao.SetVertexBufferData(new_quad_vertices);
             }
 
-            auto* material_comp = scene.Get<ecs::material_component>(entity);
             auto* shader        = material_comp->shader;
             shader->Use();
             shader->SetUniform("u_Projection"_sid, Renderer::GetProjectionMatrix());
             shader->SetUniform("u_View"_sid, Camera::GetViewMatrix());
 
-            auto*     transform_comp = scene.Get<ecs::transform_component>(entity);
             glm::mat4 model_matrix(1.0f);
             model_matrix = glm::translate(model_matrix, transform_comp->position);
             shapes::RotateShape2D(model_matrix, transform_comp->rotation);

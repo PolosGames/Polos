@@ -14,6 +14,8 @@ namespace polos::ecs
         base_animation* currentAnimation{};
     };
 
+    template<> inline constexpr int32 k_ComponentId<animator_component> = 5;
+
     template<> void               SerializeComponent(std::vector<byte>& p_OutVector, animator_component* p_Component);
     template<> animator_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
 } // namespace polos::ecs

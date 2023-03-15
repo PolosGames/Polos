@@ -60,6 +60,22 @@ namespace polos
         m_FreeEntities.push_back(entt_index);
     }
 
+    ecs::Entity Scene::GetEntityByIndex(ecs::EntityIndex p_Index)
+    {
+        ecs::Entity entt = m_Entities[p_Index].id;
+        return ecs::GetEntityIndex(entt) == p_Index ? entt : INVALID_ENTITY;
+    }
+
+    ecs::EntityData& Scene::GetEntityDataByIndex(ecs::EntityIndex p_Index)
+    {
+        return m_Entities[p_Index];
+    }
+
+    std::size_t Scene::GetEntityPoolSize()
+    {
+        return m_Entities.size();
+    }
+
     std::vector<byte> Scene::Serialize()
     {
         std::span<ecs::EntityIndex>   free_entities(m_FreeEntities);
