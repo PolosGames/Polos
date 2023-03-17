@@ -51,3 +51,8 @@ install(
     DIRECTORY resources
     DESTINATION ${INSTALL_DIR}
 )
+
+install(
+    FILES Config/imgui.ini
+    DESTINATION ${INSTALL_DIR}
+)
