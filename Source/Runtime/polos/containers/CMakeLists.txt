@@ -28,6 +28,7 @@ set_target_properties(
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True
             OUTPUT_NAME               "PolosContainers"
+            LINKER_LANGUAGE           CXX
 )
 
 target_precompile_headers(
