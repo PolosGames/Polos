@@ -58,6 +58,14 @@ add_compile_options(
     "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
 )
 
+if(MSVC)
+    string(REPLACE "/Zi" "/ZI" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+    string(REPLACE "/Zi" "/ZI" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+        
+    set(${CMAKE_EXE_LINKER_FLAGS_DEBUG} "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /INCREMENTAL")
+    set(${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /INCREMENTAL")
+endif()
+
 # ================================== #
 #       Build the whole source       #
 # ================================== #
