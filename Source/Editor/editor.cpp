@@ -104,7 +104,7 @@ namespace polos
         //RenderRectangle(m_Model, *m_ShaderBasicColor);
         m_EditorFramebuffer.Unbind();
 
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
 
         RenderGUI(p_DeltaTime);
     }
