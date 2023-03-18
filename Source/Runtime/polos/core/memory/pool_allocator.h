@@ -3,6 +3,7 @@
 #include "polos/core/memory/mem_utils.h"
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
+#include "polos/utils/feature.h"
 
 namespace polos
 {
@@ -40,19 +41,10 @@ namespace polos
     public:
         memory::internal_buffer internalBuffer;
     private:
-        free_node*  m_FreeListHead;
-        std::size_t m_ChunkSize;
-        std::size_t m_ChunkAmount;
+        free_node*  m_FreeListHead{};
+        std::size_t m_ChunkSize{};
+        std::size_t m_ChunkAmount{};
     };
-    
-    template<typename T>
-    PoolAllocator<T>::PoolAllocator()
-        : internalBuffer{}
-        , m_FreeListHead{}
-        , m_ChunkSize{}
-        , m_ChunkAmount{}
-    {
-    }
 
     template<typename T>
     PoolAllocator<T>::~PoolAllocator()
@@ -67,12 +59,10 @@ namespace polos
 
     template<typename T>
     PoolAllocator<T>::PoolAllocator(std::size_t p_Amount)
-        : internalBuffer{static_cast<byte*>(std::malloc(sizeof(T) * p_Amount), sizeof(T) * p_Amount}
-        , m_ChunkSize{sizeof(T)}
-        , m_ChunkAmount{p_Amount}
     {
         PL_ASSERT(m_ChunkSize > sizeof(free_node) && internalBuffer.bufferSize > sizeof(free_node));
         // FreeListHead gets created in Clear function
+        Initialize(p_Amount);
         Clear();
     }
 

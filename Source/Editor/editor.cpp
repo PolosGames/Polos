@@ -1,3 +1,4 @@
+
 #include "editor.h"
 
 #include <glad/glad.h>
@@ -8,6 +9,7 @@
 #include "polos/core/update_queue.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/core/event_bus.h"
+#include "polos/core/update_queue.h"
 #include "polos/core/window_system.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
@@ -340,4 +342,4 @@ namespace polos
         Application* app = p_PlacementPtr != nullptr ? new (p_PlacementPtr) Editor() : new Editor();
         return app;
     }
-}
+}// namespace polos
