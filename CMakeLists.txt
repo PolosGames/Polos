@@ -13,7 +13,7 @@ option(USE_OPENGL       "Use Polos with OpenGL" ON)
 option(USE_VULKAN       "Use Polos with Vulkan" OFF)
 option(ENABLE_PROFILING "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI    "Use ImGui for default Gui implementation" ON)
-option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" OFF)
+option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" ON)
 option(EXPORT_ENGINE    "Will install everything under bin folder." OFF)
 
 set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
