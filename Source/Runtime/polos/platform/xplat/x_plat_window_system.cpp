@@ -1,16 +1,18 @@
-#include "polos/polos_pch.h"
-
 #if defined(USE_OPENGL) || defined(USE_VULKAN)
+
+#include "polos/core/window_system.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-#include "polos/core/window_system.h"
 #include "polos/core/window.h"
 #include "polos/core/log.h"
 #include "polos/core/event_bus.h"
 #include "polos/utils/guid.h"
-#include "polos/events/events.h"
+#include "polos/graphics/renderer.h"
+#include "polos/core/events/input/input_events.h"
+#include "polos/core/events/window/window_events.h"
+#include "polos/core/engine/engine.h"
 
 namespace polos
 {
@@ -136,6 +138,12 @@ namespace polos
 
     WindowSystem* WindowSystem::s_Instance;
 
+    WindowSystem::WindowSystem()
+    {
+        SUBSCRIBE_TO_ENGINE_STARTUP(Startup);
+        SUBSCRIBE_TO_ENGINE_SHUTDOWN(Shutdown);
+    }
+
     void WindowSystem::Startup()
     {
         s_Instance = this;
@@ -143,13 +151,16 @@ namespace polos
         {
             glfwSetErrorCallback(GLFWErrorCallback);
             int r = glfwInit(); static_cast<void>(r);
-            ASSERTSTR(r == GLFW_TRUE, "Failed to initialize GLFW!");
+            PL_ASSERT(r == GLFW_TRUE, "Failed to initialize GLFW!");
             m_IsInitialized = true;
+
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         }
         
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
-
-        m_GfxContext = std::make_shared<GraphicsContext>();
     }
     
     void WindowSystem::Shutdown()
@@ -165,28 +176,14 @@ namespace polos
         auto& win_props = s_Instance->m_WinProps.back();
 
         // Create the GLFW window and attach its callbacks.
-        GLFWmonitor* monitor    = nullptr;
-        GLFWvidmode const* mode = nullptr;
-        if (win_props.fullscreen)
-        {
-            monitor = glfwGetPrimaryMonitor();
-            mode    = glfwGetVideoMode(monitor);
-
-            win_props.width    = mode->width;
-            win_props.height   = mode->height;
-            win_props.refreshRate = mode->refreshRate;
-        }
-
-        /*auto* first_win_handle = 
-            s_Instance->m_WinHandles.size() >= 1 ? 
-                static_cast<GLFWwindow*>(s_Instance->m_WinHandles.front()) 
-                : nullptr;*/
+        GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
+        GLFWvidmode const* mode = glfwGetVideoMode(monitor);
 
         auto* glfw_win_ptr = glfwCreateWindow(
             win_props.width,
             win_props.height,
             win_props.title.c_str(),
-            monitor,
+            nullptr,
             nullptr
         );
 
@@ -197,11 +194,33 @@ namespace polos
         glfwSetWindowUserPointer(win_handle, &win_props);
         glfwMakeContextCurrent(win_handle);
 
+        int32 pos_x, pos_y;
+        glfwGetWindowPos(glfw_win_ptr, &pos_x, &pos_y);
+        
+
+        if (win_props.fullscreen)
+        {
+            int32 refresh_rate = win_props.vsync ? mode->refreshRate : win_props.refreshRate;
+
+            glfwSetWindowMonitor(glfw_win_ptr, monitor, pos_x, pos_y, mode->width, mode->height, refresh_rate);
+        }
+        else
+        {
+            int32 window_width, window_height;
+            glfwGetWindowSize(glfw_win_ptr, &window_width, &window_height);
+            win_props.width = window_width;
+            win_props.height = window_height;
+
+            glfwMaximizeWindow(glfw_win_ptr);
+        }
+
         // If it's the first window, it's the main window, so create the gfx
         // context with it.
         if (s_Instance->m_WinProps.size() == 1)
         {
-            s_Instance->m_GfxContext->Initialize(win_handle);
+            s_Instance->m_GfxContext = Renderer::InitializeGfxContext();
+
+            Renderer::SetMainWindowHandle(win_guid);
         }
 
         glfwSwapInterval(win_props.vsync);
@@ -270,7 +289,7 @@ namespace polos
         {
             LOG_ENGINE_WARN("A window with the given guid could not be found. Returning nullopt.");
             return std::nullopt;
-        };
+        }
 
         return s_Instance->m_WinProps[i];
     }
@@ -327,8 +346,8 @@ namespace polos
     {
         auto& guid_list = s_Instance->m_WinGUIDs;
 
-        std::size_t i = 0;
-        for (; i < guid_list.size(); i++)
+        std::size_t i{};
+        for (; i < guid_list.size(); ++i)
         {
             if (guid_list[i] == p_WindowGuid)
             {

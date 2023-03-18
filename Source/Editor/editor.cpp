@@ -1,136 +1,341 @@
-#include "polos/polos_pch.h"
 
 #include "editor.h"
 
 #include <glad/glad.h>
-#include <imgui.h>
-#include <polos.h>
+#include <imgui/imgui_backend.h>
+#include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
 
-#include "polos/context/shader_lib.h"
-#include "polos/context/vertex.h"
+#include "polos/core/update_queue.h"
+#include "polos/graphics/shader_lib.h"
 #include "polos/core/event_bus.h"
 #include "polos/core/update_queue.h"
 #include "polos/core/window_system.h"
-#include "polos/memory/pool_allocator.h"
+#include "polos/graphics/renderer.h"
+#include "polos/graphics/shapes/shapes2d_transform.h"
+#include "polos/core/ecs/components/components.h"
+#include "polos/core/scene/scene_view.h"
+#include "polos/core/ecs/sets/info_set.h"
+
+#include <polos.h>
 
 namespace polos
 {
-    static constexpr std::array<vertex, 8> vertices{
-        // Front
-        vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{1.0f, 0.0f, 0.0f}},// Bottom-left
-        vertex{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 1.0f, 0.0f}}, // Bottom-right
-        vertex{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}},  // Top-right
-        vertex{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.5f, 0.5f, 0.5f}}, // Top-left
-
-        // Back
-        vertex{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 1.0f, 0.0f}}, // Bottom-left
-        vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{1.0f, 0.0f, 0.0f}},// Bottom-right
-        vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.5f, 0.5f, 0.5f}}, // Top-right
-        vertex{glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1.0f), glm::vec3(1.0f), glm::vec3{0.0f, 0.0f, 1.0f}},  // Top-left
-    };
-
-    static constexpr std::array<uint32, 36> indices{
-        0, 1, 2, 2, 3, 0,// Front
-        4, 5, 6, 6, 7, 4,// Back
-        5, 0, 3, 3, 6, 5,// left
-        1, 4, 7, 7, 2, 1,// right
-        3, 2, 7, 7, 6, 3,// top
-        1, 0, 5, 5, 4, 1 // Bottom
-    };
-
     Editor::Editor()
-        : cube{vertices, indices}
+        : m_EditorCamera{{0.0f, 0.0f, 5.0f}, {0.0f, 1.0f, 0.0f}}
+        , m_GuiFontScale{1.8f}
+        , m_EditorFramebufferAspectRatioBefore{0.0f}
+        , m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}}
+        , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
     {
         UPDATE_Q_MEM_ADD_LAST(Update);
-
+        
+        m_AppWindow     = WindowSystem::GetAppWindowGUID();
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
+        ShaderLib::Load("resources/shaders/texture.vert", "resources/shaders/texture.frag");
+        m_ShaderTexture    = &ShaderLib::Get("texture"_sid);
+        m_ShaderBasicColor = &ShaderLib::Get("basic_color"_sid);
 
-        basic_color = ShaderLib::Get("basic_color"_sid);
+        Optional<window_props> app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
+        m_AppWindowWidth  = app_window_props->width;
+        m_AppWindowHeight = app_window_props->height;
+        m_AspectRatio     = static_cast<float>(m_AppWindowWidth) / m_AppWindowHeight;
 
-        model  = glm::mat4(1.0f);
-        model2 = glm::mat4(1.0f);
-        view   = glm::lookAt(
-            glm::vec3(0.5f, 0.5f, 1.0f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f));
-        app_window   = WindowSystem::GetAppWindowGUID();
-        popup_window = INT_MIN;
+        m_EditorFramebuffer.Initialize(m_AppWindowWidth, m_AppWindowHeight);
+        m_EditorFramebuffer.Bind();
+        glViewport(0, 0, m_AppWindowWidth, m_AppWindowHeight);
+        m_EditorFramebuffer.Unbind();
 
-        auto win_props = WindowSystem::GetAppWindowProps();
-        float aspect   = static_cast<float>(win_props->width) / static_cast<float>(win_props->height);
-        projection     = glm::perspective(
-            45.0f,
-            aspect,
-            0.1f,
-            1000.0f);
-        pos        = glm::vec3(0.0f, 0.0f, -3.0f);
-        slider_pos = pos;
+        ecs::Entity texture_entity = m_Scene.NewEntity();
 
-        pos2        = glm::vec3(2.0f, 0.0f, -3.0f);
-        slider_pos2 = pos2;
+        auto* entity_transform_component = m_Scene.Assign<ecs::transform_component>(texture_entity);
+        auto* entity_texture_component   = m_Scene.Assign<ecs::texture2d_component>(texture_entity);
+        auto* entity_material_component  = m_Scene.Assign<ecs::material_component>(texture_entity);
 
-        open = true;
+        entity_transform_component->position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        entity_transform_component->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        entity_transform_component->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        entity_texture_component->texture = Texture::Load("resources/textures/linux-22621.png");
+
+        entity_material_component->shader = m_ShaderTexture;
+
+        auto* info_component = m_Scene.Get<ecs::info_component>(texture_entity);
+        info_component->name = "Texture";
+
+        SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
+        SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
+        SUB_TO_EVENT_MEM_FUN(key_release, OnKeyRelease);
+
+        m_SelectedEntity = INVALID_ENTITY;
     }
 
     Editor::~Editor()
     {
     }
 
-    void Editor::Update(float delta_time)
+    void Editor::Update(float p_DeltaTime)
     {
-        static_cast<void>(delta_time);
-        model = glm::translate(model, (pos - slider_pos));
-        pos   = slider_pos;
+        CameraMovement camera_move{k_None};
 
-        model2 = glm::translate(model2, (pos2 - slider_pos2));
-        pos2   = slider_pos2;
-
-        basic_color.Use();
-        basic_color.SetUniform("u_View"_sid, view);
-        basic_color.SetUniform("u_Projection"_sid, projection);
-
-        WindowSystem::SwitchWindow(app_window);
-        basic_color.SetUniform("u_Model"_sid, model);
-        cube.Draw();
-
-        basic_color.SetUniform("u_Model"_sid, model2);
-        cube.Draw();
-
-        ImGui::Begin("First box");
-        ImGui::SliderFloat3("Position 1", glm::value_ptr(slider_pos), -5.0f, 5.0f);
-        ImGui::SliderFloat3("Position 2", glm::value_ptr(slider_pos2), -5.0f, 5.0f);
-        if (ImGui::Button("New Window", ImVec2{100, 40}))
+        if ((m_Key & (1)) != 0)
         {
-            window_props props;
-            props.width       = 720;
-            props.height      = 360;
-            props.title       = "Another";
-            props.vsync       = true;
-            props.refreshRate = 60;
-            props.fullscreen  = false;
+            camera_move = k_Up;
+        }
+        else if ((m_Key & (2)) != 0)
+        {
+            camera_move = k_Down;
+        }
+        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
+        if ((m_Key & (4)) != 0)
+        {
+            camera_move = k_Left;
+        }
+        else if ((m_Key & (8)) != 0)
+        {
+            camera_move = k_Right;
+        }
+        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
 
-            popup_window = WindowSystem::NewWindow(props);
-            WindowSystem::SwitchWindow(popup_window);
-            glClearColor(0.3f, 1.0f, .502f, 1.0f);
+        m_EditorFramebuffer.Clear();
+
+        m_EditorFramebuffer.Bind();
+        Renderer::RenderScene(m_Scene);
+        //RenderRectangle(m_Model, *m_ShaderBasicColor);
+        m_EditorFramebuffer.Unbind();
+
+        ImGui::ShowDemoWindow();
+
+        RenderGUI(p_DeltaTime);
+    }
+
+    void Editor::RenderGUI(float p_DeltaTime)
+    {
+        PL_VOID_CAST(p_DeltaTime);
+
+        auto const* viewport = ImGui::GetMainViewport();
+        ImGui::DockSpaceOverViewport(viewport);
+
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("Scene"))
+            {
+                ImGui::MenuItem("Save");
+                ImGui::MenuItem("Open");
+                ImGui::MenuItem("Import...");
+                ImGui::MenuItem("Export...");
+                /*if (ImGui::MenuItem("Show entity size"))
+                {
+                    auto v = scene.Serialize();
+                }*/
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("View"))
+            {
+                if (ImGui::InputFloat("Font Size Scale", &m_GuiFontScale, 0.1f, 0.3f))
+                {
+                    ImGui::GetIO().FontGlobalScale = m_GuiFontScale;
+                }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Create"))
+            {
+                if(ImGui::MenuItem("Entity"))
+                {
+                    CreateEmptyEntityInScene();
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMainMenuBar();
+        }
+
+        ImGui::Begin("Log"); 
+        ImGui::End();
+
+        ImGui::Begin("Scene");
+        for(auto info : SceneView<ecs::info_set>(m_Scene))
+        {
+            if(info.infoComponent != nullptr)
+            {
+                if (ImGui::Selectable(info.infoComponent->name.c_str(), &info.infoComponent->isSelectedOnEditor))
+                {
+                    // Unselection
+                    if (!info.infoComponent->isSelectedOnEditor)
+                    {
+                        m_SelectedEntity = INVALID_ENTITY;
+                        continue;
+                    }
+
+                    // If we have selected an entity before, set the "selected"
+                    // state of old selected entity to "unselected"
+                    if(m_SelectedEntity != INVALID_ENTITY)
+                    {
+                        auto* ols_selected_entity_info = m_Scene.Get<ecs::info_component>(m_SelectedEntity);
+                        ols_selected_entity_info->isSelectedOnEditor = false;
+                    }
+                    // Now we can set the new selected entity.
+                    m_SelectedEntity = info.entity;
+                }
+            }
         }
         ImGui::End();
 
-        //auto const* viewport = ImGui::GetMainViewport();
+        ImGui::Begin("Inspector");
+        // Components
+        if(ecs::IsEntityValid(m_SelectedEntity))
+        {
+            if (ImGui::BeginMenu("Add Component"))
+            {
+                if (ImGui::MenuItem("Transform"))
+                {
+                    m_Scene.Assign<ecs::transform_component>(m_SelectedEntity);
+                }
+                if (ImGui::MenuItem("Texture"))
+                {
+                    m_Scene.Assign<ecs::texture2d_component>(m_SelectedEntity);
+                }
 
-        //ImGui::DockSpaceOverViewport(viewport);
+                ImGui::EndMenu();
+            }
+            DrawTransformComponent();
+            DrawTexture2DComponent();
+        }
+        ImGui::End();
 
-        //ImGui::ShowDemoWindow(&open);
+        // Drawing the game framebuffer into an imgui image
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0.0f, 0.0f});
+        ImGui::Begin("Game");
+        ImVec2 drawable_area_dimensions   = ImGui::GetContentRegionAvail();
+        float  drawable_area_aspect_ratio = drawable_area_dimensions.x / drawable_area_dimensions.y;
+
+        if (m_EditorFramebufferAspectRatioBefore != drawable_area_aspect_ratio)
+        {
+
+            if (m_AspectRatio >= drawable_area_aspect_ratio)
+            {
+                m_EditorFramebufferDimensions.x = drawable_area_dimensions.x;
+                m_EditorFramebufferDimensions.y = drawable_area_dimensions.x / m_AspectRatio;
+            }
+            else
+            {
+                m_EditorFramebufferDimensions.x = drawable_area_dimensions.y * m_AspectRatio;
+                m_EditorFramebufferDimensions.y = drawable_area_dimensions.y;
+            }
+
+            m_EditorFramebufferAspectRatioBefore = drawable_area_aspect_ratio;
+        }
+
+        auto framebuffer_texture_id = reinterpret_cast<ImTextureID>(static_cast<uint64>(m_EditorFramebuffer.GetFrameBufferTextureHandle()));
+
+
+        ImGui::Image(
+            framebuffer_texture_id,
+            m_EditorFramebufferDimensions,
+            m_EditorFramebufferUVCoords1,
+            m_EditorFramebufferUVCoords2
+        );
+        ImGui::End();
+        ImGui::PopStyleVar();
+    }
+
+    void Editor::OnKeyPress(key_press& e)
+    {
+        int32 current_key = 0;
+
+        switch (e.key)
+        {
+        case GLFW_KEY_W:
+            current_key = 1;
+            break;
+        case GLFW_KEY_S:
+            current_key = 2;
+            break;
+        case GLFW_KEY_A:
+            current_key = 4;
+            break;
+        case GLFW_KEY_D:
+            current_key = 8;
+            break;
+        }
+
+        m_Key |= current_key;
+    }
+
+    void Editor::OnKeyRelease(key_release& e)
+    {
+        int32 current_key = 0;
+        
+        switch (e.key)
+        {
+        case GLFW_KEY_W:
+            current_key = 1;
+            break;
+        case GLFW_KEY_S:
+            current_key = 2;
+            break;
+        case GLFW_KEY_A:
+            current_key = 4;
+            break;
+        case GLFW_KEY_D:
+            current_key = 8;
+            break;
+        }
+        
+        m_Key &= ~current_key;
+    }
+
+    void Editor::OnMouseMove(mouse_move&)
+    {
+    }
+
+    void Editor::CreateEmptyEntityInScene()
+    {
+        m_Scene.NewEntity();
+    }
+
+    void Editor::DrawTransformComponent()
+    {
+        bool has_transform = m_Scene.HasComponent<ecs::transform_component>(m_SelectedEntity);
+        if (has_transform && ImGui::CollapsingHeader("Transform"))
+        {
+            auto* transform_component = m_Scene.Get<ecs::transform_component>(m_SelectedEntity);
+
+            ImGui::DragFloat3("Position", glm::value_ptr(transform_component->position), 0.01f);
+            ImGui::DragFloat3("Scale", glm::value_ptr(transform_component->scale), 0.01f);
+        }
+    }
+
+    void Editor::DrawTexture2DComponent()
+    {
+        bool has_texture2d = m_Scene.HasComponent<ecs::texture2d_component>(m_SelectedEntity);
+        if (has_texture2d && ImGui::CollapsingHeader("Texture 2D"))
+        {
+            auto* texture2d_component = m_Scene.Get<ecs::texture2d_component>(m_SelectedEntity);
+            ImGui::ImageButton(
+                reinterpret_cast<ImTextureID>(static_cast<uint64>(texture2d_component->texture->id)),
+                ImVec2{200.0f, 200.0f},
+                // we reuse these to ensure correct rotation.
+                m_EditorFramebufferUVCoords1,
+                m_EditorFramebufferUVCoords2
+            );
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Bottom Left", glm::value_ptr(texture2d_component->uvBottomLeft), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Bottom Right", glm::value_ptr(texture2d_component->uvBottomRight), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Top Right", glm::value_ptr(texture2d_component->uvTopRight), 0.01f);
+            texture2d_component->hasUvChanged |= ImGui::DragFloat2("UV Top Left", glm::value_ptr(texture2d_component->uvTopLeft), 0.01f);
+        }
     }
 
     Application* CreateApplication(void* p_PlacementPtr)
     {
         window_props props;
-        props.title       = "Hello";
-        props.width       = 1280;
-        props.height      = 720;
-        props.refreshRate = 60;
-        props.vsync       = true;
-        props.fullscreen  = false;
+        props.title = "Hello";
+        props.width = 1920;
+        props.height = 1080;
+        props.refreshRate = 120;
+        props.vsync = true;
+        props.fullscreen = false;
 
         auto a = WindowSystem::NewWindow(props);
 

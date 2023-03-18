@@ -15,7 +15,7 @@ namespace polos
         // Loop to calculate the hash value
         // by iterating over the elements of string
         char c = 0;
-        for (size_t i = 0; p_Str[i] != '\0'; i++)
+        for (size_t i = 0; p_Str[i] != '\0'; ++i)
         {
             c          = p_Str[i];
             hash_val   = (hash_val + static_cast<int64>(c) * power_of_p) % m;
@@ -25,13 +25,13 @@ namespace polos
         return (hash_val % m + m) % m;
     }
     
-    inline constexpr StringId get_string_id(cstring p_Str)
+    inline constexpr StringId GetStringId(cstring p_Str)
     {
         StringId sid = hash_function(p_Str);
         return sid;
     }
     
-    StringId         get_string_id(std::string const& p_Str);
+    StringId         GetStringId(std::string const& p_Str);
     std::string_view get_string_from_id(StringId p_Sid);
 
 } // namespace polos

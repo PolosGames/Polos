@@ -3,83 +3,56 @@ cmake_minimum_required(VERSION 3.24)
 # ================================== #
 #  Add the third parties into build  #
 # ================================== #
+add_subdirectory(ThirdParty)
 
-add_subdirectory(ThirdParty/glm)
-set_target_properties(glm_static   PROPERTIES FOLDER "ThirdParty")
+set(PCH_LIBRARY_NAME RuntimePCH)
 
-add_subdirectory(ThirdParty/stb_image)
-set_target_properties(stb_image    PROPERTIES FOLDER "ThirdParty")
+file(WRITE polos.cpp "")
+add_library(${PCH_LIBRARY_NAME} STATIC "polos.cpp")
 
-add_subdirectory(ThirdParty/stb_textedit)
-set_target_properties(stb_textedit PROPERTIES FOLDER "ThirdParty")
+target_precompile_headers(
+    ${PCH_LIBRARY_NAME}
+        PUBLIC
+            polos_pch.h
+)
 
-add_subdirectory(ThirdParty/rapidjson)
-set_target_properties(RapidJSON    PROPERTIES FOLDER "ThirdParty")
+set_target_properties(
+    ${PCH_LIBRARY_NAME}
+        PROPERTIES
+            CXX_STANDARD 20
+            CXX_STANDARD_REQUIRED True
+)
 
-if(USE_OPENGL OR USE_VULKAN)
-    add_subdirectory(ThirdParty/GLFW)
-    set_target_properties(glfw PROPERTIES FOLDER "ThirdParty")
-endif()
+target_include_directories(
+    ${PCH_LIBRARY_NAME}
+        PRIVATE
+            ${POLOS_INCLUDE_DIR}
+)
 
-if(USE_OPENGL)
-    add_compile_definitions(USE_OPENGL)
-    add_subdirectory(ThirdParty/glad)
-    set_target_properties(glad PROPERTIES FOLDER "ThirdParty")
-endif()
+target_link_libraries(
+    ${PCH_LIBRARY_NAME}
+        PRIVATE
+            glm::glm_interface
+            spdlog::spdlog_interface
+)
 
-if(USE_VULKAN)
-    add_compile_definitions(USE_VULKAN)
-endif()
-
-if(ENABLE_LOGGING)
-    add_compile_definitions(ENABLE_LOGGING)
-    add_subdirectory(ThirdParty/spdlog)
-    set_target_properties(spdlog PROPERTIES FOLDER "ThirdParty")
-endif()
-
-if(GUI_USE_IMGUI)
-    add_compile_definitions(GUI_USE_IMGUI)
-    add_subdirectory(ThirdParty/imgui)
-    set_target_properties(ImGui PROPERTIES FOLDER "ThirdParty")
-endif()
+build_options(${PCH_LIBRARY_NAME} true)
 
 add_subdirectory(Runtime)
 
+# =================================== #
+#       Build Polos with Editor       #
+# =================================== #
 if(BUILD_EDITOR)
-    # =================================== #
-    #       Build Polos with Editor       #
-    # =================================== #
-
     add_subdirectory(Editor)
-
-    if(MSVC)
-        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
-    endif()
-
-    set_target_properties(
-        Polos
-            PROPERTIES
-                CXX_STANDARD 20
-                CXX_STANDARD_REQUIRED True
-    )
-
-    set(EXTRA_LIBS)
-    if(STATIC_STD)
-        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-            list(APPEND EXTRA_LIBS -static-libstdc++)
-        endif()
-    endif()
-
-    target_link_libraries(
-        Polos
-            PUBLIC
-                Runtime
-                ${EXTRA_LIBS}
-    )
-    
-    build_options(Polos true)
-
-    install(TARGETS Polos DESTINATION ${INSTALL_DIR})
 endif()
 
-install(DIRECTORY resources DESTINATION ${INSTALL_DIR})
+install(
+    DIRECTORY resources
+    DESTINATION ${INSTALL_DIR}
+)
+
+install(
+    FILES Config/imgui.ini
+    DESTINATION ${INSTALL_DIR}
+)

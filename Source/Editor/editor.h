@@ -1,9 +1,17 @@
 #pragma once
 
+#include <imgui/imgui_backend.h>
+
 #include "polos/core/application.h"
-#include "polos/context/shader.h"
-#include "polos/context/vao.h"
+#include "polos/graphics/shader.h"
+#include "polos/graphics/vao.h"
 #include "polos/core/window.h"
+#include "polos/core/camera.h"
+#include "polos/core/events/input/mouse_move.h"
+#include "polos/core/events/input/key_press.h"
+#include "polos/core/events/input/key_release.h"
+#include "polos/graphics/framebuffer.h"
+#include "polos/core/scene/scene.h"
 
 namespace polos
 {   
@@ -11,22 +19,40 @@ namespace polos
     {
     public:
         Editor();
-        ~Editor();
+        ~Editor() override;
     private:
-        void Update(float delta_time);
-    private:
-        Shader basic_color;
+        void Update(float p_DeltaTime);
+        void RenderGUI(float p_DeltaTime);
 
-        Vao cube;
+        void CreateEmptyEntityInScene();
         
-        glm::mat4 model, model2;
-        glm::mat4 view, projection;
-        glm::vec3 pos, pos2;
-        glm::vec3 slider_pos, slider_pos2;
+        void OnKeyPress(key_press& e);
+        void OnKeyRelease(key_release& e);
+        void OnMouseMove(mouse_move& e);
 
-        polos::GUID app_window;
-        polos::GUID popup_window;
+        void DrawTransformComponent();
+        void DrawTexture2DComponent();
+    private:
+        Shader* m_ShaderTexture{};
+        Shader* m_ShaderBasicColor{};
 
-        bool open;
+        int32 m_Key{};
+
+        polos::GUID m_AppWindow;
+        int32 m_AppWindowWidth{};
+        int32 m_AppWindowHeight{};
+        float m_AspectRatio{};
+
+        float m_GuiFontScale{};
+
+        pl::Camera m_EditorCamera;
+        FrameBuffer m_EditorFramebuffer;
+        float  m_EditorFramebufferAspectRatioBefore{};
+        ImVec2 m_EditorFramebufferDimensions{};
+        ImVec2 m_EditorFramebufferUVCoords1{};
+        ImVec2 m_EditorFramebufferUVCoords2{};
+
+        Scene m_Scene;
+        ecs::Entity m_SelectedEntity{};
     };
 }

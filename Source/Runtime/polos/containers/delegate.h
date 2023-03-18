@@ -7,6 +7,7 @@
     Currently, there is no type safety in template functions, but it should be
     added.
 */
+
 #include "polos/utils/macro_util.h"
 #include "polos/utils/concepts.h"
 
@@ -14,7 +15,7 @@ namespace polos
 {
     template<typename T, typename... Args>
     concept Functor = requires {
-        std::invocable<Args&&...>;
+        std::invocable<T, Args&&...>;
         std::is_class_v<T>;
     };
 
@@ -43,7 +44,7 @@ namespace polos
         Delegate(Delegate const&)            = delete;
         Delegate& operator=(Delegate const&) = delete;
         
-        Delegate(Delegate&& other)
+        Delegate(Delegate&& other) noexcept
         {
             m_ObjectPointer  = std::exchange(other.m_ObjectPointer, nullptr);
             m_StubPointer    = std::exchange(other.m_StubPointer, nullptr); // Not a problem since they are static
@@ -52,7 +53,7 @@ namespace polos
             m_IsMoved        = std::exchange(other.m_IsMoved, true);
         }
 
-        Delegate& operator=(Delegate&& rhs)
+        Delegate& operator=(Delegate&& rhs) noexcept
         {
             if (&rhs == this) return *this;
 

@@ -2,9 +2,9 @@
 
 #include "polos/core/window.h"
 #include "polos/containers/containers.h"
-#include "polos/context/graphics_context.h"
 #include "polos/containers/delegate.h"
-#include "polos/events/window/window_close.h"
+#include "polos/graphics/graphics_context.h"
+#include "polos/core/events/window/window_close.h"
 #include "polos/utils/guid.h"
 
 namespace polos
@@ -12,6 +12,8 @@ namespace polos
     /// Implementation inside the platform folder of the specific platform.
     class WindowSystem
     {
+    public:
+        WindowSystem();
     public:
         void Startup();
         void Shutdown();
@@ -32,7 +34,7 @@ namespace polos
 
         static void Update();
     private:
-        void on_window_close(window_close& p_Event);
+        void                 on_window_close(window_close& p_Event);
         static std::size_t   find_index_with_guid(polos::GUID p_WindowGUID);
     private:
         static WindowSystem* s_Instance;

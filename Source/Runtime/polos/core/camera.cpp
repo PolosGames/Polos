@@ -1,11 +1,19 @@
-#include "polos/polos_pch.h"
 
 #include "camera.h"
 
 namespace polos
 {
-    
-    Camera::Camera(glm::vec3 p_Position, glm::vec3 p_WorldUp, float p_Yaw, float p_Pitch)
+    Camera* Camera::s_Instance;
+
+    Camera::Camera(
+        glm::vec3 p_Position,
+        glm::vec3 p_WorldUp,
+        float     p_Yaw,
+        float     p_Pitch,
+        float     p_Speed,
+        float     p_Sensitivity,
+        float     p_Zoom
+    )
         : position{p_Position},
           front{glm::vec3{0.0f, 0.0f, -1.0f}},
           up{},
@@ -13,12 +21,12 @@ namespace polos
           worldUp{p_WorldUp},
           yaw{p_Yaw},
           pitch{p_Pitch},
-          movementSpeed{globals::k_Speed},
-          mouseSensitivity{globals::k_Sensitivity},
-          zoom{globals::k_Zoom}
+          movementSpeed{p_Speed},
+          mouseSensitivity{p_Sensitivity},
+          zoom{p_Zoom}
     {
-        static_cast<void>(globals::k_Yaw);
-        static_cast<void>(globals::k_Pitch);
+        s_Instance = this;
+
         update_camera_vectors();
     }
     
@@ -27,12 +35,16 @@ namespace polos
         float velocity = movementSpeed * p_DeltaTime;
         if (p_Direction == k_Forward)
             position += front * velocity;
-        if (p_Direction == k_Backward)
+        else if (p_Direction == k_Backward)
             position -= front * velocity;
         if (p_Direction == k_Left)
             position -= right * velocity;
-        if (p_Direction == k_Right)
+        else if (p_Direction == k_Right)
             position += right * velocity;
+        if (p_Direction == k_Up)
+            position += up * velocity;
+        else if (p_Direction == k_Down)
+            position -= up * velocity;
     }
     
     void Camera::ProcessMouseMovement(float p_XOffset, float p_YOffset, GLboolean p_ConstrainPitch)
@@ -65,9 +77,10 @@ namespace polos
             zoom = 45.0f;
     }
     
-    glm::mat4 Camera::GetViewMatrix() const
+    glm::mat4 Camera::GetViewMatrix()
     {
-        return glm::lookAt(position, position + front, up);
+        auto* cam = s_Instance;
+        return glm::lookAt(cam->position, cam->position + cam->front, cam->up);
     }
     
     void Camera::update_camera_vectors()
@@ -79,7 +92,9 @@ namespace polos
         p_front.z = glm::sin(yaw) * glm::cos(pitch);
         p_front = glm::normalize(p_front);
         // also re-calculate the Right and Up vector
-        right = glm::normalize(glm::cross(p_front, worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+        // normalize the vectors, because their length gets closer to 0 the
+        // more you look up or down which results in slower movement.
+        right = glm::normalize(glm::cross(p_front, worldUp));
         up    = glm::normalize(glm::cross(right, p_front));
     }
 }
