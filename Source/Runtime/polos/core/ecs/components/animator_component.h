@@ -10,7 +10,7 @@ namespace polos::ecs
         int32 currentFrame{};
         int32 fps{};
         int32 frameCounter{};
-        bool  isStopped{ false };
+        bool  isStopped{};
         base_animation* currentAnimation{};
     };
 
