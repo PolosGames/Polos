@@ -58,6 +58,11 @@ add_compile_options(
     "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
 )
 
+add_compile_definitions(
+    UUID_SYSTEM_GENERATOR
+    UUID_USING_CXX20_SPAN
+)
+
 if(MSVC)
     string(REPLACE "/Zi" "/ZI" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
     string(REPLACE "/Zi" "/ZI" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})

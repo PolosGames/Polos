@@ -34,6 +34,7 @@ target_link_libraries(
         PRIVATE
             glm::glm_interface
             spdlog::spdlog_interface
+            stduuid::stduuid_interface
 )
 
 build_options(${PCH_LIBRARY_NAME} true)

@@ -14,7 +14,6 @@ namespace polos
         static void PutLast(FuncType p_UpdateFunc);
         static void PutFirst(FuncType p_UpdateFunc);
         static void Update(float p_DeltaTime);
-
     private:
         static UpdateQueue* s_Instance;
         DArray<FuncType> m_UpdateList;

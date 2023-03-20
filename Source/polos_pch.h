@@ -39,6 +39,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <stduuid/uuid.h>
+
 #include "polos/core/debug/plassert.h"
 #include "polos/core/debug/profiling.h"
 #include "polos/utils/alias.h"
