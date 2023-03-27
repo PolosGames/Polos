@@ -51,3 +51,7 @@ Sound playing system.
 
 - A better Render API that supports 3D as well.
 - Different graphics API supports (Vulkan, DirectX)
+- A sound engine using OpenAL.
+- Scene export for using editor as a standalone system for making games
+
+More major/minor features and enhancements can be found in the roadmap
