@@ -7,30 +7,23 @@ assignees: kayraurfali
 
 ---
 
-**Describe the bug**
+ - OS: [e.g. Windows]
+ - Engine Version [e.g. 0.0.1]
+
+**Describe the bug**</br>
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
+**To Reproduce**</br>
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+**Expected behavior**</br>
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
+**Screenshots**</br>
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. Windows]
- - Engine Version [e.g. 0.0.1]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone14]
- - OS: [e.g. iOS16.2]
- - Engine Version [e.g. 0.0.1]
-
-**Additional context**
+**Additional context**</br>
 Add any other context about the problem here.
