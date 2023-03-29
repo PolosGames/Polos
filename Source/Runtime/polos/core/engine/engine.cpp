@@ -80,13 +80,11 @@ namespace polos
         auto* window_system    = engine_memory.New<WindowSystem>();
         auto* sound_engine     = engine_memory.New<SoundEngine>();
         auto* component_memory = engine_memory.New<ecs::ComponentMemory>();
+        auto* shader_lib       = engine_memory.New<ShaderLib>();
 
-        // Single instance subsystems
-        auto* shader_lib    = engine_memory.New<ShaderLib>();
         auto* update_queue  = engine_memory.New<UpdateQueue>();
 
         UpdateQueue::s_Instance     = update_queue;
-        ShaderLib::s_Instance       = shader_lib;
 
         // Startup for systems
         for (auto& cb : s_Instance->m_StartupSequence)
@@ -109,10 +107,10 @@ namespace polos
             std::invoke(cb);
         }
         
-        engine_memory.Delete(component_memory);
-        engine_memory.Delete(sound_engine);
         engine_memory.Delete(update_queue);
         engine_memory.Delete(shader_lib);
+        engine_memory.Delete(component_memory);
+        engine_memory.Delete(sound_engine);
         engine_memory.Delete(window_system);
         engine_memory.Delete(renderer);
         engine_memory.Delete(event_bus);

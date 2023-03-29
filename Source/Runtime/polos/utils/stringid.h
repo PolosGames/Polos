@@ -32,7 +32,7 @@ namespace polos
     }
     
     StringId         GetStringId(std::string const& p_Str);
-    std::string_view get_string_from_id(StringId p_Sid);
+    std::string_view GetStringFromId(StringId p_Sid);
 
 } // namespace polos
 
