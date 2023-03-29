@@ -4,11 +4,11 @@ namespace polos
 {
     enum ShaderType
     {
-        kVertex,
-        kFragment,
-        kGeometry,
-        kCompute,
-        kShaderTypeMax,
+        k_Vertex,
+        k_Fragment,
+        k_Geometry,
+        k_Compute,
+        k_ShaderTypeMax,
     };
     
     class Shader
