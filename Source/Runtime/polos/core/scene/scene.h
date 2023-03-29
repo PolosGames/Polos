@@ -55,7 +55,7 @@ namespace polos
         if (m_Entities[entity_index].mask.test(comp_id))
         {
             LOG_ENGINE_WARN("[Scene::Assign] Entity alrady has the requested component, returning the component.");
-            return Get<T>(entity_index);
+            return Get<T>(p_Entity);
         }
 
         if (!m_CompPools[comp_id].IsInitialized())
