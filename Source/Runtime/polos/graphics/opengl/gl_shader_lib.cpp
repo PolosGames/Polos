@@ -180,6 +180,11 @@ namespace polos
         }
         return s_Instance->m_Shaders[i];
     }
+
+    DArray<Shader> const& ShaderLib::GetAll()
+    {
+        return s_Instance->m_Shaders;
+    }
 }// namespace polos
 
 #endif // USE_OPENGL
