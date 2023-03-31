@@ -17,13 +17,14 @@ target_include_directories(
 target_link_libraries(
     PolosContainers
         PRIVATE
+            ${PCH_LIBRARY_NAME}
             glm::glm_interface
 )
 
 set_target_properties(
     PolosContainers
         PROPERTIES
-            PUBLIC_HEADER "${PolosContainers_HEADERS}"
+            PUBLIC_HEADER             "${PolosContainers_HEADERS}"
             CXX_STANDARD              20
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True

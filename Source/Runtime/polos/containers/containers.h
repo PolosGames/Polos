@@ -1,6 +1,7 @@
 #pragma once
 
 #include "polos/containers/char_array.h"
+#include "polos/containers/expected.h"
 
 namespace polos
 {
@@ -41,4 +42,10 @@ namespace polos
 
     template<typename T>
     using Optional = std::optional<T>;
+
+    template<typename T>
+    using Unexpected = unexpected<T>;
+
+    template<typename T, typename E>
+    using Expected = expected<T, E>;
 }

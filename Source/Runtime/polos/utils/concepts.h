@@ -31,4 +31,5 @@ namespace polos
     {
         !std::is_member_function_pointer_v<Func>;
     };
+
 }
