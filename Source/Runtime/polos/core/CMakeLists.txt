@@ -22,6 +22,7 @@ target_link_libraries(
             glm::glm_interface
             glad::glad_interface
             fmod::fmod_interface
+            ImGui::ImGui_interface
 )
 
 set_target_properties(

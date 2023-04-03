@@ -22,10 +22,10 @@ namespace polos
         static void RaiseEvent(Args&&... p_Args);
         
         template<EngineEvent EventType>
-        static void SubscribeToEvent(Delegate<void(EventType&)> p_Callback);
+        static bool SubscribeToEvent(Delegate<void(EventType&)> p_Callback);
 
         template<EngineEvent EventType>
-        static void UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback);
+        static bool UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback);
 
     private:
         static EventBus* s_Instance;
@@ -49,16 +49,18 @@ namespace polos
     }
 
     template<EngineEvent EventType>
-    inline void EventBus::SubscribeToEvent(Delegate<void(EventType&)> p_Callback)
+    inline bool EventBus::SubscribeToEvent(Delegate<void(EventType&)> p_Callback)
     {
         auto& callbacks  = s_Instance->m_Callbacks;
 
         StringId id = g_UniqueEventId<EventType>;
         callbacks.try_emplace(id).first->second.push_back(std::move(*std::launder(reinterpret_cast<Delegate<void(BaseEvent&)>*>(&p_Callback))));
+
+        return true;
     }
 
     template<EngineEvent EventType>
-    inline void EventBus::UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback)
+    inline bool EventBus::UnsubscribeFromEvent(Delegate<void(EventType&)> p_Callback)
     {
         StringId id      = g_UniqueEventId<EventType>;
         auto& callbacks  = s_Instance->m_Callbacks;
@@ -73,31 +75,13 @@ namespace polos
             ),
             event_list.end()
         );
+
+        return true;
     }
 } // namespace polos
 
-#define SUB_TO_EVENT_MEM_FUN(EventType, MemFuncName) \
-    ::polos::EventBus::SubscribeToEvent( \
-        ::polos::Delegate<void(EventType&)>::template From< \
-            std::remove_cvref_t<decltype(*this)>, \
-            &std::remove_cvref_t<decltype(*this)>::MemFuncName \
-        >(this) \
-    )
+#define SUB_TO_EVENT_MEM_FUN(EventType, MemFuncName)     bool PL_ANON_NAME(result) = ::polos::EventBus::SubscribeToEvent(::polos::Delegate<void(EventType&)>::template From<std::remove_cvref_t<decltype(*this)>,&std::remove_cvref_t<decltype(*this)>::MemFuncName>(this)); PL_VOID_CAST(PL_ANON_NAME(result))
+#define SUB_TO_EVENT_FREE_FUN(EventType, FuncPtr)        bool PL_ANON_NAME(result) = ::polos::EventBus::SubscribeToEvent(::polos::Delegate<void(EventType&)>::template From<FuncPtr>()); PL_VOID_CAST(PL_ANON_NAME(result))
 
-#define SUB_TO_EVENT_FREE_FUN(EventType, FuncPtr) \
-    ::polos::EventBus::SubscribeToEvent( \
-        ::polos::Delegate<void(EventType&)>::template From<FuncPtr>() \
-    )
-
-#define UNSUB_FROM_EVENT_MEM_FUN(EventType, MemFuncName) \
-    ::polos::EventBus::UnsubscribeFromEvent( \
-        ::polos::Delegate<void(EventType&)>::template From< \
-            std::remove_cvref_t<decltype(*this)>, \
-            &std::remove_cvref_t<decltype(*this)>::MemFuncName \
-        >(this) \
-    )
-
-#define UNSUB_FROM_EVENT_FREE_FUN(EventType, FuncPtr) \
-    ::polos::EventBus::UnsubscribeFromEvent(          \
-            ::polos::Delegate<void(EventType&)>::template From<FuncPtr>() \
-    )
+#define UNSUB_FROM_EVENT_MEM_FUN(EventType, MemFuncName) bool PL_ANON_NAME(result) = ::polos::EventBus::UnsubscribeFromEvent(::polos::Delegate<void(EventType&)>::template From<std::remove_cvref_t<decltype(*this)>,&std::remove_cvref_t<decltype(*this)>::MemFuncName>(this)); PL_VOID_CAST(PL_ANON_NAME(result));
+#define UNSUB_FROM_EVENT_FREE_FUN(EventType, FuncPtr)    bool PL_ANON_NAME(result) = ::polos::EventBus::UnsubscribeFromEvent(::polos::Delegate<void(EventType&)>::template From<FuncPtr>()); PL_VOID_CAST(PL_ANON_NAME(result))

@@ -16,14 +16,14 @@
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/scene/scene_view.h"
 #include "polos/core/ecs/sets/info_set.h"
+#include "polos/core/ecs/sets/camera_set.h"
 
 #include <polos.h>
 
 namespace polos
 {
     Editor::Editor()
-        : m_EditorCamera{{0.0f, 0.0f, 5.0f}, {0.0f, 1.0f, 0.0f}}
-        , m_GuiFontScale{1.8f}
+        : m_GuiFontScale{1.8f}
         , m_EditorFramebufferAspectRatioBefore{0.0f}
         , m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}}
         , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
@@ -52,7 +52,7 @@ namespace polos
         auto* entity_texture_component   = m_Scene.Assign<ecs::texture2d_component>(texture_entity);
         auto* entity_material_component  = m_Scene.Assign<ecs::material_component>(texture_entity);
 
-        entity_transform_component->position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        entity_transform_component->position = glm::vec3(0.0f, 0.0f, 0.0f);
         entity_transform_component->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         entity_transform_component->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
 
@@ -63,11 +63,32 @@ namespace polos
         auto* info_component = m_Scene.Get<ecs::info_component>(texture_entity);
         info_component->name = "Texture";
 
+        // Add the editor camera
+        m_EditorCamera = m_Scene.NewEntity();
+
+        auto* editor_camera_transform_comp = m_Scene.Assign<ecs::transform_component>(m_EditorCamera);
+        auto* editor_camera_camera_comp    = m_Scene.Assign<ecs::camera_component>(m_EditorCamera);
+        auto* editor_camera_info_comp      = m_Scene.Assign<ecs::info_component>(m_EditorCamera);
+
+        editor_camera_transform_comp->position = glm::vec3(0.0f, 0.0f, 5.0f);
+        editor_camera_transform_comp->rotation = glm::vec3(0.0f, -90.0f, 0.0f);
+        editor_camera_transform_comp->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
+
+        editor_camera_camera_comp->worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        editor_camera_camera_comp->isEditor = true;
+        editor_camera_camera_comp->type = CameraType::k_Ortho;
+
+        editor_camera_info_comp->name = "Camera";
+        
+        ecs::camera_set::UpdateCameraVectors(editor_camera_transform_comp, editor_camera_camera_comp);
+
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);
         SUB_TO_EVENT_MEM_FUN(key_press, OnKeyPress);
         SUB_TO_EVENT_MEM_FUN(key_release, OnKeyRelease);
 
         m_SelectedEntity = INVALID_ENTITY;
+
+        CameraController::AttachScene(&m_Scene);
     }
 
     Editor::~Editor()
@@ -76,27 +97,6 @@ namespace polos
 
     void Editor::Update(float p_DeltaTime)
     {
-        CameraMovement camera_move{k_None};
-
-        if ((m_Key & (1)) != 0)
-        {
-            camera_move = k_Up;
-        }
-        else if ((m_Key & (2)) != 0)
-        {
-            camera_move = k_Down;
-        }
-        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
-        if ((m_Key & (4)) != 0)
-        {
-            camera_move = k_Left;
-        }
-        else if ((m_Key & (8)) != 0)
-        {
-            camera_move = k_Right;
-        }
-        m_EditorCamera.ProcessKeyboard(camera_move, p_DeltaTime);
-
         m_EditorFramebuffer.Clear();
 
         m_EditorFramebuffer.Bind();
