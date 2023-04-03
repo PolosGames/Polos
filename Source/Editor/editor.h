@@ -6,7 +6,6 @@
 #include "polos/graphics/shader.h"
 #include "polos/graphics/vao.h"
 #include "polos/core/window.h"
-#include "polos/core/camera.h"
 #include "polos/core/events/input/mouse_move.h"
 #include "polos/core/events/input/key_press.h"
 #include "polos/core/events/input/key_release.h"
@@ -45,7 +44,7 @@ namespace polos
 
         float m_GuiFontScale{};
 
-        pl::Camera m_EditorCamera;
+        ecs::Entity m_EditorCamera;
         FrameBuffer m_EditorFramebuffer;
         float  m_EditorFramebufferAspectRatioBefore{};
         ImVec2 m_EditorFramebufferDimensions{};

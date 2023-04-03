@@ -1,14 +1,15 @@
 #include "renderer.h"
 
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "polos/core/window_system.h"
-#include "polos/core/camera.h"
 #include "polos/graphics/vertex.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/core/scene/scene_view.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
 #include "polos/core/engine/engine.h"
+#include "polos/core/ecs/sets/camera_set.h"
 
 namespace polos
 {
@@ -52,6 +53,16 @@ namespace polos
 
     void Renderer::RenderScene(Scene& scene)
     {
+        for (auto camera_set : SceneView<ecs::camera_set>(scene))
+        {
+            for (auto const& shader : ShaderLib::GetAll())
+            {
+                shader.Use();
+                shader.SetUniform("u_View"_sid, camera_set.GetViewMatrix());
+                shader.Release();
+            }
+        }
+
         for (auto [texture2d_comp, material_comp, transform_comp] : SceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene))
         {
             auto const& quad_vao       = Renderer::GetQuadVao();
@@ -75,7 +86,6 @@ namespace polos
             auto* shader        = material_comp->shader;
             shader->Use();
             shader->SetUniform("u_Projection"_sid, Renderer::GetProjectionMatrix());
-            shader->SetUniform("u_View"_sid, Camera::GetViewMatrix());
 
             glm::mat4 model_matrix(1.0f);
             model_matrix = glm::translate(model_matrix, transform_comp->position);
