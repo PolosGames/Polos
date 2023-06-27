@@ -5,7 +5,7 @@
 
 namespace polos
 {
-    inline constexpr StringId hash_function(cstring p_Str)
+    inline constexpr StringId StrHash64(cstring p_Str)
     {
         int64 p = 31;
         int64 m = 1'000'000'009;
@@ -24,10 +24,12 @@ namespace polos
     
         return (hash_val % m + m) % m;
     }
+
+    uint32 StrHash32(cstring p_Str);
     
     inline constexpr StringId GetStringId(cstring p_Str)
     {
-        StringId sid = hash_function(p_Str);
+        StringId sid = StrHash64(p_Str);
         return sid;
     }
     
@@ -36,4 +38,4 @@ namespace polos
 
 } // namespace polos
 
-consteval polos::StringId operator""_sid(char const* p_Str, std::size_t /**/) { return polos::hash_function(p_Str); }
+consteval polos::StringId operator""_sid(char const* p_Str, std::size_t /**/) { return polos::StrHash64(p_Str); }
