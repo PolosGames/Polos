@@ -1,7 +1,6 @@
 #pragma once
 
 #include "polos/core/resource/resource_loader.h"
-#include "polos/core/resource/resource.h"
 
 namespace polos::resource
 {

@@ -4,6 +4,7 @@
 
 #include "polos/core/engine/engine.h"
 #include "polos/core/io/file.h"
+#include "polos/core/resource/resource_common.h"
 
 namespace polos::resource
 {
@@ -28,7 +29,7 @@ namespace polos::resource
     void ResourceCache<T>::Shutdown()
     {
         for (auto const& [handle, _] : m_Resources)
-            DestroyResource(handle);
+            DestroyResource(detail::GetResourceHash(handle));
     }
 
     template<typename T>
@@ -42,8 +43,8 @@ namespace polos::resource
     template<typename T>
     auto ResourceCache<T>::LoadResource(std::string p_Path) -> ResourceHandle
     {
-        auto const [extension, name] = [] {
-            File file(p_Path, FileMode::k_Binary);
+        auto const [extension, name] = [&p_Path] {
+            File file(p_Path, k_Read);
             return std::pair(file.fileExtension, file.fileName);
         }();
 
@@ -53,7 +54,7 @@ namespace polos::resource
         for (std::size_t i{}; i != s_Instance->m_Loaders.size(); i++)
         {
             auto& l = s_Instance->m_Loaders[i];
-            if (l->CanLoad(extension))
+            if (l->CanLoad(p_Path))
             {
                 loader = l.get();
                 loader_index = i;
@@ -62,25 +63,26 @@ namespace polos::resource
 
         if (loader == nullptr)
         {
-            LOG_ENGINE_ERROR("No Loader was found that could load resource \"{}\".", typeid(ResourceType).name());
+            LOG_ENGINE_ERROR("[ResourceCache::LoadResource] No Loader was found that could load resource \"{}\".", typeid(ResourceType).name());
             return INVALID_RESOURCE;
         }
 
-        auto* resource = loader->LoadResource(p_Path);
+        auto rsc_index = s_Instance->m_ResourceCache.size();
+        s_Instance->m_ResourceCache.emplace_back();
+        auto* rsc = loader->LoadResource(p_Path, &s_Instance->m_ResourceCache.back());
         
-        if (resource == nullptr)
+        if (rsc == nullptr)
         {
-            LOG_ENGINE_ERROR("Couldn't load the resource \"{}\" with the given loader.", typeid(ResourceType).name());
+            LOG_ENGINE_ERROR("[ResourceCache::LoadResource] Couldn't load the resource \"{}\" with the given loader.", typeid(ResourceType).name());
+            s_Instance->m_ResourceCache.pop_back();
             return INVALID_RESOURCE;
         }
         
-        auto resource_index = s_Instance->m_ResourceCache.size();
-        s_Instance->m_ResourceCache.push_back(std::move(*resource));
+        auto rsc_handle = detail::CreateResource(rsc_index, loader_index, StrHash32(name.c_str()));
 
-        auto resource_handle = detail::CreateResource(resource_index, loader_index, StrHash32(name));
-        s_Instance->m_Resources.try_emplace(resource_handle, std::filesystem::file_size(p_Path), p_Path);
+        s_Instance->m_Resources.try_emplace(rsc_handle, std::filesystem::file_size(p_Path), p_Path);
 
-        return resource_handle;
+        return rsc_handle;
     }
 
     template<typename T>

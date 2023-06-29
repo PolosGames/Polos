@@ -1,10 +1,10 @@
 #pragma once
 
+#include "polos/core/resource/resource_common.h"
+#include "polos/core/resource/resource_cache.h"
+
 namespace polos::resource
 {
-    template<typename T>
-    class ResourceCache;
-
     template<typename T>
     auto LoadResource(std::string p_Path) -> ResourceHandle
     {

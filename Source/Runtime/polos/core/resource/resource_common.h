@@ -1,0 +1,5 @@
+#pragma once
+
+#ifndef INVALID_RESOURCE
+#   define INVALID_RESOURCE 18446744073709551615
+#endif

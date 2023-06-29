@@ -3,26 +3,26 @@
 namespace polos::resource
 {
     template<typename T>
-    ResourceLoader<T>::ResourceLoader(std::vector<std::string> p_SupportedTypes, Delegate<std::add_pointer_t<T>(std::string)> p_LoadFn)
-        : m_SupportedTypes{std::move(p_SupportedTypes)}, m_LoadFn{p_LoadFn}
+    ResourceLoader<T>::ResourceLoader(Delegate<bool(std::string)> p_CanLoadFn, Delegate<T*(std::string, T*)> p_LoadFn)
+        : m_CanLoadFn{std::move(p_CanLoadFn)}, m_LoadFn{std::move(p_LoadFn)}
     {}
 
     template<typename T>
-    auto ResourceLoader<T>::LoadResource(std::string p_Path) -> ResourceLoader<T>::ResourceType*
+    auto ResourceLoader<T>::LoadResource(std::string p_Path, T* p_Ptr) -> ResourceLoader<T>::ResourceType*
     {
-        return m_LoadFn(p_Path);
+        PL_ASSERT(p_Ptr != nullptr, "The data that was passed by AssetCache was nullptr.");
+
+        return m_LoadFn(std::move(p_Path), std::forward<T*>(p_Ptr));
     }
 
     template<typename T>
-    auto ResourceLoader<T>::CanLoad(std::string p_ExtensionType) -> bool
+    auto ResourceLoader<T>::CanLoad(std::string p_Path) -> bool
     {
-        for (auto const& type : m_SupportedTypes)
-        {
-            if (p_ExtensionType == type)
-                return true;
-        }
+        bool result = m_CanLoadFn(std::move(p_Path));
 
-        LOG_ENGINE_WARN("Extension \"{}\" is not supported by the loader \"{}\"", p_ExtensionType);
-        return false;
+        if (!result)
+            LOG_ENGINE_WARN("[ResourceLoader::CanLoad] Extension is not supported by the loader.");
+
+        return result;
     }
 } // namespace polos::resource

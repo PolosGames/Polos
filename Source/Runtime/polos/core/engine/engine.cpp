@@ -9,6 +9,8 @@
 #include "polos/core/application.h"
 #include "polos/core/update_queue.h"
 #include "polos/core/ecs/components/components.h"
+#include "polos/core/resource/resource_cache.h"
+#include "polos/core/resource/resource.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/utils/stringid.h"
@@ -64,6 +66,7 @@ namespace polos
             + sizeof(ecs::ComponentMemory)
             + sizeof(ShaderLib)
             + sizeof(UpdateQueue)
+            + sizeof(resource::ResourceCache<resource::image>)
         ;
             
         LinearAllocator engine_memory(needed_memory);
@@ -81,6 +84,7 @@ namespace polos
         auto* sound_engine     = engine_memory.New<SoundEngine>();
         auto* component_memory = engine_memory.New<ecs::ComponentMemory>();
         auto* shader_lib       = engine_memory.New<ShaderLib>();
+        auto* image_cache      = engine_memory.New<resource::ResourceCache<resource::image>>();
 
         auto* update_queue  = engine_memory.New<UpdateQueue>();
 
@@ -108,6 +112,7 @@ namespace polos
         }
         
         engine_memory.Delete(update_queue);
+        engine_memory.Delete(image_cache);
         engine_memory.Delete(shader_lib);
         engine_memory.Delete(component_memory);
         engine_memory.Delete(sound_engine);

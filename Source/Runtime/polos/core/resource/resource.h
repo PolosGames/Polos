@@ -1,6 +1,8 @@
 #pragma once
 
-#define INVALID_RESOURCE 18446744073709551615
+#include "polos/core/resource/types/image.h"
+
+#include "polos/core/resource/loaders/image_loader_stb.h"
 
 namespace polos::resource
 {
