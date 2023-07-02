@@ -27,12 +27,12 @@ namespace polos::resource
     auto GetRawResource(std::string p_Name) -> T*
     {
         uint32 hash = StrHash32(p_Name.c_str());
-        auto handle = ResourceCache<T>::GetResource(hash);
+        auto* ptr = ResourceCache<T>::GetRawResource(hash);
 
-        if (handle == INVALID_RESOURCE)
+        if (ptr == nullptr)
             LOG_ENGINE_ERROR("[GetRawResource] Resource with the name \"{}\" was not found", p_Name);
 
-        return handle;
+        return ptr;
     }
 
     template<typename T>

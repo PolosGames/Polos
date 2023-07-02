@@ -67,11 +67,6 @@ namespace polos
 
         auto* comp_ptr = new (m_CompPools[comp_id].Get(entity_index)) T(std::forward<Args>(p_Args)...);
 
-        if constexpr (std::is_same_v<T, ecs::texture2d_component>)
-        {
-            comp_ptr->texture = Texture::Load({});
-        }
-
         m_Entities[entity_index].mask.set(comp_id);
 
         return comp_ptr;

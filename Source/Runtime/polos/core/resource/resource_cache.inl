@@ -28,8 +28,7 @@ namespace polos::resource
     template<typename T>
     void ResourceCache<T>::Shutdown()
     {
-        for (auto const& [handle, _] : m_Resources)
-            DestroyResource(detail::GetResourceHash(handle));
+        DestroyAllResources();
     }
 
     template<typename T>
@@ -107,7 +106,7 @@ namespace polos::resource
             if (hash == p_Hash)
             {
                 auto index = detail::GetResourceIndex(handle);
-                return s_Instance->m_ResourceCache[index];
+                return &s_Instance->m_ResourceCache[index];
             }
         }
 
@@ -132,5 +131,12 @@ namespace polos::resource
         }
 
         return false;
+    }
+
+    template<typename T>
+    auto ResourceCache<T>::DestroyAllResources() -> void
+    {
+        s_Instance->m_ResourceCache.clear();
+        s_Instance->m_Resources.clear();
     }
 } // namespace polos::resource

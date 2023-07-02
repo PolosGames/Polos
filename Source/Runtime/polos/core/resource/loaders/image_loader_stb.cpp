@@ -21,6 +21,7 @@ namespace polos::resource
 
         cstring path = p_Path.c_str();
 
+        stbi_set_flip_vertically_on_load(1);
         byte* data = stbi_load(path, &dim.x, &dim.y, &channels, 0);
 
         if (data == nullptr)

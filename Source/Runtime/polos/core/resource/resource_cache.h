@@ -39,6 +39,7 @@ namespace polos::resource
         static auto GetResource(uint32 p_Hash) -> ResourceHandle;
         static auto GetRawResource(uint32 p_Hash) -> ResourceType*;
         static auto DestroyResource(uint32 p_Hash) -> bool;
+        static auto DestroyAllResources() -> void;
     private:
         static ResourceCache<T>* s_Instance;
 

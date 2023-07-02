@@ -5,10 +5,11 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 
+#include "polos/core/resource/resource.h"
+#include "polos/core/resource/types/image.h"
+
 namespace polos
 {
-    int32 Texture::s_IsFlipped = 0;
-
     Texture::Texture()
     {}
 
@@ -21,12 +22,8 @@ namespace polos
         glDeleteTextures(1, &id);
     }
 
-    std::shared_ptr<Texture> Texture::Load(std::string p_Path)
+    std::shared_ptr<Texture> Texture::Load(cstring p_ResourceName)
     {
-        if (!Texture::s_IsFlipped) stbi_set_flip_vertically_on_load(1);
-
-        cstring path = p_Path.c_str();
-
         uint32 handle;
         glCreateTextures(GL_TEXTURE_2D, 1, &handle);
 
@@ -35,21 +32,25 @@ namespace polos
         glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        int32 i_width{};
-        int32 i_height{};
-        int32 i_channels{};
-        
-        if (path == nullptr)
+        if (p_ResourceName == nullptr)
         {
-            glTextureStorage2D(handle, 1, GL_RGBA8, i_width, i_height);
-            glTextureSubImage2D(handle, 0, 0, 0, i_width, i_height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-            LOG_ENGINE_WARN("[Texture::Load] Creating a empty texture because the path provided was nullptr.");
-
-            return std::make_shared<Texture>(handle, 0, 0, 4, "NoPathProvided");
+            LOG_ENGINE_ERROR("[Texture::Load] Resource name cannot be empty.");
+            return std::make_shared<Texture>(handle, 0, 0, 4, "NoResource");
         }
         
-        auto* const pixel_data = stbi_load(path, &i_width, &i_height, &i_channels, 4);
+        auto* img = resource::GetRawResource<resource::image>(p_ResourceName);
+
+        if (img == nullptr)
+        {
+            LOG_ENGINE_ERROR("[Texture::Load] No resource could be found with name: {}", p_ResourceName);
+            return std::make_shared<Texture>(handle, 0, 0, 4, "NoResource");
+        }
+
+        int32 i_width = img->dimensions.x;
+        int32 i_height = img->dimensions.y;
+        int32 i_channels = img->channels;
+
+        auto* const pixel_data = img->data.data();
 
         if (pixel_data != nullptr)
         {
@@ -67,9 +68,9 @@ namespace polos
             glTextureStorage2D(handle, 1, sized_internal_format, i_width, i_height);
             glTextureSubImage2D(handle, 0, 0, 0, i_width, i_height, internal_format, GL_UNSIGNED_BYTE, pixel_data);
 
-            stbi_image_free(pixel_data);
+            //stbi_image_free(pixel_data);
 
-            auto texture = std::make_shared<Texture>(handle, i_width, i_height, i_channels, p_Path);
+            auto texture = std::make_shared<Texture>(handle, i_width, i_height, i_channels, p_ResourceName);
 
             return texture;
         }

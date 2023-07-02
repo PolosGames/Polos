@@ -29,6 +29,6 @@ namespace polos::resource::detail
 
     auto GetResourceHash(ResourceHandle p_Handle) -> uint32
     {
-        return static_cast<uint32>((p_Handle << 32));
+        return static_cast<uint32>(p_Handle);
     }
 } // namespace polos::resource::detail::
