@@ -17,6 +17,7 @@
 #include "polos/core/scene/scene_view.h"
 #include "polos/core/ecs/sets/info_set.h"
 #include "polos/core/ecs/sets/camera_set.h"
+#include "polos/core/resource/resource.h"
 
 #include <polos.h>
 
@@ -29,6 +30,8 @@ namespace polos
         , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
     {
         UPDATE_Q_MEM_ADD_LAST(Update);
+
+        resource::LoadResource<resource::image>("resources/textures/linux-22621.png");
         
         m_AppWindow     = WindowSystem::GetAppWindowGUID();
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
@@ -56,7 +59,7 @@ namespace polos
         entity_transform_component->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         entity_transform_component->scale    = glm::vec3(1.0f, 1.0f, 1.0f);
 
-        entity_texture_component->texture = Texture::Load("resources/textures/linux-22621.png");
+        entity_texture_component->texture = Texture::Load("linux-22621");
 
         entity_material_component->shader = m_ShaderTexture;
 

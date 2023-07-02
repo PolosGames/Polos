@@ -8,6 +8,8 @@
 #include "polos/core/time/timer.h"
 #include "polos/gui/gui.h"
 #include "polos/core/window_system.h"
+#include "polos/core/resource/resource_cache.h"
+#include "polos/core/resource/resource.h"
 
 namespace polos
 {
@@ -15,6 +17,8 @@ namespace polos
         : m_IsRunning{true}
     {
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
+    
+        resource::ResourceCache<resource::image>::NewLoader<resource::ImageLoaderStb>();
     }
 
 
@@ -25,7 +29,6 @@ namespace polos
 
     void Application::Run()
     {
-        
         float delta_time{};
         int64 end   = time::Timer::Now();
         int64 start = time::Timer::Now();

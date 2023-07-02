@@ -13,13 +13,14 @@
 
 namespace polos
 {
+    template<typename Fn> class Delegate {};
+
     template<typename T, typename... Args>
-    concept Functor = requires {
+    concept Functor = requires (T&& t, Args&&... args){
         std::invocable<T, Args&&...>;
         std::is_class_v<T>;
+        !std::is_same_v<std::remove_cvref_t<T> , Delegate<std::invoke_result_t<std::remove_cvref_t<T>, Args...>(Args...) >> ;
     };
-
-    template<typename Fn> class Delegate {};
 
     template<typename Return, typename... Args>
     class Delegate<Return(Args...)>

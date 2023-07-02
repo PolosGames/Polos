@@ -1,3 +1,4 @@
+#include "stringid.h"
 
 #include "stringid.h"
 
@@ -10,9 +11,22 @@ namespace polos
         std::size_t                   g_Counter{};
     }
 
+    uint32 StrHash32(cstring p_Str)
+    {
+        uint32 m{37};
+        uint32 h{};
+        uint8* p{};
+
+        h = 0;
+        for (p = (uint8*)p_Str; *p != '\0'; p++)
+            h = m * h + *p;
+
+        return h + (h >> 5);
+    }
+
     StringId GetStringId(std::string const& p_Str)
     {
-        StringId    sid  = hash_function(p_Str.c_str());
+        StringId    sid  = StrHash64(p_Str.c_str());
         std::size_t i{};
         auto        it   = std::ranges::find_if(g_StringIdTable, [sid, &i](auto const& p_Sid) { i++; return sid == p_Sid; });
         if (it == g_StringIdTable.end())
