@@ -7,7 +7,6 @@
 #include "polos/core/sound/sound_engine.h"
 #include "polos/core/ecs/component_memory.h"
 #include "polos/core/application.h"
-#include "polos/core/update_queue.h"
 #include "polos/core/ecs/components/components.h"
 #include "polos/core/resource/resource_cache.h"
 #include "polos/core/resource/resource.h"
@@ -24,6 +23,8 @@ namespace polos
         // Invokes all the events by once, so we don't get the same id's.
         // This literally smells bad, but will do for 
         engine_stop{};
+        engine_update{};
+        engine_late_update{};
         char_type{};
         key_press{};
         key_release{};
@@ -65,13 +66,16 @@ namespace polos
             + sizeof(SoundEngine)
             + sizeof(ecs::ComponentMemory)
             + sizeof(ShaderLib)
-            + sizeof(UpdateQueue)
             + sizeof(resource::ResourceCache<resource::image>)
         ;
             
         LinearAllocator engine_memory(needed_memory);
 
         InitializeComponentIds();
+
+        // This ensures that all events are fired (instantiated) once,
+        // so that every one of their id's get created.
+        RaiseAllEvents();
 
         auto* engine = engine_memory.New<Engine>();
         s_Instance   = engine;
@@ -86,32 +90,22 @@ namespace polos
         auto* shader_lib       = engine_memory.New<ShaderLib>();
         auto* image_cache      = engine_memory.New<resource::ResourceCache<resource::image>>();
 
-        auto* update_queue  = engine_memory.New<UpdateQueue>();
-
-        UpdateQueue::s_Instance     = update_queue;
-
         // Startup for systems
         for (auto& cb : s_Instance->m_StartupSequence)
         {
             std::invoke(cb);
         }
 
-        // This ensures that all events are fired (instantiated) once,
-        // so that every one of their id's get created.
-        RaiseAllEvents();
-
         Application* l_App = CreateApplication();
         l_App->Run();
         delete l_App;
 
         // Shutdown sequence
-
         for (auto& cb : s_Instance->m_ShutdownSequnce | std::views::reverse)
         {
             std::invoke(cb);
         }
         
-        engine_memory.Delete(update_queue);
         engine_memory.Delete(image_cache);
         engine_memory.Delete(shader_lib);
         engine_memory.Delete(component_memory);

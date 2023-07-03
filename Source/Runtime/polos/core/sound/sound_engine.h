@@ -3,6 +3,7 @@
 #include <fmod.hpp>
 
 #include "polos/core/sound/sound_attributes.h"
+#include "polos/core/events/engine/engine_update.h"
 
 namespace polos
 {
@@ -13,8 +14,6 @@ namespace polos
     public:
         void Startup();
         void Shutdown();
-
-        void Update(float);
 
         void LoadSound(std::string const p_SoundName);
 
@@ -28,6 +27,9 @@ namespace polos
         {
             return s_Instance;
         }
+    private:
+        void update(engine_update& p_Event);
+
     private:
         static SoundEngine* s_Instance;
 
