@@ -1,9 +1,8 @@
+<img src=".github/resources/logo_bw.svg" alt="logo" width="500"/>
 
-# Polos [![GitHub](https://img.shields.io/github/license/PolosGames/Polos)](https://github.com/PolosGames/Polos/blob/master/LICENSE) ![Build](https://img.shields.io/github/actions/workflow/status/PolosGames/Polos/build.yaml?branch=master)
+# [![GitHub](https://img.shields.io/github/license/PolosGames/Polos)](https://github.com/PolosGames/Polos/blob/master/LICENSE) ![Build](https://img.shields.io/github/actions/workflow/status/PolosGames/Polos/build.yaml?branch=master)
 
 A game engine project that started as a simple learning project and now became one of my biggest projects so far! Therefore I try to bring new features every week.
-
-![Intro](.github/resources/introduction.gif)
 
 **Roadmap** can be found in [this](https://trello.com/b/frG6m0AQ) link.
 
@@ -42,10 +41,13 @@ EventBus / Event System:
 * Create custom events that can be fired from anywhere in the code.
 
 GUI support with  ImGui
+
 Memory management
 * Almost all memory inside Polos is managed by custom allocators.
 
-Sound playing system.
+Sound playing
+
+Editor is stil a WIP! So there is little to no progress on the editor.
 
 ### Soon:
 
