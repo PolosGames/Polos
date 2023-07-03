@@ -319,8 +319,8 @@ namespace polos
         for (auto const& handle : windows)
         {
             glfwMakeContextCurrent(static_cast<GLFWwindow*>(handle));
-            glfwPollEvents();
             glfwSwapBuffers(static_cast<GLFWwindow*>(handle));
+            glfwPollEvents();
         }
     }
 
