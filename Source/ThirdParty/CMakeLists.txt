@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+file(WRITE ptp.cpp "")
+
 add_subdirectory(fmod)
 if(USE_OPENGL)
     add_subdirectory(glad)
