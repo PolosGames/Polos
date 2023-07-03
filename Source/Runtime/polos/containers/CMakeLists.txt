@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+file(WRITE pcnt.cpp "")
+
 file(GLOB_RECURSE PolosContainers_SOURCES "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 file(GLOB_RECURSE PolosContainers_HEADERS "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
