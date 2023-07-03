@@ -6,10 +6,8 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 
-#include "polos/core/update_queue.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/core/event_bus.h"
-#include "polos/core/update_queue.h"
 #include "polos/core/window_system.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
@@ -29,7 +27,7 @@ namespace polos
         , m_EditorFramebufferUVCoords1{ImVec2{0.0f, 1.0f}}
         , m_EditorFramebufferUVCoords2{ImVec2{1.0f, 0.0f}}
     {
-        UPDATE_Q_MEM_ADD_LAST(Update);
+        SUB_TO_EVENT_MEM_FUN(engine_update, update);
 
         resource::LoadResource<resource::image>("resources/textures/linux-22621.png");
         
@@ -98,7 +96,7 @@ namespace polos
     {
     }
 
-    void Editor::Update(float p_DeltaTime)
+    void Editor::update(engine_update& p_Event)
     {
         m_EditorFramebuffer.Clear();
 
@@ -109,7 +107,7 @@ namespace polos
 
         //ImGui::ShowDemoWindow();
 
-        RenderGUI(p_DeltaTime);
+        RenderGUI(p_Event.deltaTime);
     }
 
     void Editor::RenderGUI(float p_DeltaTime)

@@ -5,6 +5,7 @@
 #include "polos/core/scene/scene.h"
 #include "polos/core/events/input/input_events.h"
 #include "polos/core/camera_type.h"
+#include "polos/core/events/engine/engine_update.h"
 
 namespace polos
 {
@@ -27,7 +28,7 @@ namespace polos
     public:
         static void AttachScene(Scene* p_Scene);
     private:
-        void update(float p_DeltaTime);
+        void update(engine_update& p_Event);
 
         void on_key_press(key_press& p_Event);
         void on_key_release(key_release& p_Event);

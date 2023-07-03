@@ -1,9 +1,9 @@
 
 #include "sound_engine.h"
 
-#include "polos/core/update_queue.h"
 #include "polos/utils/stringid.h"
 #include "polos/core/engine/engine.h"
+#include "polos/core/event_bus.h"
 
 namespace polos
 {
@@ -24,10 +24,10 @@ namespace polos
 
         result = m_System->init(32, FMOD_INIT_NORMAL, nullptr);
 
-        UPDATE_Q_MEM_ADD_LAST(Update);
+        SUB_TO_EVENT_MEM_FUN(engine_update, update);
     }
 
-    void SoundEngine::Update(float)
+    void SoundEngine::update(engine_update&)
     {
         //result = m_System->playSound(m_Sound, 0, false, &m_Channel);
 

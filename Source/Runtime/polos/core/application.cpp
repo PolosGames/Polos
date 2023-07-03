@@ -4,7 +4,6 @@
 
 #include "polos/core/event_bus.h"
 #include "polos/core/events/events.h"
-#include "polos/core/update_queue.h"
 #include "polos/core/time/timer.h"
 #include "polos/gui/gui.h"
 #include "polos/core/window_system.h"
@@ -50,11 +49,11 @@ namespace polos
     
             Gui::Begin();
 
-            UpdateQueue::Update(delta_time);
+            EventBus::RaiseEvent<engine_update>();
             
             Gui::End();
 
-            WindowSystem::Update();
+            EventBus::RaiseEvent<engine_late_update>();
         }
         
         Gui::Shutdown();

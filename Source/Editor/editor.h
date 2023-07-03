@@ -20,7 +20,6 @@ namespace polos
         Editor();
         ~Editor() override;
     private:
-        void Update(float p_DeltaTime);
         void RenderGUI(float p_DeltaTime);
 
         void CreateEmptyEntityInScene();
@@ -31,6 +30,8 @@ namespace polos
 
         void DrawTransformComponent();
         void DrawTexture2DComponent();
+    private:
+        void update(engine_update& p_Event);
     private:
         Shader* m_ShaderTexture{};
         Shader* m_ShaderBasicColor{};

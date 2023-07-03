@@ -160,6 +160,7 @@ namespace polos
             glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         }
         
+        SUB_TO_EVENT_MEM_FUN(engine_late_update, update);
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
     }
     
@@ -312,7 +313,7 @@ namespace polos
         return s_Instance->m_IsInitialized;
     }
 
-    void WindowSystem::Update()
+    void WindowSystem::update(engine_late_update&)
     {
         auto& windows = s_Instance->m_WinHandles;
         for (auto const& handle : windows)

@@ -6,6 +6,7 @@
 #include "polos/graphics/graphics_context.h"
 #include "polos/core/events/window/window_close.h"
 #include "polos/utils/guid.h"
+#include "polos/core/events/engine/engine_late_update.h"
 
 namespace polos
 {
@@ -32,8 +33,8 @@ namespace polos
         
         PL_NODISCARD static bool IsInitialized();
 
-        static void Update();
     private:
+        void                 update(engine_late_update& p_Event);
         void                 on_window_close(window_close& p_Event);
         static std::size_t   find_index_with_guid(polos::GUID p_WindowGUID);
     private:

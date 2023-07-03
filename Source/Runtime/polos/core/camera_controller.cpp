@@ -4,7 +4,6 @@
 #include <imgui/imgui.h>
 
 #include "polos/core/event_bus.h"
-#include "polos/core/update_queue.h"
 #include "polos/utils/key_code.h"
 #include "polos/utils/mouse_code.h"
 #include "polos/core/scene/scene_view.h"
@@ -25,7 +24,7 @@ namespace polos
         SUB_TO_EVENT_MEM_FUN(mouse_button_press, on_mouse_button_press);
         SUB_TO_EVENT_MEM_FUN(mouse_button_release, on_mouse_button_release);
 
-        UPDATE_Q_MEM_ADD_LAST(update);
+        SUB_TO_EVENT_MEM_FUN(engine_update, update);
     }
 
     CameraController::CameraController(Scene* p_Scene)
@@ -40,7 +39,7 @@ namespace polos
         SUB_TO_EVENT_MEM_FUN(mouse_button_press, on_mouse_button_press);
         SUB_TO_EVENT_MEM_FUN(mouse_button_release, on_mouse_button_release);
 
-        UPDATE_Q_MEM_ADD_LAST(update);
+        SUB_TO_EVENT_MEM_FUN(engine_update, update);
     }
 
     void CameraController::AttachScene(Scene* p_Scene)
@@ -48,7 +47,7 @@ namespace polos
         s_Instance->m_Scene = p_Scene;
     }
 
-    void CameraController::update(float p_DeltaTime)
+    void CameraController::update(engine_update& p_Event)
     {
         for (auto set : SceneView<ecs::camera_set>(*m_Scene))
         {
@@ -69,7 +68,7 @@ namespace polos
                     set.Rotate(new_rotation);
 
                     // == Moving ==
-                    float velocity = set.cameraComponent->movementSpeed * p_DeltaTime;
+                    float velocity = set.cameraComponent->movementSpeed * p_Event.deltaTime;
                     if ((m_Key & k_KeyA) == k_KeyA)
                         set.transformComponent->position -= set.cameraComponent->right * velocity;
                     if ((m_Key & k_KeyD) == k_KeyD)
@@ -84,7 +83,7 @@ namespace polos
                 {
                     glm::vec3 move_vector = m_MouseMoveDelta * set.cameraComponent->movementSpeed;
 
-                    auto exp = std::exp2(-1.0f * p_DeltaTime);
+                    auto exp = std::exp2(-1.0f * p_Event.deltaTime);
 
                     set.transformComponent->position.x = std::lerp(set.transformComponent->position.x + move_vector.x, set.transformComponent->position.x, exp);
                     set.transformComponent->position.y = std::lerp(set.transformComponent->position.y + move_vector.y, set.transformComponent->position.y, exp);
