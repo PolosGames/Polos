@@ -33,7 +33,7 @@ target_link_libraries(
     ${PCH_LIBRARY_NAME}
         PRIVATE
             glm::glm_interface
-            spdlog::spdlog_interface
+            quill::quill
             stduuid::stduuid_interface
 )
 

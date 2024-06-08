@@ -25,7 +25,7 @@ target_link_libraries(
             glfw::glfw_interface
             glm::glm_interface
             ImGui::ImGui_interface
-            spdlog::spdlog_interface
+            quill::quill
             stb_image::stb_image_interface
             stb_textedit::stb_textedit_interface
 )

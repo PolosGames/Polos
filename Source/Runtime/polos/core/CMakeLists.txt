@@ -18,7 +18,7 @@ target_include_directories(
 target_link_libraries(
     PolosCore
         PRIVATE
-            spdlog::spdlog_interface
+            quill::quill
             glm::glm_interface
             glad::glad_interface
             fmod::fmod_interface

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <spdlog/spdlog.h>
-#include <spdlog/common.h>
+#include "quill/LogMacros.h"
+#include "quill/Logger.h"
 
 #include "polos/utils/macro_util.h"
 #include "polos/containers/containers.h"
@@ -46,8 +46,9 @@ namespace polos
             return *s_Instance;
         }
     private:
-        static Log* s_Instance;
-    private:
+        static quill::Logger* m_engineLogger;
+        static quill::Logger* m_editorLogger;
+        static quill::Logger* m_clientLogger;
         std::array<SharedPtr<spdlog::logger>, k_LoggerNone> m_Loggers;
     };
 
@@ -82,7 +83,16 @@ namespace polos
     }
 } // namespace polos
 
-#define LOG_ENGINE_CRITICAL(...) ::polos::Log::Instance().Critical(::polos::Log::logger_type::k_LoggerEngine, __VA_ARGS__)
+#define LOG_TRACE_L3(fmt, ...) QUILL_LOG_TRACE_L3(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_TRACE_L2(fmt, ...) QUILL_LOG_TRACE_L2(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_TRACE_L1(fmt, ...) QUILL_LOG_TRACE_L1(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...)    QUILL_LOG_DEBUG(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)     QUILL_LOG_INFO(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_WARNING(fmt, ...)  QUILL_LOG_WARNING(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...)    QUILL_LOG_ERROR(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+
+#define LOG_ENGINE_CRITICAL(...) QUILL_LOG_CRITICAL(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
 #define LOG_EDITOR_CRITICAL(...) ::polos::Log::Instance().Critical(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
 #define LOG_CLIENT_CRITICAL(...) ::polos::Log::Instance().Critical(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
 

@@ -1,8 +1,9 @@
 
 #include "log.h"
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
+#include "quill/Backend.h"
+#include "quill/Frontend.h"
+#include "quill/sinks/ConsoleSink.h"
 
 #include "polos/containers/containers.h"
 #include "polos/core/engine/engine.h"
