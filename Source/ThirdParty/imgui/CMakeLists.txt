@@ -3,12 +3,22 @@ cmake_minimum_required(VERSION 3.24)
 add_library(ImGui_interface INTERFACE)
 target_include_directories(ImGui_interface INTERFACE "${CMAKE_CURRENT_LIST_DIR}/include")
 
-add_library(ImGui_static STATIC IMPORTED GLOBAL)
-set_target_properties(
+add_library(ImGui_static STATIC)
+target_sources(
     ImGui_static
-        PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/lib/${CMAKE_BUILD_TYPE}/ImGui.lib"
-            FOLDER            "ThirdParty"
+        PRIVATE
+            internal/imgui_demo.cpp
+            internal/imgui_draw.cpp
+            internal/imgui_impl_glfw.cpp
+            internal/imgui_impl_opengl3.cpp
+            internal/imgui_tables.cpp
+            internal/imgui_widgets.cpp
+            internal/imgui.cpp
+)
+target_link_libraries(
+    ImGui_static
+        PRIVATE
+            ImGui_interface
 )
 
 add_library(ImGui::ImGui_static ALIAS ImGui_static)
