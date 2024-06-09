@@ -35,7 +35,7 @@ namespace FMOD
     */
     inline FMOD_RESULT Memory_Initialize    (void *poolmem, int poollen, FMOD_MEMORY_ALLOC_CALLBACK useralloc, FMOD_MEMORY_REALLOC_CALLBACK userrealloc, FMOD_MEMORY_FREE_CALLBACK userfree, FMOD_MEMORY_TYPE memtypeflags = FMOD_MEMORY_ALL) { return FMOD_Memory_Initialize(poolmem, poollen, useralloc, userrealloc, userfree, memtypeflags); }
     inline FMOD_RESULT Memory_GetStats      (int *currentalloced, int *maxalloced, bool blocking = true) { return FMOD_Memory_GetStats(currentalloced, maxalloced, blocking); }
-    inline FMOD_RESULT Debug_Initialize     (FMOD_DEBUG_FLAGS flags, FMOD_DEBUG_MODE mode = FMOD_DEBUG_MODE_TTY, FMOD_DEBUG_CALLBACK callback = 0, const char *filename = 0) { return FMOD_Debug_Initialize(flags, mode, callback, filename); }
+    inline FMOD_RESULT Debug_Initialize     (FMOD_DEBUG_FLAGS flags, FMOD_DEBUG_MODE mode = FMOD_DEBUG_MODE_TTY, FMOD_DEBUG_CALLBACK callback = nullptr, const char *filename = nullptr) { return FMOD_Debug_Initialize(flags, mode, callback, filename); }
     inline FMOD_RESULT File_SetDiskBusy     (int busy) { return FMOD_File_SetDiskBusy(busy); }
     inline FMOD_RESULT File_GetDiskBusy     (int *busy) { return FMOD_File_GetDiskBusy(busy); }
     inline FMOD_RESULT Thread_SetAttributes (FMOD_THREAD_TYPE type, FMOD_THREAD_AFFINITY affinity = FMOD_THREAD_AFFINITY_GROUP_DEFAULT, FMOD_THREAD_PRIORITY priority = FMOD_THREAD_PRIORITY_DEFAULT, FMOD_THREAD_STACK_SIZE stacksize = FMOD_THREAD_STACK_SIZE_DEFAULT) { return FMOD_Thread_SetAttributes(type, affinity, priority, stacksize); }
@@ -43,7 +43,7 @@ namespace FMOD
     /*
         FMOD System factory functions.
     */
-    inline FMOD_RESULT System_Create        (System **system, unsigned int headerversion = FMOD_VERSION) { return FMOD_System_Create((FMOD_SYSTEM **)system, headerversion); }
+    inline FMOD_RESULT System_Create        (System **system, unsigned int headerversion = FMOD_VERSION) { return FMOD_System_Create((std::launder(reinterpret_cast<FMOD_SYSTEM **>(system))), headerversion); }
 
     /*
        'System' API
@@ -122,7 +122,7 @@ namespace FMOD
         // System information functions.
         FMOD_RESULT F_API getVersion              (unsigned int *version);
         FMOD_RESULT F_API getOutputHandle         (void **handle);
-        FMOD_RESULT F_API getChannelsPlaying      (int *channels, int *realchannels = 0);
+        FMOD_RESULT F_API getChannelsPlaying      (int *channels, int *realchannels = nullptr);
         FMOD_RESULT F_API getCPUUsage             (FMOD_CPU_USAGE *usage);
         FMOD_RESULT F_API getFileUsage            (long long *sampleBytesRead, long long *streamBytesRead, long long *otherBytesRead);
 
@@ -298,7 +298,7 @@ namespace FMOD
         // Clock based functionality.
         FMOD_RESULT F_API getDSPClock            (unsigned long long *dspclock, unsigned long long *parentclock);
         FMOD_RESULT F_API setDelay               (unsigned long long dspclock_start, unsigned long long dspclock_end, bool stopchannels = true);
-        FMOD_RESULT F_API getDelay               (unsigned long long *dspclock_start, unsigned long long *dspclock_end, bool *stopchannels = 0);
+        FMOD_RESULT F_API getDelay               (unsigned long long *dspclock_start, unsigned long long *dspclock_end, bool *stopchannels = nullptr);
         FMOD_RESULT F_API addFadePoint           (unsigned long long dspclock, float volume);
         FMOD_RESULT F_API setFadePointRamp       (unsigned long long dspclock, float volume);
         FMOD_RESULT F_API removeFadePoints       (unsigned long long dspclock_start, unsigned long long dspclock_end);
@@ -388,7 +388,7 @@ namespace FMOD
         FMOD_RESULT F_API release                 ();
 
         // Nested channel groups.
-        FMOD_RESULT F_API addGroup                (ChannelGroup *group, bool propagatedspclock = true, DSPConnection **connection = 0);
+        FMOD_RESULT F_API addGroup                (ChannelGroup *group, bool propagatedspclock = true, DSPConnection **connection = nullptr);
         FMOD_RESULT F_API getNumGroups            (int *numgroups);
         FMOD_RESULT F_API getGroup                (int index, ChannelGroup **group);
         FMOD_RESULT F_API getParentGroup          (ChannelGroup **group);
@@ -454,8 +454,8 @@ namespace FMOD
         FMOD_RESULT F_API getSystemObject        (System **system);
 
         // Connection / disconnection / input and output enumeration.
-        FMOD_RESULT F_API addInput               (DSP *input, DSPConnection **connection = 0, FMOD_DSPCONNECTION_TYPE type = FMOD_DSPCONNECTION_TYPE_STANDARD);
-        FMOD_RESULT F_API disconnectFrom         (DSP *target, DSPConnection *connection = 0);
+        FMOD_RESULT F_API addInput               (DSP *input, DSPConnection **connection = nullptr, FMOD_DSPCONNECTION_TYPE type = FMOD_DSPCONNECTION_TYPE_STANDARD);
+        FMOD_RESULT F_API disconnectFrom         (DSP *target, DSPConnection *connection = nullptr);
         FMOD_RESULT F_API disconnectAll          (bool inputs, bool outputs);
         FMOD_RESULT F_API getNumInputs           (int *numinputs);
         FMOD_RESULT F_API getNumOutputs          (int *numoutputs);

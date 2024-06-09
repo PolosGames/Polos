@@ -19,7 +19,7 @@ namespace polos::ecs
     constexpr inline Entity CreateEntity(EntityIndex index, EntityVersion version)
     {
         // Shift the index up 32, and put the version in the bottom
-        return ((Entity)index << 32) | ((Entity)version);
+        return (static_cast<Entity>(index) << 32) | static_cast<Entity>(version);
     }
     constexpr inline EntityIndex GetEntityIndex(Entity id)
     {
@@ -29,11 +29,11 @@ namespace polos::ecs
     constexpr inline EntityVersion GetEntityVersion(Entity id)
     {
         // Cast to a 32 bit int to get our version number (losing the top 32 bits)
-        return (EntityVersion)id;
+        return static_cast<EntityVersion>(id);
     }
     constexpr inline bool IsEntityValid(Entity id)
     {
         // Check if the index is our invalid index
-        return (id >> 32) != EntityIndex(-1);
+        return (id >> 32) != static_cast<EntityIndex>(-1);
     }
 } // namespace polos::ecs

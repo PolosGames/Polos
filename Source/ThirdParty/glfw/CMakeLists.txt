@@ -17,6 +17,7 @@ set_target_properties(
         PROPERTIES
             IMPORTED_LOCATION "${LIB_LOCATION}"
             FOLDER            "ThirdParty"
+            POSITION_INDEPENDENT_CODE True
 )
 
 add_library(glfw::glfw_static ALIAS glfw_static)

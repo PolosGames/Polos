@@ -31,10 +31,10 @@ target_link_libraries(
             fmod::fmodL
             glad::glad_static
             glfw::glfw_static
-            ImGui::ImGui_static
+            ImGui::ImGui
             quill::quill
-            stb_image::stb_image_static
-            stb_textedit::stb_textedit_static
+            stb_image::stb_image
+            stb_textedit::stb_textedit
 )
 
 install(

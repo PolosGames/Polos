@@ -6,6 +6,9 @@ project(
     LANGUAGES CXX C
 )
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+include(GNUInstallDirs)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(STATIC_STD       "Link static libraries of STL" ON)
@@ -61,6 +64,7 @@ add_compile_options(
 add_compile_definitions(
     UUID_SYSTEM_GENERATOR
     UUID_USING_CXX20_SPAN
+    LIBUUID_CPP20_OR_GREATER
 )
 
 if(MSVC)

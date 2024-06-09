@@ -21,6 +21,7 @@ set_target_properties(
         PROPERTIES
             CXX_STANDARD 20
             CXX_STANDARD_REQUIRED True
+            POSITION_INDEPENDENT_CODE True
 )
 
 target_include_directories(

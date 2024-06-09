@@ -23,7 +23,7 @@ target_link_libraries(
             glad::glad_interface
             fmod::fmod_interface
             ImGui::ImGui_interface
-            stb_image::stb_image_interface
+            stb_image::stb_image
 )
 
 set_target_properties(

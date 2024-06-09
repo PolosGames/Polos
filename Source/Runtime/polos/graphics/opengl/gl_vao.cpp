@@ -98,7 +98,7 @@ namespace polos
     void Vao::SetVertexBufferData(std::span<vertex const> const p_VertexBufferData, int64 const p_StartIndex) const
     {
         auto const  vrt_size         = static_cast<int64>(p_VertexBufferData.size_bytes());
-        int64 const vrt_offset       = p_StartIndex * sizeof(vertex);
+        int64 const vrt_offset       = p_StartIndex * static_cast<int64>(sizeof(vertex));
 
         glNamedBufferSubData(m_BufferId, vrt_offset, vrt_size, p_VertexBufferData.data());
     }
@@ -106,7 +106,7 @@ namespace polos
     void Vao::SetVertexBufferSubData(vertex const& p_VertexData, int64 p_VertexIndex) const
     {
         auto const  vrt_size         = sizeof(vertex);
-        int64 const vrt_offset       = p_VertexIndex * sizeof(vertex);
+        int64 const vrt_offset       = p_VertexIndex * static_cast<int64>(sizeof(vertex));
 
         glNamedBufferSubData(m_BufferId, vrt_offset, vrt_size, &p_VertexData);
     }

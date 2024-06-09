@@ -6,9 +6,9 @@ namespace polos::time
 {
     ScopeTimer::ScopeTimer(std::string_view p_ScopeName)
         : m_Nom{1.0f}
+        , m_Unit{ScopeTimerUnit::k_MilliSecond}
         , m_ScopeName{p_ScopeName}
         , m_IsStopped{}
-        , m_Unit{ScopeTimerUnit::k_MilliSecond}
     {
         calculate_den(m_Unit);
         m_Start = Timer::Now();

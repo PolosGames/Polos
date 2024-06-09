@@ -14,10 +14,16 @@ target_include_directories(
             ${POLOS_INCLUDE_DIR}
 )
 
+if(LINUX)
+    find_library(UUID_LIBRARIES NAMES uuid)
+    find_path(UUID_INCLUDE_DIRS uuid/uuid.h)
+endif()
+
 target_link_libraries(
     PolosUtils
         PRIVATE
-            ${PCH_LIBRARY_NAME}
+            ${UUID_LIBRARIES}
+            stduuid::stduuid_interface
 )
 
 set_target_properties(

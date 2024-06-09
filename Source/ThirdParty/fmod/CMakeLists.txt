@@ -53,6 +53,22 @@ install(
     DESTINATION ${INSTALL_DIR}
 )
 install(
+    FILES "lib/${PLATFORM_NAME}/${fmod_libname}.13"
+    DESTINATION ${INSTALL_DIR}
+)
+install(
+    FILES "lib/${PLATFORM_NAME}/${fmod_libname}.13.22"
+    DESTINATION ${INSTALL_DIR}
+)
+install(
     FILES "lib/${PLATFORM_NAME}/${fmodL_libname}"
+    DESTINATION ${INSTALL_DIR}
+)
+install(
+    FILES "lib/${PLATFORM_NAME}/${fmodL_libname}.13"
+    DESTINATION ${INSTALL_DIR}
+)
+install(
+    FILES "lib/${PLATFORM_NAME}/${fmodL_libname}.13.22"
     DESTINATION ${INSTALL_DIR}
 )

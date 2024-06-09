@@ -13,12 +13,12 @@ namespace polos
 
     uint32 StrHash32(cstring p_Str)
     {
-        uint32 m{37};
-        uint32 h{};
-        uint8* p{};
+        uint32_t m{37};
+        uint32_t h{};
+        uint8_t const* p{};
 
         h = 0;
-        for (p = (uint8*)p_Str; *p != '\0'; p++)
+        for (p = reinterpret_cast<uint8_t const*>(p_Str); *p != '\0'; p++)
             h = m * h + *p;
 
         return h + (h >> 5);

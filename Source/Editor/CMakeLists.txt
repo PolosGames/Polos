@@ -38,6 +38,17 @@ set_target_properties(
             PRECOMPILE_HEADERS_REUSE_FROM ${PCH_LIBRARY_NAME}
 )
 
+if(LINUX)
+    set_target_properties(
+        Polos
+            PROPERTIES
+                INSTALL_RPATH "\$ORIGIN"
+                BUILD_WITH_INSTALL_RPATH TRUE
+    )
+endif()
+
+target_compile_options(Polos PRIVATE -fPIC)
+
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
 endif()

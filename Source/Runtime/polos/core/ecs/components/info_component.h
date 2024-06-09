@@ -14,5 +14,5 @@ namespace polos::ecs
     template<> inline constexpr int32 k_ComponentId<info_component> = 0;
 
     template<> void SerializeComponent(std::vector<byte>& p_OutVector, info_component* p_Component);
-    template<> info_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
+    template<> info_component DeserializeComponent(std::vector<byte>& p_InVector, ptrdiff_t p_Index);
 } // namespace polos::ecs

@@ -25,7 +25,7 @@ namespace polos::ecs
 
         DArray<byte> Serialize();
     public:
-        int32 componentId{};
+        size_t componentId{};
     private:
         void*       m_Data{};
         std::size_t m_ElemSize{};

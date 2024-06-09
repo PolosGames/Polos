@@ -6,8 +6,8 @@
 #include "polos/core/event_bus.h"
 #include "polos/utils/key_code.h"
 #include "polos/utils/mouse_code.h"
-#include "polos/core/scene/scene_view.h"
 #include "polos/core/ecs/sets/camera_set.h"
+#include "polos/core/scene/scene_view.h"
 
 namespace polos
 {

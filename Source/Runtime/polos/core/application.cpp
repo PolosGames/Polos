@@ -49,7 +49,7 @@ namespace polos
     
             Gui::Begin();
 
-            EventBus::RaiseEvent<engine_update>();
+            EventBus::RaiseEvent<engine_update>(delta_time);
             
             Gui::End();
 

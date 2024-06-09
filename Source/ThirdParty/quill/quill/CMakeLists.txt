@@ -136,6 +136,7 @@ target_compile_options(${TARGET_NAME} INTERFACE
 
 # Properties
 set_target_properties(${TARGET_NAME} PROPERTIES VERSION ${QUILL_VERSION} SOVERSION ${QUILL_VERSION})
+set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE True)
 
 # ---- Tests ---- #
 if (QUILL_BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test)

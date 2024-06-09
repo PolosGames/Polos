@@ -7,6 +7,7 @@
 #endif
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <cstdint>
 #include <cstdlib>
@@ -17,6 +18,7 @@
 #include <ranges>
 #include <iterator>
 #include <compare>
+#include <type_traits>
 
 #include <fstream>
 #include <sstream>

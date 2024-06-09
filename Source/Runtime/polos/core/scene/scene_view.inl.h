@@ -6,15 +6,15 @@ namespace polos
     SceneView<Components...>::SceneView(Scene& p_Scene)
     {
         scene = &p_Scene;
-        constexpr std::size_t component_count = sizeof...(Components);
+        constexpr size_t component_count = sizeof...(Components);
         if constexpr (component_count == 0)
         {
             iterateAll = true;
         }
 
-        std::array<int32, component_count> comp_ids = { ecs::Component<Components>::GetId()...};
+        std::array<size_t, component_count> comp_ids = { ecs::Component<Components>::GetId()...};
 
-        for (std::size_t i{}; i < component_count; i++)
+        for (size_t i{}; i < component_count; i++)
         {
             mask.set(comp_ids[i]);
         }
@@ -73,22 +73,11 @@ namespace polos
         return end();
     }
 
-    // 
-    // CommonSet View
+    //
+    // Scene View implementations that accept CommonSet classes
     //
 
-    template<std::size_t Size, typename T>
-    consteval std::array<int32, Size> GetComponentIds()
-    {
-        std::array<int32, Size> comp_ids{};
-
-        for (std::size_t i{}; i < Size; i++)
-        {
-            comp_ids[i] = ecs::k_ComponentId<std::tuple_element_t<i, T>>;
-        }
-    }
-
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     SceneView<T>::SceneView(Scene& p_Scene)
     {
         scene = &p_Scene;
@@ -105,7 +94,7 @@ namespace polos
         }
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::begin() noexcept -> iterator
     {
         // We have to skip the entities that doesnt match our criteria.
@@ -120,13 +109,13 @@ namespace polos
         return iterator(reinterpret_cast<base_scene_view*>(this), static_cast<ecs::EntityIndex>(i));
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::end() noexcept -> iterator
     {
         return iterator(reinterpret_cast<base_scene_view*>(this), static_cast<ecs::EntityIndex>(MAX_ENTITY_COUNT_IN_SCENE));
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::begin() const noexcept -> const_iterator
     {
         // We have to skip the entities that doesnt match our criteria.
@@ -140,19 +129,19 @@ namespace polos
         return const_iterator(reinterpret_cast<base_scene_view const*>(this), static_cast<ecs::EntityIndex>(i));
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::end() const noexcept -> const_iterator
     {
         return const_iterator(reinterpret_cast<base_scene_view const*>(this), static_cast<ecs::EntityIndex>(MAX_ENTITY_COUNT_IN_SCENE));
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::cbegin() const noexcept -> const_iterator
     {
         begin();
     }
 
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     PL_NODISCARD auto SceneView<T>::cend() const noexcept -> const_iterator
     {
         end();

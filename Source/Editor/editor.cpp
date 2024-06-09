@@ -331,7 +331,7 @@ namespace polos
     Application* CreateApplication(void* p_PlacementPtr)
     {
         window_props props;
-        props.title = "Hello";
+        props.title = "Polos Editor";
         props.width = 1920;
         props.height = 1080;
         props.refreshRate = 120;

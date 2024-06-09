@@ -13,20 +13,20 @@ namespace polos::ecs
     public:
         Component();
     public:
-        static int32 GetId();
+        static size_t GetId();
     };
 
     template<typename T>
     concept EcsComponent = std::is_base_of_v<Component<T>, T>;
 
     template<EcsComponent T>
-    inline constexpr int32 k_ComponentId{-1};
+    inline constexpr size_t k_ComponentId{static_cast<size_t>(-1)};
 
     template<EcsComponent T>
     inline void SerializeComponent(std::vector<byte>& p_OutVector, T* p_Component);
 
     template<EcsComponent T>
-    inline T DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index);
+    inline T DeserializeComponent(std::vector<byte>& p_InVector, ptrdiff_t p_Index);
 
 }// namespace polos::ecs
 

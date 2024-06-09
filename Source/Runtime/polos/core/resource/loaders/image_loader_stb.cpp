@@ -30,7 +30,7 @@ namespace polos::resource
             return nullptr;
         }
 
-        std::size_t data_size = dim.x * dim.y * channels;
+        ptrdiff_t data_size = dim.x * dim.y * channels;
 
         p_Ptr->channels = channels;
         p_Ptr->dimensions = dim;

@@ -14,7 +14,7 @@ namespace polos
         {
             File scene(line_content, FileMode::k_Read);
 
-            std::string scene_content(std::move(scene.ReadStr()));
+            std::string scene_content(scene.ReadStr());
             LOG_ENGINE_INFO("Scene contents:\n{}", scene_content.c_str());
         }
 

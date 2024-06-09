@@ -17,9 +17,11 @@ target_sources(
 )
 target_link_libraries(
     ImGui_static
-        PRIVATE
+        PUBLIC
             ImGui_interface
 )
 
-add_library(ImGui::ImGui_static ALIAS ImGui_static)
+set_target_properties(ImGui_static PROPERTIES POSITION_INDEPENDENT_CODE True)
+
+add_library(ImGui::ImGui ALIAS ImGui_static)
 add_library(ImGui::ImGui_interface ALIAS ImGui_interface)
