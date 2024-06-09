@@ -18,7 +18,7 @@ namespace polos
             k_LoggerEngine,
             k_LoggerEditor,
             k_LoggerClient,
-            k_LoggerNone
+            k_MaxLoggers
         };
     public:
         Log();
@@ -26,91 +26,34 @@ namespace polos
         void Startup();
         void Shutdown();
 
-        template<typename... Args>
-        void Critical(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args);
-
-        template<typename... Args>
-        void Error(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args);
-
-        template<typename... Args>
-        void Warn(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args);
-
-        template<typename... Args>
-        void Info(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args);
-
-        template<typename... Args>
-        void Trace(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args);
-
-        static Log& Instance()
-        {
-            return *s_Instance;
-        }
+        static quill::Logger* GetEngineLogger();
+        static quill::Logger* GetEditorLogger();
+        static quill::Logger* GetClientLogger();
     private:
-        static quill::Logger* m_engineLogger;
-        static quill::Logger* m_editorLogger;
-        static quill::Logger* m_clientLogger;
-        std::array<SharedPtr<spdlog::logger>, k_LoggerNone> m_Loggers;
+        static Log* s_Instance;
+        std::array<UniquePtr<quill::Logger>, k_MaxLoggers> m_Loggers;
     };
-
-    template<typename... Args>
-    inline void Log::Critical(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args)
-    {
-        m_Loggers[p_Type]->critical(p_FmtStr, std::forward<Args>(p_Args)...);
-    }
-
-    template<typename... Args>
-    inline void Log::Error(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args)
-    {
-        m_Loggers[p_Type]->error(p_FmtStr, std::forward<Args>(p_Args)...);
-    }
-
-    template<typename... Args>
-    inline void Log::Warn(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args)
-    {
-        m_Loggers[p_Type]->warn(p_FmtStr, std::forward<Args>(p_Args)...);
-    }
-
-    template<typename... Args>
-    inline void Log::Info(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args)
-    {
-        m_Loggers[p_Type]->info(p_FmtStr, std::forward<Args>(p_Args)...);
-    }
-
-    template<typename... Args>
-    inline void Log::Trace(uint8 p_Type, spdlog::format_string_t<Args...> p_FmtStr, Args&&... p_Args)
-    {
-        m_Loggers[p_Type]->trace(p_FmtStr, std::forward<Args>(p_Args)...);
-    }
 } // namespace polos
 
-#define LOG_TRACE_L3(fmt, ...) QUILL_LOG_TRACE_L3(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_TRACE_L2(fmt, ...) QUILL_LOG_TRACE_L2(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_TRACE_L1(fmt, ...) QUILL_LOG_TRACE_L1(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_DEBUG(fmt, ...)    QUILL_LOG_DEBUG(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...)     QUILL_LOG_INFO(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_WARNING(fmt, ...)  QUILL_LOG_WARNING(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...)    QUILL_LOG_ERROR(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
+#define LOG_ENGINE_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::polos::Log::GetEngineLogger(), fmt, ##__VA_ARGS__)
+#define LOG_EDITOR_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::polos::Log::GetEditorLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CLIENT_CRITICAL(fmt, ...) QUILL_LOG_CRITICAL(::polos::Log::GetClientLogger(), fmt, ##__VA_ARGS__)
 
-#define LOG_ENGINE_CRITICAL(...) QUILL_LOG_CRITICAL(::shipcombat::Log::GetLogger(), fmt, ##__VA_ARGS__)
-#define LOG_EDITOR_CRITICAL(...) ::polos::Log::Instance().Critical(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
-#define LOG_CLIENT_CRITICAL(...) ::polos::Log::Instance().Critical(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
+#define LOG_ENGINE_WARN(fmt, ...) QUILL_LOG_WARNING(::polos::Log::GetEngineLogger(), fmt, ##__VA_ARGS__)
+#define LOG_EDITOR_WARN(fmt, ...) QUILL_LOG_WARNING(::polos::Log::GetEditorLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CLIENT_WARN(fmt, ...) QUILL_LOG_WARNING(::polos::Log::GetClientLogger(), fmt, ##__VA_ARGS__)
 
-#define LOG_ENGINE_WARN(...) ::polos::Log::Instance().Warn(::polos::Log::logger_type::k_LoggerEngine, __VA_ARGS__)
-#define LOG_EDITOR_WARN(...) ::polos::Log::Instance().Warn(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
-#define LOG_CLIENT_WARN(...) ::polos::Log::Instance().Warn(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
+#define LOG_ENGINE_INFO(fmt, ...) QUILL_LOG_INFO(::polos::Log::GetEngineLogger(), fmt, ##__VA_ARGS__)
+#define LOG_EDITOR_INFO(fmt, ...) QUILL_LOG_INFO(::polos::Log::GetEditorLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CLIENT_INFO(fmt, ...) QUILL_LOG_INFO(::polos::Log::GetClientLogger(), fmt, ##__VA_ARGS__)
 
-#define LOG_ENGINE_INFO(...) ::polos::Log::Instance().Info(::polos::Log::logger_type::k_LoggerEngine, __VA_ARGS__)
-#define LOG_EDITOR_INFO(...) ::polos::Log::Instance().Info(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
-#define LOG_CLIENT_INFO(...) ::polos::Log::Instance().Info(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
+#define LOG_ENGINE_ERROR(fmt, ...) QUILL_LOG_ERROR(::polos::Log::GetEngineLogger(), fmt, ##__VA_ARGS__)
+#define LOG_EDITOR_ERROR(fmt, ...) QUILL_LOG_ERROR(::polos::Log::GetEditorLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CLIENT_ERROR(fmt, ...) QUILL_LOG_ERROR(::polos::Log::GetClientLogger(), fmt, ##__VA_ARGS__)
 
-#define LOG_ENGINE_ERROR(...) ::polos::Log::Instance().Error(::polos::Log::logger_type::k_LoggerEngine, __VA_ARGS__)
-#define LOG_EDITOR_ERROR(...) ::polos::Log::Instance().Error(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
-#define LOG_CLIENT_ERROR(...) ::polos::Log::Instance().Error(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
-
-#define LOG_ENGINE_TRACE(...) ::polos::Log::Instance().Trace(::polos::Log::logger_type::k_LoggerEngine, __VA_ARGS__)
-#define LOG_EDITOR_TRACE(...) ::polos::Log::Instance().Trace(::polos::Log::logger_type::k_LoggerEditor, __VA_ARGS__)
-#define LOG_CLIENT_TRACE(...) ::polos::Log::Instance().Trace(::polos::Log::logger_type::k_LoggerClient, __VA_ARGS__)
+#define LOG_ENGINE_TRACE(fmt, ...) QUILL_LOG_TRACE_L1(::polos::Log::GetEngineLogger(), fmt, ##__VA_ARGS__)
+#define LOG_EDITOR_TRACE(fmt, ...) QUILL_LOG_TRACE_L1(::polos::Log::GetEditorLogger(), fmt, ##__VA_ARGS__)
+#define LOG_CLIENT_TRACE(fmt, ...) QUILL_LOG_TRACE_L1(::polos::Log::GetClientLogger(), fmt, ##__VA_ARGS__)
 
 #define LOG_VAR_IMPL(Str, Variable)  LOG_ENGINE_INFO(Str, __FILE__, __LINE__, PL_STRINGIFY(Variable), Variable)
 #define LOG_VAR(Variable)            LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
