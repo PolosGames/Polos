@@ -20,14 +20,6 @@ target_link_libraries(
             ${POLOS_INCLUDE_LIB}
             PolosThirdParty
             Runtime
-            fmod::fmod_interface
-            glad::glad_interface
-            glfw::glfw_interface
-            glm::glm_interface
-            ImGui::ImGui_interface
-            quill::quill
-            stb_image::stb_image_interface
-            stb_textedit::stb_textedit_interface
 )
 
 set_target_properties(

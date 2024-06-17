@@ -234,6 +234,7 @@ private:
   QUILL_NODISCARD static void* _alloc_aligned(size_t size, size_t alignment, bool huges_pages_enabled)
   {
 #if defined(_WIN32)
+      static_cast<void>(huges_pages_enabled);
     void* p = _aligned_malloc(size, alignment);
 
     if (!p)

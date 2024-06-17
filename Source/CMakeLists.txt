@@ -33,9 +33,9 @@ target_include_directories(
 target_link_libraries(
     ${PCH_LIBRARY_NAME}
         PRIVATE
-            glm::glm_interface
+            glm::glm
             quill::quill
-            stduuid::stduuid_interface
+            stduuid::stduuid
 )
 
 build_options(${PCH_LIBRARY_NAME} true)

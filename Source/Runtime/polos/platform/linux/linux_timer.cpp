@@ -1,5 +1,3 @@
-
-
 #ifdef POLOS_LINUX
 
 #include "polos/core/time/timer.h"

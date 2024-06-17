@@ -75,6 +75,7 @@ class Tags
 {
 public:
   constexpr Tags() = default;
+  virtual ~Tags() = default;
   virtual void format(std::string&) const = 0;
 };
 

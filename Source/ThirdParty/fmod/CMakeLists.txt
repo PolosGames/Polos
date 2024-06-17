@@ -43,6 +43,8 @@ if(WIN32)
     set_target_properties(fmod PROPERTIES IMPORTED_IMPLIB "${fmod_implibloc}")
     set_target_properties(fmodL PROPERTIES IMPORTED_IMPLIB "${fmodL_implibloc}")
 endif()
+target_link_libraries(fmod INTERFACE fmod_interface)
+target_link_libraries(fmodL INTERFACE fmod_interface)
 
 add_library(fmod::fmod ALIAS fmod)
 add_library(fmod::fmodL ALIAS fmodL)
@@ -53,15 +55,16 @@ install(
     DESTINATION ${INSTALL_DIR}
 )
 install(
+    FILES "lib/${PLATFORM_NAME}/${fmodL_libname}"
+    DESTINATION ${INSTALL_DIR}
+)
+if(LINUX)
+install(
     FILES "lib/${PLATFORM_NAME}/${fmod_libname}.13"
     DESTINATION ${INSTALL_DIR}
 )
 install(
     FILES "lib/${PLATFORM_NAME}/${fmod_libname}.13.22"
-    DESTINATION ${INSTALL_DIR}
-)
-install(
-    FILES "lib/${PLATFORM_NAME}/${fmodL_libname}"
     DESTINATION ${INSTALL_DIR}
 )
 install(
@@ -72,3 +75,4 @@ install(
     FILES "lib/${PLATFORM_NAME}/${fmodL_libname}.13.22"
     DESTINATION ${INSTALL_DIR}
 )
+endif()

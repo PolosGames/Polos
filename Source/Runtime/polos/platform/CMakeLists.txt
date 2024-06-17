@@ -17,9 +17,9 @@ target_include_directories(
 target_link_libraries(
     PolosPlatform
         PRIVATE
-            glfw::glfw_interface
-            glad::glad_interface
-            glm::glm_interface
+            glfw::glfw
+            glad::glad
+            glm::glm
 )
 
 set_target_properties(

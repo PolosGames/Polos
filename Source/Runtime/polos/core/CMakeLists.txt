@@ -19,10 +19,11 @@ target_link_libraries(
     PolosCore
         PRIVATE
             quill::quill
-            glm::glm_interface
-            glad::glad_interface
-            fmod::fmod_interface
-            ImGui::ImGui_interface
+            glm::glm
+            glad::glad
+            fmod::fmod
+            fmod::fmodL
+            ImGui::ImGui
             stb_image::stb_image
 )
 

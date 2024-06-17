@@ -15,6 +15,11 @@
                     "name": "BUILD_EDITOR",
                     "value": "True",
                     "type": "BOOL"
+                },
+                {
+                    "name": "QUILL_DISABLE_NON_PREFIXED_MACROS",
+                    "value": "False",
+                    "type": "BOOL"
                 }
             ]
         },
@@ -54,6 +59,11 @@
                 },
                 {
                     "name": "EXPORT_ENGINE",
+                    "value": "False",
+                    "type": "BOOL"
+                },
+                {
+                    "name": "QUILL_DISABLE_NON_PREFIXED_MACROS",
                     "value": "False",
                     "type": "BOOL"
                 }

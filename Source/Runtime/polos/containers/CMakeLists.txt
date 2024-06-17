@@ -13,7 +13,7 @@ target_include_directories(
 target_link_libraries(
     PolosContainers
         INTERFACE
-            glm::glm_interface
+            glm::glm
 )
 
 set_target_properties(

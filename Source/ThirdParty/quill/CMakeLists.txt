@@ -15,7 +15,7 @@ option(QUILL_X86ARCH "Enable optimizations for cache coherence on x86 architectu
 
 # When enabled, removes the non-prefixed `LOG_*` macros, leaving only `QUILL_LOG_*` macros available.
 # This is useful in scenarios where the original macro names conflict with those of an existing logging library.
-option(QUILL_DISABLE_NON_PREFIXED_MACROS "Disable non-prefixed macros" ON)
+option(QUILL_DISABLE_NON_PREFIXED_MACROS "Disable non-prefixed macros" OFF)
 
 option(QUILL_ENABLE_INSTALL "Enable CMake Install when Quill is not a master project" OFF)
 
