@@ -22,22 +22,22 @@ namespace polos
     {
         quill::Backend::start();
 
-        auto console_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_console_sink");
 
-        std::string const format_pattern = 
-            "%(time) LOG_%(log_level_id) %(logger:<8) [%(caller_function)] %(message)";
+        std::string const fmtPattern = 
+            "%(time) %(log_level_id) [%(logger:<8)] [%(caller_function)] %(message)";
 
-        std::string const time_pattern = "%H:%M:%S.%Qms";
+        std::string const timePattern = "%H:%M:%S.%Qms";
 
-        m_Loggers[k_LoggerEngine] = UniquePtr<quill::Logger>(
-            quill::Frontend::create_or_get_logger("engine", console_sink, format_pattern, time_pattern)
-        );
-        m_Loggers[k_LoggerEditor] = UniquePtr<quill::Logger>(
-            quill::Frontend::create_or_get_logger("editor", console_sink, format_pattern, time_pattern)
-        );
-        m_Loggers[k_LoggerClient] = UniquePtr<quill::Logger>(
-            quill::Frontend::create_or_get_logger("client", console_sink, format_pattern, time_pattern)
-        );
+        auto stdSink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_stdSink");
+        
+        m_Loggers[k_LoggerEngine] = 
+            quill::Frontend::create_or_get_logger("ENGINE", stdSink, fmtPattern, timePattern);
+        
+        m_Loggers[k_LoggerEditor] = 
+            quill::Frontend::create_or_get_logger("EDITOR", stdSink, fmtPattern, timePattern);
+        
+        m_Loggers[k_LoggerClient] = 
+            quill::Frontend::create_or_get_logger("CLIENT", stdSink, fmtPattern, timePattern);
 
         for(auto& logger: m_Loggers)
         {
@@ -54,16 +54,16 @@ namespace polos
 
     quill::Logger* Log::GetEngineLogger()
     {
-        return s_Instance->m_Loggers[k_LoggerEngine].get();
+        return s_Instance->m_Loggers[k_LoggerEngine];
     }
 
     quill::Logger* Log::GetEditorLogger()
     {
-        return s_Instance->m_Loggers[k_LoggerEditor].get();
+        return s_Instance->m_Loggers[k_LoggerEditor];
     }
 
     quill::Logger* Log::GetClientLogger()
     {
-        return s_Instance->m_Loggers[k_LoggerClient].get();
+        return s_Instance->m_Loggers[k_LoggerClient];
     }
 }

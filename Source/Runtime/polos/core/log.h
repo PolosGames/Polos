@@ -31,7 +31,7 @@ namespace polos
         static quill::Logger* GetClientLogger();
     private:
         static Log* s_Instance;
-        std::array<UniquePtr<quill::Logger>, k_MaxLoggers> m_Loggers;
+        std::array<quill::Logger*, k_MaxLoggers> m_Loggers;
     };
 } // namespace polos
 

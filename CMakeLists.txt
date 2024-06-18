@@ -66,7 +66,7 @@ include(CMake/target_build.cmake)
 add_compile_options(
     "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
     "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
-    "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
+    "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
 )
 
 add_compile_definitions(
