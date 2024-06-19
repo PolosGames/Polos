@@ -6,6 +6,9 @@ project(
     LANGUAGES CXX C
 )
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+include(GNUInstallDirs)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(STATIC_STD       "Link static libraries of STL" ON)
@@ -47,6 +50,14 @@ else()
     return()
 endif()
 
+message("-- STATIC_STD: ${STATIC_STD}")
+message("-- USE_OPENGL: ${USE_OPENGL}")
+message("-- USE_VULKAN: ${USE_VULKAN}")
+message("-- ENABLE_PROFILING: ${ENABLE_PROFILING}")
+message("-- GUI_USE_IMGUI: ${GUI_USE_IMGUI}")
+message("-- BUILD_EDITOR: ${BUILD_EDITOR}")
+message("-- EXPORT_ENGINE: ${EXPORT_ENGINE}")
+
 set(POLOS_INSTALL_INCLUDES_DIR "${INSTALL_DIR}/include/polos")
 set(POLOS_INSTALL_LIBS_DIR "${INSTALL_DIR}")
 
@@ -55,12 +66,14 @@ include(CMake/target_build.cmake)
 add_compile_options(
     "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
     "$<$<C_COMPILER_ID:Clang>:-fansi-escape-codes>"
-    "$<$<C_COMPILER_ID:GNU>:-fdiagnostic s-color=always>"
+    "$<$<C_COMPILER_ID:GNU>:-fdiagnostics-color=always>"
 )
 
 add_compile_definitions(
     UUID_SYSTEM_GENERATOR
     UUID_USING_CXX20_SPAN
+    $<$<CXX_COMPILER_ID:Clang,GNU>:LIBUUID_CPP20_OR_GREATER>
+    $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
 
 if(MSVC)

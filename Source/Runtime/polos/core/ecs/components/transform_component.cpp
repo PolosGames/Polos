@@ -10,7 +10,7 @@ namespace polos::ecs
     }
 
     template<>
-    transform_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index)
+    transform_component DeserializeComponent(std::vector<byte>& p_InVector, ptrdiff_t p_Index)
     {
         transform_component comp;
         byte*               bytes               = reinterpret_cast<byte*>(&comp);

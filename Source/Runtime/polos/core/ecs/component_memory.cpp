@@ -14,7 +14,7 @@ namespace polos::ecs
 
         std::size_t cumulative_size = 0;
 
-        for (int i = 0; i < MAX_COMPONENT_COUNT_FOR_ENTITY; ++i)
+        for (size_t i = 0; i < MAX_COMPONENT_COUNT_FOR_ENTITY; ++i)
         {
             component_offsets[i] = cumulative_size;
             cumulative_size += component_size[i] * MAX_ENTITY_COUNT_IN_SCENE;

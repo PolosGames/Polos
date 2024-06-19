@@ -64,15 +64,14 @@ namespace polos
         base_scene_view const* m_View{};
     }; 
 
-    template<typename T, ecs::EcsComponent... Components>
-        requires std::is_base_of_v<ecs::CommonSet, T>
+    template<ecs::CommonSetLike T, ecs::EcsComponent... Components>
     class SceneViewIterator<T, Components...>
     {
     public:
         using Types = std::tuple<Components...>;
     public:
         SceneViewIterator(base_scene_view const* p_View, ecs::EntityIndex p_Index)
-            : m_View{p_View}, m_Index{p_Index}
+            : m_Index{p_Index}, m_View{p_View}
         {}
 
         T operator*() const

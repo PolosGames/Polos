@@ -20,14 +20,6 @@ target_link_libraries(
             ${POLOS_INCLUDE_LIB}
             PolosThirdParty
             Runtime
-            fmod::fmod_interface
-            glad::glad_interface
-            glfw::glfw_interface
-            glm::glm_interface
-            ImGui::ImGui_interface
-            spdlog::spdlog_interface
-            stb_image::stb_image_interface
-            stb_textedit::stb_textedit_interface
 )
 
 set_target_properties(
@@ -37,6 +29,17 @@ set_target_properties(
             CXX_STANDARD_REQUIRED True
             PRECOMPILE_HEADERS_REUSE_FROM ${PCH_LIBRARY_NAME}
 )
+
+if(LINUX)
+    set_target_properties(
+        Polos
+            PROPERTIES
+                INSTALL_RPATH "\$ORIGIN"
+                BUILD_WITH_INSTALL_RPATH TRUE
+    )
+endif()
+
+target_compile_options(Polos PRIVATE -fPIC)
 
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)

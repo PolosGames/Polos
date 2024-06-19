@@ -11,7 +11,7 @@ namespace polos::ecs
     }
 
     template<>
-    camera_component DeserializeComponent(std::vector<byte>& p_InVector, std::size_t p_Index)
+    camera_component DeserializeComponent(std::vector<byte>& p_InVector, ptrdiff_t p_Index)
     {
         camera_component comp;
         byte*            bytes = reinterpret_cast<byte*>(&comp);

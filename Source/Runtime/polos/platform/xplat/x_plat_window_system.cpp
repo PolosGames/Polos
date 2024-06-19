@@ -326,8 +326,9 @@ namespace polos
 
     void WindowSystem::on_window_close(window_close& p_Event)
     {
-        int i = 0;
-        for (; i < m_WinHandles.size(); i++)
+        auto win_handles_size = m_WinHandles.size();
+        decltype(win_handles_size) i = 0;
+        for (; i < win_handles_size; ++i)
         {
             if (m_WinHandles[i] == p_Event.winHandle)
             {
@@ -335,9 +336,11 @@ namespace polos
             }
         }
 
+
+        ptrdiff_t win_index = static_cast<ptrdiff_t>(i);
         // Delete that window from the window list.
-        m_WinHandles.erase(m_WinHandles.begin() + i);
-        m_WinProps.erase(m_WinProps.begin() + i);
+        m_WinHandles.erase(std::next(m_WinHandles.begin(), win_index));
+        m_WinProps.erase(std::next(m_WinProps.begin(), win_index));
 
         // Finally, destroy it with glfw function.
         glfwDestroyWindow(static_cast<GLFWwindow*>(p_Event.winHandle));

@@ -3,16 +3,12 @@
 #include "polos/core/ecs/common_set.h"
 #include "polos/core/ecs/components/camera_component.h"
 #include "polos/core/ecs/components/transform_component.h"
-
+#include "polos/core/scene/scene_view_iterator.h"
 namespace polos::ecs
 {
     struct camera_set : CommonSet
     {
-        COMMONSET_REGISTER(
-            camera_set,
-            transform_component,
-            camera_component
-        )
+        COMMONSET_REGISTER(camera_set, transform_component, camera_component)
 
         camera_set(ecs::Entity p_Entity, transform_component* p_Transform, camera_component* p_Camera);
 

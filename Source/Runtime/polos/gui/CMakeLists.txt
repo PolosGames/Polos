@@ -17,8 +17,8 @@ target_include_directories(
 target_link_libraries(
     PolosGUI
         PRIVATE
-            ImGui::ImGui_interface
-            glfw::glfw_interface
+            ImGui::ImGui
+            glfw::glfw
 )
 
 set_target_properties(

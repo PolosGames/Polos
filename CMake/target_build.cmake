@@ -55,6 +55,7 @@ function(build_options target warnings)
                     "/w14928" # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
                     "/w15204" # A class with virtual functions has non-virtual trivial destructor.
                     "/wd4201" # ignoring nameless struct/union bc. glm keeps giving it.
+                    "/wd4324" # disable padding warnings
         )
     else()
         target_compile_options(

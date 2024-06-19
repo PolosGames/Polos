@@ -17,10 +17,10 @@ target_include_directories(
 target_link_libraries(
     PolosGraphics
         PRIVATE
-            glm::glm_interface
-            glad::glad_interface
-            glfw::glfw_interface
-            stb_image::stb_image_interface
+            glm::glm
+            glad::glad
+            glfw::glfw
+            stb_image::stb_image
 )
 
 set_target_properties(

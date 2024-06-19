@@ -16,6 +16,6 @@ namespace polos
         bool  vsync{};
         bool  fullscreen{};
     private:
-        uint8 m_holder[2]{44, 34};
+        PL_MAYBEUNUSED byte m_holder[2]{44, 34};
     };
 }

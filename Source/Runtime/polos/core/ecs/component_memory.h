@@ -37,7 +37,7 @@ namespace polos::ecs
     {
         auto* list = static_cast<T*>(p_OffsetPtr);
 
-        if (static_cast<char*>(p_OffsetPtr) != (static_cast<char*>(s_Instance->m_Data) + s_Instance->k_ComponentOffset[ecs::Component<T>::GetId()]))
+        if (static_cast<char*>(p_OffsetPtr) != (static_cast<char*>(s_Instance->m_Data) + s_Instance->k_ComponentOffset[static_cast<size_t>(ecs::Component<T>::GetId())]))
         {
             LOG_ENGINE_ERROR("Component array's pointer and it's predefined start don't match.");
         }

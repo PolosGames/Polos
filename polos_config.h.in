@@ -4,3 +4,4 @@
 #cmakedefine USE_VULKAN
 #cmakedefine ENABLE_PROFILING
 #cmakedefine GUI_USE_IMGUI
+#cmakedefine QUILL_DISABLE_NON_PREFIXED_MACROS

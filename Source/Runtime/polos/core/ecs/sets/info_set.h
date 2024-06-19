@@ -2,15 +2,13 @@
 
 #include "polos/core/ecs/common_set.h"
 #include "polos/core/ecs/components/info_component.h"
+#include "polos/core/scene/scene_view_iterator.h"
 
 namespace polos::ecs
 {
     struct info_set : CommonSet
     {
-        COMMONSET_REGISTER(
-            info_set,
-            ecs::info_component
-        )
+        COMMONSET_REGISTER(info_set, ecs::info_component)
 
         info_set(ecs::Entity p_Entity, ecs::info_component* p_Info);
         

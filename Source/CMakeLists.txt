@@ -21,6 +21,7 @@ set_target_properties(
         PROPERTIES
             CXX_STANDARD 20
             CXX_STANDARD_REQUIRED True
+            POSITION_INDEPENDENT_CODE True
 )
 
 target_include_directories(
@@ -32,9 +33,9 @@ target_include_directories(
 target_link_libraries(
     ${PCH_LIBRARY_NAME}
         PRIVATE
-            glm::glm_interface
-            spdlog::spdlog_interface
-            stduuid::stduuid_interface
+            glm::glm
+            quill::quill
+            stduuid::stduuid
 )
 
 build_options(${PCH_LIBRARY_NAME} true)

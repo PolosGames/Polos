@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 
-file(WRITE ptp.cpp "")
+if(WIN32)
+    set(PLATFORM_NAME "win32")
+elseif(LINUX)
+    set(PLATFORM_NAME "linux")
+endif()
 
 add_subdirectory(fmod)
 if(USE_OPENGL)
@@ -12,8 +16,9 @@ endif()
 add_subdirectory(glm)
 if(GUI_USE_IMGUI)
     add_subdirectory(imgui)
+    target_link_libraries(ImGui_static PRIVATE glfw::glfw_interface )
 endif()
-add_subdirectory(spdlog)
+add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
 add_subdirectory(stduuid)
@@ -25,16 +30,10 @@ target_link_libraries(
         INTERFACE
             fmod::fmod
             fmod::fmodL
-            glad::glad_static
-            glfw::glfw_static
-            glm::glm_static
-            ImGui::ImGui_static
-            spdlog::spdlog_static
-            stb_image::stb_image_static
-            stb_textedit::stb_textedit_static
-)
-
-install(
-    TARGETS PolosThirdParty
-    LIBRARY DESTINATION "${INSTALL_DIR}"
+            glad::glad
+            glfw::glfw
+            ImGui::ImGui
+            quill::quill
+            stb_image::stb_image
+            stb_textedit::stb_textedit
 )

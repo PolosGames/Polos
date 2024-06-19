@@ -1,8 +1,9 @@
 
 #include "log.h"
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/basic_file_sink.h>
+#include "quill/Backend.h"
+#include "quill/Frontend.h"
+#include "quill/sinks/ConsoleSink.h"
 
 #include "polos/containers/containers.h"
 #include "polos/core/engine/engine.h"
@@ -19,37 +20,50 @@ namespace polos
 
     void Log::Startup()
     {
-        DArray<spdlog::sink_ptr> log_sinks;
-        log_sinks.reserve(2);
-        log_sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-        log_sinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("Polos.log", true));
+        quill::Backend::start();
 
-        log_sinks[0]->set_pattern("%^[%T %n] : %v%$");
-        log_sinks[1]->set_pattern("[%T] [%n %l] : %v");
 
-        m_Loggers[k_LoggerEngine] = std::make_shared<spdlog::logger>("ENGINE", std::begin(log_sinks), std::end(log_sinks));
-        spdlog::register_logger(m_Loggers[logger_type::k_LoggerEngine]);
-        m_Loggers[k_LoggerEngine]->set_level(spdlog::level::trace);
-        m_Loggers[k_LoggerEngine]->flush_on(spdlog::level::trace);
+        std::string const fmtPattern = 
+            "%(time) %(log_level_id) [%(logger:<8)] [%(caller_function)] %(message)";
 
-        m_Loggers[k_LoggerEditor] = std::make_shared<spdlog::logger>("EDITOR", std::begin(log_sinks), std::end(log_sinks));
-        spdlog::register_logger(m_Loggers[k_LoggerEditor]);
-        m_Loggers[k_LoggerEditor]->set_level(spdlog::level::trace);
-        m_Loggers[k_LoggerEditor]->flush_on(spdlog::level::trace);
+        std::string const timePattern = "%H:%M:%S.%Qms";
 
-        m_Loggers[k_LoggerClient] = std::make_shared<spdlog::logger>("CLIENT", std::begin(log_sinks), std::end(log_sinks));
-        spdlog::register_logger(m_Loggers[k_LoggerClient]);
-        m_Loggers[k_LoggerClient]->set_level(spdlog::level::trace);
-        m_Loggers[k_LoggerClient]->flush_on(spdlog::level::trace);
+        auto stdSink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_stdSink");
+        
+        m_Loggers[k_LoggerEngine] = 
+            quill::Frontend::create_or_get_logger("ENGINE", stdSink, fmtPattern, timePattern);
+        
+        m_Loggers[k_LoggerEditor] = 
+            quill::Frontend::create_or_get_logger("EDITOR", stdSink, fmtPattern, timePattern);
+        
+        m_Loggers[k_LoggerClient] = 
+            quill::Frontend::create_or_get_logger("CLIENT", stdSink, fmtPattern, timePattern);
+
+        for(auto& logger: m_Loggers)
+        {
+            logger->set_log_level(quill::LogLevel::TraceL1);
+        }
 
         s_Instance = this;
     }
 
     void Log::Shutdown()
     {
-        spdlog::drop("ENGINE");
-        spdlog::drop("EDITOR");
-        spdlog::drop("CLIENT");
         s_Instance = nullptr;
+    }
+
+    quill::Logger* Log::GetEngineLogger()
+    {
+        return s_Instance->m_Loggers[k_LoggerEngine];
+    }
+
+    quill::Logger* Log::GetEditorLogger()
+    {
+        return s_Instance->m_Loggers[k_LoggerEditor];
+    }
+
+    quill::Logger* Log::GetClientLogger()
+    {
+        return s_Instance->m_Loggers[k_LoggerClient];
     }
 }

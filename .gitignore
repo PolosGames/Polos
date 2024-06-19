@@ -42,3 +42,9 @@ vsbuild/
 **.a2
 lastResults.xml
 **cppcheck**
+
+polos.cpp
+pcnt.cpp
+ptp.cpp
+
+**/polos_config.h

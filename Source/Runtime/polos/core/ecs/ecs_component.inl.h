@@ -9,7 +9,7 @@ namespace polos::ecs
     }
 
     template<typename T>
-    int32 Component<T>::GetId()
+    size_t Component<T>::GetId()
     {
         return k_ComponentId<T>;
     }

@@ -4,7 +4,7 @@ namespace polos::resource
 {
     template<typename T>
     ResourceLoader<T>::ResourceLoader(Delegate<bool(std::string)> p_CanLoadFn, Delegate<T*(std::string, T*)> p_LoadFn)
-        : m_CanLoadFn{std::move(p_CanLoadFn)}, m_LoadFn{std::move(p_LoadFn)}
+        : m_LoadFn{std::move(p_LoadFn)}, m_CanLoadFn{std::move(p_CanLoadFn)}
     {}
 
     template<typename T>

@@ -18,12 +18,13 @@ target_include_directories(
 target_link_libraries(
     PolosCore
         PRIVATE
-            spdlog::spdlog_interface
-            glm::glm_interface
-            glad::glad_interface
-            fmod::fmod_interface
-            ImGui::ImGui_interface
-            stb_image::stb_image_interface
+            quill::quill
+            glm::glm
+            glad::glad
+            fmod::fmod
+            fmod::fmodL
+            ImGui::ImGui
+            stb_image::stb_image
 )
 
 set_target_properties(

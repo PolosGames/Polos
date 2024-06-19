@@ -20,9 +20,18 @@ namespace polos
         s_Instance = this;
         FMOD_RESULT result;
 
-        FMOD::System_Create(&m_System);
+        result = FMOD::System_Create(&m_System);
+        if(FMOD_RESULT::FMOD_OK != result)
+        {
+            LOG_ENGINE_CRITICAL("Could not create FMOD_System!");
+        }
 
-        result = m_System->init(32, FMOD_INIT_NORMAL, nullptr);
+        int32_t const max_channels{32};
+        result = m_System->init(max_channels, FMOD_INIT_NORMAL, nullptr);
+        if(FMOD_RESULT::FMOD_OK != result)
+        {
+            LOG_ENGINE_CRITICAL("FMOD_System was not able to initialize with {} channels", max_channels);
+        }
 
         SUB_TO_EVENT_MEM_FUN(engine_update, update);
     }
@@ -43,11 +52,19 @@ namespace polos
         auto  iterator_pair    = m_Sounds.insert({sound_string_id, sound_attributes{} });
         auto& sound_attributes = iterator_pair.first->second;
 
-        result = m_System->createSound(("resources/media/" + p_SoundName).c_str(), FMOD_DEFAULT, 0, &sound_attributes.soundPtr);
+        result = m_System->createSound(("resources/media/" + p_SoundName).c_str(), FMOD_DEFAULT, nullptr, &sound_attributes.soundPtr);
         auto* sound_ptr = sound_attributes.soundPtr;
+        if(FMOD_RESULT::FMOD_OK != result)
+        {
+            LOG_ENGINE_ERROR("Could not create sound: {}", p_SoundName.c_str());
+        }
 
         // Initialize the sound's channel
-        m_System->playSound(sound_ptr, nullptr, true, &sound_attributes.channelPtr);
+        result = m_System->playSound(sound_ptr, nullptr, true, &sound_attributes.channelPtr);
+        if(FMOD_RESULT::FMOD_OK != result)
+        {
+            LOG_ENGINE_ERROR("Could not start sound: {}", p_SoundName.c_str());
+        }
         auto* channel_ptr = sound_attributes.channelPtr;
 
         // Initialize the rest of the sound_attributes struct's variables.

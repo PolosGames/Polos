@@ -8,7 +8,7 @@
 
 namespace polos
 {
-    template<typename... T> class SceneView;
+    template<typename... T> class SceneView {};
 
     template<ecs::EcsComponent... Components>
     class SceneView<Components...> : public base_scene_view
@@ -28,17 +28,14 @@ namespace polos
         PL_NODISCARD auto cend() const noexcept -> const_iterator;
     };
 
-    template<typename T>
-    concept IsCommonSet = std::is_base_of_v<ecs::CommonSet, T>;
-
-    template<IsCommonSet T>
+    template<ecs::CommonSetLike T>
     class SceneView<T> : public base_scene_view
     {
     private:
         using iterator = T::IteratorType;
         using const_iterator = iterator const;
     private:
-        static constexpr std::size_t k_ComponentCount = std::tuple_size_v<iterator::Types>;
+        static constexpr std::size_t k_ComponentCount = std::tuple_size_v<typename iterator::Types>;
     public:
         SceneView(Scene& p_Scene);
 
