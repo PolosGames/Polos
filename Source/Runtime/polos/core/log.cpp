@@ -24,7 +24,7 @@ namespace polos
 
 
         std::string const fmtPattern = 
-            "%(time) %(log_level_id) [%(logger:<8)] [%(caller_function)] %(message)";
+            "[%(time) %(logger:<6) %(log_level_id)] %(message)";
 
         std::string const timePattern = "%H:%M:%S.%Qms";
 
