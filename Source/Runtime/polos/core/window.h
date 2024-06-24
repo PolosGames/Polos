@@ -2,8 +2,6 @@
 
 #include "polos/utils/alias.h"
 #include "polos/utils/feature.h"
-#include "polos/utils/guid.h"
-#include "polos/graphics/graphics_context.h"
 
 namespace polos
 {
