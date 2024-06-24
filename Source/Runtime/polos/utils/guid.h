@@ -4,7 +4,7 @@ namespace polos
 {
     struct GUID
     {
-        uuids::uuid guid;
+        uint64_t guid;
     };
 
     bool operator==(GUID const& p_Lhs, GUID const& p_Rhs);

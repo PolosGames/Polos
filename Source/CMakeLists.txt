@@ -35,7 +35,6 @@ target_link_libraries(
         PRIVATE
             glm::glm
             quill::quill
-            stduuid::stduuid
 )
 
 build_options(${PCH_LIBRARY_NAME} true)

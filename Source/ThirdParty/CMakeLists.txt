@@ -21,7 +21,6 @@ endif()
 add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
-add_subdirectory(stduuid)
 
 add_library(PolosThirdParty INTERFACE)
 

@@ -23,7 +23,6 @@ target_link_libraries(
     PolosUtils
         PRIVATE
             ${UUID_LIBRARIES}
-            stduuid::stduuid
 )
 
 set_target_properties(

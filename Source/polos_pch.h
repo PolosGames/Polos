@@ -1,3 +1,5 @@
+#pragma once
+
 #include "polos_config.h"
 #include "polos/platform/platform_detection.h"
 
@@ -7,41 +9,44 @@
 #endif
 
 #include <algorithm>
+#include <array>
+#include <atomic>
+#include <bitset>
+#include <chrono>
+#include <compare>
 #include <cstddef>
-#include <cstring>
 #include <cstdint>
 #include <cstdlib>
-#include <memory>
-#include <mutex>
-#include <utility>
-#include <variant>
-#include <ranges>
-#include <iterator>
-#include <compare>
-#include <type_traits>
-
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include <cstring>
 #include <filesystem>
-
-#include <string>
-#include <vector>
-#include <memory_resource>
+#include <fstream>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
 #include <map>
+#include <memory>
+#include <memory_resource>
+#include <mutex>
+#include <numeric>
+#include <optional>
+#include <random>
+#include <ranges>
+#include <span>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <array>
-#include <span>
-#include <optional>
-#include <bitset>
+#include <utility>
+#include <variant>
+#include <vector>
 
 // glm stuff
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include <stduuid/uuid.h>
 
 #include "polos/core/debug/plassert.h"
 #include "polos/core/debug/profiling.h"
