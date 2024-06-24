@@ -12,7 +12,6 @@
 #include "polos/core/resource/resource.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shader_lib.h"
-#include "polos/utils/stringid.h"
 
 #include "engine.h"
 

@@ -11,6 +11,7 @@
 #include "polos/core/events/input/key_release.h"
 #include "polos/graphics/framebuffer.h"
 #include "polos/core/scene/scene.h"
+#include "polos/utils/guid.h"
 
 namespace polos
 {   
