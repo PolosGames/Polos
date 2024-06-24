@@ -26,6 +26,7 @@ vsbuild/
 # Keep cmakes!
 !CMakeLists.txt
 !CMakeSettings.json
+!CMakePresets.json
 
 #nvidia insight folder
 **.ngfx-proj

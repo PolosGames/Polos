@@ -23,14 +23,6 @@ set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
 set(POLOS_DIR         "${CMAKE_CURRENT_LIST_DIR}/Source")
 set(POLOS_INCLUDE_DIR "${POLOS_DIR}/Runtime")
 
-if(${CMAKE_BUILD_TYPE} MATCHES "Release" OR ${CMAKE_BUILD_TYPE} MATCHES "MinSizeRel")
-    add_compile_definitions(PL_RELEASE)
-    message("-- Selected Release mode.")
-else()
-    add_compile_definitions(PL_DEBUG)
-    message("-- Selected Debug mode.")
-endif()
-
 configure_file(polos_config.h.in ${POLOS_INCLUDE_DIR}/polos_config.h USE_SOURCE_PERMISSIONS)
 
 set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
@@ -72,7 +64,6 @@ add_compile_options(
 add_compile_definitions(
     UUID_SYSTEM_GENERATOR
     UUID_USING_CXX20_SPAN
-    $<$<CXX_COMPILER_ID:Clang,GNU>:LIBUUID_CPP20_OR_GREATER>
     $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
 
