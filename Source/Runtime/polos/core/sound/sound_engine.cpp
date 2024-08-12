@@ -26,7 +26,7 @@ namespace polos
             LOG_ENGINE_CRITICAL("Could not create FMOD_System!");
         }
 
-        int32_t const max_channels{32};
+        constexpr int32_t max_channels{32};
         result = m_System->init(max_channels, FMOD_INIT_NORMAL, nullptr);
         if(FMOD_RESULT::FMOD_OK != result)
         {

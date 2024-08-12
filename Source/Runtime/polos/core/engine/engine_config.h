@@ -1,6 +1,10 @@
 #pragma once
 
-#define MAX_ENTITY_COUNT_IN_SCENE 256U
-#define MAX_COMPONENT_COUNT_FOR_ENTITY 16U
+inline constexpr std::size_t k_SceneMaxEntityAmount{ 256 };
 
-#define ENGINE_SHADER_COUNT 2U
+inline constexpr std::size_t k_EntityMaxChildrenAmount{ 32 };
+inline constexpr std::size_t k_EntityMaxComponentAmount{ 16 };
+inline constexpr std::size_t k_EntityNameMaxCharAmount{ 128 };
+inline constexpr std::size_t k_EntityMaxRenderHandleAmount{ 128 };
+
+inline constexpr std::size_t k_EngineShaderCount{ 2 };

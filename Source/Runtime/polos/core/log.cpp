@@ -1,9 +1,9 @@
 
 #include "log.h"
 
-#include "quill/Backend.h"
-#include "quill/Frontend.h"
-#include "quill/sinks/ConsoleSink.h"
+#include <quill/Backend.h>
+#include <quill/Frontend.h>
+#include <quill/sinks/ConsoleSink.h>
 
 #include "polos/containers/containers.h"
 #include "polos/core/engine/engine.h"
@@ -22,21 +22,20 @@ namespace polos
     {
         quill::Backend::start();
 
-
-        std::string const fmtPattern = 
-            "[%(time) %(logger:<6) %(log_level_id)] %(message)";
+        std::string const fmtPattern =
+            "[%(time)] [%(logger:<6)] [%(log_level:<3)] %(message)";
 
         std::string const timePattern = "%H:%M:%S.%Qms";
 
         auto stdSink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_stdSink");
-        
-        m_Loggers[k_LoggerEngine] = 
+
+        m_Loggers[k_LoggerEngine] =
             quill::Frontend::create_or_get_logger("ENGINE", stdSink, fmtPattern, timePattern);
-        
-        m_Loggers[k_LoggerEditor] = 
+
+        m_Loggers[k_LoggerEditor] =
             quill::Frontend::create_or_get_logger("EDITOR", stdSink, fmtPattern, timePattern);
-        
-        m_Loggers[k_LoggerClient] = 
+
+        m_Loggers[k_LoggerClient] =
             quill::Frontend::create_or_get_logger("CLIENT", stdSink, fmtPattern, timePattern);
 
         for(auto& logger: m_Loggers)

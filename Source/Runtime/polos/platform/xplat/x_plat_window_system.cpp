@@ -326,16 +326,15 @@ namespace polos
 
     void WindowSystem::on_window_close(window_close& p_Event)
     {
-        auto win_handles_size = m_WinHandles.size();
-        decltype(win_handles_size) i = 0;
-        for (; i < win_handles_size; ++i)
+        std::size_t win_handles_size = m_WinHandles.size();
+        std::size_t i{0};
+        for (; i < win_handles_size; i++)
         {
             if (m_WinHandles[i] == p_Event.winHandle)
             {
                 break;
             }
         }
-
 
         ptrdiff_t win_index = static_cast<ptrdiff_t>(i);
         // Delete that window from the window list.

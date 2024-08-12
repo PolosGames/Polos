@@ -4,7 +4,7 @@ namespace polos::ecs
 {
     struct base_component
     {
-        static std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> s_ComponentSizeArray;
+        static std::array<std::size_t, k_EntityMaxComponentAmount> s_ComponentSizeArray;
     };
 
     template<typename T>

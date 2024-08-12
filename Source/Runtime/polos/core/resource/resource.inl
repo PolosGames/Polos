@@ -6,13 +6,13 @@
 namespace polos::resource
 {
     template<typename T>
-    auto LoadResource(std::string p_Path) -> ResourceHandle
+    auto ImportResource(std::string const& p_Path, import_options<T> p_Options) -> ResourceHandle
     {
-        return ResourceCache<T>::LoadResource(p_Path);
+        return ResourceCache<T>::ImportResource(p_Path, std::forward<import_options<T>>(p_Options));
     }
 
     template<typename T>
-    auto GetResource(std::string p_Name) -> ResourceHandle
+    auto GetResource(std::string const& p_Name) -> ResourceHandle
     {
         uint32 hash = StrHash32(p_Name.c_str());
         auto handle = ResourceCache<T>::GetResource(hash);
@@ -24,7 +24,7 @@ namespace polos::resource
     }
 
     template<typename T>
-    auto GetRawResource(std::string p_Name) -> T*
+    auto GetRawResource(std::string const& p_Name) -> T*
     {
         uint32 hash = StrHash32(p_Name.c_str());
         auto* ptr = ResourceCache<T>::GetRawResource(hash);
@@ -36,7 +36,7 @@ namespace polos::resource
     }
 
     template<typename T>
-    auto DestroyResource(std::string p_Name) -> void
+    auto DestroyResource(std::string const& p_Name) -> void
     {
         uint32 hash = StrHash32(p_Name.c_str());
         auto result = ResourceCache<T>::DestroyResource(hash);

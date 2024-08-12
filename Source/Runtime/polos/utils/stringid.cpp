@@ -48,7 +48,7 @@ namespace polos
             return g_StringTable.at(i);
         }
 
-        LOG_ENGINE_WARN("No string with the id {} found! Returning empty string_view.", p_Sid);
+        LOG_ENGINE_WARN("[GetStringFromId] No string with the id {} found! Returning empty string_view.", p_Sid);
 
         return std::string_view{};
     }

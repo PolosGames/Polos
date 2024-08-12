@@ -5,7 +5,7 @@
 namespace polos::ecs
 {
     using Entity = std::uint64_t;
-    using CompMask = std::bitset<MAX_COMPONENT_COUNT_FOR_ENTITY>;
+    using CompMask = std::bitset<k_EntityMaxComponentAmount>;
 
     using EntityIndex = std::uint32_t;
     using EntityVersion = std::uint32_t;

@@ -29,8 +29,8 @@ namespace polos
     {
         SUB_TO_EVENT_MEM_FUN(engine_update, update);
 
-        resource::LoadResource<resource::image>("resources/textures/linux-22621.png");
-
+        resource::ImportResource<resource::image>("resources/textures/linux-22621.png", {});
+        
         m_AppWindow     = WindowSystem::GetAppWindowGUID();
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         ShaderLib::Load("resources/shaders/texture.vert", "resources/shaders/texture.frag");
@@ -331,7 +331,7 @@ namespace polos
     Application* CreateApplication(void* p_PlacementPtr)
     {
         window_props props;
-        props.title = "Polos Editor";
+        props.title = "Hello";
         props.width = 1920;
         props.height = 1080;
         props.refreshRate = 120;

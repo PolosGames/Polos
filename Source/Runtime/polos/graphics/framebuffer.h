@@ -2,28 +2,27 @@
 
 namespace polos
 {
-    class FrameBuffer
-    {
-    public:
-        FrameBuffer();
-        ~FrameBuffer();
+class FrameBuffer
+{
+public:
+    FrameBuffer();
+    ~FrameBuffer();
 
-        void Initialize(int32 p_Width, int32 pHeight);
+    void Initialize(int32 p_Width, int32 pHeight);
 
-        uint32 GetFrameBufferHandle();
-        uint32 GetFrameBufferTextureHandle();
+    uint32 GetFrameBufferHandle();
+    uint32 GetFrameBufferTextureHandle();
 
-        void Bind();
-        void Unbind();
+    void Bind();
+    void Unbind();
 
-        void Clear();
+    void Clear();
+private:
+    uint32 m_Id;
+    uint32 m_DepthRbo;
+    uint32 m_ColorAttachmentTexture;
 
-    private:
-        uint32 m_Id;
-        uint32 m_DepthRbo;
-        uint32 m_ColorAttachmentTexture;
-
-        std::array<float, 4> m_ClearRGBA;
-        std::array<float, 1> m_ClearDepth;
-    };
-} // namespace polos
+    std::array<float, 4> m_ClearRGBA;
+    std::array<float, 1> m_ClearDepth;
+};
+}// namespace polos

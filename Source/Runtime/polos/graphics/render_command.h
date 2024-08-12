@@ -2,7 +2,7 @@
 
 namespace polos
 {
-    namespace graphics
-    {
-    }
-}// namespace polos::graphics
+namespace graphics
+{
+}
+}// namespace polos

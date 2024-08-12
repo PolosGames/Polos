@@ -19,7 +19,7 @@ namespace polos::ecs
     }
     void* ComponentPool::Get(size_t p_Index)
     {
-        if (p_Index >= MAX_ENTITY_COUNT_IN_SCENE)
+        if (p_Index >= k_SceneMaxEntityAmount)
         {
             LOG_ENGINE_ERROR("[ComponentPool::Get] Entity index out of range.");
             return nullptr;
@@ -38,7 +38,7 @@ namespace polos::ecs
         pool_data.reserve(
             componentId
           + m_ElemSize
-          + (MAX_ENTITY_COUNT_IN_SCENE * m_ElemSize)
+          + (k_SceneMaxEntityAmount * m_ElemSize)
         );
 
         auto push_to_pool_data_as_bytes = [&pool_data](auto number) -> bool {
@@ -65,7 +65,7 @@ namespace polos::ecs
         byte* data = static_cast<byte*>(m_Data);
         std::copy(
             data,
-            std::next(data, static_cast<ptrdiff_t>(MAX_ENTITY_COUNT_IN_SCENE * m_ElemSize)),
+            std::next(data, static_cast<ptrdiff_t>(k_SceneMaxEntityAmount) * m_ElemSize),
             std::back_inserter(pool_data)
         );
 

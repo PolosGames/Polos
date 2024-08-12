@@ -28,7 +28,7 @@ namespace polos
         fileExtension  = full_name.substr(sep_loc, full_name.size() - sep_loc);
         fileName = full_name.substr(0, full_name.size() - fileExtension.size() - 1);
     }
-    
+
     std::string File::ReadLine()
     {
         if(!( m_Mode & FileMode::k_Read))
@@ -42,10 +42,10 @@ namespace polos
             LOG_ENGINE_WARN("Could not read line because the file hit EOF.");
             return "";
         }
-    
+
         std::string line;
         std::getline(m_FileStream, line);
-        
+
         return line;
     }
 
@@ -66,14 +66,14 @@ namespace polos
         std::getline(m_FileStream, p_Line);
         return true;
     }
-    
+
     std::string File::ReadStr()
     {
         std::stringstream ss;
         ss << m_FileStream.rdbuf();
         return ss.str();
     }
-    
+
     DArray<byte> File::ReadByte()
     {
         PL_ASSERT(m_Mode & (FileMode::k_Read | FileMode::k_Binary));

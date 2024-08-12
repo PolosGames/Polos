@@ -42,7 +42,7 @@ namespace polos::ecs
             LOG_ENGINE_ERROR("Component array's pointer and it's predefined start don't match.");
         }
 
-        for (size_t i = 0; i < MAX_ENTITY_COUNT_IN_SCENE; i++)
+        for (size_t i = 0; i < k_SceneMaxEntityAmount; i++)
         {
             list[i].~T();
         }

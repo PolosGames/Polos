@@ -17,6 +17,7 @@ target_include_directories(
 target_link_libraries(
     PolosGraphics
         PRIVATE
+            PolosCore
             glm::glm
             glad::glad
             glfw
@@ -42,7 +43,7 @@ target_precompile_headers(
 build_options(PolosGraphics true)
 
 install(
-    TARGETS PolosGraphics 
+    TARGETS PolosGraphics
     LIBRARY       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
     ARCHIVE       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
     RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"

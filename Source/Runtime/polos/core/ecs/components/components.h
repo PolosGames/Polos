@@ -6,3 +6,4 @@
 #include "material_component.h"
 #include "texture2d_component.h"
 #include "transform_component.h"
+#include "render_component.h"

@@ -40,12 +40,11 @@ namespace polos::resource
     }
 
     template<typename T>
-    auto ResourceCache<T>::LoadResource(std::string p_Path) -> ResourceHandle
+    auto ResourceCache<T>::ImportResource(std::string const& p_Path, import_options<ResourceType> p_Options) -> ResourceHandle
     {
-        auto const [extension, name] = [&p_Path] {
-            File file(p_Path, k_Read);
-            return std::pair(file.fileExtension, file.fileName);
-        }();
+        std::filesystem::path file(p_Path);
+        auto name = file.stem();
+        auto ext = file.extension();
 
         LoaderBase* loader{};
         size_t loader_index{};
@@ -53,7 +52,7 @@ namespace polos::resource
         for (std::size_t i{}; i != s_Instance->m_Loaders.size(); i++)
         {
             auto& l = s_Instance->m_Loaders[i];
-            if (l->CanLoad(p_Path))
+            if (l->CanImport(p_Path))
             {
                 loader = l.get();
                 loader_index = i;
@@ -62,22 +61,30 @@ namespace polos::resource
 
         if (loader == nullptr)
         {
-            LOG_ENGINE_ERROR("[ResourceCache::LoadResource] No Loader was found that could load resource \"{}\".", typeid(ResourceType).name());
+            LOG_ENGINE_ERROR(
+                "[ResourceCache::ImportResource] No Loader was found that could load resource \"{}\"."
+                , typeid(ResourceType).name());
             return INVALID_RESOURCE;
         }
 
         auto rsc_index = s_Instance->m_ResourceCache.size();
         s_Instance->m_ResourceCache.emplace_back();
-        auto* rsc = loader->LoadResource(p_Path, &s_Instance->m_ResourceCache.back());
+        auto* rsc = loader->ImportResource(p_Path,
+                                           std::forward<import_options<ResourceType>>(p_Options),
+                                           &s_Instance->m_ResourceCache.back());
         
         if (rsc == nullptr)
         {
-            LOG_ENGINE_ERROR("[ResourceCache::LoadResource] Couldn't load the resource \"{}\" with the given loader.", typeid(ResourceType).name());
+            LOG_ENGINE_ERROR(
+                "[ResourceCache::ImportResource] Couldn't load the resource"
+                "\"{}\" with the given loader."
+                , typeid(ResourceType).name());
             s_Instance->m_ResourceCache.pop_back();
             return INVALID_RESOURCE;
         }
         
-        auto rsc_handle = detail::CreateResource(rsc_index, loader_index, StrHash32(name.c_str()));
+        uint32         name_hash  = StrHash32(name.string().c_str());
+        ResourceHandle rsc_handle = detail::CreateResource(rsc_index, loader_index, name_hash);
 
         s_Instance->m_Resources.try_emplace(rsc_handle, std::filesystem::file_size(p_Path), p_Path);
 

@@ -28,6 +28,8 @@ namespace polos
 
     using StringId       = int64;
     using ResourceHandle = uint64;
+    using TextureHandle  = uint64;
+    using RenderHandle   = uint64;
 
     using cstring = const char*;
 }

@@ -5,7 +5,7 @@
 
 namespace polos
 {
-    struct window_props
+    struct alignas(64) window_props
     {
         std::string title{};
         int32 width{};
@@ -13,7 +13,5 @@ namespace polos
         int32 refreshRate{60};
         bool  vsync{};
         bool  fullscreen{};
-    private:
-        PL_MAYBEUNUSED byte m_holder[2]{44, 34};
     };
 }

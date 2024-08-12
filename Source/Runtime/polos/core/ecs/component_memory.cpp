@@ -6,18 +6,18 @@
 
 namespace polos::ecs
 {
-    static std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> GetComponentOffsetArray()
+    static std::array<std::size_t, k_EntityMaxComponentAmount> GetComponentOffsetArray()
     {
         auto const component_size = base_component::s_ComponentSizeArray;
 
-        std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> component_offsets{};
+        std::array<std::size_t, k_EntityMaxComponentAmount> component_offsets{};
 
         std::size_t cumulative_size = 0;
 
-        for (size_t i = 0; i < MAX_COMPONENT_COUNT_FOR_ENTITY; ++i)
+        for (std::size_t i = 0; i < k_EntityMaxComponentAmount; ++i)
         {
             component_offsets[i] = cumulative_size;
-            cumulative_size += component_size[i] * MAX_ENTITY_COUNT_IN_SCENE;
+            cumulative_size += component_size[i] * k_SceneMaxEntityAmount;
         }
 
         return component_offsets;
@@ -48,7 +48,7 @@ namespace polos::ecs
         std::size_t total_allocation_size = 0;
         for (auto const& size : k_ComponentSizeArray)
         {
-            total_allocation_size += size * MAX_ENTITY_COUNT_IN_SCENE;
+            total_allocation_size += size * k_SceneMaxEntityAmount;
         }
         m_Data = std::malloc(total_allocation_size);
     }

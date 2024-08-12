@@ -58,8 +58,8 @@ QUILL_NODISCARD QUILL_ATTRIBUTE_HOT inline std::string_view _get_log_level_strin
 QUILL_NODISCARD QUILL_ATTRIBUTE_HOT inline std::string_view loglevel_to_string(LogLevel log_level)
 {
   static constexpr std::string_view log_levels_map[] = {
-    "TRACE_L3", "TRACE_L2", "TRACE_L1",  "DEBUG", "INFO",   "WARNING",
-    "ERROR",    "CRITICAL", "BACKTRACE", "NONE",  "DYNAMIC"};
+    "TL3", "TL2", "TL1",  "DBG", "INF",   "WRN",
+    "ERR", "FAT", "BTR", "NON",  "DYN"};
 
   static constexpr uint32_t log_levels_map_size = sizeof(log_levels_map) / sizeof(log_levels_map[0]);
 

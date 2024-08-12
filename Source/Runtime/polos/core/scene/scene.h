@@ -36,8 +36,8 @@ namespace polos
         uint32_t                      m_EntitySize{};
         std::vector<ecs::EntityIndex> m_FreeEntities;
 
-        std::array<ecs::EntityData, MAX_ENTITY_COUNT_IN_SCENE>         m_Entities;
-        std::array<ecs::ComponentPool, MAX_COMPONENT_COUNT_FOR_ENTITY> m_CompPools;
+        std::array<ecs::EntityData, k_SceneMaxEntityAmount>         m_Entities;
+        std::array<ecs::ComponentPool, k_EntityMaxComponentAmount> m_CompPools;
     };
 
     template<ecs::EcsComponent T, typename... Args>

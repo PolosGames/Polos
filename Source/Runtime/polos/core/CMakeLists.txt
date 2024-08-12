@@ -18,6 +18,7 @@ target_include_directories(
 target_link_libraries(
     PolosCore
         PRIVATE
+            assimp::assimp
             fmod::fmod
             fmod::fmodL
             glm::glm

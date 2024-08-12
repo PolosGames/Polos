@@ -18,7 +18,7 @@ namespace polos
     template<typename Iterator>
     inline auto BaseSceneView<Iterator>::end() noexcept -> iterator
     {
-        return iterator(reinterpret_cast<BaseSceneView*>(this), static_cast<ecs::EntityIndex>(MAX_ENTITY_COUNT_IN_SCENE));
+        return iterator(reinterpret_cast<BaseSceneView*>(this), static_cast<ecs::EntityIndex>(k_SceneMaxEntityAmount));
     }
 
     template<typename Iterator>
@@ -38,7 +38,7 @@ namespace polos
     template<typename Iterator>
     inline auto BaseSceneView<Iterator>::end() const noexcept -> const_iterator
     {
-        return const_iterator(reinterpret_cast<BaseSceneView const*>(this), static_cast<ecs::EntityIndex>(MAX_ENTITY_COUNT_IN_SCENE));
+        return const_iterator(reinterpret_cast<BaseSceneView const*>(this), static_cast<ecs::EntityIndex>(k_SceneMaxEntityAmount));
     }
 
     template<typename Iterator>

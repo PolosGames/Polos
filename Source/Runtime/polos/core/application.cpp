@@ -17,7 +17,7 @@ namespace polos
     {
         SUB_TO_EVENT_MEM_FUN(window_close, on_window_close);
     
-        resource::ResourceCache<resource::image>::NewLoader<resource::ImageLoaderStb>();
+        resource::ResourceCache<resource::image>::NewLoader<resource::ImageImporterStb>();
     }
 
 
@@ -53,7 +53,7 @@ namespace polos
             
             Gui::End();
 
-            EventBus::RaiseEvent<engine_late_update>();
+            EventBus::RaiseEvent<engine_late_update>(delta_time);
         }
         
         Gui::Shutdown();

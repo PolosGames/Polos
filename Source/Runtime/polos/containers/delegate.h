@@ -196,3 +196,5 @@ namespace polos
         bool           m_IsMoved{};
     };
 }
+
+#define CREATE_DELEGATE_MEM_FN(Class, Fn, FnType) ::polos::Delegate<FnType>::template From<Class, &Class::Fn>(this)

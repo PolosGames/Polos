@@ -1,6 +1,7 @@
 #pragma once
 
 #include "polos/core/resource/resource_loader.h"
+#include "polos/core/resource/import_options.h"
 
 namespace polos::resource
 {
@@ -35,7 +36,7 @@ namespace polos::resource
         static auto NewLoader(Args&&... args) -> void
             requires(std::is_constructible_v<LoaderType, Args...> && std::is_same_v<typename LoaderType::ResourceType, ResourceType>);
 
-        static auto LoadResource(std::string p_Path) -> ResourceHandle;
+        static auto ImportResource(std::string const& p_Path, import_options<ResourceType> p_Options) -> ResourceHandle;
         static auto GetResource(uint32 p_Hash) -> ResourceHandle;
         static auto GetRawResource(uint32 p_Hash) -> ResourceType*;
         static auto DestroyResource(uint32 p_Hash) -> bool;

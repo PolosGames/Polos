@@ -2,7 +2,7 @@
 
 namespace polos::resource
 {
-    struct image
+    struct alignas(64) image
     {
         int32        channels{};
         glm::ivec2   dimensions;

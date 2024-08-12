@@ -1,4 +1,4 @@
-#include "image_loader_stb.h"
+#include "polos/core/resource/importers/image_importer_stb.h"
 
 #include <stb_image.h>
 
@@ -6,15 +6,15 @@
 
 namespace polos::resource
 {
-    ImageLoaderStb::ImageLoaderStb()
+    ImageImporterStb::ImageImporterStb()
         : ResourceLoader<image>(
-            Delegate<bool(std::string)>::template From<ImageLoaderStb, &ImageLoaderStb::CanLoad>(this),
-            Delegate<image*(std::string, image*)>::template From<ImageLoaderStb, &ImageLoaderStb::Load>(this)
+            Delegate<image*(std::string, import_options<image>, image*)>::template From<ImageImporterStb, &ImageImporterStb::Import>(this)
+          , Delegate<bool(std::string)>::template From<ImageImporterStb, &ImageImporterStb::CanImport>(this)
         )
     {
     }
 
-    image* ImageLoaderStb::Load(std::string p_Path, image* p_Ptr)
+    image* ImageImporterStb::Import(std::string p_Path, import_options<image>, image* p_Ptr)
     {
         glm::ivec2 dim;
         int32 channels;
@@ -26,11 +26,11 @@ namespace polos::resource
 
         if (data == nullptr)
         {
-            LOG_ENGINE_ERROR("[ImageLoaderStb::Load] Couldn't load image from path: \"{}\"", p_Path);
+            LOG_ENGINE_ERROR("[ImageImporterStb::Import] Couldn't load image from path: \"{}\"", p_Path);
             return nullptr;
         }
 
-        ptrdiff_t data_size = dim.x * dim.y * channels;
+        std::size_t data_size = dim.x * dim.y * channels;
 
         p_Ptr->channels = channels;
         p_Ptr->dimensions = dim;
@@ -39,7 +39,7 @@ namespace polos::resource
         return p_Ptr;
     }
 
-    bool ImageLoaderStb::CanLoad(std::string p_Path)
+    bool ImageImporterStb::CanImport(std::string p_Path)
     {
         int32 x;
         int32 y;

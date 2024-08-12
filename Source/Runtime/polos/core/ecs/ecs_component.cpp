@@ -3,5 +3,5 @@
 
 namespace polos::ecs
 {
-    std::array<std::size_t, MAX_COMPONENT_COUNT_FOR_ENTITY> base_component::s_ComponentSizeArray{};
+    std::array<std::size_t, k_EntityMaxComponentAmount> base_component::s_ComponentSizeArray{};
 } // namespace polos::ecs

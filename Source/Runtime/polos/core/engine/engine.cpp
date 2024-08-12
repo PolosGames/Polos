@@ -12,6 +12,9 @@
 #include "polos/core/resource/resource.h"
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shader_lib.h"
+#include "polos/utils/stringid.h"
+
+#include <assimp/DefaultLogger.hpp>
 
 #include "engine.h"
 
@@ -48,6 +51,7 @@ namespace polos
         ecs::material_component{};
         ecs::camera_component{};
         ecs::animator_component{};
+        ecs::render_component{};
     }
 
     Engine* Engine::s_Instance;
@@ -66,6 +70,7 @@ namespace polos
             + sizeof(ecs::ComponentMemory)
             + sizeof(ShaderLib)
             + sizeof(resource::ResourceCache<resource::image>)
+            + sizeof(resource::ResourceCache<resource::model>)
         ;
             
         LinearAllocator engine_memory(needed_memory);
@@ -88,6 +93,7 @@ namespace polos
         auto* component_memory = engine_memory.New<ecs::ComponentMemory>();
         auto* shader_lib       = engine_memory.New<ShaderLib>();
         auto* image_cache      = engine_memory.New<resource::ResourceCache<resource::image>>();
+        auto* model_cache      = engine_memory.New<resource::ResourceCache<resource::model>>();
 
         // Startup for systems
         for (auto& cb : s_Instance->m_StartupSequence)
@@ -95,9 +101,44 @@ namespace polos
             std::invoke(cb);
         }
 
+        Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
+
+        class AssimpError : public Assimp::LogStream
+        {
+        public:
+            void write(char const* p_Msg)
+            {
+                LOG_ENGINE_ERROR("ASSIMP: {}", p_Msg);
+            }
+        };
+
+        class AssimpWarn : public Assimp::LogStream
+        {
+        public:
+            void write(char const* p_Msg)
+            {
+                LOG_ENGINE_WARN("ASSIMP: {}", p_Msg);
+            }
+        };
+
+        class AssimpInfo : public Assimp::LogStream
+        {
+        public:
+            void write(char const* p_Msg)
+            {
+                LOG_ENGINE_TRACE("ASSIMP: {}", p_Msg);
+            }
+        };
+
+        Assimp::DefaultLogger::get()->attachStream(new AssimpError, Assimp::Logger::Err);
+        Assimp::DefaultLogger::get()->attachStream(new AssimpWarn, Assimp::Logger::Warn);
+        Assimp::DefaultLogger::get()->attachStream(new AssimpInfo, Assimp::Logger::Debugging | Assimp::Logger::Info);
+
         Application* l_App = CreateApplication();
         l_App->Run();
         delete l_App;
+
+        Assimp::DefaultLogger::kill();
 
         // Shutdown sequence
         std::ranges::reverse_view rv{s_Instance->m_ShutdownSequnce};
@@ -105,7 +146,8 @@ namespace polos
         {
             std::invoke(cb);
         }
-
+        
+        engine_memory.Delete(model_cache);
         engine_memory.Delete(image_cache);
         engine_memory.Delete(shader_lib);
         engine_memory.Delete(component_memory);
