@@ -32,6 +32,7 @@
 #include <optional>
 #include <random>
 #include <ranges>
+#include <queue>
 #include <span>
 #include <sstream>
 #include <string>

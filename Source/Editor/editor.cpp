@@ -30,7 +30,7 @@ namespace polos
         SUB_TO_EVENT_MEM_FUN(engine_update, update);
 
         resource::LoadResource<resource::image>("resources/textures/linux-22621.png");
-        
+
         m_AppWindow     = WindowSystem::GetAppWindowGUID();
         ShaderLib::Load("resources/shaders/basic_color.vert", "resources/shaders/basic_color.frag");
         ShaderLib::Load("resources/shaders/texture.vert", "resources/shaders/texture.frag");
@@ -80,7 +80,7 @@ namespace polos
         editor_camera_camera_comp->type = CameraType::k_Ortho;
 
         editor_camera_info_comp->name = "Camera";
-        
+
         ecs::camera_set::UpdateCameraVectors(editor_camera_transform_comp, editor_camera_camera_comp);
 
         SUB_TO_EVENT_MEM_FUN(mouse_move, OnMouseMove);

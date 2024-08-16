@@ -18,12 +18,12 @@ target_include_directories(
 target_link_libraries(
     PolosCore
         PRIVATE
-            quill::quill
-            glm::glm
-            glad::glad
             fmod::fmod
             fmod::fmodL
+            glm::glm
+            glad::glad
             ImGui::ImGui
+            quill::quill
             stb_image::stb_image
 )
 
