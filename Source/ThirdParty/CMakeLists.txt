@@ -6,6 +6,7 @@ elseif(LINUX)
     set(PLATFORM_NAME "linux")
 endif()
 
+add_subdirectory(assimp)
 add_subdirectory(fmod)
 if(USE_OPENGL)
     add_subdirectory(glad)
@@ -27,6 +28,7 @@ add_library(PolosThirdParty INTERFACE)
 target_link_libraries(
     PolosThirdParty
         INTERFACE
+            assimp::assimp
             fmod::fmod
             fmod::fmodL
             glad::glad
