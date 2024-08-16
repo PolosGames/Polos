@@ -1,10 +1,4 @@
-# CMAKE STUFF, YOU MAY NOT EVEN NEED THEM
-
-# Build type categories: 
-# Release
-# RelWithDebInfo
-# Debug
-BUILD_TYPE=Release
+BUILD_TYPE=Debug
 BUILD_DIR=build
 ENGINE_INSTALL_DIR=bin
 GENERATOR=Ninja
@@ -23,7 +17,8 @@ EXPORT_ENGINE=1
 BUILD_FOLDER=$BUILD_DIR/$BUILD_TYPE
 INSTALL_PREFIX=$ENGINE_INSTALL_DIR/$BUILD_TYPE
 
-cd ../
+# For GLFW
+sudo apt install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
 
 #Configure cmake
 cmake . -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
@@ -38,6 +33,7 @@ cmake . -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
 -D EXPORT_ENGINE=$EXPORT_ENGINE \
 -D CMAKE_EXPORT_COMPILE_COMMANDS=1 \
 -G $GENERATOR \
--B $BUILD_FOLDER
+-B $BUILD_FOLDER \
+-D CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 
 cmake --build $BUILD_FOLDER -j $(nproc) --target=install --config=$BUILD_TYPE

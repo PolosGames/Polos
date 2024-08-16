@@ -10,13 +10,9 @@ add_subdirectory(fmod)
 if(USE_OPENGL)
     add_subdirectory(glad)
 endif()
-if(USE_OPENGL OR USE_VULKAN)
-    add_subdirectory(glfw)
-endif()
 add_subdirectory(glm)
 if(GUI_USE_IMGUI)
     add_subdirectory(imgui)
-    target_link_libraries(ImGui_static PRIVATE glfw::glfw_interface )
 endif()
 add_subdirectory(quill)
 add_subdirectory(stb_image)
@@ -30,7 +26,7 @@ target_link_libraries(
             fmod::fmod
             fmod::fmodL
             glad::glad
-            glfw::glfw
+            glfw
             ImGui::ImGui
             quill::quill
             stb_image::stb_image

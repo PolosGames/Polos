@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.24)
 function(build_options target warnings)
 
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
-            CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
-            CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+        CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
+        CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
         target_compile_options(
             ${target}
                 PRIVATE
-                    $<$<CONFIG:Debug>:-Og>
+                    $<$<CONFIG:Debug>:-O0 -g>
                     $<$<CONFIG:RelWithDebInfo>:-O2 -g>
                     $<$<CONFIG:Release>:-O2>
                     $<$<CONFIG:MinSizeRel>:-O3>

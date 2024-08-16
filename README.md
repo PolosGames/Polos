@@ -22,6 +22,7 @@ You need:
   - constexpr lambdas,
   - nodiscard(with message), likely/unlikely, maybe_unused attributes,
   is fine
+- vcpkg (`VCPKG_ROOT` environment variable needs to be readily available.)
 
 ### Current Features:
 

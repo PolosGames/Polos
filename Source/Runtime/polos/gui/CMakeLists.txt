@@ -18,7 +18,7 @@ target_link_libraries(
     PolosGUI
         PRIVATE
             ImGui::ImGui
-            glfw::glfw
+            glfw
 )
 
 set_target_properties(

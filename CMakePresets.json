@@ -14,10 +14,6 @@
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
-            },
-            "cacheVariables": {
-                "BUILD_EDITOR": true,
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true
             }
         },
         {
