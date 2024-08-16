@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 
+# =================================== #
+#  Add ThirdParty libs added by vcpkg #
+# =================================== #
+
+find_package(assimp CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
+
 # ================================== #
 #  Add the third parties into build  #
 # ================================== #

@@ -19,7 +19,7 @@ target_link_libraries(
         PRIVATE
             glm::glm
             glad::glad
-            glfw::glfw
+            glfw
             stb_image::stb_image
 )
 
@@ -48,4 +48,3 @@ install(
     RUNTIME       DESTINATION "${POLOS_INSTALL_LIBS_DIR}"
     PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INCLUDES_DIR}/graphics"
 )
-

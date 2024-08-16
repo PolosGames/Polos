@@ -1,0 +1,7 @@
+{
+    "name": "polos",
+    "dependencies": [
+        "assimp",
+        "glfw3"
+    ]
+}
