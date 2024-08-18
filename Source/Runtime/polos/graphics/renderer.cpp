@@ -6,7 +6,8 @@
 #include "polos/core/window_system.h"
 #include "polos/graphics/vertex.h"
 #include "polos/graphics/shader_lib.h"
-#include "polos/core/scene/scene_view.h"
+#include "polos/core/scene/common_set_scene_view.h"
+#include "polos/core/scene/component_scene_view.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
 #include "polos/core/engine/engine.h"
 #include "polos/core/ecs/sets/camera_set.h"
@@ -45,7 +46,7 @@ namespace polos
     {
         s_Instance = this;
     }
-    
+
     void Renderer::Shutdown()
     {
         s_Instance = nullptr;
@@ -53,7 +54,7 @@ namespace polos
 
     void Renderer::RenderScene(Scene& scene)
     {
-        for (auto camera_set : SceneView<ecs::camera_set>(scene))
+        for (auto camera_set : CommonSetSceneView<ecs::camera_set>(scene))
         {
             for (auto const& shader : ShaderLib::GetAll())
             {
@@ -63,7 +64,7 @@ namespace polos
             }
         }
 
-        for (auto [texture2d_comp, material_comp, transform_comp] : SceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene))
+        for (auto [texture2d_comp, material_comp, transform_comp] : ComponentSceneView<ecs::texture2d_component, ecs::material_component, ecs::transform_component>(scene))
         {
             auto const& quad_vao       = Renderer::GetQuadVao();
             if (texture2d_comp->hasUvChanged)
