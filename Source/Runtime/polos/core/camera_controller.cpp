@@ -7,7 +7,7 @@
 #include "polos/utils/key_code.h"
 #include "polos/utils/mouse_code.h"
 #include "polos/core/ecs/sets/camera_set.h"
-#include "polos/core/scene/scene_view.h"
+#include "polos/core/scene/common_set_scene_view.h"
 
 namespace polos
 {
@@ -49,7 +49,7 @@ namespace polos
 
     void CameraController::update(engine_update& p_Event)
     {
-        for (auto set : SceneView<ecs::camera_set>(*m_Scene))
+        for (auto set : CommonSetSceneView<ecs::camera_set>(*m_Scene))
         {
             CameraType cam_type = set.cameraComponent->type;
             if (set.cameraComponent->isEditor && (m_MouseButton & k_MouseButtonRight) == k_MouseButtonRight)

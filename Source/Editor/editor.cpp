@@ -12,7 +12,7 @@
 #include "polos/graphics/renderer.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
 #include "polos/core/ecs/components/components.h"
-#include "polos/core/scene/scene_view.h"
+#include "polos/core/scene/common_set_scene_view.h"
 #include "polos/core/ecs/sets/info_set.h"
 #include "polos/core/ecs/sets/camera_set.h"
 #include "polos/core/resource/resource.h"
@@ -40,7 +40,7 @@ namespace polos
         Optional<window_props> app_window_props = WindowSystem::GetWindowProps(m_AppWindow);
         m_AppWindowWidth  = app_window_props->width;
         m_AppWindowHeight = app_window_props->height;
-        m_AspectRatio     = static_cast<float>(m_AppWindowWidth) / m_AppWindowHeight;
+        m_AspectRatio     = static_cast<float>(m_AppWindowWidth) / static_cast<float>(m_AppWindowHeight);
 
         m_EditorFramebuffer.Initialize(m_AppWindowWidth, m_AppWindowHeight);
         m_EditorFramebuffer.Bind();
@@ -156,7 +156,7 @@ namespace polos
         ImGui::End();
 
         ImGui::Begin("Scene");
-        for(auto info : SceneView<ecs::info_set>(m_Scene))
+        for(auto info : CommonSetSceneView<ecs::info_set>(m_Scene))
         {
             if(info.infoComponent != nullptr)
             {
@@ -339,6 +339,7 @@ namespace polos
         props.fullscreen = false;
 
         auto a = WindowSystem::NewWindow(props);
+        static_cast<void>(a);
 
         Application* app = p_PlacementPtr != nullptr ? new (p_PlacementPtr) Editor() : new Editor();
         return app;

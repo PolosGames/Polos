@@ -100,11 +100,12 @@ namespace polos
         delete l_App;
 
         // Shutdown sequence
-        for (auto& cb : s_Instance->m_ShutdownSequnce | std::views::reverse)
+        std::ranges::reverse_view rv{s_Instance->m_ShutdownSequnce};
+        for (auto& cb : rv)
         {
             std::invoke(cb);
         }
-        
+
         engine_memory.Delete(image_cache);
         engine_memory.Delete(shader_lib);
         engine_memory.Delete(component_memory);

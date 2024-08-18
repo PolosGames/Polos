@@ -10,7 +10,7 @@ namespace polos::ecs
 
     template<typename T>
     concept CommonSetLike = std::is_base_of_v<CommonSet, T>;
-    
+
     template<ecs::EcsComponent... T >
     struct common_set_component_ids
     {

@@ -39,7 +39,7 @@ if(LINUX)
     )
 endif()
 
-set_target_properties(Polos PROPERTIES POSITION_INDEPENDENT_CODE True)
+target_compile_options(Polos PRIVATE -fPIC)
 
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Polos)
