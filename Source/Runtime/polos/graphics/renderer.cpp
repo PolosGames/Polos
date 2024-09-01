@@ -10,24 +10,13 @@
 #include "polos/core/window_system.h"
 #include "polos/graphics/shader_lib.h"
 #include "polos/graphics/shapes/shapes2d_transform.h"
-#include "polos/graphics/vertex.h"
+#include "polos/graphics/quad_vertex.h"
 
 namespace polos
 {
 
 namespace
 {
-    static constexpr std::array<quad_vertex, 4> k_QuadVertices{
-        quad_vertex{glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 0.0f),
-                    glm::vec4{97.0f, 40.0f, 36.0f, 255.0f}},// Bottom-left
-        quad_vertex{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 0.0f),
-                    glm::vec4{97.0f, 40.0f, 36.0f, 255.0f}},// Bottom-right
-        quad_vertex{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(1.0f, 1.0f),
-                    glm::vec4{97.0f, 40.0f, 36.0f, 255.0f}},// Top-right
-        quad_vertex{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1.0f), glm::vec2(0.0f, 1.0f),
-                    glm::vec4{97.0f, 40.0f, 36.0f, 255.0f}},// Top-left
-    };
-
     static constexpr std::array<uint32, 6> k_QuadIndices{
         0, 1, 2, 2, 3, 0,
     };

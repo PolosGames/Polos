@@ -4,7 +4,6 @@
 
 #include "polos/core/application.h"
 #include "polos/graphics/shader.h"
-#include "polos/graphics/vao.h"
 #include "polos/core/window.h"
 #include "polos/core/events/input/mouse_move.h"
 #include "polos/core/events/input/key_press.h"

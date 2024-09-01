@@ -1,14 +1,16 @@
 #pragma once
 
 #include "polos/core/ecs/ecs_component.h"
+#include "polos/graphics/draw_strategy.h"
 #include "polos/graphics/shader.h"
 
 namespace polos::ecs
 {
     struct render_component final : Component<render_component>
     {
-        Shader* shader{};
-        std::array<RenderHandle, k_EntityMaxRenderHandleAmount> renderHandle{};
+        RenderHandle render_handle;
+        graphics::DrawStrategyType draw_strategy;
+
     };
 
     template<> inline constexpr int32 k_ComponentId<render_component> = 6;

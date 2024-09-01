@@ -25,7 +25,7 @@ target_link_libraries(
 set_target_properties(
     Polos
         PROPERTIES
-            CXX_STANDARD 20
+            CXX_STANDARD ${POLOS_CPP_STANDARD}
             CXX_STANDARD_REQUIRED True
             PRECOMPILE_HEADERS_REUSE_FROM ${PCH_LIBRARY_NAME}
 )

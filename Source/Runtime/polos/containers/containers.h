@@ -41,4 +41,7 @@ namespace polos
 
     template<typename T>
     using Optional = std::optional<T>;
+
+    template<typename ValueType, typename ErrorType>
+    using Result = std::expected<ValueType, ErrorType>;
 }

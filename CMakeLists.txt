@@ -9,6 +9,8 @@ project(
 set(CMAKE_CXX_EXTENSIONS OFF)
 include(GNUInstallDirs)
 
+set(POLOS_CPP_STANDARD 23)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 option(STATIC_STD       "Link static libraries of STL" ON)
@@ -65,6 +67,10 @@ add_compile_definitions(
     UUID_SYSTEM_GENERATOR
     UUID_USING_CXX20_SPAN
     $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+)
+
+add_compile_options(
+    -stdlib=libc++
 )
 
 if(MSVC)

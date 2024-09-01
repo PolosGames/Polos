@@ -20,7 +20,7 @@ set_target_properties(
     PolosContainers
         PROPERTIES
             PUBLIC_HEADER             "${PolosContainers_HEADERS}"
-            CXX_STANDARD              20
+            CXX_STANDARD              ${POLOS_CPP_STANDARD}
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True
             OUTPUT_NAME               "PolosContainers"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "polos/graphics/vertex.h"
+#include "polos/graphics/quad_vertex.h"
 
 namespace polos::resource
 {

@@ -65,7 +65,7 @@ namespace polos::ecs
         byte* data = static_cast<byte*>(m_Data);
         std::copy(
             data,
-            std::next(data, static_cast<ptrdiff_t>(k_SceneMaxEntityAmount) * m_ElemSize),
+            std::next(data, static_cast<ptrdiff_t>(k_SceneMaxEntityAmount * m_ElemSize)),
             std::back_inserter(pool_data)
         );
 

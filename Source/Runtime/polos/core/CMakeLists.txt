@@ -32,7 +32,7 @@ set_target_properties(
     PolosCore
         PROPERTIES
             PUBLIC_HEADER             "${PolosCore_HEADERS}"
-            CXX_STANDARD              20
+            CXX_STANDARD              ${POLOS_CPP_STANDARD}
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True
             OUTPUT_NAME               "PolosCore"

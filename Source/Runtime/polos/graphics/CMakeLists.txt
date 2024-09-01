@@ -28,7 +28,7 @@ set_target_properties(
     PolosGraphics
         PROPERTIES
             PUBLIC_HEADER             "${PolosGraphics_HEADERS}"
-            CXX_STANDARD              20
+            CXX_STANDARD              ${POLOS_CPP_STANDARD}
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE TRUE
             OUTPUT_NAME               "PolosGraphics"

@@ -8,6 +8,21 @@ namespace polos
 {
 namespace graphics
 {
+    enum class DrawStrategyType : uint8_t
+    {
+        kDrawIndexed,
+        kDrawArrays,
+        kDrawIndexedInstanced,
+        kDrawArraysInstanced
+    };
+
+    template<typename T>
+    concept DrawStrategy = requires(T t, draw_data const data) {
+        {
+            t.Draw(data)
+        };
+    };
+
     namespace draw_strategy
     {
         class DrawIndexed
@@ -34,29 +49,5 @@ namespace graphics
             void Draw(draw_data const& data) const noexcept;
         };
     }// namespace draw_strategy
-
-    class DrawStrategy
-    {
-        using DrawStrategyVariant = std::variant<draw_strategy::DrawIndexed, draw_strategy::DrawIndexedInstanced,
-                                                 draw_strategy::DrawArrays, draw_strategy::DrawArraysInstanced>;
-    public:
-        void Draw(draw_data const& data);
-    private:
-        friend class DrawStrategyFactory;
-        DrawStrategy(DrawStrategyVariant t_strategy_variant);
-
-        DrawStrategyVariant m_strategy_variant;
-    };
-
-    class DrawStrategyFactory
-    {
-    public:
-        template<typename T, typename... Ts>
-        static DrawStrategy create(Ts&&... args)
-        {
-            return Strategy(T(std::forward<Ts>(args)...));
-        }
-    };
-
 }// namespace graphics
 }// namespace polos

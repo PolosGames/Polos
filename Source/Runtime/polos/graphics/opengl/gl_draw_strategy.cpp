@@ -26,10 +26,5 @@ namespace graphics
             glDrawArraysInstanced(data.mode, data.first, data.count, data.instance_count);
         }
     }// namespace draw_strategy
-
-    void DrawStrategy::Draw(draw_data const& data)
-    {
-        std::visit([&data](auto const& strategy) -> void { strategy.Draw(data); }, m_strategy_variant);
-    }
 }// namespace graphics
 }// namespace polos

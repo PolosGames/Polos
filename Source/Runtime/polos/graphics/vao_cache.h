@@ -1,31 +1,34 @@
 #pragma once
 
 #include "polos/graphics/draw_strategy.h"
-#include "polos/graphics/vao.h"
+#include "polos/graphics/quad_vertex.h"
 
 namespace polos
 {
-class VaoCache
+namespace graphics
 {
-public:
-    VaoCache();
+    class VaoCache
+    {
+    public:
+        VaoCache(VaoCache const&)            = delete;
+        VaoCache(VaoCache&&)                 = delete;
+        VaoCache& operator=(VaoCache const&) = delete;
+        VaoCache& operator=(VaoCache&&) = delete;
 
-    VaoCache(VaoCache const&)            = delete;
-    VaoCache(VaoCache&&)                 = delete;
-    VaoCache& operator=(VaoCache const&) = delete;
-    VaoCache& operator=(VaoCache&&)      = delete;
+        ~VaoCache() = default;
 
-    ~VaoCache();
+        uint32_t New(std::span<quad_vertex> const t_dertices);
+        uint32_t New(std::span<quad_vertex> const t_vertices, std::span<uint32_t> const t_indices);
 
-    uint32 New(std::span<quad_vertex> const p_Vertices, graphics::DrawStrategy const p_DrawStrategy);
-    uint32 New(std::span<quad_vertex> const p_Vertices, std::span<uint32> const p_Indices,
-               graphics::DrawStrategy const p_DrawStrategy);
+        std::span<uint32_t> GetVaoCache();
+        uint32_t            GetVao(RenderHandle const t_render_handle);
+    private:
+        VaoCache() = default;
 
-    std::span<graphics::vertex_array_object> GetCache();
-    graphics::vertex_array_object&           GetVao();
-private:
-    static VaoCache* s_Instance;
+        void set_quad_attributes(uint32_t t_vao_id);
 
-    DArray<graphics::vertex_array_object> m_Cache;
-};
+        static VaoCache* s_instance;
+        DArray<uint32_t> m_cache;
+    };
+} // namespace graphics
 }// namespace polos

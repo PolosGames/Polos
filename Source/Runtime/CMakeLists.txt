@@ -13,7 +13,7 @@ set_target_properties(
     Runtime
         PROPERTIES
             OUTPUT_NAME "PolosRuntime"
-            CXX_STANDARD 20
+            CXX_STANDARD ${POLOS_CPP_STANDARD}
             CXX_STANDARD_REQUIRED True
 )
 
