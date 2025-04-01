@@ -1,0 +1,52 @@
+# Binaries
+**/bin/
+build/
+vsbuild/
+
+
+**.txt
+
+# Ignore this on Sandbox
+**.log
+
+# Folders to ignore
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+.idea/
+.cache/
+.vscode/
+
+# Optick generated files
+**.opt
+*.json
+
+# Keep cmakes!
+!CMakeLists.txt
+!CMakeSettings.json
+!CMakePresets.json
+!vcpkg.json
+
+#nvidia insight folder
+**.ngfx-proj
+
+#Cppcheck folder
+**.cppcheck
+**.a1
+**.clang-tidy-cmd
+**.clang-tidy-E
+**.clang-tidy-results
+**.ctu-info
+**.dump
+**.snalyzerinfo
+**.a2
+lastResults.xml
+**cppcheck**
+
+polos.cpp
+pcnt.cpp
+ptp.cpp
+
+**/polos_config.h

@@ -1,0 +1,94 @@
+﻿{
+    "version": 5,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 12
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "installDir": "${sourceDir}/out/bin/${presetName}",
+            "toolchainFile": "${sourceDir}/CMake/cache_entries.cmake",
+            "generator": "Ninja",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "environment": {
+                "PATH": "${sourceDir}/out/build/${presetName}/Source/Editor${pathListSep}$penv{PATH}"
+            }
+        },
+        {
+            "name": "linux-base",
+            "inherits": "base",
+            "environment": {
+                "VCPKG_ROOT": "~/vcpkg-bin"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "win-debug",
+            "displayName": "x64-Debug",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "linux-debug",
+            "displayName": "x64-Debug",
+            "inherits": "linux-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "name": "win-release",
+            "displayName": "x64-Release",
+            "inherits": "win-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "linux-release",
+            "displayName": "x64-Release",
+            "inherits": "linux-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "win-relwithdebinfo",
+            "displayName": "x64-RelWithDebInfo",
+            "inherits": "win-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "linux-relwithdebinfo",
+            "displayName": "x64-RelWithDebInfo",
+            "inherits": "linux-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        }
+    ]
+}

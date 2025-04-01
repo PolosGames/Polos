@@ -1,0 +1,22 @@
+{
+    "name": "polos",
+    "version-string": "1.0.0",
+    "dependencies": [
+        "assimp",
+        "glfw3",
+        {
+            "name": "glad",
+            "features": ["gl-api-45"]
+        },
+        "glm",
+        {
+            "name": "imgui",
+            "features": [
+                "docking-experimental",
+                "glfw-binding",
+                "opengl3-binding"
+            ]
+        },
+        "quill"
+    ]
+}
