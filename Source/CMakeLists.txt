@@ -9,13 +9,11 @@ find_path(QUILL_INCLUDE_DIRS "quill/Backend.h")
 
 add_subdirectory(ThirdParty)
 
-set(POLOS_PCH_LIB PolosPCH)
-
 file(WRITE polos.cpp "")
-add_library(${POLOS_PCH_LIB} STATIC "polos.cpp")
+add_library(PolosPCH STATIC "polos.cpp")
 
-target_precompile_headers(${POLOS_PCH_LIB} PUBLIC polos_pch.h)
-target_link_libraries(${POLOS_PCH_LIB} PRIVATE glm::glm-header-only)
+target_precompile_headers(PolosPCH PUBLIC polos_pch.h)
+target_link_libraries(PolosPCH PRIVATE glm::glm-header-only)
 
 add_subdirectory(Runtime)
 add_subdirectory(Editor)

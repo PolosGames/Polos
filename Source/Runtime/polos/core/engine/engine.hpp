@@ -3,14 +3,18 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/core/engine/engine.hpp"
+#ifndef CORE_ENGINE_ENGINE_H
+#define CORE_ENGINE_ENGINE_H
 
 namespace polos::core
 {
 
-void Engine::Run()
+class Engine
 {
-
-}
+public:
+    void Run();
+};
 
 } // namespace polos::core
+
+#endif //CORE_ENGINE_ENGINE_H

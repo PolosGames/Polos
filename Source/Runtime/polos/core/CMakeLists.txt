@@ -23,7 +23,10 @@ target_include_directories(
     PolosCore
         PRIVATE
             ${POLOS_INC_DIR}
+            PolosDataTypes
+            ${QUILL_INCLUDE_DIRS}
 )
+target_precompile_headers(PolosCore REUSE_FROM PolosPCH)
 
 set_target_properties(
     PolosCore PROPERTIES

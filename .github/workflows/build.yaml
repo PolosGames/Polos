@@ -1,88 +1,88 @@
-name: CMake
-
-on:
-  push:
-    branches: [ master, project]
-  pull_request:
-    branches: [ master, project]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
-
-jobs:
-  win-build:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up vpckg
-        run: |
-            git clone https://github.com/microsoft/vcpkg.git
-            .\vcpkg\bootstrap-vcpkg.bat
-            echo "VCPKG_ROOT=$(pwd)\vcpkg" >> $env:GITHUB_ENV
-
-      - name: Cache vcpkg packages
-        uses: actions/cache@v4
-        with:
-          path: .\vcpkg\packages
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-              ${{ runner.os }}-vcpkg-
-
-      - name: Configure CMake
-        run: |
-            cmake . `
-            -B ${{github.workspace}}\\build `
-            -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake `
-            -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
-      - name: Build
-        run: cmake --build ${{github.workspace}}\build --config ${{env.BUILD_TYPE}}
-  linux-build:
-    runs-on: ubuntu-24.04
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Upgrade packages
-        run:  sudo apt-get update && sudo apt-get upgrade
-
-      - name: Install dependencies
-        run: |
-          sudo apt install -y \
-          libxinerama-dev \
-          libxcursor-dev \
-          xorg-dev \
-          libglu1-mesa-dev \
-          pkg-config
-
-      - name: Set up vcpkg
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh
-          echo "VCPKG_ROOT=$(pwd)/vcpkg" >> $GITHUB_ENV
-
-      - name: Cache vcpkg packages
-        uses: actions/cache@v3
-        with:
-          path: ./vcpkg/packages
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: Configure CMake
-        run: |
-          cmake . \
-          -B ${{github.workspace}}/build \
-          -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake \
-          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -D CMAKE_C_COMPILER=clang-18 \
-          -D CMAKE_CXX_COMPILER=clang++-18
-        env:
-          CC: clang-18
-          CXX: clang++-18
-
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+#name: CMake
+#
+#on:
+#  push:
+#    branches: [ master, project]
+#  pull_request:
+#    branches: [ master, project]
+#
+#env:
+#  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+#  BUILD_TYPE: Release
+#
+#jobs:
+#  win-build:
+#    runs-on: windows-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Set up vpckg
+#        run: |
+#            git clone https://github.com/microsoft/vcpkg.git
+#            .\vcpkg\bootstrap-vcpkg.bat
+#            echo "VCPKG_ROOT=$(pwd)\vcpkg" >> $env:GITHUB_ENV
+#
+#      - name: Cache vcpkg packages
+#        uses: actions/cache@v4
+#        with:
+#          path: .\vcpkg\packages
+#          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+#          restore-keys: |
+#              ${{ runner.os }}-vcpkg-
+#
+#      - name: Configure CMake
+#        run: |
+#            cmake . `
+#            -B ${{github.workspace}}\\build `
+#            -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake `
+#            -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+#
+#      - name: Build
+#        run: cmake --build ${{github.workspace}}\build --config ${{env.BUILD_TYPE}}
+#  linux-build:
+#    runs-on: ubuntu-24.04
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Upgrade packages
+#        run:  sudo apt-get update && sudo apt-get upgrade
+#
+#      - name: Install dependencies
+#        run: |
+#          sudo apt install -y \
+#          libxinerama-dev \
+#          libxcursor-dev \
+#          xorg-dev \
+#          libglu1-mesa-dev \
+#          pkg-config
+#
+#      - name: Set up vcpkg
+#        run: |
+#          git clone https://github.com/microsoft/vcpkg.git
+#          ./vcpkg/bootstrap-vcpkg.sh
+#          echo "VCPKG_ROOT=$(pwd)/vcpkg" >> $GITHUB_ENV
+#
+#      - name: Cache vcpkg packages
+#        uses: actions/cache@v3
+#        with:
+#          path: ./vcpkg/packages
+#          key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-vcpkg-
+#
+#      - name: Configure CMake
+#        run: |
+#          cmake . \
+#          -B ${{github.workspace}}/build \
+#          -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake \
+#          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+#          -D CMAKE_C_COMPILER=clang-18 \
+#          -D CMAKE_CXX_COMPILER=clang++-18
+#        env:
+#          CC: clang-18
+#          CXX: clang++-18
+#
+#      - name: Build
+#        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
