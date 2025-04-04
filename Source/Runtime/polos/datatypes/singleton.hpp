@@ -6,6 +6,8 @@
 #ifndef DATATYPES_SINGLETON_H
 #define DATATYPES_SINGLETON_H
 
+#include <cstdint>
+
 namespace polos::datatypes
 {
 
@@ -13,8 +15,12 @@ template<typename Type>
 class Singleton
 {
 public:
+    virtual ~Singleton() = default;
+
     template<typename... Args>
     static Type* Instance(Args&&... t_args);
+
+    static bool Destroy(); // TODO: Return a std::expected here
 private:
     struct data
     {
@@ -31,5 +37,3 @@ private:
 } // namespace polos::datatypes
 
 #endif //DATATYPES_SINGLETON_H
-
-#include "polos/datatypes/singleton.inl.hpp"

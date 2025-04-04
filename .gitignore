@@ -45,7 +45,6 @@ vsbuild/
 lastResults.xml
 **cppcheck**
 
-polos.cpp
 pcnt.cpp
 ptp.cpp
 

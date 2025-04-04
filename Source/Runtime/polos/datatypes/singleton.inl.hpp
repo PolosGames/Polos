@@ -3,10 +3,14 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/datatypes/singleton.hpp"
-
 #ifndef DATATYPES_SINGLETON_INL_H
 #define DATATYPES_SINGLETON_INL_H
+
+#include "polos/datatypes/singleton.hpp"
+#include "polos/logging/logging_macros.hpp"
+
+#include <type_traits>
+
 
 namespace polos::datatypes
 {
@@ -26,6 +30,24 @@ Type* Singleton<Type>::Instance(Args&&... t_args)
     }
     return &s_data.instance;
 }
+
+template<typename Type>
+bool Singleton<Type>::Destroy()
+{
+    if (!s_is_constructed)
+    {
+        return false;
+    }
+
+    s_is_constructed = false;
+
+    LOG_ENGINE_INFO("Destroying subsystem...");
+
+    Instance()->~Type();
+
+    return true;
+}
+
 
 } // namespace polos::datatypes
 

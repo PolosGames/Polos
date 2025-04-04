@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-function(build_options target warnings)
-
+macro(build_options target warnings)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
         CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
         CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
@@ -27,7 +26,7 @@ function(build_options target warnings)
             ${target}
                 PRIVATE
                     "/permissive-"
-                    "/W4"
+                    "/W3"
                     "/WX"
                     "/w14101" # unreferenced local variable
                     "/w14189" # local variable is initialized but not referenced
@@ -57,6 +56,7 @@ function(build_options target warnings)
                     "/wd4201" # ignoring nameless struct/union bc. glm keeps giving it.
                     "/wd4324" # disable padding warnings
         )
+        target_compile_options(${target} PRIVATE "/wd5204") # for quill virtual function error, TODO: Remove
     else()
         target_compile_options(
             ${target}
@@ -101,7 +101,7 @@ function(build_options target warnings)
         endif()
     endif()
 
-endfunction()
+endmacro()
 
 macro(generate_versioning_info)
     set(oneValueArgs
@@ -113,4 +113,71 @@ macro(generate_versioning_info)
     )
 
     cmake_parse_arguments(LIB "" "${oneValueArgs}" "" ${ARGN})
+endmacro()
+
+include(GenerateExportHeader)
+
+macro(define_polos_module)
+    set(oneValueArgs NAME TYPE)
+    set(multiValueArgs SOURCES PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS PUBLIC_DEFINES PRIVATE_DEFINES)
+    cmake_parse_arguments(MODULE
+        "" "${oneValueArgs}" "${multiValueArgs}"
+        ${ARGN}
+    )
+
+    set(MODULE_NAME_ORIG ${MODULE_NAME})
+    set(MODULE_NAME "polos_${MODULE_NAME_ORIG}")
+
+    if (MODULE_TYPE STREQUAL "SHARED")
+        add_library(${MODULE_NAME} SHARED ${MODULE_SOURCES})
+    elseif (MODULE_TYPE STREQUAL "STATIC")
+        add_library(${MODULE_NAME} STATIC ${MODULE_SOURCES})
+    elseif (MODULE_TYPE STREQUAL "INTERFACE")
+        add_library(${MODULE_NAME} INTERFACE ${MODULE_SOURCES})
+    endif ()
+
+    if (MODULE_PUBLIC_DEPS)
+        target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEPS})
+    endif ()
+    if (MODULE_PRIVATE_DEPS)
+        target_link_libraries(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEPS})
+    endif ()
+    if (MODULE_INTERFACE_DEPS)
+        target_link_libraries(${MODULE_NAME} INTERFACE ${MODULE_INTERFACE_DEPS})
+    endif ()
+
+    target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
+    target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+
+    set_target_properties(
+        ${MODULE_NAME} PROPERTIES
+            PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
+            CXX_STANDARD              ${POLOS_CXX_STANDARD}
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "${MODULE_NAME}"
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN True
+            LINKER_LANGUAGE           CXX
+    )
+
+    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
+        build_options(${MODULE_NAME} true)
+        generate_export_header(${MODULE_NAME}
+            BASE_NAME ${MODULE_NAME_ORIG}
+            EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/polos/${MODULE_NAME_ORIG}/module_macros.hpp
+        )
+        target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+        target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
+    endif ()
+
+    install(
+        TARGETS ${MODULE_NAME}
+        LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/${MODULE_NAME_ORIG}"
+    )
+
+    add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
 endmacro()

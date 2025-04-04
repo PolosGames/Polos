@@ -3,9 +3,9 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/core/engine/engine_subsystem.hpp"
+#include "polos/system/engine_subsystem.hpp"
 
-namespace polos::core
+namespace polos::system
 {
 
-} // namespace polos::core
+} // namespace polos::system

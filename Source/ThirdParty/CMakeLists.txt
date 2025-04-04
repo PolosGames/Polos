@@ -6,24 +6,22 @@ elseif(LINUX)
     set(PLATFORM_NAME "linux")
 endif()
 
+find_path(QUILL_INCLUDE_DIRS "quill/Backend.h")
+add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
 
-add_library(PolosThirdParty INTERFACE)
-
-target_link_libraries(
-    PolosThirdParty
+define_polos_module(
+    NAME
+        third_party
+    TYPE
         INTERFACE
-            assimp::assimp
-            glad::glad
-            glfw
-            glm::glm
-            stb_image::stb_image
-            stb_textedit::stb_textedit
+    INTERFACE_DEPS
+        assimp::assimp
+        glad::glad
+        glfw
+        glm::glm
+        imgui::imgui
+        stb_image::stb_image
+        stb_textedit::stb_textedit
 )
-
-target_include_directories(PolosThirdParty INTERFACE ${QUILL_INCLUDE_DIRS})
-
-if(GUI_USE_IMGUI)
-    target_link_libraries(PolosThirdParty INTERFACE imgui::imgui)
-endif()

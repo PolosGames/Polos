@@ -6,11 +6,19 @@
 #ifndef POLOS_MAIN_HPP
 #define POLOS_MAIN_HPP
 
-#include <iostream>
+#include "polos/core/engine/engine.hpp"
+#ifdef _MSVC_LANG
+#pragma warning (push)
+#pragma warning (disable:4008)
+#endif
 
-int main(int argc, char *argv[])
+inline int main(int argc, char *argv[])
 {
-    std::cout << "Hello World!" << std::endl;
+    polos::core::Engine engine;
+    engine.Run();
 }
+#ifdef _MSVC_LANG
+#pragma warning (pop)
+#endif
 
 #endif //POLOS_MAIN_HPP
