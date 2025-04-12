@@ -8,15 +8,15 @@
 
 #include "polos/datatypes/singleton.hpp"
 
-#include "polos/system/module_macros.hpp"
+#include "polos/backend/module_macros.hpp"
 
 namespace polos::system
 {
 template<typename S>
-class SYSTEM_EXPORT EngineSubsystem : public datatypes::Singleton<S>
+class BACKEND_EXPORT EngineSubsystem : public datatypes::Singleton<S>
 {
 public:
-    EngineSubsystem() = default;
+    EngineSubsystem();
     virtual ~EngineSubsystem() = default;
 };
 } // namespace polos::core

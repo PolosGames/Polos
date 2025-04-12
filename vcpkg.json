@@ -17,6 +17,10 @@
                 "opengl3-binding"
             ]
         },
-        "quill"
-    ]
+        {
+            "name": "quill",
+            "version>=": "9.0.0#0"
+        }
+    ],
+    "builtin-baseline": "83956e89e656f1b95af0a03506dc7214a7d67716"
 }

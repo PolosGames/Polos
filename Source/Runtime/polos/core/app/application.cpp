@@ -5,12 +5,15 @@
 
 #include "polos/core/app/application.hpp"
 
+#include "polos/communication/event_bus.hpp"
+#include "polos/communication/events/engine_update.hpp"
 #include "polos/logging/logging_macros.hpp"
+#include "polos/utils/time/scoped_timer.hpp"
 
 #include <chrono>
 #include <cstdint>
-#include <thread>
 #include <iostream>
+#include <thread>
 
 namespace polos::core
 {
@@ -19,6 +22,13 @@ Application::Application()
     : m_is_running{true}
 {
     LOG_APP_INFO("Application constructed!");
+
+    communication::Subscribe<communication::engine_update>(
+        [this](communication::engine_update& t_event)
+        {
+            this->on_engine_update(t_event);
+        }
+    );
 }
 
 void Application::Run()
@@ -29,19 +39,25 @@ void Application::Run()
     std::int64_t end{0};
     std::int64_t start = app_clock::now().time_since_epoch().count();
 
-    int count = 0;
+    // int count = 0;
     while (m_is_running)
     {
+        CREATE_SCOPED_TIMER("Main Loop");
+
         end        = app_clock::now().time_since_epoch().count();
         delta_time = static_cast<float>(end - start) * 0.001f * 0.001f * 0.001f;
 
         start      = app_clock::now().time_since_epoch().count();
-
-        LOG_APP_INFO("Running app... (count: {})", count++);
+        //
+        // LOG_APP_INFO("Running app... (count: {})", count++);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        static_cast<void>(delta_time);
+        communication::Dispatch<communication::engine_update>(delta_time);
     }
+}
+void Application::on_engine_update(communication::engine_update& t_event)
+{
+    LOG_APP_INFO("On Engine Update: [{}]", t_event);
 }
 
 

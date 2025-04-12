@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+find_package(quill CONFIG REQUIRED)
+
 add_library(quill_shared SHARED quill_shared.hpp quill_shared.cpp)
 
 target_include_directories(quill_shared
@@ -15,7 +17,7 @@ if (WIN32)
 endif ()
 
 # Link quill dependency
-target_include_directories(quill_shared PUBLIC ${QUILL_INCLUDE_DIRS})
+target_link_libraries(quill_shared PUBLIC quill::quill)
 
 set_target_properties(
     quill_shared PROPERTIES

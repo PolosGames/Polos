@@ -1,27 +1,29 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 generate_versioning_info(
-    NAME system
+    NAME communication
     VERSION_MAJOR 1
     VERSION_MINOR 0
     VERSION_PATCH 0
 )
 
 project(
-    system
+    communication
     LANGUAGES CXX
     VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
 )
 
 define_polos_module(
     NAME
-        system
+        communication
     TYPE
         SHARED
     SOURCES
-        "engine_subsystem.cpp"
-        "engine_subsystem.hpp"
+        "event.hpp"
+        "event_bus.cpp"
+        "event_bus.hpp"
+        "events/engine_update.hpp"
     PRIVATE_DEPS
-        polos::polos
-        polos::polos_datatypes
+        polos::polos_logging
+        quill::quill_shared
 )

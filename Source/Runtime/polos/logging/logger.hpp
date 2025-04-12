@@ -8,7 +8,6 @@
 
 #include "polos/logging/module_macros.hpp"
 
-#include <array>
 #include <quill/Logger.h>
 
 namespace polos::logging
@@ -28,7 +27,9 @@ class LOGGING_EXPORT Logger
 {
 public:
     Logger(Logger const&) = delete;
+    Logger(Logger&&) = delete;
     Logger& operator=(Logger const&) = delete;
+    Logger& operator=(Logger&&) = delete;
 
     static Logger& Instance();
 
@@ -38,6 +39,59 @@ public:
 private:
     Logger();
 };
+
+//
+// template<typename... Args>
+// void verbose(quill::Logger* t_logger, char const* t_format, Args&&... args)
+// {
+//     QUILL_LOG_TRACE_L1(t_logger, t_format, std::forward<Args>(args)...);
+// }
+//
+// template<typename... Args>
+// void info(quill::Logger* t_logger, char const* t_format, Args&&... args)
+// {
+//     QUILL_LOG_INFO(t_logger, t_format, std::forward<Args>(args)...);
+// }
+//
+// template<typename... Args>
+// void warn(quill::Logger* t_logger, char const* t_format, Args&&... args)
+// {
+//     QUILL_LOG_WARNING(t_logger, t_format, std::forward<Args>(args)...);
+// }
+//
+// template<typename... Args>
+// void error(quill::Logger* t_logger, char const* t_format, Args&&... args)
+// {
+//     QUILL_LOG_ERROR(t_logger, t_format, std::forward<Args>(args)...);
+// }
+//
+// template<typename... Args>
+// void critical(quill::Logger* t_logger, char const* t_format, Args&&... args)
+// {
+//     QUILL_LOG_CRITICAL(t_logger, t_format, std::forward<Args>(args)...);
+// }
+//
+// #ifdef PL_LOGGER_TYPE
+//
+// template<typename... Args>
+// void verbose(char const* t_format, Args&&... args)
+// {
+//
+// }
+//
+// template<typename... Args>
+// void info(char const* t_format, Args&&... args);
+//
+// template<typename... Args>
+// void warn(char const* t_format, Args&&... args);
+//
+// template<typename... Args>
+// void error(char const* t_format, Args&&... args);
+//
+// template<typename... Args>
+// void critical(char const* t_format, Args&&... args);
+//
+// #endif // PL_LOG_CONTEXT
 
 } // namespace polos::logging
 

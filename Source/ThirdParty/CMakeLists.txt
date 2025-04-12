@@ -6,7 +6,6 @@ elseif(LINUX)
     set(PLATFORM_NAME "linux")
 endif()
 
-find_path(QUILL_INCLUDE_DIRS "quill/Backend.h")
 add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)

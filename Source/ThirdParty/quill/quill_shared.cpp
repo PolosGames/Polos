@@ -8,6 +8,7 @@
 #include <quill/Backend.h>
 #include <quill/Frontend.h>
 #include <quill/LogMacros.h>
+#include <quill/core/PatternFormatterOptions.h>
 #include <quill/sinks/ConsoleSink.h>
 #include <string>
 
@@ -25,16 +26,16 @@ void setup_quill()
     quill::BackendOptions backend_options;
     quill::Backend::start(backend_options);
 
-    std::string const fmt_pattern =
-        "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)";
-
-    std::string const time_pattern = "%H:%M:%S.%Qms";
+    quill::PatternFormatterOptions formatter_options{
+        "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)", // LOG
+        "%H:%M:%S.%Qms" // TIME
+    };
 
     auto std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
 
-    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, fmt_pattern, time_pattern);
-    g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, fmt_pattern, time_pattern);
-    g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, fmt_pattern, time_pattern);
+    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
+    g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
+    g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 
     g_polos_logger->set_log_level(quill::LogLevel::TraceL1);
     g_polly_logger->set_log_level(quill::LogLevel::TraceL1);

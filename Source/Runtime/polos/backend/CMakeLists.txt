@@ -1,23 +1,25 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 generate_versioning_info(
-    NAME platform
+    NAME backend
     VERSION_MAJOR 1
     VERSION_MINOR 0
     VERSION_PATCH 0
 )
 
 project(
-    platform
+    backend
     LANGUAGES CXX
     VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
 )
 
 define_polos_module(
     NAME
-        platform
+        backend
     TYPE
-        INTERFACE
+        SHARED
     SOURCES
-        "platform.hpp"
+        "engine_subsystem.hpp"
+    PRIVATE_DEPS
+        polos::polos_datatypes
 )

@@ -21,10 +21,14 @@ define_polos_module(
     SOURCES
         "app/application.cpp"
         "app/application.hpp"
+        "../communication/event.hpp"
+        "../communication/event_bus.hpp"
         "engine/engine.cpp"
         "engine/engine.hpp"
     PRIVATE_DEPS
-        polos::polos
+        polos::polos_communication
         polos::polos_datatypes
         polos::polos_logging
+        polos::polos_utils
+        quill::quill_shared
 )

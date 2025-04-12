@@ -11,7 +11,6 @@
 
 #include <type_traits>
 
-
 namespace polos::datatypes
 {
 

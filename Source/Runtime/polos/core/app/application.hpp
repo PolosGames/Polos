@@ -8,6 +8,11 @@
 
 #include "polos/core/module_macros.hpp"
 
+namespace polos::communication
+{
+struct engine_update;
+}
+
 namespace polos::core
 {
 class CORE_EXPORT Application
@@ -16,6 +21,8 @@ public:
     Application();
 
     void Run();
+
+    void on_engine_update(communication::engine_update& t_event);
 
     bool m_is_running;
 };

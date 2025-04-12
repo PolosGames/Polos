@@ -24,6 +24,4 @@ define_polos_module(
         "logging_macros.hpp"
     PUBLIC_DEPS
         quill::quill_shared
-    PRIVATE_DEPS
-        polos::polos
 )

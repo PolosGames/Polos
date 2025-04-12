@@ -136,6 +136,18 @@ macro(define_polos_module)
         add_library(${MODULE_NAME} INTERFACE ${MODULE_SOURCES})
     endif ()
 
+    set_target_properties(
+        ${MODULE_NAME} PROPERTIES
+        PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
+        CXX_STANDARD              ${POLOS_CXX_STANDARD}
+        CXX_STANDARD_REQUIRED     True
+        POSITION_INDEPENDENT_CODE True
+        OUTPUT_NAME               "${MODULE_NAME}"
+        CXX_VISIBILITY_PRESET     hidden
+        VISIBILITY_INLINES_HIDDEN True
+        LINKER_LANGUAGE           CXX
+    )
+
     if (MODULE_PUBLIC_DEPS)
         target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEPS})
     endif ()
@@ -149,18 +161,6 @@ macro(define_polos_module)
     target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
     target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
 
-    set_target_properties(
-        ${MODULE_NAME} PROPERTIES
-            PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
-            CXX_STANDARD              ${POLOS_CXX_STANDARD}
-            CXX_STANDARD_REQUIRED     True
-            POSITION_INDEPENDENT_CODE True
-            OUTPUT_NAME               "${MODULE_NAME}"
-            CXX_VISIBILITY_PRESET     hidden
-            VISIBILITY_INLINES_HIDDEN True
-            LINKER_LANGUAGE           CXX
-    )
-
     if (NOT MODULE_TYPE STREQUAL "INTERFACE")
         build_options(${MODULE_NAME} true)
         generate_export_header(${MODULE_NAME}
@@ -168,7 +168,10 @@ macro(define_polos_module)
             EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/polos/${MODULE_NAME_ORIG}/module_macros.hpp
         )
         target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+        target_include_directories(${MODULE_NAME} PRIVATE ${POLOS_INC_DIR})
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
+    elseif ()
+        target_include_directories(${MODULE_NAME} INTERFACE ${POLOS_INC_DIR})
     endif ()
 
     install(
@@ -181,3 +184,36 @@ macro(define_polos_module)
 
     add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
 endmacro()
+
+# NAME: Should be the same as the folder name where this macro is called as well.
+# DIRECTORY: Relative to root CMakeLists.txt
+macro (define_polos_app)
+    set(oneValueArgs NAME DIRECTORY LOGGER_TYPE)
+    set(multiValueArgs SOURCES DEFINES)
+    cmake_parse_arguments(app "" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+
+    add_executable(${app_NAME} ${app_SOURCES})
+
+    target_link_libraries(${app_NAME} PRIVATE polos::polos)
+
+    set_target_properties(
+        ${app_NAME} PROPERTIES
+            CXX_STANDARD              ${POLOS_CXX_STANDARD}
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            LINKER_LANGUAGE           CXX
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN True
+    )
+
+    if (NOT app_LOGGER_TYPE)
+        set(LOGGER_TYPE APP)
+    endif ()
+
+    target_compile_definitions(${app_NAME} PRIVATE PL_LOGGER_TYPE=)
+
+    install(
+        TARGETS ${app_NAME}
+        RUNTIME DESTINATION ${POLOS_INSTALL_DIR}
+    )
+endmacro ()
