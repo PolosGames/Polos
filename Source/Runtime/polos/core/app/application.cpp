@@ -8,7 +8,6 @@
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/events/engine_update.hpp"
 #include "polos/logging/logging_macros.hpp"
-#include "polos/utils/time/scoped_timer.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -42,14 +41,11 @@ void Application::Run()
     // int count = 0;
     while (m_is_running)
     {
-        CREATE_SCOPED_TIMER("Main Loop");
-
         end        = app_clock::now().time_since_epoch().count();
         delta_time = static_cast<float>(end - start) * 0.001f * 0.001f * 0.001f;
 
         start      = app_clock::now().time_since_epoch().count();
-        //
-        // LOG_APP_INFO("Running app... (count: {})", count++);
+
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
         communication::Dispatch<communication::engine_update>(delta_time);

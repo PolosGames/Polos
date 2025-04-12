@@ -33,9 +33,17 @@ public:
 
     static Logger& Instance();
 
-    quill::Logger* GetPolosLogger() const;
-    quill::Logger* GetPollyLogger() const;
-    quill::Logger* GetAppLogger() const;
+    /// Get pointer for the quill logger that will be used for logging inside Polos framework
+    /// @return Pointer to the logger with id "POLOS"
+    [[nodiscard]] quill::Logger* GetPolosLogger() const;
+
+    /// Get pointer for the quill logger that will be used for logging inside Polly Editor
+    /// @return Pointer to the logger with id "POLLY"
+    [[nodiscard]] quill::Logger* GetPollyLogger() const;
+
+    /// Get pointer for the quill logger that will be used for logging inside Apps made from Polos
+    /// @return Pointer to the logger with id "APP"
+    [[nodiscard]] quill::Logger* GetAppLogger() const;
 private:
     Logger();
 };

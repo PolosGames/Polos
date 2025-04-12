@@ -8,12 +8,12 @@
 
 #include "polos/datatypes/singleton.hpp"
 
-#include "polos/backend/module_macros.hpp"
+
 
 namespace polos::system
 {
 template<typename S>
-class BACKEND_EXPORT EngineSubsystem : public datatypes::Singleton<S>
+class EngineSubsystem
 {
 public:
     EngineSubsystem();

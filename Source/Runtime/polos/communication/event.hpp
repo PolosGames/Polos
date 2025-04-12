@@ -12,6 +12,9 @@
 namespace polos::communication
 {
 
+/// Base struct for declaring new events.
+///
+/// Every event should inherit this struct and override the Name function.
 struct base_event
 {
     virtual ~base_event() = default;
@@ -19,35 +22,25 @@ struct base_event
     virtual char const* Name() = 0;
 };
 
+/// Utility function to quickly get a hash for an event based on the return string of Name()
+/// @return hash of the event name based on FNV-1a hashing
 template <typename Event>
 std::int64_t EventHash()
 {
-    constexpr std::int64_t m = 1'000'000'009;
-    constexpr std::int64_t p = 31;
-    std::int64_t power_of_p = 1;
-    std::int64_t hash_val = 0;
-
-    // Loop to calculate the hash value
-    // by iterating over the elements of string
-    Event event;
-
-    char const* name = event.Name();
-    char c = 0;
-    for (size_t i = 0; name[i] != '\0'; ++i)
-    {
-        c          = name[i];
-        hash_val   = (hash_val + static_cast<std::int64_t>(c) * power_of_p) % m;
-        power_of_p = (power_of_p * p) % m;
+    std::string const name_str{Event{}.Name()};
+    constexpr std::int64_t k_FnvPrime{1099511628211LL};
+    constexpr std::int64_t k_FnvOffset{14695981039346656037LL};
+    std::int64_t hash = k_FnvOffset;
+    for (char const c : name_str) {
+        hash ^= c;
+        hash *= k_FnvPrime;
     }
-
-    return (hash_val % m + m) % m;
+    return hash;
 }
 
 } // namespace polos::communication
 
-///
 /// Shall be called after each declaration of an event.
-///
 /// @param EventName Event's class name with its full namespace
 /// @param Fmt Format string to log the event
 /// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "event." prefix
@@ -66,6 +59,9 @@ std::int64_t EventHash()
     { \
     };
 
+/// Shall be called after each declaration of an event. The format should match as if overloading ostream.
+/// @param EventName Event's class name with its full namespace
+/// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "event." prefix
 #define DEFINE_EVENT_LOG_OSTREAM(EventName, ...) \
     std::ostream& operator<<(std::ostream& os, EventName const& event) \
     {\

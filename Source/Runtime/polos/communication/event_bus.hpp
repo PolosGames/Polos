@@ -25,14 +25,18 @@ class COMMUNICATION_EXPORT EventBus
 {
     using BaseEventDelegate = std::function<void(base_event&)>;
 public:
-    static EventBus& Instance();
-
     ~EventBus();
 
     EventBus(const EventBus&) = delete;
     EventBus& operator=(const EventBus&) = delete;
     EventBus(EventBus&&) = delete;
     EventBus& operator=(EventBus&&) = delete;
+
+    ///
+    /// Get EventBus singleton
+    ///
+    /// @return Instance of EventBus
+    static EventBus& Instance();
 
     ///
     /// Subscribe to the specific event in the engine. Return type needs to be kept in order to unsubscribe.
@@ -51,6 +55,10 @@ public:
     template<PolosEvent EventType>
     bool Unsubscribe(std::int64_t t_sub_id) const;
 
+    ///
+    /// @tparam EventType
+    /// @tparam Args
+    /// @param args
     template<PolosEvent EventType, typename... Args>
     void Dispatch(Args&&... args);
 private:
@@ -81,7 +89,7 @@ void EventBus::Dispatch(Args&&... args)
     auto subscribers = retrieve_subscribers(EventHash<EventType>());
     if (subscribers.first == nullptr)
     {
-        LOG_POLOS_INFO("[EventBus::Dispatch] No subscribers found for type {}" , typeid(EventType).name());
+        LOG_POLOS_WARN("[EventBus::Dispatch] No subscribers found for type {}" , EventType{}.Name());
         return;
     }
 

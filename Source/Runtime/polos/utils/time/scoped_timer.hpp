@@ -11,6 +11,20 @@
 
 namespace polos::utils
 {
+
+/// Used for timing scopes.
+///
+/// E.g:
+/// ```cpp
+/// {
+///   CREATE_SCOPED_TIMER("Main Loop");
+///   std::cout << "Hello from scope";
+/// }
+///
+/// Output:
+/// [Starting timer for scope: "Main Loop"]
+/// [Scope: "Main Loop", took: 1.0002s]
+/// ```
 class UTILS_EXPORT ScopedTimer
 {
 public:
@@ -27,6 +41,8 @@ private:
 };
 } // namespace polos::utils
 
+/// Preferred method of creating a ScopedTimer. Needs to be called at the top of the scope preferably.
+/// @param NAME quoted string name of the ScopedTimer
 #define CREATE_SCOPED_TIMER(NAME) polos::utils::ScopedTimer PL_ANON_NAME(scopedtimer)(NAME)
 
 #endif //UTILS_TIME_SCOPED_TIMER_H
