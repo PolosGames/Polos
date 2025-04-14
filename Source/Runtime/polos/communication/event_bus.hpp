@@ -13,7 +13,6 @@
 
 #include <concepts>
 #include <functional>
-#include <typeindex>
 #include <utility>
 
 namespace polos::communication
@@ -21,6 +20,13 @@ namespace polos::communication
 template<class T>
 concept PolosEvent = std::derived_from<std::remove_cvref_t<T>, base_event>;
 
+/// Simple event bus for triggering subscriber functors for a specific event.
+///
+/// The subscriber functors should not hang.
+/// The type of the functor shall always conform to the format of void(EventType&).
+/// Helper functions for not manually triggering Instance of this class is created. When subscribing, unsubscribing, or
+/// dispatching, the functions communication::Subscribe, communication::Unsubscribe, communication::Dispatch can be used
+/// instead of using EventBus verbosely.
 class COMMUNICATION_EXPORT EventBus
 {
     using BaseEventDelegate = std::function<void(base_event&)>;
@@ -55,7 +61,7 @@ public:
     template<PolosEvent EventType>
     bool Unsubscribe(std::int64_t t_sub_id) const;
 
-    ///
+    /// Trigger an event dispatch to all subscribers of the specific event.
     /// @tparam EventType
     /// @tparam Args
     /// @param args
@@ -65,8 +71,8 @@ private:
     EventBus();
 
     std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
-    bool unsubscribe_internal(std::int64_t t_type_hash, std::int64_t t_sub_id) const;
-    std::pair<std::function<void(base_event&)> const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
+    bool         unsubscribe_internal(std::int64_t t_type_hash, std::int64_t t_sub_id) const;
+    std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
 
     class Impl;
     Impl* m_impl;

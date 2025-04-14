@@ -29,7 +29,7 @@ std::int64_t EventHash()
 {
     std::string const name_str{Event{}.Name()};
     constexpr std::int64_t k_FnvPrime{1099511628211LL};
-    constexpr std::int64_t k_FnvOffset{14695981039346656037LL};
+    constexpr std::int64_t k_FnvOffset{static_cast<std::int64_t>(14695981039346656037ULL)};
     std::int64_t hash = k_FnvOffset;
     for (char const c : name_str) {
         hash ^= c;
@@ -40,7 +40,17 @@ std::int64_t EventHash()
 
 } // namespace polos::communication
 
-/// Shall be called after each declaration of an event.
+/// Declare and define a default constructor, override the Name function and add a friend declaration for
+/// quill::DeferredFormatCodec. Has to be called inside event declaration scope. Don't forget to add ; to end of call.
+/// @param EventName name of the event
+#define DECLARE_POLOS_EVENT(EventName) \
+    private: \
+        friend struct quill::DeferredFormatCodec<EventName>; \
+    public: \
+        EventName() = default; \
+        char const* Name() override { return #EventName; }
+
+/// Declare and define log formatting of the event. Shall be called after each declaration of an event.
 /// @param EventName Event's class name with its full namespace
 /// @param Fmt Format string to log the event
 /// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "event." prefix
