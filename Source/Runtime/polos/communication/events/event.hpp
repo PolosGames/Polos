@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef CORE_COMMUNICATION_EVENT_H
-#define CORE_COMMUNICATION_EVENT_H
+#ifndef CORE_COMMUNICATION_EVENTS_EVENT_H
+#define CORE_COMMUNICATION_EVENTS_EVENT_H
 
 #include <quill/DeferredFormatCodec.h>
 #include <quill/bundled/fmt/ostream.h>
@@ -86,4 +86,4 @@ std::int64_t EventHash()
     { \
     };
 
-#endif //CORE_COMMUNICATION_EVENT_H
+#endif //CORE_COMMUNICATION_EVENTS_EVENT_H

@@ -7,7 +7,7 @@
 #define DATATYPES_SINGLETON_INL_H
 
 #include "polos/datatypes/singleton.hpp"
-#include "polos/logging/logging_macros.hpp"
+#include "polos/logging/log_macros.hpp"
 
 #include <type_traits>
 

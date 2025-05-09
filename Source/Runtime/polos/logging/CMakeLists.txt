@@ -21,7 +21,9 @@ define_polos_module(
     SOURCES
         "logger.cpp"
         "logger.hpp"
-        "logging_macros.hpp"
+        "log_macros.hpp"
     PUBLIC_DEPS
         quill::quill_shared
+    PRIVATE_DEPS
+        polos::polos_platform
 )

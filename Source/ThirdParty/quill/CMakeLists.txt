@@ -16,6 +16,8 @@ if (WIN32)
     target_compile_definitions(quill_shared PRIVATE QUILL_DLL_EXPORT)
 endif ()
 
+target_compile_definitions(quill_shared PUBLIC QUILL_DISABLE_NON_PREFIXED_MACROS)
+
 # Link quill dependency
 target_link_libraries(quill_shared PUBLIC quill::quill)
 

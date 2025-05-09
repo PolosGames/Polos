@@ -5,9 +5,9 @@
 
 #include "polos/core/app/application.hpp"
 
-#include "polos/communication/event_bus.hpp"
+#include "polos/communication/event_bus/event_bus.hpp"
 #include "polos/communication/events/engine_update.hpp"
-#include "polos/logging/logging_macros.hpp"
+#include "polos/logging/log_macros.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -20,7 +20,7 @@ namespace polos::core
 Application::Application()
     : m_is_running{true}
 {
-    LOG_APP_INFO("Application constructed!");
+    LogInfo("Application constructed!");
 
     communication::Subscribe<communication::engine_update>(
         [this](communication::engine_update& t_event)
@@ -53,7 +53,7 @@ void Application::Run()
 }
 void Application::on_engine_update(communication::engine_update& t_event)
 {
-    LOG_APP_INFO("On Engine Update: [{}]", t_event);
+    LogInfo("On Engine Update: [{}]", t_event);
 }
 
 

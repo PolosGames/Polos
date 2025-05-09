@@ -5,7 +5,7 @@
 
 #include "polos/utils/time/scoped_timer.hpp"
 
-#include "polos/logging/logging_macros.hpp"
+#include "polos/logging/log_macros.hpp"
 
 #include <string_view>
 
@@ -20,7 +20,7 @@ public:
           m_start{GetTimeNow()},
           m_end{GetTimeNow()}
     {
-        LOG_POLOS_INFO("Starting timer for scope: \"{}\"", m_name);
+        LogInfo("Starting timer for scope: \"{}\"", m_name);
     }
 
     ~Impl()
@@ -28,10 +28,10 @@ public:
         m_end = GetTimeNow();
         auto const passed_time = m_end - m_start;
 
-        LOG_POLOS_INFO("Scope: \"{}\", took: {}s", m_name, static_cast<double>(passed_time * 0.001f * 0.001f));
+        LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<double>(passed_time) * 0.001f * 0.001f));
     }
 private:
-    std::string_view m_name;
+    std::string m_name;
     std::uint64_t m_start;
     std::uint64_t m_end;
 };

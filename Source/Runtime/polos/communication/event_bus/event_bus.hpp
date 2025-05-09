@@ -3,13 +3,12 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef CORE_COMMUNICATION_EVENT_BUS_H
-#define CORE_COMMUNICATION_EVENT_BUS_H
+#ifndef CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
+#define CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
 
-#include "polos/communication/event.hpp"
-
+#include "polos/communication/events/event.hpp"
 #include "polos/communication/module_macros.hpp"
-#include "polos/logging/logging_macros.hpp"
+#include "polos/logging/log_macros.hpp"
 
 #include <concepts>
 #include <functional>
@@ -72,7 +71,8 @@ private:
 
     std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
     bool         unsubscribe_internal(std::int64_t t_type_hash, std::int64_t t_sub_id) const;
-    std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
+    [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t>
+        retrieve_subscribers(std::int64_t t_type_hash) const;
 
     class Impl;
     Impl* m_impl;
@@ -95,7 +95,7 @@ void EventBus::Dispatch(Args&&... args)
     auto subscribers = retrieve_subscribers(EventHash<EventType>());
     if (subscribers.first == nullptr)
     {
-        LOG_POLOS_WARN("[EventBus::Dispatch] No subscribers found for type {}" , EventType{}.Name());
+        LogWarn("[EventBus::Dispatch] No subscribers found for type {}" , EventType{}.Name());
         return;
     }
 
@@ -131,4 +131,4 @@ void Dispatch(Args&&... args)
 
 } // namespace polos::communication
 
-#endif //CORE_COMMUNICATION_EVENT_BUS_H
+#endif //CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H

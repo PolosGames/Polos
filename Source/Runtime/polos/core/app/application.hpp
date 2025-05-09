@@ -21,7 +21,7 @@ public:
     Application();
 
     void Run();
-
+private:
     void on_engine_update(communication::engine_update& t_event);
 
     bool m_is_running;

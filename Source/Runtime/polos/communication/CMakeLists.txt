@@ -9,8 +9,8 @@ generate_versioning_info(
 
 project(
     communication
-    LANGUAGES CXX
-    VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
+        LANGUAGES CXX
+        VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
 )
 
 define_polos_module(
@@ -19,11 +19,11 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "event.hpp"
-        "event_bus.cpp"
-        "event_bus.hpp"
+        "event_bus/event_bus.cpp"
+        "event_bus/event_bus.hpp"
         "events/engine_update.hpp"
+        "events/event.hpp"
     PRIVATE_DEPS
         polos::polos_logging
-        quill::quill_shared
+        polos::polos_utils
 )

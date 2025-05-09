@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/communication/event_bus.hpp"
+#include "polos/communication/event_bus/event_bus.hpp"
 
 #include <mutex>
 #include <unordered_map>
@@ -15,13 +15,6 @@ class EventBus::Impl
 {
 public:
      Impl() = default;
-
-    template<typename F>
-    Impl(F const& f)
-    {
-
-    }
-
     ~Impl() = default;
 
     bool Subscribe(std::int64_t const t_event_hash, std::function<void(base_event&)> const& t_callback)
@@ -34,7 +27,7 @@ public:
         auto& event_queue = m_callbacks[t_event_hash];
         // Subscriber index is the current tail of the subscriber vector of the specific event.
         std::size_t subscriber_index = event_queue.size();
-        event_queue.emplace_back(std::move(t_callback));
+        event_queue.push_back(std::move(t_callback));
 
         // The subscriber id will also be the index in our m_indices. In this vector, we keep the actual index of the
         // subscriber (std::function) inside the specific Event's Callback Vector.

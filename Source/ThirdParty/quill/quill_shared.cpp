@@ -37,9 +37,9 @@ void setup_quill()
     g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
     g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 
-    g_polos_logger->set_log_level(quill::LogLevel::TraceL1);
-    g_polly_logger->set_log_level(quill::LogLevel::TraceL1);
-    g_app_logger->set_log_level(quill::LogLevel::TraceL1);
+    g_polos_logger->set_log_level(quill::LogLevel::TraceL3);
+    g_polly_logger->set_log_level(quill::LogLevel::TraceL3);
+    g_app_logger->set_log_level(quill::LogLevel::TraceL3);
 }
 
 quill::Logger* get_logger(std::string const& name)
