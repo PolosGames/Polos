@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 generate_versioning_info(
     NAME core
@@ -21,8 +21,6 @@ define_polos_module(
     SOURCES
         "app/application.cpp"
         "app/application.hpp"
-        "../communication/event.hpp"
-        "../communication/event_bus.hpp"
         "engine/engine.cpp"
         "engine/engine.hpp"
     PRIVATE_DEPS
@@ -30,5 +28,4 @@ define_polos_module(
         polos::polos_datatypes
         polos::polos_logging
         polos::polos_utils
-        quill::quill_shared
 )

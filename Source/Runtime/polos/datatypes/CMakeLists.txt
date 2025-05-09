@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 file(GLOB_RECURSE datatypes_INC "${CMAKE_CURRENT_LIST_DIR}/*.hpp")
 

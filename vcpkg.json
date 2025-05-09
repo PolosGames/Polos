@@ -3,12 +3,10 @@
     "version-string": "1.0.0",
     "dependencies": [
         "assimp",
+        "ctre",
         "glfw3",
-        {
-            "name": "glad",
-            "features": ["gl-api-45"]
-        },
         "glm",
+        "gtest",
         {
             "name": "imgui",
             "features": [
@@ -16,6 +14,10 @@
                 "glfw-binding",
                 "opengl3-binding"
             ]
+        },
+        {
+            "name": "glad",
+            "features": ["gl-api-45"]
         },
         {
             "name": "quill",
