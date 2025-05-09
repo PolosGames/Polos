@@ -10,11 +10,21 @@
 
 namespace polos::logging
 {
+
+std::string_view GetConsoleSinkName()
+{
+    return "pl_std_sink";
+}
+
 Logger::Logger()
 {
     setup_quill();
 
-    QUILL_LOG_INFO(get_logger("POLOS"), "Logger initialized!");
+    m_polos_logger = get_logger("POLOS");
+    m_polly_logger = get_logger("POLLY");
+    m_app_logger = get_logger("APP");
+
+    QUILL_LOG_INFO(m_polos_logger, "Logger initialized!");
 }
 
 Logger& Logger::Instance()
@@ -25,17 +35,22 @@ Logger& Logger::Instance()
 
 quill::Logger* Logger::GetPolosLogger() const
 {
-    return get_logger("POLOS");
+    return m_polos_logger;
 }
 
 quill::Logger* Logger::GetPollyLogger() const
 {
-    return get_logger("POLLY");
+    return m_polly_logger;
 }
 
 quill::Logger* Logger::GetAppLogger() const
 {
-    return get_logger("APP");
+    return m_app_logger;
+}
+
+void FlushLogger(quill::Logger* t_logger)
+{
+    t_logger->flush_log();
 }
 
 } // namespace polos::logging

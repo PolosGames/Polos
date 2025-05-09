@@ -12,16 +12,14 @@
 
 namespace polos::logging
 {
-namespace detail
-{
-    enum logger_type : std::uint8_t
-    {
-        k_LoggerPolos,
-        k_LoggerPolly,
-        k_LoggerApp,
-        k_MaxLoggers
-    };
-} // namespace detail
+
+/// Get the sink name for the console logger
+/// @return a string view to the name of the sink
+[[nodiscard]] LOGGING_EXPORT std::string_view GetConsoleSinkName();
+
+/// Flush the designated logger immediately while blocking the calling thread.
+/// @param t_logger The logger whose sink that needs flushing
+LOGGING_EXPORT void FlushLogger(quill::Logger* t_logger);
 
 class LOGGING_EXPORT Logger
 {
@@ -46,6 +44,10 @@ public:
     [[nodiscard]] quill::Logger* GetAppLogger() const;
 private:
     Logger();
+
+    quill::Logger* m_polos_logger;
+    quill::Logger* m_polly_logger;
+    quill::Logger* m_app_logger;
 };
 
 //

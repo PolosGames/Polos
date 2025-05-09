@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 project(Polos
         LANGUAGES CXX C
@@ -13,6 +13,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
 set(POLOS_DIR         "${CMAKE_CURRENT_LIST_DIR}/Source")
+set(POLOS_TEST_DIR    "${POLOS_DIR}/Tests")
 set(POLOS_INC_DIR     "${POLOS_DIR}/Runtime")
 set(POLOS_EXAMPLES    "${CMAKE_CURRENT_LIST_DIR}/Examples")
 set(POLOS_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
@@ -31,7 +32,8 @@ message(STATUS "[POLOS] ENABLE_PROFILING: ${ENABLE_PROFILING}")
 message(STATUS "[POLOS] BUILD_EDITOR: ${BUILD_EDITOR}")
 message(STATUS "[POLOS] POLOS_INSTALL_DIR: ${POLOS_INSTALL_DIR}")
 
-include(CMake/target_build.cmake)
+include(CMake/BuildOptions.cmake)
+include(CMake/PolosTarget.cmake)
 
 add_compile_options(
         "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
