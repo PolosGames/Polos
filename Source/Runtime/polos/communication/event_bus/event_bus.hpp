@@ -81,21 +81,29 @@ private:
 template <PolosEvent EventType>
 std::int64_t EventBus::Subscribe(std::function<void(EventType&)> t_callback)
 {
-    return subscribe_internal(EventHash<EventType>(), *std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
+    LogTrace("[EventBus::Subscribe]");
+    auto event_hash = EventHash<EventType>();
+    LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
+    return subscribe_internal(event_hash, *std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
 }
 
-template<PolosEvent EventType> bool EventBus::Unsubscribe(std::int64_t const t_sub_id) const
+template<PolosEvent EventType>
+bool EventBus::Unsubscribe(std::int64_t const t_sub_id) const
 {
-    return unsubscribe_internal(EventHash<EventType>(), t_sub_id);
+    LogTrace("[EventBus::Unsubscribe]");
+    auto event_hash = EventHash<EventType>();
+    LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
+    return unsubscribe_internal(event_hash, t_sub_id);
 }
 
 template<PolosEvent EventType, typename... Args>
 void EventBus::Dispatch(Args&&... args)
 {
+    LogTrace("[EventBus::Dispatch]");
     auto subscribers = retrieve_subscribers(EventHash<EventType>());
     if (subscribers.first == nullptr)
     {
-        LogWarn("[EventBus::Dispatch] No subscribers found for type {}" , EventType{}.Name());
+        LogWarn("[EventBus::Dispatch] No subscribers found for type {}" , EventType::Name());
         return;
     }
 
@@ -104,6 +112,7 @@ void EventBus::Dispatch(Args&&... args)
 
     std::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last);
 
+    LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_callbacks.size());
     for (auto const& subscriber : subscribers_callbacks)
     {
         EventType event{std::forward<Args>(args)...};

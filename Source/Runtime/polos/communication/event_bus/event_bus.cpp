@@ -69,6 +69,7 @@ private:
     // To keep indices of the subscribers inside their own Event type_index's.
     std::vector<std::size_t> m_indices;
 
+    // TODO: Make a freelist so we can unsubscribe
     using CallbackMap = std::unordered_map<std::int64_t, std::vector<BaseEventDelegate>>;
 
     std::int64_t m_next_id{0};

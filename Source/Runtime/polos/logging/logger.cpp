@@ -50,6 +50,11 @@ quill::Logger* Logger::GetAppLogger() const
 
 void FlushLogger(quill::Logger* t_logger)
 {
+    if (nullptr == t_logger)
+    {
+        QUILL_LOG_ERROR(Logger::Instance().GetPolosLogger(), "Cannot flush a null logger!");
+        return;
+    }
     t_logger->flush_log();
 }
 
