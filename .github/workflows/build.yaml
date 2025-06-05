@@ -35,7 +35,7 @@
 #        run: |
 #            cmake . `
 #            -B ${{github.workspace}}\\build `
-#            -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake `
+#            -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\Toolchain.cmake `
 #            -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 #
 #      - name: Build
@@ -76,7 +76,7 @@
 #        run: |
 #          cmake . \
 #          -B ${{github.workspace}}/build \
-#          -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\cache_entries.cmake \
+#          -D CMAKE_TOOLCHAIN_FILE=${{github.workspace}}\\CMake\\Toolchain.cmake \
 #          -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
 #          -D CMAKE_C_COMPILER=clang-18 \
 #          -D CMAKE_CXX_COMPILER=clang++-18
