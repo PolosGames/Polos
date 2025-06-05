@@ -2,7 +2,7 @@
     "version": 5,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 12
+        "minor": 21
     },
     "configurePresets": [
         {
@@ -10,7 +10,7 @@
             "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/bin/${presetName}",
-            "toolchainFile": "${sourceDir}/CMake/cache_entries.cmake",
+            "toolchainFile": "${sourceDir}/CMake/Toolchain.cmake",
             "generator": "Ninja",
             "architecture": {
                 "value": "x64",
@@ -89,6 +89,21 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base",
+            "configurePreset": "base",
+            "hidden": true
+        },
+        {
+            "name": "win-debug",
+            "inherits": "base",
+            "displayName": "x64-Debug",
+            "configurePreset": "win-debug",
+            "targets": [ "install" ],
+            "verbose": false
         }
     ]
 }
