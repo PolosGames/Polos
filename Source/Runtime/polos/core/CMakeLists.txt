@@ -24,8 +24,8 @@ define_polos_module(
         "engine/engine.cpp"
         "engine/engine.hpp"
     PRIVATE_DEPS
-        polos::polos_communication
-        polos::polos_datatypes
-        polos::polos_logging
-        polos::polos_utils
+        polos::communication
+        polos::datatypes
+        polos::logging
+        polos::utils
 )

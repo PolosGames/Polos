@@ -21,5 +21,5 @@ define_polos_module(
     SOURCES
         "engine_subsystem.hpp"
     PRIVATE_DEPS
-        polos::polos_datatypes
+        polos::datatypes
 )

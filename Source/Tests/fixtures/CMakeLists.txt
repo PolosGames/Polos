@@ -7,5 +7,5 @@ define_polos_fixture(
         "polos_systems_fixture.cpp"
         "polos_systems_fixture.hpp"
     DEPS
-        polos::polos_logging
+        polos::logging
 )

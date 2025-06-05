@@ -25,5 +25,5 @@ define_polos_module(
     PUBLIC_DEPS
         quill::quill_shared
     PRIVATE_DEPS
-        polos::polos_platform
+        polos::platform
 )

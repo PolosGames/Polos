@@ -11,5 +11,5 @@ define_polos_module(
         "singleton.hpp"
         "singleton.inl.hpp"
     INTERFACE_DEPS
-        polos::polos_logging
+        polos::logging
 )

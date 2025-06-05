@@ -24,6 +24,6 @@ define_polos_module(
         "time/time.cpp"
         "time/time.hpp"
     PRIVATE_DEPS
-        polos::polos_logging
-        polos::polos_platform
+        polos::logging
+        polos::platform
 )

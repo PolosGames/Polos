@@ -19,13 +19,13 @@ add_library(polos INTERFACE)
 target_link_libraries(
     polos
         INTERFACE
-            polos::polos_communication
             polos::polos_interface
-            polos::polos_core
-            polos::polos_datatypes
-            polos::polos_logging
-            #polos::polos_platform
-            #polos::polos_backend
+            polos::communication
+            polos::core
+            polos::datatypes
+            polos::logging
+            #polos::platform
+            #polos::backend
 )
 add_library(polos::polos ALIAS polos)
 

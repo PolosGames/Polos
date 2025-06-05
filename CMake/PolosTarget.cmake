@@ -21,7 +21,7 @@ macro(define_polos_module)
     )
 
     set(MODULE_NAME_ORIG ${MODULE_NAME})
-    set(MODULE_NAME "polos_${MODULE_NAME_ORIG}")
+    set(MODULE_NAME "${MODULE_NAME_ORIG}")
 
     if (MODULE_TYPE STREQUAL "SHARED")
         add_library(${MODULE_NAME} SHARED ${MODULE_SOURCES})
@@ -60,9 +60,9 @@ macro(define_polos_module)
         build_options(${MODULE_NAME} true)
         generate_export_header(${MODULE_NAME}
             BASE_NAME ${MODULE_NAME_ORIG}
-            EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/include/polos/${MODULE_NAME_ORIG}/module_macros.hpp
+            EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/../../include/polos/${MODULE_NAME_ORIG}/module_macros.hpp
         )
-        target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+        target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../include)
         target_include_directories(${MODULE_NAME} PRIVATE ${POLOS_INC_DIR})
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
         target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)

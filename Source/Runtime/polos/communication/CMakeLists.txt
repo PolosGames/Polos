@@ -25,6 +25,6 @@ define_polos_module(
         "events/event.cpp"
         "events/event.hpp"
     PRIVATE_DEPS
-        polos::polos_logging
-        polos::polos_utils
+        polos::logging
+        polos::utils
 )

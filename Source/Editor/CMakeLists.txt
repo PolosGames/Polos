@@ -8,9 +8,9 @@ target_include_directories(Polly PRIVATE ${POLOS_INC_DIR})
 target_link_libraries(
     Polly
         PRIVATE
-            polos::polos_third_party
-            polos::polos_core
-            polos::polos_logging
+            polos::third_party
+            polos::core
+            polos::logging
 )
 
 set_target_properties(
