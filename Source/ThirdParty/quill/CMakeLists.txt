@@ -23,7 +23,7 @@ target_link_libraries(quill_shared PUBLIC quill::quill)
 
 set_target_properties(
     quill_shared PROPERTIES
-        PUBLIC_HEADER             "quill_shared.hpp"
+#        PUBLIC_HEADER             "quill_shared.hpp"
         CXX_STANDARD              ${POLOS_CXX_STANDARD}
         CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
@@ -40,5 +40,5 @@ install(
     LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
     ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
     RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/logging"
+#    PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/logging"
 )
