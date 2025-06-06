@@ -1,8 +1,6 @@
-#add_subdirectory(polos/backend)
 add_subdirectory(polos/communication)
 add_subdirectory(polos/core)
 add_subdirectory(polos/datatypes)
-add_subdirectory(polos/filesystem)
 add_subdirectory(polos/logging)
 add_subdirectory(polos/platform)
 add_subdirectory(polos/utils)

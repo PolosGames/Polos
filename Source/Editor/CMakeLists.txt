@@ -4,7 +4,6 @@ project(Polly)
 
 add_executable(Polly editor.cpp)
 
-target_include_directories(Polly PRIVATE ${POLOS_INC_DIR})
 target_link_libraries(
     Polly
         PRIVATE

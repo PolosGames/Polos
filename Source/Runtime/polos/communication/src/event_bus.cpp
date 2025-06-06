@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/communication/event_bus/event_bus.hpp"
+#include "polos/communication/event_bus.hpp"
 
 #include <mutex>
 #include <unordered_map>

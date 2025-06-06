@@ -20,16 +20,22 @@ macro(define_polos_module)
         ${ARGN}
     )
 
-    set(MODULE_NAME_ORIG ${MODULE_NAME})
-    set(MODULE_NAME "${MODULE_NAME_ORIG}")
-
     if (MODULE_TYPE STREQUAL "SHARED")
-        add_library(${MODULE_NAME} SHARED ${MODULE_SOURCES})
+        add_library(${MODULE_NAME} SHARED)
     elseif (MODULE_TYPE STREQUAL "STATIC")
-        add_library(${MODULE_NAME} STATIC ${MODULE_SOURCES})
+        add_library(${MODULE_NAME} STATIC)
     elseif (MODULE_TYPE STREQUAL "INTERFACE")
-        add_library(${MODULE_NAME} INTERFACE ${MODULE_SOURCES})
+        add_library(${MODULE_NAME} INTERFACE)
+        if (MODULE_SOURCES)
+            message(FATAL_ERROR "Interface target cannot have source files!")
+        endif()
     endif ()
+
+    file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
+
+    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
+        target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
+    endif()
 
     set_target_properties(
         ${MODULE_NAME} PROPERTIES
@@ -53,29 +59,42 @@ macro(define_polos_module)
         target_link_libraries(${MODULE_NAME} INTERFACE ${MODULE_INTERFACE_DEPS})
     endif ()
 
-    target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
-    target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
+        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
+        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+    endif()
 
     if (NOT MODULE_TYPE STREQUAL "INTERFACE")
         build_options(${MODULE_NAME} true)
         generate_export_header(${MODULE_NAME}
-            BASE_NAME ${MODULE_NAME_ORIG}
-            EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/../../include/polos/${MODULE_NAME_ORIG}/module_macros.hpp
+            BASE_NAME ${MODULE_NAME}
+            EXPORT_FILE_NAME ${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}/module_macros.hpp
         )
-        target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../include)
-        target_include_directories(${MODULE_NAME} PRIVATE ${POLOS_INC_DIR})
+        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
         target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
-    elseif ()
-        target_include_directories(${MODULE_NAME} INTERFACE ${POLOS_INC_DIR})
+
+        target_include_directories(${MODULE_NAME}
+            PUBLIC
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+        )
     endif ()
+    target_include_directories(${MODULE_NAME}
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    )
+
+    target_include_directories(${MODULE_NAME}
+        INTERFACE
+            $<INSTALL_INTERFACE:include>
+    )
 
     install(
         TARGETS ${MODULE_NAME}
         LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/${MODULE_NAME_ORIG}"
+        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
     )
 
     add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
@@ -159,28 +178,4 @@ macro (define_polos_test)
         COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${test_NAME}>
         COMMAND_EXPAND_LISTS
     )
-endmacro ()
-
-macro (define_polos_fixture)
-    set(oneValueArgs NAME)
-    set(multiValueArgs SOURCES DEFINES DEPS)
-    cmake_parse_arguments(test "" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
-
-    add_library(${test_NAME} STATIC ${test_SOURCES})
-
-    set_target_properties(
-        ${test_NAME} PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
-        POSITION_INDEPENDENT_CODE True
-        LINKER_LANGUAGE           CXX
-    )
-
-    target_include_directories(${test_NAME} PRIVATE ${POLOS_INC_DIR})
-
-    target_link_libraries(${test_NAME} PRIVATE GTest::gtest)
-    if (test_DEPS)
-        target_link_libraries(${test_NAME} PUBLIC ${test_DEPS})
-    endif ()
-
 endmacro ()

@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/communication/events/event.hpp"
+#include "polos/communication/event.hpp"
 
 #include <mutex>
 #include <string>

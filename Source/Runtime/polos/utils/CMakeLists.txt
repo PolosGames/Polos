@@ -19,11 +19,10 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "time/scoped_timer.cpp"
-        "time/scoped_timer.hpp"
-        "time/time.cpp"
-        "time/time.hpp"
+        "src/scoped_timer.cpp"
+        "src/time.cpp"
+    PUBLIC_DEPS
+        polos::platform
     PRIVATE_DEPS
         polos::logging
-        polos::platform
 )

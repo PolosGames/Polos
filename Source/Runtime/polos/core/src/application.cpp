@@ -3,10 +3,10 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/core/app/application.hpp"
+#include "polos/core/application.hpp"
 
-#include "polos/communication/event_bus/event_bus.hpp"
-#include "polos/communication/events/engine_update.hpp"
+#include "polos/communication/event_bus.hpp"
+#include "polos/communication/engine_update.hpp"
 #include "polos/logging/log_macros.hpp"
 
 #include <chrono>

@@ -6,7 +6,7 @@
 #ifndef CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
 #define CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
 
-#include "polos/communication/events/event.hpp"
+#include "polos/communication/event.hpp"
 #include "polos/communication/module_macros.hpp"
 #include "polos/logging/log_macros.hpp"
 

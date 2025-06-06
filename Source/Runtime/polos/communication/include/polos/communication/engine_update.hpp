@@ -6,7 +6,7 @@
 #ifndef COMMUNICATION_EVENTS_ENGINE_UPDATE_H
 #define COMMUNICATION_EVENTS_ENGINE_UPDATE_H
 
-#include "polos/communication/events/event.hpp"
+#include "polos/communication/event.hpp"
 
 namespace polos::communication
 {

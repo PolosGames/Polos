@@ -13,19 +13,20 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
 set(POLOS_DIR         "${CMAKE_CURRENT_LIST_DIR}/Source")
-set(POLOS_TEST_DIR    "${POLOS_DIR}/Tests")
-set(POLOS_INC_DIR     "${POLOS_DIR}/Runtime")
 set(POLOS_EXAMPLES    "${CMAKE_CURRENT_LIST_DIR}/Examples")
-set(POLOS_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+if (NOT POLOS_INSTALL_DIR)
+    set(POLOS_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+endif()
+string(REPLACE "\\" "/" POLOS_INSTALL_DIR ${POLOS_INSTALL_DIR})
 
 configure_file(polos_config.h.in ${POLOS_DIR}/polos_config.h USE_SOURCE_PERMISSIONS)
 
-option(ENABLE_PROFILING "Enable the profiling tools" OFF)
-option(GUI_USE_IMGUI    "Use ImGui for default Gui implementation" ON)
-option(BUILD_EDITOR     "If not checked, only builds the runtime binaries" ON)
-option(BUILD_EXAMPLES   "Will build all example projects under Examples directory." ON)
+option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
+option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)
+option(BUILD_EDITOR      "If not checked, only builds the runtime binaries" ON)
+option(BUILD_EXAMPLES    "Will build all example projects under Examples directory." ON)
 
-set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include/polos")
+set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include")
 set(POLOS_INSTALL_LIB_DIR "${POLOS_INSTALL_DIR}")
 
 message(STATUS "[POLOS] ENABLE_PROFILING: ${ENABLE_PROFILING}")

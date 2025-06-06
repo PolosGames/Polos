@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef PLATFORM_PLATFORM_H
-#define PLATFORM_PLATFORM_H
+#ifndef PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_HPP_
+#define PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_HPP_
 
 /// Concatenates the passed parameters together.
 #define PL_CONCAT_IMPL(x, y) x ## y
@@ -12,4 +12,4 @@
 
 #define PL_ANON_NAME(name) PL_CONCAT(name, __LINE__)
 
-#endif //PLATFORM_PLATFORM_H
+#endif //PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_HPP_

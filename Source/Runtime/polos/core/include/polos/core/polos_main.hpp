@@ -6,13 +6,13 @@
 #ifndef POLOS_MAIN_HPP
 #define POLOS_MAIN_HPP
 
-#include "polos/core/engine/engine.hpp"
+#include "polos/core/engine.hpp"
 #ifdef _MSVC_LANG
 #pragma warning (push)
 #pragma warning (disable:4008)
 #endif
 
-inline int main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     polos::core::Engine engine;
     engine.Run();

@@ -19,11 +19,8 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "logger.cpp"
-        "logger.hpp"
-        "log_macros.hpp"
+        "src/logger.cpp"
     PUBLIC_DEPS
         quill::quill_shared
-    PRIVATE_DEPS
         polos::platform
 )

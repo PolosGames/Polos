@@ -6,7 +6,7 @@
 #ifndef UTILS_TIME_SCOPED_TIMER_H
 #define UTILS_TIME_SCOPED_TIMER_H
 
-#include "polos/utils/time/time.hpp"
+#include "polos/utils/time.hpp"
 #include "polos/platform/platform.hpp"
 
 namespace polos::utils

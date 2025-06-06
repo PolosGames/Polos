@@ -19,12 +19,10 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "event_bus/event_bus.cpp"
-        "event_bus/event_bus.hpp"
-        "events/engine_update.hpp"
-        "events/event.cpp"
-        "events/event.hpp"
-    PRIVATE_DEPS
+        "src/event.cpp"
+        "src/event_bus.cpp"
+    PUBLIC_DEPS
         polos::logging
+    PRIVATE_DEPS
         polos::utils
 )

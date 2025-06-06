@@ -8,29 +8,23 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 
-add_subdirectory(ThirdParty)
 add_subdirectory(Runtime)
-
-add_library(polos_interface INTERFACE)
-target_include_directories(polos_interface INTERFACE ${POLOS_INC_DIR})
-add_library(polos::polos_interface ALIAS polos_interface)
+add_subdirectory(ThirdParty)
 
 add_library(polos INTERFACE)
 target_link_libraries(
     polos
         INTERFACE
-            polos::polos_interface
             polos::communication
             polos::core
             polos::datatypes
             polos::logging
-            #polos::platform
+            polos::platform
+            polos::utils
             #polos::backend
 )
 add_library(polos::polos ALIAS polos)
 
-if(BUILD_EDITOR)
+if(${BUILD_EDITOR})
     add_subdirectory(Editor)
 endif()
-
-add_subdirectory(Tests)

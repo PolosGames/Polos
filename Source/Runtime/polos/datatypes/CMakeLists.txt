@@ -1,15 +1,23 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-file(GLOB_RECURSE datatypes_INC "${CMAKE_CURRENT_LIST_DIR}/*.hpp")
+generate_versioning_info(
+    NAME datatypes
+    VERSION_MAJOR 1
+    VERSION_MINOR 0
+    VERSION_PATCH 0
+)
+
+project(
+    datatypes
+    LANGUAGES CXX
+    VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
+)
 
 define_polos_module(
     NAME
         datatypes
     TYPE
         INTERFACE
-    SOURCES
-        "singleton.hpp"
-        "singleton.inl.hpp"
     INTERFACE_DEPS
         polos::logging
 )

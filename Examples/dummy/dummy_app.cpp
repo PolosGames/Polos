@@ -3,6 +3,4 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/core/polos_main.hpp"
-
-
+#include <polos/core/polos_main.hpp>

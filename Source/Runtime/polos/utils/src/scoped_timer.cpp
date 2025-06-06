@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/utils/time/scoped_timer.hpp"
+#include "polos/utils/scoped_timer.hpp"
 
 #include "polos/logging/log_macros.hpp"
 

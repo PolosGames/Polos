@@ -19,10 +19,8 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "app/application.cpp"
-        "app/application.hpp"
-        "engine/engine.cpp"
-        "engine/engine.hpp"
+        "src/application.cpp"
+        "src/engine.cpp"
     PRIVATE_DEPS
         polos::communication
         polos::datatypes

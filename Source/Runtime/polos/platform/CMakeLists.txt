@@ -18,6 +18,4 @@ define_polos_module(
         platform
     TYPE
         INTERFACE
-    SOURCES
-        "platform.hpp"
 )

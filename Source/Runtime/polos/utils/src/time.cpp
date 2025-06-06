@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/utils/time/time.hpp"
+#include "polos/utils/time.hpp"
 
 namespace polos::utils
 {
