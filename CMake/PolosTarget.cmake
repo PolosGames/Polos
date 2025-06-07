@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 3.26)
+
+include(GoogleTest)
+
 macro(generate_versioning_info)
     set(oneValueArgs
         NAME
@@ -14,7 +18,10 @@ include(GenerateExportHeader)
 
 macro(define_polos_module)
     set(oneValueArgs NAME TYPE)
-    set(multiValueArgs SOURCES PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS PUBLIC_DEFINES PRIVATE_DEFINES)
+    set(multiValueArgs SOURCES
+                       PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS
+                       PUBLIC_DEFINES PRIVATE_DEFINES
+                       TEST_SOURCES TEST_DEPS TEST_DEFINES TEST_EXTRA_ARGS TEST_DATA)
     cmake_parse_arguments(MODULE
         "" "${oneValueArgs}" "${multiValueArgs}"
         ${ARGN}
@@ -43,7 +50,7 @@ macro(define_polos_module)
         CXX_STANDARD              ${POLOS_CXX_STANDARD}
         CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
-        OUTPUT_NAME               "${MODULE_NAME}"
+        OUTPUT_NAME               "polos_${MODULE_NAME}"
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
         LINKER_LANGUAGE           CXX
@@ -79,6 +86,7 @@ macro(define_polos_module)
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         )
     endif ()
+
     target_include_directories(${MODULE_NAME}
         INTERFACE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
@@ -98,6 +106,60 @@ macro(define_polos_module)
     )
 
     add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+
+    if (${BUILD_TESTS} AND MODULE_TEST_SOURCES)
+        message(STATUS "[POLOS] Building tests for: ${MODULE_NAME}")
+
+        set(MODULE_TEST_NAME ut-${MODULE_NAME})
+        set(MODULE_TEST_NAME ${MODULE_TEST_NAME} PARENT_SCOPE)
+
+        add_executable(${MODULE_TEST_NAME} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA})
+
+        set_target_properties(
+            ${MODULE_TEST_NAME} PROPERTIES
+            CXX_STANDARD              ${POLOS_CXX_STANDARD}
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "${MODULE_TEST_NAME}"
+            LINKER_LANGUAGE           CXX
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN True
+        )
+
+        target_include_directories(${MODULE_TEST_NAME} PRIVATE src)
+        target_link_libraries(${MODULE_TEST_NAME}
+            PRIVATE
+                GTest::gtest
+                ${MODULE_NAME}
+        )
+
+        if (MODULE_TEST_DEPS)
+            target_link_libraries(${MODULE_TEST_NAME} PRIVATE ${MODULE_TEST_DEPS})
+        endif ()
+
+        target_compile_definitions(${MODULE_TEST_NAME} PRIVATE PL_LOGGER_TYPE=App)
+        target_compile_definitions(${MODULE_TEST_NAME} PRIVATE QUILL_DLL_IMPORT)
+
+        gtest_add_tests(
+            TARGET ${MODULE_TEST_NAME}
+            TEST_LIST MODULE_TEST_LIST
+            EXTRA_ARGS ${MODULE_TEST_EXTRA_ARGS}
+        )
+
+        set_tests_properties(${MODULE_TEST_LIST}
+            PROPERTIES
+                RUN_SERIAL ON
+                TIMEOUT 60
+                LABELS ut
+        )
+
+        # TODO: Not cross platform. Only for Windows for now.
+        add_custom_command(TARGET ${MODULE_TEST_NAME} PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_TEST_DATA}
+            COMMAND_EXPAND_LISTS
+        )
+    endif()
 endmacro()
 
 # NAME: Should be the same as the folder name where this macro is called as well.
@@ -131,51 +193,5 @@ macro (define_polos_app)
     install(
         TARGETS ${app_NAME}
         RUNTIME DESTINATION ${POLOS_INSTALL_DIR}
-    )
-endmacro ()
-
-macro (define_polos_test)
-    set(options DISABLED)
-    set(oneValueArgs NAME)
-    set(multiValueArgs SOURCES DEFINES DEPS EXTRA_ARGS)
-    cmake_parse_arguments(test "${options}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
-
-    add_executable(${test_NAME} ${test_SOURCES})
-
-    set_target_properties(
-        ${test_NAME} PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
-        POSITION_INDEPENDENT_CODE True
-        OUTPUT_NAME               "${MODULE_NAME}"
-        CXX_VISIBILITY_PRESET     hidden
-        VISIBILITY_INLINES_HIDDEN True
-        LINKER_LANGUAGE           CXX
-    )
-
-    if (test_EXTRA_ARGS)
-        set(${test_NAME}_EXTRA_ARGS ${test_EXTRA_ARGS})
-    else ()
-        set(${test_NAME}_EXTRA_ARGS "")
-    endif ()
-
-    target_include_directories(${test_NAME} PRIVATE ${POLOS_INC_DIR})
-
-    target_link_libraries(${test_NAME} PRIVATE GTest::gtest)
-
-    if (test_DEPS)
-        target_link_libraries(${test_NAME} PRIVATE ${test_DEPS})
-    endif ()
-
-    target_compile_definitions(${test_NAME} PRIVATE QUILL_DLL_IMPORT)
-
-    gtest_discover_tests(${test_NAME}
-        EXTRA_ARGS ${test_NAME}_EXTRA_ARGS
-    )
-
-    # TODO: Not cross platform. Only for Windows for now.
-    add_custom_command(TARGET ${test_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${test_NAME}>
-        COMMAND_EXPAND_LISTS
     )
 endmacro ()

@@ -10,6 +10,7 @@ include(GNUInstallDirs)
 set(POLOS_CXX_STANDARD 23)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 set(POLOS_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}")
 set(POLOS_DIR         "${CMAKE_CURRENT_LIST_DIR}/Source")
@@ -25,6 +26,7 @@ option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)
 option(BUILD_EDITOR      "If not checked, only builds the runtime binaries" ON)
 option(BUILD_EXAMPLES    "Will build all example projects under Examples directory." ON)
+option(BUILD_TESTS       "Build all unit and component tests for all modules" ON)
 
 set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include")
 set(POLOS_INSTALL_LIB_DIR "${POLOS_INSTALL_DIR}")
@@ -50,6 +52,13 @@ add_compile_definitions(
 
 if(LINUX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
+find_package(GTest CONFIG REQUIRED)
+
+if (BUILD_TESTS)
+    message(STATUS "[POLOS] Building all tests")
+    enable_testing()
 endif()
 
 add_subdirectory(Source)

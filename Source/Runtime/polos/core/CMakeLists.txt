@@ -24,6 +24,7 @@ define_polos_module(
     PRIVATE_DEPS
         polos::communication
         polos::datatypes
+        polos::filesystem
         polos::logging
         polos::utils
 )

@@ -25,6 +25,7 @@ macro(build_options target warnings)
         target_compile_options(
             ${target}
                 PRIVATE
+                    "/EHsc"
                     "/permissive-"
                     "/W3"
                     "/WX"
@@ -77,6 +78,7 @@ macro(build_options target warnings)
                     "-Wformat=2"
                     "-pedantic-errors"
                     "-Wzero-as-null-pointer-constant"
+                    "-fno-exceptions"
         )
 
         # GCC only warnings
