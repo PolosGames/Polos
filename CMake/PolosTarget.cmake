@@ -46,7 +46,7 @@ macro(define_polos_module)
 
     set_target_properties(
         ${MODULE_NAME} PROPERTIES
-        PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
+        #PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
         CXX_STANDARD              ${POLOS_CXX_STANDARD}
         CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
@@ -102,7 +102,7 @@ macro(define_polos_module)
         LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
+        #PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
     )
 
     add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})

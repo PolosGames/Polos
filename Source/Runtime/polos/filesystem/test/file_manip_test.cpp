@@ -11,7 +11,7 @@
 namespace
 {
 
-TEST(FileManipTest, OpenAndRead_When_CorrectFileName)
+TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
 {
     auto file = polos::fs::ReadFile("test_file.test", std::ios::ate);
 
@@ -28,7 +28,7 @@ TEST(FileManipTest, OpenAndRead_When_CorrectFileName)
     EXPECT_EQ(first_letter, 'L');
 }
 
-TEST(FileManipTest, OpenAndRead_When_IncorrectFileName)
+TEST(FileManipTestFixture, OpenAndRead_When_IncorrectFileName)
 {
     auto file = polos::fs::ReadFile("test_fle.test", std::ios::ate);
 

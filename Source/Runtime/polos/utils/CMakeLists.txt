@@ -25,4 +25,6 @@ define_polos_module(
         polos::platform
     PRIVATE_DEPS
         polos::logging
+    TEST_SOURCES
+        "test/time_test.cpp"
 )

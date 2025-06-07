@@ -31,9 +31,9 @@ public:
         LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<double>(passed_time) * 0.001f * 0.001f));
     }
 private:
-    std::string   m_name;
-    std::uint64_t m_start;
-    std::uint64_t m_end;
+    std::string  m_name;
+    std::int64_t m_start;
+    std::int64_t m_end;
 };
 
 ScopedTimer::ScopedTimer(char const* t_name)

@@ -19,7 +19,12 @@ using TimePoint = Clock::time_point;
 
 namespace utils
 {
-UTILS_EXPORT std::uint64_t GetTimeNow();
+
+UTILS_EXPORT std::int64_t GetTimeNow();
+UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::minutes);
+UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::seconds);
+UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::milliseconds);
+
 }// namespace utils
 }// namespace polos
 

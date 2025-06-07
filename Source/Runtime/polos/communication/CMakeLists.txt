@@ -25,4 +25,6 @@ define_polos_module(
         polos::logging
     PRIVATE_DEPS
         polos::utils
+    TEST_SOURCES
+        "test/event_bus_test.cpp"
 )

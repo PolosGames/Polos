@@ -11,6 +11,9 @@
 #include "polos/logging/log_macros.hpp"
 
 #include <concepts>
+#include <cstddef>
+#include <cstdint>
+#include <expected>
 #include <functional>
 #include <utility>
 
@@ -51,14 +54,14 @@ public:
     /// @param t_callback Functor that will receive the event
     /// @return Specific EventBus subscriber id.
     template<PolosEvent EventType>
-    [[nodiscard]] std::int64_t Subscribe(std::function<void(EventType&)> t_callback);
+    auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t;
 
     /// Trigger an event dispatch to all subscribers of the specific event.
     /// @tparam EventType
     /// @tparam Args
     /// @param args
     template<PolosEvent EventType, typename... Args>
-    void Dispatch(Args&&... args);
+    auto Dispatch(Args&&... args) -> std::size_t;
 private:
     EventBus();
 
@@ -70,7 +73,7 @@ private:
 };
 
 template<PolosEvent EventType>
-std::int64_t EventBus::Subscribe(std::function<void(EventType&)> t_callback)
+auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
 {
     LogTrace("[EventBus::Subscribe]");
     auto event_hash = EventHash<EventType>();
@@ -79,37 +82,40 @@ std::int64_t EventBus::Subscribe(std::function<void(EventType&)> t_callback)
 }
 
 template<PolosEvent EventType, typename... Args>
-void EventBus::Dispatch(Args&&... args)
+auto EventBus::Dispatch(Args&&... args) -> std::size_t
 {
     LogTrace("[EventBus::Dispatch]");
     auto subscribers = retrieve_subscribers(EventHash<EventType>());
     if (subscribers.first == nullptr)
     {
         LogWarn("[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
-        return;
+        return subscribers.second;
     }
 
     auto first = subscribers.first;
     auto last  = subscribers.first + subscribers.second;
 
     std::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last);
+    const std::size_t                            subscribers_size = subscribers_callbacks.size();
 
-    LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_callbacks.size());
+    LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_size);
     for (auto const& subscriber : subscribers_callbacks)
     {
         EventType event{std::forward<Args>(args)...};
         std::invoke(subscriber, event);
     }
+
+    return subscribers_size;
 }
 
 template<PolosEvent EventType>
-bool Subscribe(std::function<void(EventType&)> t_callback)
+auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
 {
     return EventBus::Instance().Subscribe(t_callback);
 }
 
 template<PolosEvent EventType, typename... Args>
-void Dispatch(Args&&... args)
+auto Dispatch(Args&&... args) -> std::size_t
 {
     return EventBus::Instance().Dispatch<EventType>(std::forward<Args>(args)...);
 }
