@@ -48,6 +48,6 @@ bool Singleton<Type>::Destroy()
 }
 
 
-} // namespace polos::datatypes
+}// namespace polos::datatypes
 
-#endif //DATATYPES_SINGLETON_INL_H
+#endif//DATATYPES_SINGLETON_INL_H

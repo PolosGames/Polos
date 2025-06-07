@@ -27,8 +27,8 @@ void setup_quill()
     quill::Backend::start(backend_options);
 
     quill::PatternFormatterOptions formatter_options{
-        "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)", // LOG
-        "%H:%M:%S.%Qms" // TIME
+        "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)",// LOG
+        "%H:%M:%S.%Qms"                                                                // TIME
     };
 
     auto std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
@@ -46,4 +46,4 @@ quill::Logger* get_logger(std::string const& name)
 {
     return quill::Frontend::get_logger(name);
 }
-} // namespace polos::logging
+}// namespace polos::logging

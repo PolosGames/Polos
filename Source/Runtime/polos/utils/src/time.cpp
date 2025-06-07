@@ -13,4 +13,4 @@ std::uint64_t GetTimeNow()
     return static_cast<std::uint64_t>(now.count());
 }
 
-} // namespace polos::utils
+}// namespace polos::utils

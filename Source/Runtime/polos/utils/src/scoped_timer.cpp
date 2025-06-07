@@ -25,13 +25,13 @@ public:
 
     ~Impl()
     {
-        m_end = GetTimeNow();
+        m_end                  = GetTimeNow();
         auto const passed_time = m_end - m_start;
 
         LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<double>(passed_time) * 0.001f * 0.001f));
     }
 private:
-    std::string m_name;
+    std::string   m_name;
     std::uint64_t m_start;
     std::uint64_t m_end;
 };

@@ -5,8 +5,8 @@
 
 #include "polos/logging/logger.hpp"
 
-#include "quill_shared.hpp"
 #include "quill/LogMacros.h"
+#include "quill_shared.hpp"
 
 namespace polos::logging
 {
@@ -22,7 +22,7 @@ Logger::Logger()
 
     m_polos_logger = get_logger("POLOS");
     m_polly_logger = get_logger("POLLY");
-    m_app_logger = get_logger("APP");
+    m_app_logger   = get_logger("APP");
 
     QUILL_LOG_INFO(m_polos_logger, "Logger initialized!");
 }
@@ -58,4 +58,4 @@ void FlushLogger(quill::Logger* t_logger)
     t_logger->flush_log();
 }
 
-} // namespace polos::logging
+}// namespace polos::logging

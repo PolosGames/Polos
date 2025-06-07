@@ -15,12 +15,12 @@ namespace polos::fs
 
 struct resource
 {
-    std::size_t uncompressed_size;
-    std::size_t size;
-    std::string name;
+    std::size_t            uncompressed_size;
+    std::size_t            size;
+    std::string            name;
     std::vector<std::byte> data;
 };
 
 }// namespace polos::fs
 
-#endif //FILESYSTEM_FILE_H_
+#endif//FILESYSTEM_FILE_H_

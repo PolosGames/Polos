@@ -26,6 +26,6 @@ private:
 
     bool m_is_running;
 };
-} // namespace polos::core
+}// namespace polos::core
 
-#endif //CORE_APP_APPLICATION_H
+#endif//CORE_APP_APPLICATION_H

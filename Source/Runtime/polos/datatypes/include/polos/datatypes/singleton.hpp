@@ -20,7 +20,7 @@ public:
     template<typename... Args>
     static Type* Instance(Args&&... t_args);
 
-    static bool Destroy(); // TODO: Return a std::expected here
+    static bool Destroy();// TODO: Return a std::expected here
 private:
     struct data
     {
@@ -34,6 +34,6 @@ private:
     static bool s_is_constructed;
 };
 
-} // namespace polos::datatypes
+}// namespace polos::datatypes
 
-#endif //DATATYPES_SINGLETON_H
+#endif//DATATYPES_SINGLETON_H

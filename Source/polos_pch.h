@@ -3,8 +3,8 @@
 #include "polos_config.h"
 
 #if defined(POLOS_WIN)
-#	include <Windows.h>
-#	include <winnt.h>
+#    include <Windows.h>
+#    include <winnt.h>
 #endif
 
 #include <algorithm>
@@ -31,9 +31,9 @@
 #include <mutex>
 #include <numeric>
 #include <optional>
+#include <queue>
 #include <random>
 #include <ranges>
-#include <queue>
 #include <span>
 #include <sstream>
 #include <string>
@@ -51,15 +51,15 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #ifdef _MSC_VER
-    #define DLL_EXPORT __declspec(dllexport)
-    #define DLL_IMPORT __declspec(dllimport)
+#    define DLL_EXPORT __declspec(dllexport)
+#    define DLL_IMPORT __declspec(dllimport)
 #else
-    #define DLL_EXPORT __attribute__((visibility("default")))
-    #define DLL_IMPORT
+#    define DLL_EXPORT __attribute__((visibility("default")))
+#    define DLL_IMPORT
 #endif
 
 #ifdef POLOS_BUILD
-    #define PLAPI DLL_EXPORT
+#    define PLAPI DLL_EXPORT
 #else
-    #define PLAPI DLL_IMPORT
+#    define PLAPI DLL_IMPORT
 #endif

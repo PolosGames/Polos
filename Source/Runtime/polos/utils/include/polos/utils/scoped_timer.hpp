@@ -6,8 +6,8 @@
 #ifndef UTILS_TIME_SCOPED_TIMER_H
 #define UTILS_TIME_SCOPED_TIMER_H
 
-#include "polos/utils/time.hpp"
 #include "polos/platform/platform.hpp"
+#include "polos/utils/time.hpp"
 
 namespace polos::utils
 {
@@ -31,18 +31,18 @@ public:
     explicit ScopedTimer(char const* t_name);
     ~ScopedTimer();
 
-    ScopedTimer(ScopedTimer const&) = delete;
-    ScopedTimer(ScopedTimer&&) = delete;
-    ScopedTimer& operator=(ScopedTimer&&) = delete;
+    ScopedTimer(ScopedTimer const&)            = delete;
+    ScopedTimer(ScopedTimer&&)                 = delete;
+    ScopedTimer& operator=(ScopedTimer&&)      = delete;
     ScopedTimer& operator=(ScopedTimer const&) = delete;
 private:
     class Impl;
     Impl* m_impl;
 };
-} // namespace polos::utils
+}// namespace polos::utils
 
 /// Preferred method of creating a ScopedTimer. Needs to be called at the top of the scope preferably.
 /// @param NAME quoted string name of the ScopedTimer
 #define CREATE_SCOPED_TIMER(NAME) polos::utils::ScopedTimer PL_ANON_NAME(scopedtimer)(NAME)
 
-#endif //UTILS_TIME_SCOPED_TIMER_H
+#endif//UTILS_TIME_SCOPED_TIMER_H

@@ -13,14 +13,14 @@
 
 namespace polos
 {
-using Clock = std::chrono::high_resolution_clock;
-using Duration = std::chrono::microseconds;
+using Clock     = std::chrono::high_resolution_clock;
+using Duration  = std::chrono::microseconds;
 using TimePoint = Clock::time_point;
 
 namespace utils
 {
 UTILS_EXPORT std::uint64_t GetTimeNow();
-} // namespace utils
-} // namespace polos
+}// namespace utils
+}// namespace polos
 
-#endif //UTILS_TIME_TIME_H
+#endif//UTILS_TIME_TIME_H

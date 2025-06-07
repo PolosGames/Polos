@@ -32,10 +32,10 @@ class COMMUNICATION_EXPORT EventBus
 public:
     ~EventBus();
 
-    EventBus(const EventBus&) = delete;
+    EventBus(const EventBus&)            = delete;
     EventBus& operator=(const EventBus&) = delete;
-    EventBus(EventBus&&) = delete;
-    EventBus& operator=(EventBus&&) = delete;
+    EventBus(EventBus&&)                 = delete;
+    EventBus& operator=(EventBus&&)      = delete;
 
     ///
     /// Get EventBus singleton
@@ -71,14 +71,13 @@ private:
 
     std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
     bool         unsubscribe_internal(std::int64_t t_type_hash, std::int64_t t_sub_id) const;
-    [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t>
-        retrieve_subscribers(std::int64_t t_type_hash) const;
+    [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
 
     class Impl;
     Impl* m_impl;
 };
 
-template <PolosEvent EventType>
+template<PolosEvent EventType>
 std::int64_t EventBus::Subscribe(std::function<void(EventType&)> t_callback)
 {
     LogTrace("[EventBus::Subscribe]");
@@ -103,12 +102,12 @@ void EventBus::Dispatch(Args&&... args)
     auto subscribers = retrieve_subscribers(EventHash<EventType>());
     if (subscribers.first == nullptr)
     {
-        LogWarn("[EventBus::Dispatch] No subscribers found for type {}" , EventType::Name());
+        LogWarn("[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
         return;
     }
 
     auto first = subscribers.first;
-    auto last = subscribers.first + subscribers.second;
+    auto last  = subscribers.first + subscribers.second;
 
     std::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last);
 
@@ -138,6 +137,6 @@ void Dispatch(Args&&... args)
     return EventBus::Instance().Dispatch<EventType>(std::forward<Args>(args)...);
 }
 
-} // namespace polos::communication
+}// namespace polos::communication
 
-#endif //CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
+#endif//CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H

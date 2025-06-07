@@ -14,7 +14,7 @@ namespace polos::communication
 class EventBus::Impl
 {
 public:
-     Impl() = default;
+    Impl()  = default;
     ~Impl() = default;
 
     bool Subscribe(std::int64_t const t_event_hash, std::function<void(base_event&)> const& t_callback)
@@ -53,13 +53,13 @@ public:
         return false;
     }
 
-    [[nodiscard]] std::pair<std::function<void(base_event&)> const*, std::size_t> GetSubscribers(
-        std::int64_t const t_event_hash) const
+    [[nodiscard]] std::pair<std::function<void(base_event&)> const*, std::size_t>
+    GetSubscribers(std::int64_t const t_event_hash) const
     {
         if (auto it = m_callbacks.find(t_event_hash); it != m_callbacks.end())
         {
             std::function<void(base_event&)> const* data = it->second.data();
-            std::size_t size = it->second.size();
+            std::size_t                             size = it->second.size();
             return std::make_pair<>(data, size);
         }
 
@@ -92,7 +92,8 @@ EventBus::~EventBus()
     delete m_impl;
 }
 
-std::int64_t EventBus::subscribe_internal(std::int64_t const t_type_hash, std::function<void(base_event&)> const& t_callback) const
+std::int64_t EventBus::subscribe_internal(std::int64_t const                      t_type_hash,
+                                          std::function<void(base_event&)> const& t_callback) const
 {
     return m_impl->Subscribe(t_type_hash, t_callback);
 }
@@ -108,4 +109,4 @@ EventBus::retrieve_subscribers(std::int64_t const t_type_hash) const
     return m_impl->GetSubscribers(t_type_hash);
 }
 
-} // namespace polos::communication
+}// namespace polos::communication

@@ -24,10 +24,10 @@ LOGGING_EXPORT void FlushLogger(quill::Logger* t_logger);
 class LOGGING_EXPORT Logger
 {
 public:
-    Logger(Logger const&) = delete;
-    Logger(Logger&&) = delete;
+    Logger(Logger const&)            = delete;
+    Logger(Logger&&)                 = delete;
     Logger& operator=(Logger const&) = delete;
-    Logger& operator=(Logger&&) = delete;
+    Logger& operator=(Logger&&)      = delete;
 
     static Logger& Instance();
 
@@ -50,6 +50,6 @@ private:
     quill::Logger* m_app_logger;
 };
 
-} // namespace polos::logging
+}// namespace polos::logging
 
-#endif //LOGGING_LOG_H
+#endif//LOGGING_LOG_H

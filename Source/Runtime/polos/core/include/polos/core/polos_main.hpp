@@ -8,17 +8,17 @@
 
 #include "polos/core/engine.hpp"
 #ifdef _MSVC_LANG
-#pragma warning (push)
-#pragma warning (disable:4008)
+#    pragma warning(push)
+#    pragma warning(disable : 4008)
 #endif
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     polos::core::Engine engine;
     engine.Run();
 }
 #ifdef _MSVC_LANG
-#pragma warning (pop)
+#    pragma warning(pop)
 #endif
 
-#endif //POLOS_MAIN_HPP
+#endif//POLOS_MAIN_HPP

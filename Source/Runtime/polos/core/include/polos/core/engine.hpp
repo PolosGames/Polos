@@ -15,6 +15,6 @@ class CORE_EXPORT Engine
 public:
     void Run();
 };
-} // namespace polos::core
+}// namespace polos::core
 
-#endif //CORE_ENGINE_ENGINE_H
+#endif//CORE_ENGINE_ENGINE_H

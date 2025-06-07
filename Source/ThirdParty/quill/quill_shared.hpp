@@ -6,8 +6,8 @@
 #ifndef THIRDPARTY_QUILL_QUILL_SHARED_H
 #define THIRDPARTY_QUILL_QUILL_SHARED_H
 
-#include <quill/core/Attributes.h>
 #include <quill/Logger.h>
+#include <quill/core/Attributes.h>
 
 #include <string>
 
@@ -15,6 +15,6 @@ namespace polos::logging
 {
 QUILL_EXPORT void setup_quill();
 QUILL_EXPORT quill::Logger* get_logger(std::string const& name);
-} // namespace polos::logging
+}// namespace polos::logging
 
-#endif //THIRDPARTY_QUILL_QUILL_SHARED_H
+#endif//THIRDPARTY_QUILL_QUILL_SHARED_H
