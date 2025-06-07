@@ -35,24 +35,6 @@ public:
         return subscriber_id;
     }
 
-    bool Unsubscribe(std::int64_t const t_event_hash, std::int64_t const t_subscriber_id)
-    {
-        std::lock_guard lock(m_mutex);
-
-        // Now get the subscriber index back, because subscriber ids are ordered and can be used as indices on the
-        // m_indices vector to receive back the actual index.
-        // auto subscriber_index = m_indices[static_cast<std::size_t>(t_subscriber_id)];
-        // if (auto const it = m_callbacks.find(t_event_type); it != m_callbacks.end())
-        // {
-        //     auto& vec = it->second;
-        //     vec.erase(std::remove_if(vec.begin(), vec.end(),
-        //                              [callback_id](const auto& pair) { return pair.first == callback_id; }),
-        //               vec.end());
-        //     return true;
-        // }
-        return false;
-    }
-
     [[nodiscard]] std::pair<std::function<void(base_event&)> const*, std::size_t>
     GetSubscribers(std::int64_t const t_event_hash) const
     {
@@ -96,11 +78,6 @@ std::int64_t EventBus::subscribe_internal(std::int64_t const                    
                                           std::function<void(base_event&)> const& t_callback) const
 {
     return m_impl->Subscribe(t_type_hash, t_callback);
-}
-
-bool EventBus::unsubscribe_internal(std::int64_t const t_type_hash, std::int64_t const t_sub_id) const
-{
-    return m_impl->Unsubscribe(t_type_hash, t_sub_id);
 }
 
 std::pair<std::function<void(base_event&)> const*, std::size_t>

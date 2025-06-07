@@ -53,13 +53,6 @@ public:
     template<PolosEvent EventType>
     [[nodiscard]] std::int64_t Subscribe(std::function<void(EventType&)> t_callback);
 
-    ///
-    /// @tparam EventType Type of event to unsubscribe from (should be deduced)
-    /// @param t_sub_id Subscriber id which is the output of Subscribe(cb)
-    /// @return true if operation is successful, false if not
-    template<PolosEvent EventType>
-    bool Unsubscribe(std::int64_t t_sub_id) const;
-
     /// Trigger an event dispatch to all subscribers of the specific event.
     /// @tparam EventType
     /// @tparam Args
@@ -70,7 +63,6 @@ private:
     EventBus();
 
     std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
-    bool         unsubscribe_internal(std::int64_t t_type_hash, std::int64_t t_sub_id) const;
     [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
 
     class Impl;
@@ -84,15 +76,6 @@ std::int64_t EventBus::Subscribe(std::function<void(EventType&)> t_callback)
     auto event_hash = EventHash<EventType>();
     LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
     return subscribe_internal(event_hash, *std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
-}
-
-template<PolosEvent EventType>
-bool EventBus::Unsubscribe(std::int64_t const t_sub_id) const
-{
-    LogTrace("[EventBus::Unsubscribe]");
-    auto event_hash = EventHash<EventType>();
-    LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
-    return unsubscribe_internal(event_hash, t_sub_id);
 }
 
 template<PolosEvent EventType, typename... Args>
@@ -123,12 +106,6 @@ template<PolosEvent EventType>
 bool Subscribe(std::function<void(EventType&)> t_callback)
 {
     return EventBus::Instance().Subscribe(t_callback);
-}
-
-template<PolosEvent EventType>
-bool Unsubscribe(std::function<void(EventType&)> t_callback)
-{
-    return EventBus::Instance().Unsubscribe(t_callback);
 }
 
 template<PolosEvent EventType, typename... Args>
