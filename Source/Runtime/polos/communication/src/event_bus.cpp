@@ -7,6 +7,7 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <vector>
 
 namespace polos::communication
 {
@@ -14,7 +15,10 @@ namespace polos::communication
 class EventBus::Impl
 {
 public:
-    Impl()  = default;
+    Impl(polos::memory::DebugAllocator& t_allocator)
+        : m_allocator{t_allocator},
+          m_callbacks{m_allocator.GetMemoryResource()}
+    {}
     ~Impl() = default;
 
     bool Subscribe(std::int64_t const t_event_hash, std::function<void(base_event&)> const& t_callback)
@@ -24,14 +28,10 @@ public:
         // Give each subscriber of any event a unique id.
         auto subscriber_id = m_next_id++;
 
+        m_callbacks.emplace(t_event_hash, std::pmr::vector<BaseEventDelegate>{m_allocator.GetMemoryResource()});
         auto& event_queue = m_callbacks[t_event_hash];
-        // Subscriber index is the current tail of the subscriber vector of the specific event.
-        std::size_t subscriber_index = event_queue.size();
         event_queue.push_back(std::move(t_callback));
 
-        // The subscriber id will also be the index in our m_indices. In this vector, we keep the actual index of the
-        // subscriber (std::function) inside the specific Event's Callback Vector.
-        m_indices.push_back(subscriber_index);
         return subscriber_id;
     }
 
@@ -48,27 +48,26 @@ public:
         return {nullptr, 0};
     }
 private:
-    // To keep indices of the subscribers inside their own Event type_index's.
-    std::vector<std::size_t> m_indices;
-
     // TODO: Make a freelist so we can unsubscribe
-    using CallbackMap = std::unordered_map<std::int64_t, std::vector<BaseEventDelegate>>;
+    using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
 
-    std::int64_t m_next_id{0};
-    CallbackMap  m_callbacks;
-    std::mutex   m_mutex;
+    polos::memory::DebugAllocator& m_allocator;
+    std::int64_t                   m_next_id{0};
+    CallbackMap                    m_callbacks;
+    std::mutex                     m_mutex;
 };
 
 EventBus::EventBus()
-{
-    m_impl = new Impl();
-}
+    : m_allocator{"EventBus"},
+      m_impl{new Impl{m_allocator}}
+{}
 
 EventBus& EventBus::Instance()
 {
     static EventBus instance;
     return instance;
 }
+
 EventBus::~EventBus()
 {
     delete m_impl;

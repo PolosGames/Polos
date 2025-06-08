@@ -9,6 +9,7 @@
 #include "polos/communication/event.hpp"
 #include "polos/communication/module_macros.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/memory/debug_allocator.hpp"
 
 #include <concepts>
 #include <cstddef>
@@ -68,6 +69,8 @@ private:
     std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
     [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
 
+    polos::memory::DebugAllocator m_allocator;
+
     class Impl;
     Impl* m_impl;
 };
@@ -95,8 +98,9 @@ auto EventBus::Dispatch(Args&&... args) -> std::size_t
     auto first = subscribers.first;
     auto last  = subscribers.first + subscribers.second;
 
-    std::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last);
-    const std::size_t                            subscribers_size = subscribers_callbacks.size();
+    std::pmr::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last,
+                                                                            m_allocator.GetMemoryResource());
+    const std::size_t                                 subscribers_size = subscribers_callbacks.size();
 
     LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_size);
     for (auto const& subscriber : subscribers_callbacks)

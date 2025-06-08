@@ -1,0 +1,83 @@
+//
+// Copyright (c) 2025 Kayra Urfali
+// Permission is hereby granted under the MIT License - see LICENSE for details.
+//
+
+#include "polos/memory/debug_allocator.hpp"
+#include "polos/logging/log_macros.hpp"
+
+namespace polos::memory
+{
+
+class DebugAllocator::Impl : public std::pmr::memory_resource
+{
+public:
+    explicit Impl(std::string t_name, std::pmr::memory_resource* t_upstream)
+        : m_name{std::move(t_name)},
+          m_upstream{t_upstream}
+    {}
+
+    Impl(Impl&&)      = delete;
+    Impl(Impl const&) = delete;
+
+    ~Impl() override = default;
+
+    Impl& operator=(Impl const&) = delete;
+    Impl& operator=(Impl&&)      = delete;
+
+    void* do_allocate(std::size_t bytes, std::size_t alignment) override
+    {
+        LogDebug("[{} (alloc)] Size: {}, Alignment: {}", m_name, bytes, alignment);
+        total_allocation += bytes;
+        used_memory_in_bytes += bytes;
+        return m_upstream->allocate(bytes, alignment);
+    }
+
+    void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override
+    {
+        LogDebug("[{} (dealloc)] Size: {}, Alignment: {}", m_name, bytes, alignment);
+        used_memory_in_bytes -= bytes;
+        m_upstream->deallocate(p, bytes, alignment);
+    }
+
+    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override
+    {
+        return this == &other;
+    }
+
+    std::int64_t total_allocation{0};
+    std::int64_t used_memory_in_bytes{0};
+private:
+    std::string                m_name;
+    std::pmr::memory_resource* m_upstream{nullptr};
+};
+
+DebugAllocator::DebugAllocator()
+    : DebugAllocator{"Default"}
+{}
+
+DebugAllocator::DebugAllocator(char const* t_name, std::pmr::memory_resource* t_upstream)
+    : m_impl{new Impl{t_name, t_upstream}}
+{}
+
+DebugAllocator::~DebugAllocator()
+{
+    delete m_impl;
+}
+
+std::pmr::memory_resource* DebugAllocator::GetMemoryResource() const noexcept
+{
+    return m_impl;
+}
+
+std::int64_t DebugAllocator::GetTotalAllocationInBytes() const
+{
+    return m_impl->total_allocation;
+}
+
+std::int64_t DebugAllocator::GetUsedMemoryInBytes() const
+{
+    return m_impl->used_memory_in_bytes;
+}
+
+}// namespace polos::memory
