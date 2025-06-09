@@ -30,9 +30,9 @@ public:
     DebugAllocator& operator=(DebugAllocator const&) = delete;
     DebugAllocator& operator=(DebugAllocator&&)      = delete;
 
-    std::pmr::memory_resource* GetMemoryResource() const noexcept;
-    std::int64_t               GetTotalAllocationInBytes() const;
-    std::int64_t               GetUsedMemoryInBytes() const;
+    auto GetMemoryResource() const noexcept -> std::pmr::memory_resource*;
+    auto GetTotalAllocationInBytes() const -> std::int64_t;
+    auto GetUsedMemoryInBytes() const -> std::int64_t;
 private:
     class Impl;
     Impl* m_impl;

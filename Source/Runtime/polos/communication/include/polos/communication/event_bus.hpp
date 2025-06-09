@@ -45,7 +45,7 @@ public:
     /// Get EventBus singleton
     ///
     /// @return Instance of EventBus
-    static EventBus& Instance();
+    static auto Instance() -> EventBus&;
 
     ///
     /// Subscribe to the specific event in the engine. Return type needs to be kept in order to unsubscribe.
@@ -66,8 +66,9 @@ public:
 private:
     EventBus();
 
-    std::int64_t subscribe_internal(std::int64_t t_type_hash, std::function<void(base_event&)> const& t_callback) const;
-    [[nodiscard]] std::pair<BaseEventDelegate const*, std::size_t> retrieve_subscribers(std::int64_t t_type_hash) const;
+    auto subscribe_internal(std::int64_t                            t_type_hash,
+                            std::function<void(base_event&)> const& t_callback) const -> std::int64_t;
+    auto retrieve_subscribers(std::int64_t t_type_hash) const -> std::pair<BaseEventDelegate const*, std::size_t>;
 
     polos::memory::DebugAllocator m_allocator;
 

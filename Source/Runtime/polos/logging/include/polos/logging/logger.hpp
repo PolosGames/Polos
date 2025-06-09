@@ -29,19 +29,19 @@ public:
     Logger& operator=(Logger const&) = delete;
     Logger& operator=(Logger&&)      = delete;
 
-    static Logger& Instance();
+    static auto Instance() -> Logger&;
 
     /// Get pointer for the quill logger that will be used for logging inside Polos framework
     /// @return Pointer to the logger with id "POLOS"
-    [[nodiscard]] quill::Logger* GetPolosLogger() const;
+    [[nodiscard]] auto GetPolosLogger() const -> quill::Logger*;
 
     /// Get pointer for the quill logger that will be used for logging inside Polly Editor
     /// @return Pointer to the logger with id "POLLY"
-    [[nodiscard]] quill::Logger* GetPollyLogger() const;
+    [[nodiscard]] auto GetPollyLogger() const -> quill::Logger*;
 
     /// Get pointer for the quill logger that will be used for logging inside Apps made from Polos
     /// @return Pointer to the logger with id "APP"
-    [[nodiscard]] quill::Logger* GetAppLogger() const;
+    [[nodiscard]] auto GetAppLogger() const -> quill::Logger*;
 private:
     Logger();
 

@@ -20,10 +20,10 @@ using TimePoint = Clock::time_point;
 namespace utils
 {
 
-UTILS_EXPORT std::int64_t GetTimeNow();
-UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::minutes);
-UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::seconds);
-UTILS_EXPORT std::int64_t ConvertToMicroseconds(std::chrono::milliseconds);
+UTILS_EXPORT auto GetTimeNow() -> std::int64_t;
+UTILS_EXPORT auto ConvertToMicroseconds(std::chrono::minutes) -> std::int64_t;
+UTILS_EXPORT auto ConvertToMicroseconds(std::chrono::seconds) -> std::int64_t;
+UTILS_EXPORT auto ConvertToMicroseconds(std::chrono::milliseconds) -> std::int64_t;
 
 }// namespace utils
 }// namespace polos

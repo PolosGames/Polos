@@ -65,17 +65,17 @@ DebugAllocator::~DebugAllocator()
     delete m_impl;
 }
 
-std::pmr::memory_resource* DebugAllocator::GetMemoryResource() const noexcept
+auto DebugAllocator::GetMemoryResource() const noexcept -> std::pmr::memory_resource*
 {
     return m_impl;
 }
 
-std::int64_t DebugAllocator::GetTotalAllocationInBytes() const
+auto DebugAllocator::GetTotalAllocationInBytes() const -> std::int64_t
 {
     return m_impl->total_allocation;
 }
 
-std::int64_t DebugAllocator::GetUsedMemoryInBytes() const
+auto DebugAllocator::GetUsedMemoryInBytes() const -> std::int64_t
 {
     return m_impl->used_memory_in_bytes;
 }

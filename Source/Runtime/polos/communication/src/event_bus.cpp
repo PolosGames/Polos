@@ -21,7 +21,7 @@ public:
     {}
     ~Impl() = default;
 
-    bool Subscribe(std::int64_t const t_event_hash, std::function<void(base_event&)> const& t_callback)
+    auto Subscribe(std::int64_t const t_event_hash, std::function<void(base_event&)> const& t_callback) -> bool
     {
         std::lock_guard lock(m_mutex);
 
@@ -35,8 +35,8 @@ public:
         return subscriber_id;
     }
 
-    [[nodiscard]] std::pair<std::function<void(base_event&)> const*, std::size_t>
-    GetSubscribers(std::int64_t const t_event_hash) const
+    auto GetSubscribers(std::int64_t const t_event_hash) const
+        -> std::pair<std::function<void(base_event&)> const*, std::size_t>
     {
         if (auto it = m_callbacks.find(t_event_hash); it != m_callbacks.end())
         {
@@ -62,7 +62,7 @@ EventBus::EventBus()
       m_impl{new Impl{m_allocator}}
 {}
 
-EventBus& EventBus::Instance()
+auto EventBus::Instance() -> EventBus&
 {
     static EventBus instance;
     return instance;
@@ -73,14 +73,14 @@ EventBus::~EventBus()
     delete m_impl;
 }
 
-std::int64_t EventBus::subscribe_internal(std::int64_t const                      t_type_hash,
-                                          std::function<void(base_event&)> const& t_callback) const
+auto EventBus::subscribe_internal(std::int64_t const                      t_type_hash,
+                                  std::function<void(base_event&)> const& t_callback) const -> std::int64_t
 {
     return m_impl->Subscribe(t_type_hash, t_callback);
 }
 
-std::pair<std::function<void(base_event&)> const*, std::size_t>
-EventBus::retrieve_subscribers(std::int64_t const t_type_hash) const
+auto EventBus::retrieve_subscribers(std::int64_t const t_type_hash) const
+    -> std::pair<std::function<void(base_event&)> const*, std::size_t>
 {
     return m_impl->GetSubscribers(t_type_hash);
 }

@@ -11,13 +11,15 @@
 #include <quill/DeferredFormatCodec.h>
 #include <quill/bundled/fmt/ostream.h>
 
+#include <cstdint>
+
 namespace polos::communication
 {
 
 namespace detail
 {
 
-COMMUNICATION_EXPORT std::int64_t RetrieveEventHash(char const* t_name);
+COMMUNICATION_EXPORT auto RetrieveEventHash(char const* t_name) -> std::int64_t;
 
 }
 
@@ -34,7 +36,7 @@ protected:
 /// Utility function to quickly get a hash for an event based on the return string of Name()
 /// @return hash of the event name based on FNV-1a hashing
 template<typename Event>
-std::int64_t EventHash()
+auto EventHash() -> std::int64_t
 {
     std::string const event_name = Event::Name();
     return detail::RetrieveEventHash(event_name.c_str());
@@ -54,7 +56,7 @@ private:                                                                        
     }                                                                                                                  \
 public:                                                                                                                \
     EventName() = default;                                                                                             \
-    static char const* Name()                                                                                          \
+    static auto Name() -> char const*                                                                                  \
     {                                                                                                                  \
         return #EventName;                                                                                             \
     }

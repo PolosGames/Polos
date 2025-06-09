@@ -12,7 +12,7 @@
 namespace polos::communication::detail
 {
 
-std::int64_t FnvHash(std::string const& t_str)
+static auto FnvHash(std::string const& t_str) -> std::int64_t
 {
     constexpr std::int64_t k_FnvPrime{1099511628211LL};
     constexpr std::int64_t k_FnvOffset{static_cast<std::int64_t>(14695981039346656037ULL)};
@@ -25,7 +25,7 @@ std::int64_t FnvHash(std::string const& t_str)
     return hash;
 }
 
-std::int64_t RetrieveEventHash(char const* t_name)
+auto RetrieveEventHash(char const* t_name) -> std::int64_t
 {
     static std::unordered_map<std::string, std::int64_t> hash_map;
     static std::mutex                                    mutex;
