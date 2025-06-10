@@ -4,16 +4,20 @@
 //
 
 #include "polos/core/engine.hpp"
-#include "polos/core/application.hpp"
+#include "polos/core/main_loop.hpp"
 #include "polos/logging/logger.hpp"
+
+#include <memory>
 
 namespace polos::core
 {
 
-void Engine::Run()
+void Engine::Run(ILiveLayer* t_app_layer)
 {
-    Application app;
-    app.Run();
+    MainLoop loop{};
+    loop.Run();
+
+    delete t_app_layer;
 }
 
 }// namespace polos::core

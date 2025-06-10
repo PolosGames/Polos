@@ -14,12 +14,12 @@ namespace
 
 TEST(TimeTestFixture, ElapsedTimeTest)
 {
-    std::int64_t start = polos::utils::GetTimeNow();
+    polos::TimePoint start = polos::utils::GetTimeNow();
 
     using namespace std::literals::chrono_literals;
     std::this_thread::sleep_for(1s);
 
-    std::int64_t end = polos::utils::GetTimeNow();
+    polos::TimePoint end = polos::utils::GetTimeNow();
 
     auto elapsed_time = end - start;
 

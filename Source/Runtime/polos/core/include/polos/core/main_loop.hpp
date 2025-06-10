@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef CORE_APP_APPLICATION_H
-#define CORE_APP_APPLICATION_H
+#ifndef POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_
+#define POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_
 
 #include "polos/core/module_macros.hpp"
 
@@ -15,17 +15,17 @@ struct engine_update;
 
 namespace polos::core
 {
-class CORE_EXPORT Application
+class CORE_EXPORT MainLoop
 {
 public:
-    Application();
+    MainLoop();
 
     void Run();
 private:
     void on_engine_update(communication::engine_update& t_event);
 
-    bool m_is_running;
+    bool m_is_running{true};
 };
 }// namespace polos::core
 
-#endif//CORE_APP_APPLICATION_H
+#endif// POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_

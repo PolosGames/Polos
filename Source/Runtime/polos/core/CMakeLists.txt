@@ -19,7 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "src/application.cpp"
+        "src/main_loop.cpp"
         "src/engine.cpp"
     PRIVATE_DEPS
         polos::communication

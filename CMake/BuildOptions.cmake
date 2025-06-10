@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-macro(build_options target warnings)
+function(build_options target warnings)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
         CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
         CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
@@ -17,6 +17,7 @@ macro(build_options target warnings)
     # if we are compiling a third party library, we don't care about the
     # warnings, so turn them off
     if(NOT ${warnings})
+        message(WARNING "Compiler warnings will not be enabled for ${target}")
         return()
     endif()
 
@@ -61,7 +62,7 @@ macro(build_options target warnings)
     else()
         target_compile_options(
             ${target}
-                PRIVATE 
+                PRIVATE
                     "-pedantic"
                     "-Wall"
                     "-Wextra"
@@ -72,7 +73,7 @@ macro(build_options target warnings)
                     "-Wcast-align"
                     "-Wunused"
                     "-Woverloaded-virtual"
-                    "-  "
+                    "-Wconversion"
                     "-Wsign-conversion"
                     "-Wdouble-promotion"
                     "-Wformat=2"
@@ -103,4 +104,4 @@ macro(build_options target warnings)
         endif()
     endif()
 
-endmacro()
+endfunction()

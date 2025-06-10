@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 include(GoogleTest)
 
@@ -38,22 +38,15 @@ macro(define_polos_module)
         endif()
     endif ()
 
-    file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
-
-    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
-        target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
-    endif()
-
     set_target_properties(
         ${MODULE_NAME} PROPERTIES
         #PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
         OUTPUT_NAME               "polos_${MODULE_NAME}"
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
         LINKER_LANGUAGE           CXX
+        LINK_FLAGS                "-lc++abi -lc++"
     )
 
     if (MODULE_PUBLIC_DEPS)
@@ -67,31 +60,41 @@ macro(define_polos_module)
     endif ()
 
     if (NOT MODULE_TYPE STREQUAL "INTERFACE")
-        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
-        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
-    endif()
-
-    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
         build_options(${MODULE_NAME} true)
         generate_export_header(${MODULE_NAME}
             BASE_NAME ${MODULE_NAME}
             EXPORT_FILE_NAME ${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}/module_macros.hpp
         )
-        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
-        target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
-        target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
 
+        file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
+        target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
+
+        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
         target_include_directories(${MODULE_NAME}
             PUBLIC
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         )
+
+        target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
+        target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
+        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
+        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+
+        # PDB files only for source code
+        if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+            install(
+                FILES "${CMAKE_CURRENT_BINARY_DIR}/polos_${MODULE_NAME}.pdb"
+                DESTINATION ${POLOS_INSTALL_DIR}
+            )
+        endif ()
+    else ()
+        target_compile_features(${MODULE_NAME} INTERFACE cxx_std_23)
     endif ()
 
     target_include_directories(${MODULE_NAME}
         INTERFACE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
     )
-
     target_include_directories(${MODULE_NAME}
         INTERFACE
             $<INSTALL_INTERFACE:include>
@@ -103,6 +106,7 @@ macro(define_polos_module)
         ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
         #PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
+        PERMISSIONS OWNER_READ OWNER_WRITE
     )
 
     add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
@@ -124,6 +128,7 @@ macro(define_polos_module)
             LINKER_LANGUAGE           CXX
             CXX_VISIBILITY_PRESET     hidden
             VISIBILITY_INLINES_HIDDEN True
+            LINK_FLAGS                "-lc++abi -lc++"
         )
 
         target_include_directories(${MODULE_TEST_NAME} PRIVATE src)
@@ -173,26 +178,42 @@ macro (define_polos_app)
     set(multiValueArgs SOURCES DEFINES)
     cmake_parse_arguments(app "" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
 
+    file(GLOB_RECURSE ${app_NAME}_INC "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+
+    list(APPEND app_SOURCES ${${app_NAME}_INC})
+
     add_executable(${app_NAME} ${app_SOURCES})
 
     target_link_libraries(${app_NAME} PUBLIC polos::polos)
 
+    target_include_directories(${app_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
     set_target_properties(
         ${app_NAME} PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
         LINKER_LANGUAGE           CXX
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
+        LINK_FLAGS                "-lc++abi -lc++"
     )
 
     if (NOT app_LOGGER_TYPE)
         set(LOGGER_TYPE App)
     endif ()
 
-    target_compile_definitions(${app_NAME} PRIVATE PL_LOGGER_TYPE=${LOGGER_TYPE})
+    target_compile_definitions(${app_NAME} PRIVATE PL_LOGGER_TYPE=App)
     target_compile_definitions(${app_NAME} PRIVATE QUILL_DLL_IMPORT)
+
+    target_compile_features(${app_NAME} PRIVATE cxx_std_23)
+
+    build_options(${app_NAME} true)
+
+    if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        install(
+            FILES ${CMAKE_CURRENT_BINARY_DIR}/${app_NAME}.pdb
+            DESTINATION ${POLOS_INSTALL_DIR}
+        )
+    endif()
 
     install(
         TARGETS ${app_NAME}

@@ -17,23 +17,20 @@ class ScopedTimer::Impl
 public:
     explicit Impl(std::string_view const t_name)
         : m_name{t_name},
-          m_start{GetTimeNow()},
-          m_end{GetTimeNow()}
+          m_start{GetTimeNow()}
     {
         LogInfo("Starting timer for scope: \"{}\"", m_name);
     }
 
     ~Impl()
     {
-        m_end                  = GetTimeNow();
-        auto const passed_time = m_end - m_start;
+        auto const passed_time = GetTimeNow() - m_start;
 
-        LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<double>(passed_time) * 0.001f * 0.001f));
+        LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<float>(passed_time.count()) * 0.001f * 0.001f));
     }
 private:
-    std::string  m_name;
-    std::int64_t m_start;
-    std::int64_t m_end;
+    std::string m_name;
+    TimePoint   m_start;
 };
 
 ScopedTimer::ScopedTimer(char const* t_name)

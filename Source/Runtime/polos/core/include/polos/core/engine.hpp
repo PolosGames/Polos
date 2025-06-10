@@ -6,6 +6,7 @@
 #ifndef CORE_ENGINE_ENGINE_H
 #define CORE_ENGINE_ENGINE_H
 
+#include "polos/core/i_live_layer.hpp"
 #include "polos/core/module_macros.hpp"
 
 namespace polos::core
@@ -13,7 +14,7 @@ namespace polos::core
 class CORE_EXPORT Engine
 {
 public:
-    void Run();
+    void Run(ILiveLayer* t_app_layer);
 };
 }// namespace polos::core
 

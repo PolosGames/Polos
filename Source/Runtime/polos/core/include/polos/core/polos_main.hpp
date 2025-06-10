@@ -7,15 +7,19 @@
 #define POLOS_MAIN_HPP
 
 #include "polos/core/engine.hpp"
+#include "polos/core/i_live_layer.hpp"
+
+static polos::core::ILiveLayer* GetLiveLayer(void* t_ptr = nullptr);
+
 #ifdef _MSVC_LANG
 #    pragma warning(push)
 #    pragma warning(disable : 4008)
 #endif
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     polos::core::Engine engine;
-    engine.Run();
+    engine.Run(GetLiveLayer());
 }
 #ifdef _MSVC_LANG
 #    pragma warning(pop)

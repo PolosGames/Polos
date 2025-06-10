@@ -23,6 +23,8 @@ QUILL_EXPORT quill::Logger* g_app_logger;
 
 void setup_quill()
 {
+    static constexpr quill::LogLevel log_level{quill::LogLevel::Info};
+
     quill::BackendOptions backend_options;
     quill::Backend::start(backend_options);
 
@@ -37,9 +39,9 @@ void setup_quill()
     g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
     g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 
-    g_polos_logger->set_log_level(quill::LogLevel::TraceL3);
-    g_polly_logger->set_log_level(quill::LogLevel::TraceL3);
-    g_app_logger->set_log_level(quill::LogLevel::TraceL3);
+    g_polos_logger->set_log_level(log_level);
+    g_polly_logger->set_log_level(log_level);
+    g_app_logger->set_log_level(log_level);
 }
 
 quill::Logger* get_logger(std::string const& name)
