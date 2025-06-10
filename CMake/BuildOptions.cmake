@@ -27,7 +27,7 @@ macro(build_options target warnings)
                 PRIVATE
                     "/EHsc"
                     "/permissive-"
-                    "/W3"
+                    "/W4"
                     "/WX"
                     "/w14101" # unreferenced local variable
                     "/w14189" # local variable is initialized but not referenced
@@ -72,7 +72,7 @@ macro(build_options target warnings)
                     "-Wcast-align"
                     "-Wunused"
                     "-Woverloaded-virtual"
-                    "-Wconversion"
+                    "-  "
                     "-Wsign-conversion"
                     "-Wdouble-promotion"
                     "-Wformat=2"

@@ -156,8 +156,12 @@ macro(define_polos_module)
         # TODO: Not cross platform. Only for Windows for now.
         add_custom_command(TARGET ${MODULE_TEST_NAME} PRE_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_NAME}>
-            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${MODULE_TEST_DATA}
             COMMAND_EXPAND_LISTS
+        )
+
+        install(
+            FILES ${MODULE_TEST_DATA}
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif()
 endmacro()

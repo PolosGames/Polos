@@ -12,12 +12,16 @@
 namespace
 {
 
-TEST(EventBusTestFixture, SubscribeToEventTest)
+class EventBusTestFixture : public ::testing::Test
 {
-    auto& event_bus = polos::communication::EventBus::Instance();
+protected:
+    static constexpr float const    expected_delta_time{44.0f};
+    polos::communication::EventBus& m_event_bus = polos::communication::EventBus::Instance();
+};
 
-    float                 ref_delta_time{0.0f};
-    constexpr float const expected_delta_time{44.0f};
+TEST_F(EventBusTestFixture, SubscribeToEventTest)
+{
+    float ref_delta_time{0.0f};
 
     auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event)
     {
@@ -31,10 +35,8 @@ TEST(EventBusTestFixture, SubscribeToEventTest)
     EXPECT_EQ(ref_delta_time, expected_delta_time);
 }
 
-TEST(EventBusTestFixture, DispatchWithoutSubscribers)
+TEST_F(EventBusTestFixture, DispatchWithoutSubscribers)
 {
-    auto& event_bus = polos::communication::EventBus::Instance();
-
     constexpr float const expected_delta_time{44.0f};
 
     std::size_t total_dispatched =
