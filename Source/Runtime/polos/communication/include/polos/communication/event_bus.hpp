@@ -9,7 +9,7 @@
 #include "polos/communication/event.hpp"
 #include "polos/communication/module_macros.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/memory/debug_allocator.hpp"
+#include "polos/memory/debug_memory_resource.hpp"
 
 #include <concepts>
 #include <cstddef>
@@ -70,7 +70,7 @@ private:
                             std::function<void(base_event&)> const& t_callback) const -> std::int64_t;
     auto retrieve_subscribers(std::int64_t t_type_hash) const -> std::pair<BaseEventDelegate const*, std::size_t>;
 
-    polos::memory::DebugAllocator m_allocator;
+    polos::memory::DebugMemoryResource m_allocator;
 
     class Impl;
     Impl* m_impl;

@@ -82,7 +82,7 @@ public:                                                                         
     template<>                                                                                                         \
     struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName>                                             \
     {                                                                                                                  \
-    };
+    }
 
 /// Shall be called after each declaration of an event. The format should match as if overloading ostream.
 /// @param EventName Event's class name with its full namespace
@@ -100,6 +100,6 @@ public:                                                                         
     template<>                                                                                                         \
     struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName>                                             \
     {                                                                                                                  \
-    };
+    }
 
 #endif//CORE_COMMUNICATION_EVENTS_EVENT_H

@@ -3,13 +3,13 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/memory/debug_allocator.hpp"
+#include "polos/memory/debug_memory_resource.hpp"
 #include "polos/logging/log_macros.hpp"
 
 namespace polos::memory
 {
 
-class DebugAllocator::Impl : public std::pmr::memory_resource
+class DebugMemoryResource::Impl : public std::pmr::memory_resource
 {
 public:
     explicit Impl(std::string t_name, std::pmr::memory_resource* t_upstream)
@@ -52,30 +52,30 @@ private:
     std::pmr::memory_resource* m_upstream{nullptr};
 };
 
-DebugAllocator::DebugAllocator()
-    : DebugAllocator{"Default"}
+DebugMemoryResource::DebugMemoryResource()
+    : DebugMemoryResource{"Default"}
 {}
 
-DebugAllocator::DebugAllocator(char const* t_name, std::pmr::memory_resource* t_upstream)
+DebugMemoryResource::DebugMemoryResource(char const* t_name, std::pmr::memory_resource* t_upstream)
     : m_impl{new Impl{t_name, t_upstream}}
 {}
 
-DebugAllocator::~DebugAllocator()
+DebugMemoryResource::~DebugMemoryResource()
 {
     delete m_impl;
 }
 
-auto DebugAllocator::GetMemoryResource() const noexcept -> std::pmr::memory_resource*
+auto DebugMemoryResource::GetMemoryResource() const noexcept -> std::pmr::memory_resource*
 {
     return m_impl;
 }
 
-auto DebugAllocator::GetTotalAllocationInBytes() const -> std::int64_t
+auto DebugMemoryResource::GetTotalAllocationInBytes() const -> std::int64_t
 {
     return m_impl->total_allocation;
 }
 
-auto DebugAllocator::GetUsedMemoryInBytes() const -> std::int64_t
+auto DebugMemoryResource::GetUsedMemoryInBytes() const -> std::int64_t
 {
     return m_impl->used_memory_in_bytes;
 }

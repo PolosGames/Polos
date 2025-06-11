@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/memory/debug_allocator.hpp"
+#include "polos/memory/debug_memory_resource.hpp"
 
 #include "polos/logging/log_macros.hpp"
 
@@ -15,11 +15,11 @@
 namespace
 {
 
-using polos::memory::DebugAllocator;
+using polos::memory::DebugMemoryResource;
 
-TEST(DebugAllocatorTestFixture, AllocateOnVectorTest)
+TEST(DebugMemoryResourceTestFixture, AllocateOnVectorTest)
 {
-    DebugAllocator        allocator{"TestAllocator", std::pmr::new_delete_resource()};
+    DebugMemoryResource   allocator{"TestAllocator", std::pmr::new_delete_resource()};
     std::pmr::vector<int> int_vec({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, allocator.GetMemoryResource());
 
     EXPECT_EQ(allocator.GetUsedMemoryInBytes(), 56);// 40 + 16 (vector internal structures)

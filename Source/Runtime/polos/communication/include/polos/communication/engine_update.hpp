@@ -24,6 +24,6 @@ struct engine_update final : base_event
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::engine_update, "Delta Time: {}", event.delta_time);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::engine_update, "Delta Time: {:.4f}", event.delta_time);
 
 #endif// COMMUNICATION_EVENTS_ENGINE_UPDATE_H

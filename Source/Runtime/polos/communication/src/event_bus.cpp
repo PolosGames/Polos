@@ -15,7 +15,7 @@ namespace polos::communication
 class EventBus::Impl
 {
 public:
-    Impl(polos::memory::DebugAllocator& t_allocator)
+    Impl(polos::memory::DebugMemoryResource& t_allocator)
         : m_allocator{t_allocator},
           m_callbacks{m_allocator.GetMemoryResource()}
     {}
@@ -51,10 +51,10 @@ private:
     // TODO: Make a freelist so we can unsubscribe
     using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
 
-    polos::memory::DebugAllocator& m_allocator;
-    std::int64_t                   m_next_id{0};
-    CallbackMap                    m_callbacks;
-    std::mutex                     m_mutex;
+    polos::memory::DebugMemoryResource& m_allocator;
+    std::int64_t                        m_next_id{0};
+    CallbackMap                         m_callbacks;
+    std::mutex                          m_mutex;
 };
 
 EventBus::EventBus()
