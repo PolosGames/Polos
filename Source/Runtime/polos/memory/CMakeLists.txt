@@ -19,9 +19,9 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "src/debug_allocator.cpp"
+        "src/debug_memory_resource.cpp"
     PUBLIC_DEPS
         polos::logging
     TEST_SOURCES
-        "test/debug_allocator_test.cpp"
+        "test/debug_memory_resource_test.cpp"
 )
