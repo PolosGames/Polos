@@ -8,7 +8,7 @@
 
 #include "polos/logging/logger.hpp"
 
-#include "polos/platform/platform.hpp"
+#include "polos/utils/macro_utilities.hpp"
 
 #include <quill/LogMacros.h>
 #include <source_location>

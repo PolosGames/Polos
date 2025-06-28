@@ -15,13 +15,13 @@ namespace polos::logging
 
 /// Get the sink name for the console logger
 /// @return a string view to the name of the sink
-[[nodiscard]] LOGGING_EXPORT std::string_view GetConsoleSinkName();
+[[nodiscard]] std::string_view GetConsoleSinkName();
 
 /// Flush the designated logger immediately while blocking the calling thread.
 /// @param t_logger The logger whose sink that needs flushing
-LOGGING_EXPORT void FlushLogger(quill::Logger* t_logger);
+void FlushLogger(quill::Logger* t_logger);
 
-class LOGGING_EXPORT Logger
+class Logger
 {
 public:
     Logger(Logger const&)            = delete;

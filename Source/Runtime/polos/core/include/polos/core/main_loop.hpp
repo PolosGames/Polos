@@ -11,6 +11,7 @@
 namespace polos::communication
 {
 struct engine_update;
+struct window_close;
 }
 
 namespace polos::core
@@ -23,6 +24,7 @@ public:
     void Run();
 private:
     void on_engine_update(communication::engine_update& t_event);
+    void on_window_close(communication::window_close&);
 
     bool m_is_running{true};
 };

@@ -7,6 +7,8 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+set(ThirdPartyLibs assimp::assimp ctre::ctre glfw glad::glad glm::glm imgui::imgui)
+
 add_subdirectory(Runtime)
 add_subdirectory(ThirdParty)
 
@@ -18,11 +20,14 @@ target_link_libraries(
             polos::core
             polos::datatypes
             polos::logging
-            polos::platform
             polos::utils
+            ${ThirdPartyLibs}
 )
 add_library(polos::polos ALIAS polos)
 
-if(${BUILD_EDITOR})
-    add_subdirectory(Editor)
-endif()
+foreach(LIB ${ThirdPartyLibs})
+    get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION_RELEASE)
+    if(LIB_SHARED_LIBRARIES)
+        install(FILES ${LIB_SHARED_LIBRARIES} DESTINATION ${POLOS_INSTALL_DIR})
+    endif()
+endforeach()

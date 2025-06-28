@@ -17,12 +17,10 @@ define_polos_module(
     NAME
         utils
     TYPE
-        SHARED
+        STATIC
     SOURCES
         "src/scoped_timer.cpp"
         "src/time.cpp"
-    PUBLIC_DEPS
-        polos::platform
     PRIVATE_DEPS
         polos::logging
     TEST_SOURCES

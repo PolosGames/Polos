@@ -106,7 +106,7 @@ auto EventBus::Dispatch(Args&&... args) -> std::size_t
     LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_size);
     for (auto const& subscriber : subscribers_callbacks)
     {
-        EventType event{std::forward<Args>(args)...};
+        EventType event(std::forward<Args>(args)...);
         std::invoke(subscriber, event);
     }
 

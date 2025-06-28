@@ -14,6 +14,12 @@ function(build_options target warnings)
         )
     endif()
 
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+        set_target_properties(${target} PROPERTIES LINKER_FLAGS "-lc++")
+    endif()
+
+
     # if we are compiling a third party library, we don't care about the
     # warnings, so turn them off
     if(NOT ${warnings})

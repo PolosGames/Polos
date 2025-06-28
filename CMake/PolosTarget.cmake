@@ -46,7 +46,6 @@ macro(define_polos_module)
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
         LINKER_LANGUAGE           CXX
-        LINK_FLAGS                "-lc++abi -lc++"
     )
 
     if (MODULE_PUBLIC_DEPS)
@@ -81,12 +80,14 @@ macro(define_polos_module)
         target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
 
         # PDB files only for source code
-        if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        if (CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND MODULE_TYPE STREQUAL "SHARED")
             install(
                 FILES "${CMAKE_CURRENT_BINARY_DIR}/polos_${MODULE_NAME}.pdb"
                 DESTINATION ${POLOS_INSTALL_DIR}
             )
         endif ()
+
+        target_compile_features(${MODULE_NAME} PUBLIC cxx_std_23)
     else ()
         target_compile_features(${MODULE_NAME} INTERFACE cxx_std_23)
     endif ()
@@ -128,7 +129,6 @@ macro(define_polos_module)
             LINKER_LANGUAGE           CXX
             CXX_VISIBILITY_PRESET     hidden
             VISIBILITY_INLINES_HIDDEN True
-            LINK_FLAGS                "-lc++abi -lc++"
         )
 
         target_include_directories(${MODULE_TEST_NAME} PRIVATE src)
@@ -194,7 +194,6 @@ macro (define_polos_app)
         LINKER_LANGUAGE           CXX
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
-        LINK_FLAGS                "-lc++abi -lc++"
     )
 
     if (NOT app_LOGGER_TYPE)

@@ -30,7 +30,7 @@ public:
 
         m_callbacks.emplace(t_event_hash, std::pmr::vector<BaseEventDelegate>{m_allocator.GetMemoryResource()});
         auto& event_queue = m_callbacks[t_event_hash];
-        event_queue.push_back(std::move(t_callback));
+        event_queue.push_back(t_callback);
 
         return subscriber_id;
     }

@@ -7,6 +7,7 @@
 
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/window/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/time.hpp"
 
@@ -25,8 +26,15 @@ MainLoop::MainLoop()
     communication::Subscribe<communication::engine_update>(
         [this](communication::engine_update& t_event)
         {
-            this->on_engine_update(t_event);
+            on_engine_update(t_event);
         });
+
+    communication::Subscribe<communication::window_close>(
+        [this](communication::window_close& t_event)
+        {
+            on_window_close(t_event);
+        }
+    );
 }
 
 void MainLoop::Run()
@@ -60,5 +68,9 @@ void MainLoop::on_engine_update(communication::engine_update& t_event)
     LogInfo("On Engine Update: [{}]", t_event.delta_time);
 }
 
+void MainLoop::on_window_close(communication::window_close&)
+{
+    m_is_running = false;
+}
 
 }// namespace polos::core

@@ -27,4 +27,5 @@ define_polos_module(
         polos::filesystem
         polos::logging
         polos::utils
+        polos::platform
 )

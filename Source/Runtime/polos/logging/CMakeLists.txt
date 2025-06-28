@@ -17,10 +17,10 @@ define_polos_module(
     NAME
         logging
     TYPE
-        SHARED
+        STATIC
     SOURCES
         "src/logger.cpp"
     PUBLIC_DEPS
         quill::quill_shared
-        polos::platform
+        polos::utils
 )
