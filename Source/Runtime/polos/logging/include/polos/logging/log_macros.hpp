@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef LOGGING_LOGGING_MACROS_H
-#define LOGGING_LOGGING_MACROS_H
+#ifndef POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_
+#define POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_
 
 #include "polos/logging/logger.hpp"
 
@@ -31,4 +31,4 @@
 #define LOG_VAR_IMPL(Str, Variable) LOG_POLOS_INFO(Str, __FILE__, __LINE__, QUILL_STRINGIFY(Variable), Variable)
 #define LogVariable(Variable)       LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
 
-#endif//LOGGING_LOGGING_MACROS_H
+#endif// POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_

@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"

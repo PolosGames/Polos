@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #ifndef POLOS_MEMORY_INCLUDE_POLOS_MEMORY_DEBUG_MEMORY_RESOURCE_HPP_
 #define POLOS_MEMORY_INCLUDE_POLOS_MEMORY_DEBUG_MEMORY_RESOURCE_HPP_
@@ -40,4 +40,4 @@ private:
 
 }// namespace polos::memory
 
-#endif//POLOS_MEMORY_INCLUDE_POLOS_MEMORY_DEBUG_MEMORY_RESOURCE_HPP_
+#endif// POLOS_MEMORY_INCLUDE_POLOS_MEMORY_DEBUG_MEMORY_RESOURCE_HPP_

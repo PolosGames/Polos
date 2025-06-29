@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef CORE_ENGINE_ENGINE_H
-#define CORE_ENGINE_ENGINE_H
+#ifndef POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_HPP_
+#define POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_HPP_
 
 #include "polos/core/i_live_layer.hpp"
 #include "polos/core/module_macros.hpp"
@@ -18,4 +18,4 @@ public:
 };
 }// namespace polos::core
 
-#endif//CORE_ENGINE_ENGINE_H
+#endif// POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_HPP_

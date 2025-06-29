@@ -1,13 +1,13 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #include "polos/core/main_loop.hpp"
 
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/window/window_close.hpp"
+#include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/time.hpp"
 

@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #include "polos/platform/window_manager.hpp"
 
@@ -41,7 +41,7 @@ void GLFWErrorCallback(int p_ErrorCode, const char* p_Description)
             break;
     }
 }
-#endif
+#endif// !NDEBUG
 
 void WindowCloseCallback(GLFWwindow* t_handle)
 {

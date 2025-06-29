@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef DATATYPES_SINGLETON_H
-#define DATATYPES_SINGLETON_H
+#ifndef POLOS_DATATYPES_INCLUDE_POLOS_DATATYPES_SINGLETON_HPP_
+#define POLOS_DATATYPES_INCLUDE_POLOS_DATATYPES_SINGLETON_HPP_
 
 #include <cstdint>
 
@@ -36,4 +36,4 @@ private:
 
 }// namespace polos::datatypes
 
-#endif//DATATYPES_SINGLETON_H
+#endif// POLOS_DATATYPES_INCLUDE_POLOS_DATATYPES_SINGLETON_HPP_

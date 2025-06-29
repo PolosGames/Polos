@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef CORE_COMMUNICATION_EVENTS_EVENT_H
-#define CORE_COMMUNICATION_EVENTS_EVENT_H
+#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_HPP_
+#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_HPP_
 
 #include "polos/communication/module_macros.hpp"
 
@@ -102,4 +102,4 @@ public:                                                                         
     {                                                                                                                  \
     }
 
-#endif//CORE_COMMUNICATION_EVENTS_EVENT_H
+#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_HPP_

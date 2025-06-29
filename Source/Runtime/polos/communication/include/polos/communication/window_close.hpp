@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_CLOSE_HPP_
 #define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_CLOSE_HPP_
@@ -22,4 +22,4 @@ struct window_close final : base_event
 
 }// namespace polos::communication
 
-#endif//POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_CLOSE_HPP_
+#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_CLOSE_HPP_

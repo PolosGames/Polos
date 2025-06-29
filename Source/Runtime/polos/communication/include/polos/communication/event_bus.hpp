@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
-#define CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
+#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
+#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
 
 #include "polos/communication/event.hpp"
 #include "polos/communication/module_macros.hpp"
@@ -36,10 +36,10 @@ class COMMUNICATION_EXPORT EventBus
 public:
     ~EventBus();
 
-    EventBus(const EventBus&)            = delete;
+    EventBus(const EventBus&) = delete;
     EventBus& operator=(const EventBus&) = delete;
-    EventBus(EventBus&&)                 = delete;
-    EventBus& operator=(EventBus&&)      = delete;
+    EventBus(EventBus&&) = delete;
+    EventBus& operator=(EventBus&&) = delete;
 
     ///
     /// Get EventBus singleton
@@ -67,8 +67,8 @@ private:
     EventBus();
 
     auto subscribe_internal(std::int64_t                            t_type_hash,
-                            std::function<void(base_event&)> const& t_callback) const -> std::int64_t;
-    auto retrieve_subscribers(std::int64_t t_type_hash) const -> std::pair<BaseEventDelegate const*, std::size_t>;
+                            std::function<void(base_event&)> const& t_callback) const->std::int64_t;
+    auto retrieve_subscribers(std::int64_t t_type_hash) const->std::pair<BaseEventDelegate const*, std::size_t>;
 
     polos::memory::DebugMemoryResource m_allocator;
 
@@ -97,7 +97,7 @@ auto EventBus::Dispatch(Args&&... args) -> std::size_t
     }
 
     auto first = subscribers.first;
-    auto last  = subscribers.first + subscribers.second;
+    auto last = subscribers.first + subscribers.second;
 
     std::pmr::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last,
                                                                             m_allocator.GetMemoryResource());
@@ -127,4 +127,4 @@ auto Dispatch(Args&&... args) -> std::size_t
 
 }// namespace polos::communication
 
-#endif//CORE_COMMUNICATION_EVENT_BUS_EVENT_BUS_H
+#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_

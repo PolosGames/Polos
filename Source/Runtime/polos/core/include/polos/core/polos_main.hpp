@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #ifndef POLOS_MAIN_HPP
 #define POLOS_MAIN_HPP
@@ -25,4 +25,4 @@ int main(int, char*[])
 #    pragma warning(pop)
 #endif
 
-#endif//POLOS_MAIN_HPP
+#endif// POLOS_MAIN_HPP

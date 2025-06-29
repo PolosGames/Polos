@@ -26,7 +26,7 @@ target_link_libraries(
 add_library(polos::polos ALIAS polos)
 
 foreach(LIB ${ThirdPartyLibs})
-    get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION_RELEASE)
+    get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION)
     if(LIB_SHARED_LIBRARIES)
         install(FILES ${LIB_SHARED_LIBRARIES} DESTINATION ${POLOS_INSTALL_DIR})
     endif()

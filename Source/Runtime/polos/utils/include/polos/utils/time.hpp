@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef UTILS_TIME_TIME_H
-#define UTILS_TIME_TIME_H
+#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_TIME_HPP_
+#define POLOS_UTILS_INCLUDE_POLOS_UTILS_TIME_HPP_
 
 #include "polos/utils/module_macros.hpp"
 
@@ -59,4 +59,4 @@ inline constexpr polos::Duration operator""_ms(unsigned long long t_time)
     return polos::utils::ConvertToMicroseconds(std::chrono::milliseconds(t_time));
 }
 
-#endif//UTILS_TIME_TIME_H
+#endif//POLOS_UTILS_INCLUDE_POLOS_UTILS_TIME_HPP_

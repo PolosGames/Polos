@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef FILESYSTEM_FILE_H_
-#define FILESYSTEM_FILE_H_
+#ifndef POLOS_FILESYSTEM_INCLUDE_FILESYSTEM_RESOURCE_HPP_
+#define POLOS_FILESYSTEM_INCLUDE_FILESYSTEM_RESOURCE_HPP_
 
 #include <cstdint>
 #include <string>
@@ -23,4 +23,4 @@ struct resource
 
 }// namespace polos::fs
 
-#endif//FILESYSTEM_FILE_H_
+#endif//POLOS_FILESYSTEM_INCLUDE_FILESYSTEM_RESOURCE_HPP_

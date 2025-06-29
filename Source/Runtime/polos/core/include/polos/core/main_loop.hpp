@@ -1,7 +1,7 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #ifndef POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_
 #define POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_

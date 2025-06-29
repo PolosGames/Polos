@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef LOGGING_LOG_H
-#define LOGGING_LOG_H
+#ifndef POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
+#define POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
 
 #include "polos/logging/module_macros.hpp"
 
@@ -52,4 +52,4 @@ private:
 
 }// namespace polos::logging
 
-#endif//LOGGING_LOG_H
+#endif// POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
