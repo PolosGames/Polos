@@ -13,7 +13,7 @@ namespace
 
 TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
 {
-    auto file = polos::fs::ReadFile("test_file.test", std::ios::ate);
+    auto file = polos::fs::ReadFile("test_file.test"_path, std::ios::ate);
 
     EXPECT_TRUE(file);
 
@@ -30,7 +30,7 @@ TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
 
 TEST(FileManipTestFixture, OpenAndRead_When_IncorrectFileName)
 {
-    auto file = polos::fs::ReadFile("test_fle.test", std::ios::ate);
+    auto file = polos::fs::ReadFile("test_fle.test"_path, std::ios::ate);
 
     EXPECT_FALSE(file);
 }

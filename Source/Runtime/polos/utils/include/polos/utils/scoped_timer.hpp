@@ -28,7 +28,7 @@ namespace polos::utils
 class UTILS_EXPORT ScopedTimer
 {
 public:
-    explicit ScopedTimer(char const* t_name);
+    explicit ScopedTimer(std::string t_name);
     ~ScopedTimer();
 
     ScopedTimer(ScopedTimer const&)            = delete;
@@ -36,8 +36,8 @@ public:
     ScopedTimer& operator=(ScopedTimer&&)      = delete;
     ScopedTimer& operator=(ScopedTimer const&) = delete;
 private:
-    class Impl;
-    Impl* m_impl;
+    std::string m_name;
+    TimePoint   m_start;
 };
 }// namespace polos::utils
 

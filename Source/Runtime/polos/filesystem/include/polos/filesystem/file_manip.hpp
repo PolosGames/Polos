@@ -10,12 +10,25 @@
 #include "polos/filesystem/resource.hpp"
 
 #include <expected>
+#include <filesystem>
 #include <fstream>
 
 namespace polos::fs
 {
-FILESYSTEM_EXPORT auto ReadFile(const char*        t_file_path,
-                                std::ios::openmode t_open_mode) -> std::expected<resource, bool>;
+
+FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path t_file_path,
+                                std::ios::openmode    t_open_mode) -> std::expected<resource, bool>;
+
+inline auto ReadFile(std::string t_file_path, std::ios::openmode t_open_mode) -> std::expected<resource, bool> = delete;
+inline auto ReadFile(char const* t_file_path, std::ios::openmode t_open_mode) -> std::expected<resource, bool> = delete;
+inline auto ReadFile(std::string_view   t_file_path,
+                     std::ios::openmode t_open_mode) -> std::expected<resource, bool>                          = delete;
+
+}// namespace polos::fs
+
+inline const std::filesystem::path operator""_path(char const* t_path_str, std::size_t)
+{
+    return std::filesystem::path(t_path_str);
 }
 
 #endif// POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILE_MANIP_HPP_

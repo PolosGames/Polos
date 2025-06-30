@@ -12,6 +12,14 @@
 
 #include <vector>
 
+namespace polos::communication
+{
+
+struct engine_update;
+struct window_close;
+
+}// namespace polos::communication
+
 namespace polos::platform
 {
 
@@ -27,13 +35,13 @@ public:
     WindowManager& operator=(WindowManager&&) = delete;
 
     static WindowManager& Instance();
-
-
 private:
     WindowManager();
 
-    class Impl;
-    Impl* m_impl;
+    void OnUpdate(communication::engine_update&) const noexcept;
+    void OnWindowClose(communication::window_close&) const noexcept;
+
+    GLFWwindow* m_window{ nullptr };
 };
 
 }// namespace polos::platform

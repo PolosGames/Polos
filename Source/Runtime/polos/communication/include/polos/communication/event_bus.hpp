@@ -66,51 +66,56 @@ public:
 private:
     EventBus();
 
-    auto subscribe_internal(std::int64_t                            t_type_hash,
-                            std::function<void(base_event&)> const& t_callback) const->std::int64_t;
-    auto retrieve_subscribers(std::int64_t t_type_hash) const->std::pair<BaseEventDelegate const*, std::size_t>;
+    // TODO: Make a freelist so we can unsubscribe
+    using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
 
-    polos::memory::DebugMemoryResource m_allocator;
-
-    class Impl;
-    Impl* m_impl;
+    polos::memory::DebugMemoryResource  m_allocator;
+    std::int64_t                        m_next_id{0};
+    CallbackMap                         m_callbacks;
+    std::mutex                          m_mutex;
 };
 
 template<PolosEvent EventType>
 auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
 {
     LogTrace("[EventBus::Subscribe]");
-    auto event_hash = EventHash<EventType>();
+
+    std::int64_t event_hash = EventHash<EventType>();
     LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
-    return subscribe_internal(event_hash, *std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
+
+    std::lock_guard lock(m_mutex);
+
+    // Give each subscriber of any event a unique id.
+    auto subscriber_id = m_next_id++;
+
+    m_callbacks.emplace(event_hash, std::pmr::vector<BaseEventDelegate>{m_allocator.GetMemoryResource()});
+    auto& event_queue = m_callbacks[event_hash];
+    event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
+
+    return subscriber_id;
 }
 
 template<PolosEvent EventType, typename... Args>
 auto EventBus::Dispatch(Args&&... args) -> std::size_t
 {
     LogTrace("[EventBus::Dispatch]");
-    auto subscribers = retrieve_subscribers(EventHash<EventType>());
-    if (subscribers.first == nullptr)
+    CallbackMap::iterator it = m_callbacks.find(EventHash<EventType>());
+    if (it == m_callbacks.end())
     {
-        LogWarn("[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
-        return subscribers.second;
+        LogDebug("[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
+        return 0U;
     }
 
-    auto first = subscribers.first;
-    auto last = subscribers.first + subscribers.second;
+    auto& subcribers_callbacks = it->second;
 
-    std::pmr::vector<std::function<void(EventType&)>> subscribers_callbacks(first, last,
-                                                                            m_allocator.GetMemoryResource());
-    const std::size_t                                 subscribers_size = subscribers_callbacks.size();
-
-    LogDebug("Dispatching event of type {{{}}} to {} subscribers...", EventType::Name(), subscribers_size);
-    for (auto const& subscriber : subscribers_callbacks)
+    for (auto const& subscriber : subcribers_callbacks)
     {
         EventType event(std::forward<Args>(args)...);
         std::invoke(subscriber, event);
     }
+    LogDebug("Dispatched event of type {{{}}} to {} subscribers...", EventType::Name(), subcribers_callbacks.size());
 
-    return subscribers_size;
+    return subcribers_callbacks.size();
 }
 
 template<PolosEvent EventType>

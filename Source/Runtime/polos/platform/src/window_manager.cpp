@@ -66,92 +66,73 @@ void FramebufferSizeCallback(GLFWwindow* /*p_Window*/, std::int32_t t_width, std
 
 }// namespace
 
-class WindowManager::Impl
-{
-public:
-    Impl()
-    {
-        communication::Subscribe<communication::engine_update>(
-            [this](communication::engine_update& t_event)
-            {
-                OnUpdate(t_event);
-            });
-        communication::Subscribe<communication::window_close>(
-            [this](communication::window_close& t_event)
-            {
-                OnWindowClose(t_event);
-            });
-
-        if (!glfwInit())
-        {
-            LogCritical("Could not initialize GLFW!");
-            return;
-        }
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifndef NDEBUG
-        glfwSetErrorCallback(GLFWErrorCallback);
-#endif// !NDEBUG
-
-        m_window = glfwCreateWindow(640, 480, "OpenGL Triangle", NULL, NULL);
-        if (nullptr == m_window)
-        {
-            LogCritical("Could not create main window!");
-            return;
-        }
-
-        glfwMakeContextCurrent(m_window);
-
-        if (!rendering::InitializeRenderContext())
-        {
-            LogCritical("Aborting initialization of WindowManager since GL was not initialized!");
-            return;
-        }
-
-        glfwSwapInterval(1);
-
-        glfwSetWindowCloseCallback(m_window, WindowCloseCallback);
-        glfwSetWindowFocusCallback(m_window, WindowFocusCallback);
-        glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
-    }
-
-    ~Impl()
-    {
-    }
-
-    void OnUpdate(communication::engine_update&)
-    {
-        glfwSwapBuffers(m_window);
-        glfwPollEvents();
-    }
-
-    void OnWindowClose(communication::window_close&)
-    {
-        glfwDestroyWindow(m_window);
-        glfwTerminate();
-    }
-
-private:
-    GLFWwindow* m_window{nullptr};
-};
-
 WindowManager::WindowManager()
 {
-    m_impl = new Impl();
+    communication::Subscribe<communication::engine_update>(
+        [this](communication::engine_update& t_event)
+    {
+        OnUpdate(t_event);
+    });
+    communication::Subscribe<communication::window_close>(
+        [this](communication::window_close& t_event)
+    {
+        OnWindowClose(t_event);
+    });
+
+    if (!glfwInit())
+    {
+        LogCritical("Could not initialize GLFW!");
+        return;
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifndef NDEBUG
+    glfwSetErrorCallback(GLFWErrorCallback);
+#endif// !NDEBUG
+
+    m_window = glfwCreateWindow(640, 480, "OpenGL Triangle", NULL, NULL);
+    if (nullptr == m_window)
+    {
+        LogCritical("Could not create main window!");
+        return;
+    }
+
+    glfwMakeContextCurrent(m_window);
+
+    if (!rendering::InitializeRenderContext())
+    {
+        LogCritical("Aborting initialization of WindowManager since GL was not initialized!");
+        return;
+    }
+
+    glfwSwapInterval(1);
+
+    glfwSetWindowCloseCallback(m_window, WindowCloseCallback);
+    glfwSetWindowFocusCallback(m_window, WindowFocusCallback);
+    glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
 }
 
-WindowManager::~WindowManager()
-{
-    delete m_impl;
-}
+WindowManager::~WindowManager() = default;
 
 WindowManager& WindowManager::Instance()
 {
     static WindowManager win_mgr;
     return win_mgr;
+}
+
+void WindowManager::OnUpdate(communication::engine_update&) const noexcept
+{
+    glfwSwapBuffers(m_window);
+    glfwPollEvents();
+}
+
+void WindowManager::OnWindowClose(communication::window_close&) const noexcept
+{
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }
 
 }// namespace polos::platform

@@ -63,6 +63,8 @@ function(build_options target warnings)
                     "/w15204" # A class with virtual functions has non-virtual trivial destructor.
                     "/wd4201" # ignoring nameless struct/union bc. glm keeps giving it.
                     "/wd4324" # disable padding warnings
+                    "/wd4251" # needs to have dll-interface to be used by clients
+                    "/wd4275" # needs to have dll-interface to be used by clients
         )
         target_compile_options(${target} PRIVATE "/wd5204") # for quill virtual function error, TODO: Remove
     else()
