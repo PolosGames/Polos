@@ -35,6 +35,7 @@ message(STATUS "[POLOS] POLOS_INSTALL_DIR: ${POLOS_INSTALL_DIR}")
 
 include(CMake/BuildOptions.cmake)
 include(CMake/PolosTarget.cmake)
+include(CMake/UtilityMacros.cmake)
 
 add_compile_options(
         "$<$<C_COMPILER_ID:Clang>:-fcolor-diagnostics>"
