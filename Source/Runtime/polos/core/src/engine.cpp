@@ -14,7 +14,7 @@
 namespace polos::core
 {
 
-void Engine::Run(ILiveLayer* t_app_layer)
+std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 {
     std::unique_ptr<ILiveLayer> app_layer{t_app_layer};
 
@@ -22,6 +22,8 @@ void Engine::Run(ILiveLayer* t_app_layer)
 
     MainLoop loop{};
     loop.Run();
+
+    return 0;
 }
 
 }// namespace polos::core

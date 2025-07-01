@@ -20,6 +20,8 @@ target_link_libraries(
             polos::core
             polos::datatypes
             polos::logging
+            polos::platform
+            polos::rendering
             polos::utils
             ${ThirdPartyLibs}
 )

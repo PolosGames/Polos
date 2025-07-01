@@ -10,6 +10,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <string_view>
 #include <vector>
 
 namespace polos::communication
@@ -29,19 +30,22 @@ public:
     ~WindowManager();
 
     WindowManager(WindowManager const&) = delete;
-    WindowManager(WindowManager&&) = delete;
+    WindowManager(WindowManager&&)      = delete;
 
     WindowManager& operator=(WindowManager const&) = delete;
-    WindowManager& operator=(WindowManager&&) = delete;
+    WindowManager& operator=(WindowManager&&)      = delete;
 
     static WindowManager& Instance();
+
+    bool        CreateWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
+    GLFWwindow* GetRawWindow() const;
 private:
     WindowManager();
 
     void OnUpdate(communication::engine_update&) const noexcept;
     void OnWindowClose(communication::window_close&) const noexcept;
 
-    GLFWwindow* m_window{ nullptr };
+    GLFWwindow* m_window{nullptr};
 };
 
 }// namespace polos::platform

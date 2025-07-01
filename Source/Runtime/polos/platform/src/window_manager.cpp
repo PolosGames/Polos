@@ -70,14 +70,14 @@ WindowManager::WindowManager()
 {
     communication::Subscribe<communication::engine_update>(
         [this](communication::engine_update& t_event)
-    {
-        OnUpdate(t_event);
-    });
+        {
+            OnUpdate(t_event);
+        });
     communication::Subscribe<communication::window_close>(
         [this](communication::window_close& t_event)
-    {
-        OnWindowClose(t_event);
-    });
+        {
+            OnWindowClose(t_event);
+        });
 
     if (!glfwInit())
     {
@@ -92,27 +92,6 @@ WindowManager::WindowManager()
 #ifndef NDEBUG
     glfwSetErrorCallback(GLFWErrorCallback);
 #endif// !NDEBUG
-
-    m_window = glfwCreateWindow(640, 480, "OpenGL Triangle", NULL, NULL);
-    if (nullptr == m_window)
-    {
-        LogCritical("Could not create main window!");
-        return;
-    }
-
-    glfwMakeContextCurrent(m_window);
-
-    if (!rendering::InitializeRenderContext())
-    {
-        LogCritical("Aborting initialization of WindowManager since GL was not initialized!");
-        return;
-    }
-
-    glfwSwapInterval(1);
-
-    glfwSetWindowCloseCallback(m_window, WindowCloseCallback);
-    glfwSetWindowFocusCallback(m_window, WindowFocusCallback);
-    glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
 }
 
 WindowManager::~WindowManager() = default;
@@ -121,6 +100,37 @@ WindowManager& WindowManager::Instance()
 {
     static WindowManager win_mgr;
     return win_mgr;
+}
+
+bool WindowManager::CreateWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title)
+{
+    m_window = glfwCreateWindow(t_width, t_height, t_title.data(), NULL, NULL);
+    if (nullptr == m_window)
+    {
+        LogCritical("Could not create window!");
+        return false;
+    }
+
+    glfwMakeContextCurrent(m_window);
+
+    if (!rendering::InitializeRenderContext())
+    {
+        LogCritical("Aborting initialization of WindowManager since GL was not initialized!");
+        return false;
+    }
+
+    glfwSwapInterval(1);
+
+    glfwSetWindowCloseCallback(m_window, WindowCloseCallback);
+    glfwSetWindowFocusCallback(m_window, WindowFocusCallback);
+    glfwSetFramebufferSizeCallback(m_window, FramebufferSizeCallback);
+
+    return true;
+}
+
+GLFWwindow* WindowManager::GetRawWindow() const
+{
+    return m_window;
 }
 
 void WindowManager::OnUpdate(communication::engine_update&) const noexcept

@@ -9,12 +9,14 @@
 #include "polos/core/i_live_layer.hpp"
 #include "polos/core/module_macros.hpp"
 
+#include <cstdint>
+
 namespace polos::core
 {
 class CORE_EXPORT Engine
 {
 public:
-    void Run(ILiveLayer* t_app_layer);
+    std::int32_t Run(ILiveLayer* t_app_layer);
 };
 }// namespace polos::core
 
