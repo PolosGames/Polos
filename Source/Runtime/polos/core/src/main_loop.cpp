@@ -33,8 +33,7 @@ MainLoop::MainLoop()
         [this](communication::window_close& t_event)
         {
             on_window_close(t_event);
-        }
-    );
+        });
 }
 
 void MainLoop::Run()
@@ -59,8 +58,6 @@ void MainLoop::Run()
         lag += delta_time;
 
         while (lag >= kTimestep) { lag -= kTimestep; }
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 void MainLoop::on_engine_update(communication::engine_update& t_event)

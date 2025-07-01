@@ -36,10 +36,10 @@ class COMMUNICATION_EXPORT EventBus
 public:
     ~EventBus();
 
-    EventBus(const EventBus&) = delete;
+    EventBus(const EventBus&)            = delete;
     EventBus& operator=(const EventBus&) = delete;
-    EventBus(EventBus&&) = delete;
-    EventBus& operator=(EventBus&&) = delete;
+    EventBus(EventBus&&)                 = delete;
+    EventBus& operator=(EventBus&&)      = delete;
 
     ///
     /// Get EventBus singleton
@@ -69,10 +69,9 @@ private:
     // TODO: Make a freelist so we can unsubscribe
     using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
 
-    polos::memory::DebugMemoryResource  m_allocator;
-    std::int64_t                        m_next_id{0};
-    CallbackMap                         m_callbacks;
-    std::mutex                          m_mutex;
+    polos::memory::DebugMemoryResource m_allocator;
+    std::int64_t                       m_next_id{0};
+    CallbackMap                        m_callbacks;
 };
 
 template<PolosEvent EventType>
@@ -82,8 +81,6 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
 
     std::int64_t event_hash = EventHash<EventType>();
     LogDebug("EventHash: {}, Name: {}", event_hash, EventType::Name());
-
-    std::lock_guard lock(m_mutex);
 
     // Give each subscriber of any event a unique id.
     auto subscriber_id = m_next_id++;
@@ -99,6 +96,7 @@ template<PolosEvent EventType, typename... Args>
 auto EventBus::Dispatch(Args&&... args) -> std::size_t
 {
     LogTrace("[EventBus::Dispatch]");
+
     CallbackMap::iterator it = m_callbacks.find(EventHash<EventType>());
     if (it == m_callbacks.end())
     {

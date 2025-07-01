@@ -141,7 +141,6 @@ void WindowManager::OnUpdate(communication::engine_update&) const noexcept
 
 void WindowManager::OnWindowClose(communication::window_close&) const noexcept
 {
-    glfwDestroyWindow(m_window);
     glfwTerminate();
 }
 
