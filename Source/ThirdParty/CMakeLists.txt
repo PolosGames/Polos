@@ -6,6 +6,7 @@ elseif(LINUX)
     set(PLATFORM_NAME "linux")
 endif()
 
+add_subdirectory(glad)
 add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
