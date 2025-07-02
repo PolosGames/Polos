@@ -19,7 +19,7 @@ static polos::core::ILiveLayer* GetLiveLayer(void* t_ptr = nullptr);
 int main(int, char*[])
 {
     polos::core::Engine engine;
-    engine.Run(GetLiveLayer());
+    return engine.Run(GetLiveLayer());
 }
 #ifdef _MSVC_LANG
 #    pragma warning(pop)

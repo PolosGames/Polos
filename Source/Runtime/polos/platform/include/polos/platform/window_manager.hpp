@@ -16,7 +16,7 @@
 namespace polos::communication
 {
 
-struct engine_update;
+struct end_frame;
 struct window_close;
 
 }// namespace polos::communication
@@ -42,8 +42,8 @@ public:
 private:
     WindowManager();
 
-    void OnUpdate(communication::engine_update&) const noexcept;
-    void OnWindowClose(communication::window_close&) const noexcept;
+    void on_end_frame() const;
+    void on_window_close() const;
 
     GLFWwindow* m_window{nullptr};
 };
