@@ -133,7 +133,7 @@ void WindowManager::on_end_frame() const
     glfwPollEvents();
 }
 
-void WindowManager::on_window_close() const noexcept
+void WindowManager::on_window_close() const
 {
     glfwTerminate();
 }

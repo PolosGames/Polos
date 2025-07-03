@@ -1,7 +1,7 @@
 # Generated from CLion C/C++ Code Style settings
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: DontAlign
 AlignArrayOfStructures: None
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: Consecutive
@@ -32,7 +32,7 @@ BraceWrapping:
   AfterUnion: true
   BeforeCatch: false
   BeforeElse: true
-  BeforeLambdaBody: true
+  BeforeLambdaBody: false
   IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyRecord: true

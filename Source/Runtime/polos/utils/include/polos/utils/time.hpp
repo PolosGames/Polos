@@ -30,7 +30,7 @@ inline constexpr auto ConvertToSeconds(std::chrono::microseconds const t_usecs) 
 
 inline constexpr auto ConvertToMicroseconds(std::chrono::milliseconds const t_msecs) -> Duration
 {
-    return std::chrono::duration_cast<Duration>(t_msecs * 1000);
+    return std::chrono::duration_cast<Duration>(t_msecs);
 }
 
 inline constexpr auto ConvertToMicroseconds(std::chrono::seconds const t_secs) -> Duration
