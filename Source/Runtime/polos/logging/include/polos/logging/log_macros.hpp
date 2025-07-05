@@ -28,6 +28,18 @@
 #define LogDebug(fmt, ...)    QUILL_LOG_DEBUG(LOGGER_TYPE, fmt, ##__VA_ARGS__)
 #define LogTrace(fmt, ...)    QUILL_LOG_TRACE_L1(LOGGER_TYPE, fmt, ##__VA_ARGS__)
 
+// Logging macros with a explicit context for inline, constexpr, template functions in header files
+#define LOG_CTX_POLOS ::polos::logging::Logger::Instance().GetPolosLogger()
+#define LOG_CTX_POLLY ::polos::logging::Logger::Instance().GetPollyLogger()
+#define LOG_CTX_APP   ::polos::logging::Logger::Instance().GetAppLogger()
+
+#define LogCriticalCtx(LoggerType, fmt, ...) QUILL_LOG_CRITICAL(LoggerType, fmt, ##__VA_ARGS__)
+#define LogErroCtx(LoggerType, fmt, ...)     QUILL_LOG_ERROR(LoggerType, fmt, ##__VA_ARGS__)
+#define LogWarnCtx(LoggerType, fmt, ...)     QUILL_LOG_WARNING(LoggerType, fmt, ##__VA_ARGS__)
+#define LogInfoCtx(LoggerType, fmt, ...)     QUILL_LOG_INFO(LoggerType, fmt, ##__VA_ARGS__)
+#define LogDebugCtx(LoggerType, fmt, ...)    QUILL_LOG_DEBUG(LoggerType, fmt, ##__VA_ARGS__)
+#define LogTraceCtx(LoggerType, fmt, ...)    QUILL_LOG_TRACE_L1(LoggerType, fmt, ##__VA_ARGS__)
+
 #define LOG_VAR_IMPL(Str, Variable) LOG_POLOS_INFO(Str, __FILE__, __LINE__, QUILL_STRINGIFY(Variable), Variable)
 #define LogVariable(Variable)       LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
 

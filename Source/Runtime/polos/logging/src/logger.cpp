@@ -23,8 +23,6 @@ Logger::Logger()
     m_polos_logger = get_logger("POLOS");
     m_polly_logger = get_logger("POLLY");
     m_app_logger   = get_logger("APP");
-
-    QUILL_LOG_INFO(m_polos_logger, "Logger initialized!");
 }
 
 Logger& Logger::Instance()
