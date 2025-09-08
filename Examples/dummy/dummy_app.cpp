@@ -5,22 +5,37 @@
 
 #include "dummy_app.hpp"
 
+#include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
+#include <polos/communication/render_update.hpp>
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
+#include <polos/platform/window_manager.hpp>
 
-polos::core::ILiveLayer* GetLiveLayer(void* t_ptr)
+#include <array>
+#include <cfloat>
+#include <vector>
+
+constexpr std::float_t const kPolosRed{0.50980395F};
+constexpr std::float_t const kPolosGreen{0.59607846F};
+constexpr std::float_t const kPolosBlue{0.6431373F};
+
+namespace dummy_app
 {
-    return nullptr == t_ptr ? new DummyApp{} : new (t_ptr) DummyApp{};
-}
 
 DummyApp::DummyApp()
 {
     polos::communication::Subscribe<polos::communication::engine_update>(
-        [this](polos::communication::engine_update& t_event)
-        {
-            OnEngineUpdate(t_event);
+        [this](polos::communication::engine_update& t_event) {
+            on_engine_update(t_event);
         });
+
+    polos::communication::Subscribe<polos::communication::render_update>(
+        [this](polos::communication::render_update& t_event) {
+            on_render_update(t_event);
+        });
+
+    assert(polos::platform::WindowManager::Instance().CreateWindow(1280, 720, Name()));
 }
 
 DummyApp::~DummyApp() {}
@@ -30,7 +45,19 @@ char const* DummyApp::Name() const
     return "DummyApp";
 }
 
-void DummyApp::OnEngineUpdate(polos::communication::engine_update& t_event)
+void DummyApp::on_engine_update(polos::communication::engine_update&)
 {
-    LogInfo("{}: On Engine Update: [{}]", Name(), t_event);
+    //LogInfo("Engine Thread Update");
+}
+
+void DummyApp::on_render_update(polos::communication::render_update&)
+{
+    //LogInfo("Render Thread Update");
+}
+
+}// namespace dummy_app
+
+polos::core::ILiveLayer* GetLiveLayer(void* t_ptr)
+{
+    return nullptr == t_ptr ? new dummy_app::DummyApp{} : new (t_ptr) dummy_app::DummyApp{};
 }

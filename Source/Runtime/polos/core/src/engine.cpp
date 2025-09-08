@@ -6,7 +6,6 @@
 #include "polos/core/engine.hpp"
 
 #include "polos/core/main_loop.hpp"
-#include "polos/logging/logger.hpp"
 #include "polos/platform/window_manager.hpp"
 
 #include <memory>

@@ -21,6 +21,7 @@ define_polos_module(
     SOURCES
         "src/main_loop.cpp"
         "src/engine.cpp"
+        "src/base_live_layer.cpp"
     PRIVATE_DEPS
         polos::communication
         polos::datatypes

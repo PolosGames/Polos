@@ -24,6 +24,7 @@ public:
     void Run();
 private:
     void on_window_close();
+    void on_engine_terminate();
 
     bool m_is_running{true};
 };

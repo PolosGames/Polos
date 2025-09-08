@@ -1,15 +1,23 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
-
-#include <polos/communication/engine_update.hpp>
-#include <polos/core/i_live_layer.hpp>
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
 #ifndef EXAMPLES_DUMMY_DUMMY_APP_HPP_
-#    define EXAMPLES_DUMMY_DUMMY_APP_HPP_
+#define EXAMPLES_DUMMY_DUMMY_APP_HPP_
 
-class DummyApp : public polos::core::ILiveLayer
+#include <polos/core/base_live_layer.hpp>
+
+namespace polos::communication
+{
+struct engine_update;
+struct render_update;
+}// namespace polos::communication
+
+namespace dummy_app
+{
+
+class DummyApp final : public polos::core::BaseLiveLayer
 {
 public:
     DummyApp();
@@ -17,7 +25,10 @@ public:
 
     char const* Name() const override;
 private:
-    void OnEngineUpdate(polos::communication::engine_update& t_event);
+    void on_engine_update(polos::communication::engine_update& t_event);
+    void on_render_update(polos::communication::render_update& t_event);
 };
+
+}// namespace dummy_app
 
 #endif// EXAMPLES_DUMMY_DUMMY_APP_HPP_

@@ -6,6 +6,7 @@
 #include "polos/core/main_loop.hpp"
 
 #include "polos/communication/end_frame.hpp"
+#include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/render_update.hpp"
@@ -27,6 +28,10 @@ MainLoop::MainLoop()
 
     communication::Subscribe<communication::window_close>([this](communication::window_close&) {
         on_window_close();
+    });
+
+    communication::Subscribe<communication::engine_terminate>([this](communication::engine_terminate&) {
+        on_engine_terminate();
     });
 }
 
@@ -70,6 +75,11 @@ void MainLoop::Run()
 }
 
 void MainLoop::on_window_close()
+{
+    m_is_running = false;
+}
+
+void MainLoop::on_engine_terminate()
 {
     m_is_running = false;
 }
