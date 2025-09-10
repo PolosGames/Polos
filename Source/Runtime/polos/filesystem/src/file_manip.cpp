@@ -16,14 +16,12 @@
 namespace polos::fs
 {
 
-auto ReadFile(std::filesystem::path t_file_path, std::ios::openmode t_open_mode) -> std::expected<resource, bool>
+auto ReadFile(std::filesystem::path t_file_path) -> std::expected<resource, bool>
 {
-    LogTrace("[ReadFile]");
-
     std::string file_name = t_file_path.filename().string();
     LogDebug("Reading file: {}", file_name);
 
-    std::ifstream file{t_file_path, t_open_mode};
+    std::ifstream file{t_file_path, std::ios::ate | std::ios::binary};
 
     if (!file.is_open())
     {
