@@ -3,7 +3,6 @@
 build/
 vsbuild/
 
-
 **.txt
 
 # Ignore this on Sandbox
@@ -49,3 +48,4 @@ pcnt.cpp
 ptp.cpp
 
 **/polos_config.h
+**.code-workspace

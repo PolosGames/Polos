@@ -188,12 +188,14 @@ macro (define_polos_app)
 
     target_include_directories(${app_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-    set_target_properties(
-        ${app_NAME} PROPERTIES
-        POSITION_INDEPENDENT_CODE True
-        LINKER_LANGUAGE           CXX
-        CXX_VISIBILITY_PRESET     hidden
-        VISIBILITY_INLINES_HIDDEN True
+    set_target_properties(${app_NAME}
+        PROPERTIES
+            CXX_STANDARD              ${POLOS_CXX_STANDARD}
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            LINKER_LANGUAGE           CXX
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN True
     )
 
     if (NOT app_LOGGER_TYPE)
