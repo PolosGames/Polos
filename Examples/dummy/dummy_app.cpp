@@ -11,14 +11,7 @@
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
 #include <polos/platform/window_manager.hpp>
-
-#include <array>
-#include <cfloat>
-#include <vector>
-
-constexpr std::float_t const kPolosRed{0.50980395F};
-constexpr std::float_t const kPolosGreen{0.59607846F};
-constexpr std::float_t const kPolosBlue{0.6431373F};
+#include <polos/rendering/vk_instance.hpp>
 
 namespace dummy_app
 {
@@ -52,7 +45,7 @@ void DummyApp::on_engine_update(polos::communication::engine_update&)
 
 void DummyApp::on_render_update(polos::communication::render_update&)
 {
-    //LogInfo("Render Thread Update");
+    polos::rendering::RenderFrame();
 }
 
 }// namespace dummy_app

@@ -6,7 +6,6 @@ elseif(LINUX)
     set(PLATFORM_NAME "linux")
 endif()
 
-add_subdirectory(glad)
 add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
@@ -18,7 +17,7 @@ define_polos_module(
         INTERFACE
     INTERFACE_DEPS
         assimp::assimp
-        glad::glad
+        Vulkan::Vulkan
         glfw
         glm::glm
         imgui::imgui

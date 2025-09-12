@@ -22,7 +22,7 @@ define_polos_module(
         "src/window_manager.cpp"
     PUBLIC_DEPS
         glfw
-        glad::glad
+        Vulkan::Vulkan
         polos::communication
         polos::logging
         polos::rendering

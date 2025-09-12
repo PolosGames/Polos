@@ -42,7 +42,7 @@ void setup_quill()
         return config;
     }());
 
-    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
+    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", pl_sink, formatter_options);
     g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
     g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 

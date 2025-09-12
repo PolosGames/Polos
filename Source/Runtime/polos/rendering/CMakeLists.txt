@@ -19,9 +19,10 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "src/gl_render_context.cpp"
+        "src/vk_instance.cpp"
     PUBLIC_DEPS
         glfw
-        glad::glad
+        Vulkan::Vulkan
         polos::logging
+        polos::filesystem
 )

@@ -47,7 +47,6 @@ add_compile_definitions(
         UUID_SYSTEM_GENERATOR
         UUID_USING_CXX20_SPAN
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
-        GLFW_INCLUDE_NONE
 )
 
 find_package(GTest CONFIG REQUIRED)
