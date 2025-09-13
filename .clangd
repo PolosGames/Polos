@@ -2,4 +2,4 @@ CompileFlags:
     Add: [/std:c++latest]
     Add: [-std=c++23]
 Diagnostics:
-  Suppress: attributes_not_allowed
+    Suppress: attributes_not_allowed

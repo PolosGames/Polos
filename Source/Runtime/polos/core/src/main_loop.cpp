@@ -13,6 +13,7 @@
 #include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/platform/window_manager.hpp"
+#include "polos/rendering/device.hpp"
 #include "polos/utils/time.hpp"
 
 #include <chrono>

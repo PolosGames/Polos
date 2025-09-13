@@ -527,14 +527,14 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
             return false;
         }
 
-        auto result = QuerySwapChainSupport(t_device);
-        if (!result.has_value())
+        auto swap_c_support = QuerySwapChainSupport(t_device);
+        if (!swap_c_support.has_value())
         {
             LogWarn("Required swapchain support was not found for the physical device.");
             return false;
         }
 
-        swap_chain_support_details const& details = result.value();
+        swap_chain_support_details const& details = swap_c_support.value();
         if (details.surface_formats.empty() || details.present_modes.empty())
         {
             LogWarn("Swapchain support is inadequate!");

@@ -20,9 +20,14 @@ define_polos_module(
         SHARED
     SOURCES
         "src/vk_instance.cpp"
+        "src/device.cpp"
+        "src/renderer.cpp"
+        "src/vulkan_swapchain.cpp"
     PUBLIC_DEPS
         glfw
         Vulkan::Vulkan
         polos::logging
+    PRIVATE_DEPS
+        polos::communication
         polos::filesystem
 )
