@@ -12,14 +12,15 @@
             "features": [
                 "docking-experimental",
                 "glfw-binding",
-                "opengl3-binding"
+                "vulkan-binding"
             ]
         },
         {
             "name": "quill",
             "version>=": "9.0.0#0"
         },
-        "vulkan"
+        "vulkan",
+        "shader-slang"
     ],
     "builtin-baseline": "83956e89e656f1b95af0a03506dc7214a7d67716"
 }

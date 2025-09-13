@@ -27,6 +27,7 @@ define_polos_module(
         polos::datatypes
         polos::filesystem
         polos::logging
-        polos::utils
         polos::platform
+        polos::rendering
+        polos::utils
 )

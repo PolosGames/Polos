@@ -8,9 +8,11 @@
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/system_created.hpp"
 #include "polos/communication/window_events.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/vk_instance.hpp"
+
 
 namespace polos::platform
 {

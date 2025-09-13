@@ -52,8 +52,7 @@ GLFWwindow* g_window{nullptr};
 VkSwapchainKHR             g_swap_chain{VK_NULL_HANDLE};
 std::vector<VkImageView>   g_swap_chain_image_views;
 std::vector<VkFramebuffer> g_swap_chain_framebuffers;
-VkShaderModule             g_vertex_shader_module{VK_NULL_HANDLE};
-VkShaderModule             g_fragment_shader_module{VK_NULL_HANDLE};
+VkShaderModule             shader_module{VK_NULL_HANDLE};
 VkPipelineLayout           g_pipeline_layout{VK_NULL_HANDLE};
 VkRenderPass               g_render_pass{VK_NULL_HANDLE};
 VkPipeline                 g_graphics_pipeline{VK_NULL_HANDLE};
@@ -353,8 +352,7 @@ auto CreateShaderModule(std::span<std::byte const> const t_code) -> std::expecte
         .pCode    = reinterpret_cast<std::uint32_t const*>(t_code.data()),
     };
 
-    VkShaderModule shader_module;
-    VkResult       result = vkCreateShaderModule(g_logical_device, &create_info, nullptr, &shader_module);
+    VkResult result = vkCreateShaderModule(g_logical_device, &create_info, nullptr, &shader_module);
     if (result != VK_SUCCESS)
     {
         LogError("Could not create a shader module!");
@@ -527,14 +525,14 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
             return false;
         }
 
-        auto result = QuerySwapChainSupport(t_device);
-        if (!result.has_value())
+        auto swap_c_support = QuerySwapChainSupport(t_device);
+        if (!swap_c_support.has_value())
         {
             LogWarn("Required swapchain support was not found for the physical device.");
             return false;
         }
 
-        swap_chain_support_details const& details = result.value();
+        swap_chain_support_details const& details = swap_c_support.value();
         if (details.surface_formats.empty() || details.present_modes.empty())
         {
             LogWarn("Swapchain support is inadequate!");
@@ -735,29 +733,20 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
     /// ==========================================
     ///          Create shader modules
     /// ==========================================
-    auto vertex_shader_code   = fs::ReadFile(std::filesystem::path("Shaders/basic_color.vert.spv"));
-    auto fragment_shader_code = fs::ReadFile(std::filesystem::path("Shaders/basic_color.frag.spv"));
-    if (!vertex_shader_code.has_value() || !fragment_shader_code.has_value())
+    auto shader_code = fs::ReadFile(std::filesystem::path("Resource/Shaders/basic_color.slang.spv"));
+    if (!shader_code.has_value())
     {
         LogCritical("Could not read shader files!");
         return std::unexpected{VkResult::VK_INCOMPLETE};
     }
 
-    auto vertex_shader_module_result = CreateShaderModule(vertex_shader_code.value().data);
-    if (!vertex_shader_module_result.has_value())
+    auto shader_module_result = CreateShaderModule(shader_code.value().data);
+    if (!shader_module_result.has_value())
     {
         LogError("Could not create vertex shader module!");
-        return std::unexpected{vertex_shader_module_result.error()};
+        return std::unexpected{shader_module_result.error()};
     }
-    g_vertex_shader_module = vertex_shader_module_result.value();
-
-    auto fragment_shader_module_result = CreateShaderModule(fragment_shader_code.value().data);
-    if (!fragment_shader_module_result.has_value())
-    {
-        LogError("Could not create fragment shader module!");
-        return std::unexpected{fragment_shader_module_result.error()};
-    }
-    g_fragment_shader_module = fragment_shader_module_result.value();
+    shader_module = shader_module_result.value();
 
 
     /// ==========================================
@@ -769,8 +758,8 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
             .pNext               = nullptr,
             .flags               = 0U,
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .module              = g_vertex_shader_module,
-            .pName               = "main",
+            .module              = shader_module,
+            .pName               = "vertexMain",
             .pSpecializationInfo = nullptr,
         },
         {
@@ -778,8 +767,8 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
             .pNext               = nullptr,
             .flags               = 0U,
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module              = g_fragment_shader_module,
-            .pName               = "main",
+            .module              = shader_module,
+            .pName               = "fragmentMain",
             .pSpecializationInfo = nullptr,
         },
     };
@@ -1111,8 +1100,7 @@ void TerminateVulkan()
     vkDestroyPipeline(g_logical_device, g_graphics_pipeline, nullptr);
     vkDestroyRenderPass(g_logical_device, g_render_pass, nullptr);
     vkDestroyPipelineLayout(g_logical_device, g_pipeline_layout, nullptr);
-    vkDestroyShaderModule(g_logical_device, g_fragment_shader_module, nullptr);
-    vkDestroyShaderModule(g_logical_device, g_vertex_shader_module, nullptr);
+    vkDestroyShaderModule(g_logical_device, shader_module, nullptr);
     for (auto image_view : g_swap_chain_image_views) { vkDestroyImageView(g_logical_device, image_view, nullptr); }
     vkDestroySwapchainKHR(g_logical_device, g_swap_chain, nullptr);
 
