@@ -11,7 +11,6 @@
 
 #include <expected>
 #include <filesystem>
-#include <fstream>
 
 namespace polos::fs
 {

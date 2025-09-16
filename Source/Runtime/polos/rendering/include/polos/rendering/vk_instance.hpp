@@ -23,8 +23,8 @@ namespace polos::rendering
 /// @brief Try to initialize Vulkan with predefined options
 /// @return VulkanState with initialized instance and device if successfull.
 /// @error A Vulkan error in the form of VkResult
-RENDERING_EXPORT
-[[nodiscard]] auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, VkResult>;
+[[nodiscard]] RENDERING_EXPORT auto
+InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, VkResult>;
 
 /// @brief Terminate Vulkan and cleanup all resources related to the instance
 RENDERING_EXPORT void TerminateVulkan();

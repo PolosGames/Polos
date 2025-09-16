@@ -9,6 +9,7 @@
 #include "polos/communication/error_domain.hpp"
 
 #include <expected>
+#include <functional>
 #include <string_view>
 #include <type_traits>
 

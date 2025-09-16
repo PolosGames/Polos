@@ -40,13 +40,22 @@ macro(define_polos_module)
 
     set_target_properties(
         ${MODULE_NAME} PROPERTIES
-        #PUBLIC_HEADER             "${${MODULE_NAME}_INC}"
+        CXX_STANDARD              ${POLOS_CXX_STANDARD}
+        CXX_STANDARD_REQUIRED     True
         POSITION_INDEPENDENT_CODE True
         OUTPUT_NAME               "polos_${MODULE_NAME}"
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
         LINKER_LANGUAGE           CXX
     )
+
+    if (LINUX)
+        set_target_properties(${MODULE_NAME}
+            PROPERTIES
+            INSTALL_RPATH ${POLOS_INSTALL_DIR}
+            BUILD_WITH_INSTALL_RPATH 1
+        )
+    endif()
 
     if (MODULE_PUBLIC_DEPS)
         target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEPS})
@@ -131,6 +140,14 @@ macro(define_polos_module)
             VISIBILITY_INLINES_HIDDEN True
         )
 
+        if (LINUX)
+            set_target_properties(${MODULE_TEST_NAME}
+                PROPERTIES
+                INSTALL_RPATH ${POLOS_INSTALL_DIR}
+                BUILD_WITH_INSTALL_RPATH 1
+            )
+        endif()
+
         target_include_directories(${MODULE_TEST_NAME} PRIVATE src)
         target_link_libraries(${MODULE_TEST_NAME}
             PRIVATE
@@ -197,6 +214,14 @@ macro (define_polos_app)
             CXX_VISIBILITY_PRESET     hidden
             VISIBILITY_INLINES_HIDDEN True
     )
+
+    if (LINUX)
+        set_target_properties(${app_NAME}
+            PROPERTIES
+            INSTALL_RPATH ${POLOS_INSTALL_DIR}
+            BUILD_WITH_INSTALL_RPATH 1
+        )
+    endif()
 
     if (NOT app_LOGGER_TYPE)
         set(LOGGER_TYPE App)

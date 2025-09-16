@@ -95,15 +95,33 @@
         {
             "name": "base",
             "configurePreset": "base",
-            "hidden": true
+            "targets": [
+                "install"
+            ],
+            "hidden": true,
+            "verbose": false
         },
         {
             "name": "win-debug",
             "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
             "displayName": "x64-Debug",
-            "configurePreset": "win-debug",
-            "targets": [ "install" ],
-            "verbose": false
+            "configurePreset": "win-debug"
+        },
+        {
+            "name": "linux-debug",
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "displayName": "x64-Debug",
+            "configurePreset": "linux-debug"
         }
     ]
 }
