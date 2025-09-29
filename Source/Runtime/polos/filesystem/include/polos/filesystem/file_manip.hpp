@@ -15,7 +15,9 @@
 namespace polos::fs
 {
 
-FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path t_file_path) -> std::expected<resource, bool>;
+FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const t_file_path) -> std::expected<resource, bool>;
+FILESYSTEM_EXPORT auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const t_file_path)
+    -> std::expected<resource, bool>;
 
 inline auto ReadFile(std::string t_file_pathe) -> std::expected<resource, bool>     = delete;
 inline auto ReadFile(char const* t_file_pathe) -> std::expected<resource, bool>     = delete;
