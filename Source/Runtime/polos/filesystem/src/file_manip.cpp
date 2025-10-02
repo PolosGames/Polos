@@ -4,6 +4,7 @@
 ///
 
 #include "polos/filesystem/file_manip.hpp"
+#include "polos/filesystem/filesystem_error_domain.hpp"
 #include "polos/logging/log_macros.hpp"
 
 #include <cstddef>
@@ -16,13 +17,12 @@
 namespace polos::fs
 {
 
-auto ReadFile(std::filesystem::path const t_file_path) -> std::expected<resource, bool>
+auto ReadFile(std::filesystem::path const t_file_path) -> Result<resource>
 {
     return ReadFile(t_file_path.filename().string(), t_file_path);
 }
 
-auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const t_file_path)
-    -> std::expected<resource, bool>
+auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const t_file_path) -> Result<resource>
 {
     std::string file_name = t_file_path.filename().string();
     LogDebug("Reading file: {}", file_name);
@@ -32,13 +32,13 @@ auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const 
     if (!file.is_open())
     {
         LogError("Could not open file: {}", file_name);
-        return std::unexpected{false};
+        return ErrorType{FilesystemErrc::kFileWasNotFound};
     }
 
     if (file.fail())
     {
         LogError("{}, File: {}", std::strerror(errno), file_name);
-        return std::unexpected{false};
+        return ErrorType{FilesystemErrc::kFileOpenError};
     }
     LogDebug("File has been opened successfully.");
 

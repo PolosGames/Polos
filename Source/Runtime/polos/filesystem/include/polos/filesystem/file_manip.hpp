@@ -6,22 +6,22 @@
 #ifndef POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILE_MANIP_HPP_
 #define POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILE_MANIP_HPP_
 
+#include "polos/communication/error_code.hpp"
 #include "polos/filesystem/module_macros.hpp"
 #include "polos/filesystem/resource.hpp"
 
-#include <expected>
 #include <filesystem>
 
 namespace polos::fs
 {
 
-FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const t_file_path) -> std::expected<resource, bool>;
-FILESYSTEM_EXPORT auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const t_file_path)
-    -> std::expected<resource, bool>;
+FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const t_file_path) -> Result<resource>;
+FILESYSTEM_EXPORT auto
+ReadFile(std::string_view const t_custom_name, std::filesystem::path const t_file_path) -> Result<resource>;
 
-inline auto ReadFile(std::string t_file_pathe) -> std::expected<resource, bool>     = delete;
-inline auto ReadFile(char const* t_file_pathe) -> std::expected<resource, bool>     = delete;
-inline auto ReadFile(std::string_view t_file_path) -> std::expected<resource, bool> = delete;
+inline auto ReadFile(std::string t_file_pathe) -> Result<resource>     = delete;
+inline auto ReadFile(char const* t_file_pathe) -> Result<resource>     = delete;
+inline auto ReadFile(std::string_view t_file_path) -> Result<resource> = delete;
 
 }// namespace polos::fs
 

@@ -22,6 +22,7 @@ define_polos_module(
         "src/file_manip.cpp"
     PRIVATE_DEPS
         polos::logging
+        polos::communication
     TEST_SOURCES
         "test/file_manip_test.cpp"
     TEST_DATA

@@ -19,7 +19,7 @@ TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
 
     polos::fs::resource& test_file = file.value();
 
-    EXPECT_STREQ(test_file.name.c_str(), "test_file");
+    EXPECT_STREQ(test_file.stem_name.c_str(), "test_file");
     EXPECT_EQ(test_file.size, 513);
     EXPECT_EQ(test_file.uncompressed_size, 513);
     EXPECT_EQ(test_file.data.size(), 513);
