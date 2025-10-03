@@ -6,15 +6,16 @@
 #ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_SCOPED_TIMER_HPP_
 #define POLOS_UTILS_INCLUDE_POLOS_UTILS_SCOPED_TIMER_HPP_
 
+#include "polos/logging/log_macros.hpp"
 #include "polos/utils/macro_utilities.hpp"
 #include "polos/utils/time.hpp"
 
 namespace polos::utils
 {
 
-/// Used for timing scopes.
+/// @brief Used for timing scopes.
 ///
-/// E.g:
+/// @example
 /// ```cpp
 /// {
 ///   CREATE_SCOPED_TIMER("Main Loop");
@@ -28,8 +29,18 @@ namespace polos::utils
 class UTILS_EXPORT ScopedTimer
 {
 public:
-    explicit ScopedTimer(std::string t_name);
-    ~ScopedTimer();
+    explicit ScopedTimer(std::string t_name)
+        : m_name{t_name},
+          m_start{GetTimeNow()}
+    {
+        LogInfo("Starting timer for scope: \"{}\"", m_name);
+    }
+    ~ScopedTimer()
+    {
+        auto const passed_time = GetTimeNow() - m_start;
+
+        LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<float>(passed_time.count()) * 0.001f * 0.001f));
+    }
 
     ScopedTimer(ScopedTimer const&)            = delete;
     ScopedTimer(ScopedTimer&&)                 = delete;

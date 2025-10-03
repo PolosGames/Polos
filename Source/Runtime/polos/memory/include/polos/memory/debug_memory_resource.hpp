@@ -20,8 +20,9 @@ class MEMORY_EXPORT DebugMemoryResource : public std::pmr::memory_resource
 {
 public:
     DebugMemoryResource();
-    explicit DebugMemoryResource(std::string                t_name,
-                                 std::pmr::memory_resource* t_upstream = std::pmr::new_delete_resource());
+    explicit DebugMemoryResource(
+        std::string                t_name,
+        std::pmr::memory_resource* t_upstream = std::pmr::new_delete_resource());
     DebugMemoryResource(DebugMemoryResource&&)      = delete;
     DebugMemoryResource(DebugMemoryResource const&) = delete;
 
