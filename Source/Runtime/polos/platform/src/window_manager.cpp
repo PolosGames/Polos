@@ -8,14 +8,26 @@
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/key_release.hpp"
 #include "polos/communication/system_created.hpp"
 #include "polos/communication/window_events.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/vk_instance.hpp"
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
+namespace polos::rendering
+{
+struct VulkanState;
+}
 namespace polos::platform
 {
+
+namespace
+{
+rendering::rendering_dll_out rendering_dll;
+}
 
 WindowManager::WindowManager()
 {
@@ -39,28 +51,28 @@ WindowManager::WindowManager()
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    // #ifndef NDEBUG
-    //     glfwSetErrorCallback([](std::int32_t t_error_code, const char* t_description) {
-    //         switch (t_error_code)
-    //         {
-    //             case GLFW_INVALID_ENUM:
-    //                 LogWarn("GLFW received an invalid enum to it's function! Desc: {0}", t_description);
-    //                 break;
-    //             case GLFW_INVALID_VALUE:
-    //                 LogWarn("GLFW received an invalid value to it's function! Desc: {0}", t_description);
-    //                 break;
-    //             case GLFW_OUT_OF_MEMORY:
-    //                 LogCritical("A memory allocation failed within GLFW or the operating system! Desc: {0}", t_description);
-    //                 break;
-    //             case GLFW_API_UNAVAILABLE:
-    //                 LogError("GLFW could not find support for the requested API on the system! Desc: {0}", t_description);
-    //                 break;
-    //             case GLFW_FORMAT_UNAVAILABLE:
-    //                 LogError("The requested pixel format is not supported! Desc: {0}", t_description);
-    //                 break;
-    //         }
-    //     });
-    // #endif// !NDEBUG
+#ifndef NDEBUG
+    glfwSetErrorCallback([](std::int32_t t_error_code, const char* t_description) {
+        switch (t_error_code)
+        {
+            case GLFW_INVALID_ENUM:
+                LogWarn("GLFW received an invalid enum to it's function! Desc: {0}", t_description);
+                break;
+            case GLFW_INVALID_VALUE:
+                LogWarn("GLFW received an invalid value to it's function! Desc: {0}", t_description);
+                break;
+            case GLFW_OUT_OF_MEMORY:
+                LogCritical("A memory allocation failed within GLFW or the operating system! Desc: {0}", t_description);
+                break;
+            case GLFW_API_UNAVAILABLE:
+                LogError("GLFW could not find support for the requested API on the system! Desc: {0}", t_description);
+                break;
+            case GLFW_FORMAT_UNAVAILABLE:
+                LogError("The requested pixel format is not supported! Desc: {0}", t_description);
+                break;
+        }
+    });
+#endif// !NDEBUG
 }
 
 WindowManager::~WindowManager() {}
@@ -71,7 +83,7 @@ WindowManager& WindowManager::Instance()
     return win_mgr;
 }
 
-bool WindowManager::CreateWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title)
+bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title)
 {
     m_window = glfwCreateWindow(t_width, t_height, t_title.data(), NULL, NULL);
     if (nullptr == m_window)
@@ -80,41 +92,36 @@ bool WindowManager::CreateWindow(std::int32_t t_width, std::int32_t t_height, st
         return false;
     }
 
-    auto result = rendering::InitializeVulkan(m_window);
-    if (!result.has_value())
-    {
-        LogCritical("Cannot initialize Vulkan, VkResult: {}", static_cast<std::uint32_t>(result.error()));
-
-        communication::Dispatch<communication::engine_terminate>();
-
-        return false;
-    }
-
-    m_vulkan_state = result.value();
-
-    // glfwMakeContextCurrent(m_window);
-
-    // if (!rendering::InitializeRenderContext())
-    // {
-    //     LogCritical("Aborting initialization of WindowManager since GL was not initialized!");
-    //     return false;
-    // }
-    // glfwSwapInterval(1);
+    init_vulkan();
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
         communication::Dispatch<communication::window_close>(t_handle);
     });
-    // glfwSetWindowFocusCallback(m_window, [](GLFWwindow* p_Window, std::int32_t t_is_focused) {
-    //     if (p_Window != glfwGetCurrentContext())
-    //     {
-    //         glfwMakeContextCurrent(p_Window);
-    //     }
-    //     communication::Dispatch<communication::window_focus>(t_is_focused);
-    // });
-    // glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /*p_Window*/, std::int32_t t_width, std::int32_t t_height) {
-    //     communication::Dispatch<communication::window_framebuffer_resize>(t_width, t_height);
-    //     // glViewport(0, 0, t_width, t_height);
-    // });
+
+    glfwSetWindowFocusCallback(m_window, [](GLFWwindow* p_Window, std::int32_t t_is_focused) {
+        if (p_Window != glfwGetCurrentContext())
+        {
+            glfwMakeContextCurrent(p_Window);
+        }
+        communication::Dispatch<communication::window_focus>(t_is_focused);
+    });
+
+    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /*p_Window*/, std::int32_t t_width, std::int32_t t_height) {
+        communication::Dispatch<communication::window_framebuffer_resize>(t_width, t_height);
+    });
+
+    glfwSetKeyCallback(
+        m_window,
+        [](GLFWwindow* /*t_window*/,
+           std::int32_t t_key,
+           std::int32_t /*t_scancode*/,
+           std::int32_t t_action,
+           std::int32_t /*t_mods*/) {
+            if (t_action == GLFW_RELEASE)
+            {
+                polos::communication::Dispatch<communication::key_release>(t_key);
+            }
+        });
 
     return true;
 }
@@ -122,6 +129,27 @@ bool WindowManager::CreateWindow(std::int32_t t_width, std::int32_t t_height, st
 GLFWwindow* WindowManager::GetRawWindow() const
 {
     return m_window;
+}
+
+void WindowManager::UpdateRenderingModule(rendering::rendering_dll_out& t_dll_out)
+{
+    rendering_dll = t_dll_out;
+
+    if (nullptr != m_window)
+    {
+        init_vulkan();
+    }
+}
+
+void WindowManager::init_vulkan()
+{
+#if defined(NDEBUG)
+    auto result    = rendering::InitializeVulkan(m_window);
+    m_vulkan_state = *result.value();
+#else
+    polos::rendering::VulkanState* result = rendering_dll.initialize_vulkan_func(m_window);
+    m_vulkan_state                        = *result;
+#endif// NDEBUG
 }
 
 void WindowManager::on_end_frame() const
@@ -136,9 +164,18 @@ void WindowManager::on_window_close()
     {
         return;
     }
+
     LogInfo("Window close event received, terminating WindowManager...");
     m_window = nullptr;
+
+#if defined(NDEBUG)
     rendering::TerminateVulkan();
+#else
+    if (nullptr != rendering_dll.terminate_vulkan_func)
+    {
+        rendering_dll.terminate_vulkan_func();
+    }
+#endif// NDEBUG
     glfwTerminate();
 }
 
@@ -152,7 +189,15 @@ void WindowManager::on_engine_terminate()
     m_window = nullptr;
     LogInfo("Terminating WindowManager...");
 
+
+#if defined(NDEBUG)
     rendering::TerminateVulkan();
+#else
+    if (nullptr != rendering_dll.terminate_vulkan_func)
+    {
+        rendering_dll.terminate_vulkan_func();
+    }
+#endif// NDEBUG
     glfwTerminate();
 }
 

@@ -22,7 +22,7 @@ target_link_libraries(
             polos::datatypes
             polos::logging
             polos::platform
-            polos::rendering
+            polos::rendering_INTERFACE
             polos::utils
             ${ThirdPartyLibs}
 )

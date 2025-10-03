@@ -6,6 +6,7 @@
 #ifndef EXAMPLES_DUMMY_DUMMY_APP_HPP_
 #define EXAMPLES_DUMMY_DUMMY_APP_HPP_
 
+#include <polos/communication/key_release.hpp>
 #include <polos/core/base_live_layer.hpp>
 
 namespace polos::communication
@@ -27,6 +28,9 @@ public:
 private:
     void on_engine_update(polos::communication::engine_update& t_event);
     void on_render_update(polos::communication::render_update& t_event);
+    void on_key_release(polos::communication::key_release t_event);
+
+    bool m_unload_in_progress{false};
 };
 
 }// namespace dummy_app

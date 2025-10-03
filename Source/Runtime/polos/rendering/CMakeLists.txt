@@ -19,6 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/dll_main.cpp"
         "src/render_context.cpp"
         "src/vk_instance.cpp"
         "src/vulkan_context.cpp"

@@ -20,9 +20,11 @@ define_polos_module(
         SHARED
     SOURCES
         "src/file_manip.cpp"
+        "src/dll_main.cpp"
+    PUBLIC_DEPS
+        polos::communication
     PRIVATE_DEPS
         polos::logging
-        polos::communication
     TEST_SOURCES
         "test/file_manip_test.cpp"
     TEST_DATA

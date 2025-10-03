@@ -19,11 +19,12 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/dll_main.cpp"
         "src/window_manager.cpp"
     PUBLIC_DEPS
         glfw
         Vulkan::Vulkan
         polos::communication
         polos::logging
-        polos::rendering
+        polos::rendering_INTERFACE
 )

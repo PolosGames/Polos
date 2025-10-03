@@ -19,7 +19,8 @@ static polos::core::ILiveLayer* GetLiveLayer(void* t_ptr = nullptr);
 int main(int, char*[])
 {
     polos::core::Engine engine;
-    return engine.Run(GetLiveLayer());
+    std::int32_t        ret_val = engine.Run(GetLiveLayer());
+    return ret_val;
 }
 #ifdef _MSVC_LANG
 #    pragma warning(pop)

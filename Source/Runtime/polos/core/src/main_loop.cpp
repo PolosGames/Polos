@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <thread>
 
 namespace polos::core
 {
@@ -62,6 +63,8 @@ void MainLoop::Run()
                 lag -= kTimestep;
             }
         }
+
+        LogInfo("-- Update Thread Finished");
     }};
 
     update_thread.detach();
@@ -72,6 +75,9 @@ void MainLoop::Run()
 
         communication::Dispatch<communication::end_frame>();
     }
+
+    // Wait for update thread to finish
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void MainLoop::on_window_close()

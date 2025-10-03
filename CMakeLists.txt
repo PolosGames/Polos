@@ -61,3 +61,8 @@ add_subdirectory(Source)
 if (BUILD_EXAMPLES)
     add_subdirectory(Examples)
 endif ()
+
+add_custom_target(
+    copy-compile-commands ALL
+    ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_CURRENT_LIST_DIR}
+)

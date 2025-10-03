@@ -21,6 +21,8 @@ namespace polos::rendering
 namespace
 {
 
+VulkanState g_state;
+
 constexpr std::float_t const kPolosRed{0.50980395F};
 constexpr std::float_t const kPolosGreen{0.59607846F};
 constexpr std::float_t const kPolosBlue{0.6431373F};
@@ -62,6 +64,8 @@ VkCommandBuffer g_command_buffer{VK_NULL_HANDLE};
 VkSemaphore     g_image_available_semaphore{VK_NULL_HANDLE};
 VkSemaphore     g_render_finished_semaphore{VK_NULL_HANDLE};
 VkFence         g_in_flight_fence{VK_NULL_HANDLE};
+
+bool g_initialized{false};
 
 #ifndef NDEBUG
 
@@ -291,9 +295,10 @@ auto ChooseSwapSurfaceFormat(std::span<VkSurfaceFormatKHR> const t_available_for
 {
     for (auto const& available_format : t_available_formats)
     {
-        if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB &&
+        if (available_format.format == VK_FORMAT_R8G8B8A8_UNORM &&
             available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
+            LogWarn("Format: {}", static_cast<std::uint32_t>(available_format.format));
             return available_format;
         }
     }
@@ -403,9 +408,10 @@ void RecordCommandBuffer(VkCommandBuffer t_command_buffer, std::uint32_t t_image
 
 }// namespace
 
-auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, VkResult>
+auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState*, VkResult>
 {
-    g_window = t_window;
+    g_initialized = false;
+    g_window      = t_window;
     /// ==========================================
     ///         Initialize vulkan app
     /// ==========================================
@@ -1076,13 +1082,15 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState, 
     /// ==========================================
     ///          Return final variables
     /// ==========================================
-    return VulkanState{
+    g_state = {
         .instance   = g_instance,
         .device     = g_logical_device,
         .gfx_queue  = g_gfx_present_queue,
         .surface    = g_surface,
         .swap_chain = g_swap_chain,
     };
+    g_initialized = true;
+    return &g_state;
 }
 
 void TerminateVulkan()
@@ -1114,6 +1122,9 @@ void TerminateVulkan()
 
 void RenderFrame()
 {
+    if (!g_initialized)
+        return;
+
     vkWaitForFences(g_logical_device, 1U, &g_in_flight_fence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
     vkResetFences(g_logical_device, 1U, &g_in_flight_fence);
 
@@ -1188,3 +1199,24 @@ void RenderFrame()
 }
 
 }// namespace polos::rendering
+
+polos::rendering::VulkanState* InitializeVulkan(GLFWwindow* const t_window)
+{
+    auto result = polos::rendering::InitializeVulkan(t_window);
+    if (!result.has_value())
+    {
+        LogError("Error reloading Vulkan, ErrorCode: {}", static_cast<std::uint32_t>(result.error()));
+        return nullptr;
+    }
+    return *result;
+}
+
+void TerminateVulkan()
+{
+    return polos::rendering::TerminateVulkan();
+}
+
+void RenderFrame()
+{
+    return polos::rendering::RenderFrame();
+}

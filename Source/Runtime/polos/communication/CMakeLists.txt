@@ -19,6 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/dll_main.cpp"
         "src/event.cpp"
         "src/event_bus.cpp"
     PUBLIC_DEPS

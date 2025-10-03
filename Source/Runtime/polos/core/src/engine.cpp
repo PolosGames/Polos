@@ -6,6 +6,8 @@
 #include "polos/core/engine.hpp"
 
 #include "polos/core/main_loop.hpp"
+#include "polos/logging/log_macros.hpp"
+#include "polos/logging/logger.hpp"
 #include "polos/platform/window_manager.hpp"
 
 #include <memory>
@@ -21,6 +23,9 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 
     MainLoop loop{};
     loop.Run();
+
+    LogInfo("Polos exiting! Bye!");
+    logging::FlushLogger(LOG_CTX_POLOS);
 
     return 0;
 }

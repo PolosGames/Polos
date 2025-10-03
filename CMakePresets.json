@@ -18,6 +18,9 @@
             },
             "environment": {
                 "PATH": "${sourceDir}/out/build/${presetName}/Source/Editor${pathListSep}$penv{PATH}"
+            },
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },
         {

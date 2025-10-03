@@ -19,6 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/dll_main.cpp"
         "src/main_loop.cpp"
         "src/engine.cpp"
         "src/base_live_layer.cpp"
@@ -28,6 +29,6 @@ define_polos_module(
         polos::filesystem
         polos::logging
         polos::platform
-        polos::rendering
+        polos::rendering_INTERFACE
         polos::utils
 )

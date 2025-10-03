@@ -8,14 +8,13 @@
 
 #include "polos/platform/module_macros.hpp"
 
+#include "polos/rendering/dll_out.hpp"
 #include "polos/rendering/vulkan_state.hpp"
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 
 #include <cstdint>
 #include <string_view>
-#include <vector>
+
+struct GLFWwindow;
 
 namespace polos::communication
 {
@@ -40,10 +39,17 @@ public:
     WindowManager& operator=(WindowManager&&)      = delete;
 
     static WindowManager& Instance();
-    bool                  CreateWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
+    bool                  CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
     GLFWwindow*           GetRawWindow() const;
+
+#ifndef NDEBUG
+    /// @brief Must be called before CreateNewWindow
+    void UpdateRenderingModule(rendering::rendering_dll_out& t_dll_out);
+#endif// NDEBUG
 private:
     WindowManager();
+
+    void init_vulkan();
 
     void on_end_frame() const;
     void on_window_close();
@@ -52,7 +58,6 @@ private:
     GLFWwindow* m_window{nullptr};
 
     rendering::VulkanState m_vulkan_state;
-    VkSurfaceKHR           m_surface;
 };
 
 }// namespace polos::platform

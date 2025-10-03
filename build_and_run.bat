@@ -17,3 +17,5 @@ if %ERRORLEVEL% neq 0 (
   echo Build failed!
   exit /b %ERRORLEVEL%
 )
+
+powershell -Command "Start-Process -FilePath %INSTALL_DIR%/dummy.exe -WorkingDirectory %INSTALL_DIR%"
