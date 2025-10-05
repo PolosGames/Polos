@@ -15,7 +15,9 @@ struct window_close final : base_event
 {
     DECLARE_POLOS_EVENT(window_close);
 
-    explicit window_close(void* t_handle) : window_handle{t_handle} {}
+    explicit window_close(void* t_handle)
+        : window_handle{t_handle}
+    {}
 
     void* window_handle;
 };

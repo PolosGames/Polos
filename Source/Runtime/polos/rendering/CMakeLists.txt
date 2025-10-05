@@ -20,7 +20,9 @@ define_polos_module(
         SHARED
     SOURCES
         "src/dll_main.cpp"
+        "src/pipeline_cache.cpp"
         "src/render_context.cpp"
+        "src/vertex.cpp"
         "src/vk_instance.cpp"
         "src/vulkan_context.cpp"
         "src/vulkan_device.cpp"

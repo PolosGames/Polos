@@ -44,6 +44,11 @@ public:
 
     auto Create(swapchain_create_details const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
+
+    auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
+    auto GetExtent() const -> VkExtent2D const&;
+    auto GetScissor() const -> VkRect2D const&;
+    auto GetViewport() const -> VkViewport const&;
 private:
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
 

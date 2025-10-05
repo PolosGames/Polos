@@ -26,7 +26,10 @@ struct window_framebuffer_resize final : base_event
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::window_framebuffer_resize, "New Framebuffer dimensions: {}, {}",
-                        event.width, event.height);
+DEFINE_EVENT_LOG_FORMAT(
+    ::polos::communication::window_framebuffer_resize,
+    "New Framebuffer dimensions: {}, {}",
+    event.width,
+    event.height);
 
 #endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP_

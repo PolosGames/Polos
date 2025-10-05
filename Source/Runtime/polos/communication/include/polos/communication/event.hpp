@@ -47,18 +47,18 @@ auto EventHash() -> std::int64_t
 /// Declare and define a default constructor, override the Name function and add a friend declaration for
 /// quill::DeferredFormatCodec. Has to be called inside event declaration scope. Don't forget to add ; to end of call.
 /// @param EventName name of the event
-#define DECLARE_POLOS_EVENT(EventName)                                                                                 \
-private:                                                                                                               \
-    friend struct quill::DeferredFormatCodec<EventName>;                                                               \
-    std::int64_t Id() override                                                                                         \
-    {                                                                                                                  \
-        return 0;                                                                                                      \
-    }                                                                                                                  \
-public:                                                                                                                \
-    EventName() = default;                                                                                             \
-    static auto Name() -> char const*                                                                                  \
-    {                                                                                                                  \
-        return #EventName;                                                                                             \
+#define DECLARE_POLOS_EVENT(EventName)                   \
+private:                                                 \
+    friend struct quill::DeferredFormatCodec<EventName>; \
+    std::int64_t Id() override                           \
+    {                                                    \
+        return 0;                                        \
+    }                                                    \
+public:                                                  \
+    EventName() = default;                               \
+    static auto Name() -> char const*                    \
+    {                                                    \
+        return #EventName;                               \
     }
 
 
@@ -66,40 +66,40 @@ public:                                                                         
 /// @param EventName Event's class name with its full namespace
 /// @param Fmt Format string to log the event
 /// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "event." prefix
-#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                                                                   \
-    template<>                                                                                                         \
-    struct fmtquill::formatter<EventName>                                                                              \
-    {                                                                                                                  \
-        constexpr auto parse(format_parse_context& ctx)                                                                \
-        {                                                                                                              \
-            return ctx.begin();                                                                                        \
-        }                                                                                                              \
-        auto format(EventName const& event, format_context& ctx) const                                                 \
-        {                                                                                                              \
-            return fmtquill::format_to(ctx.out(), Fmt, __VA_ARGS__);                                                   \
-        }                                                                                                              \
-    };                                                                                                                 \
-    template<>                                                                                                         \
-    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName>                                             \
-    {                                                                                                                  \
+#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                       \
+    template<>                                                             \
+    struct fmtquill::formatter<EventName>                                  \
+    {                                                                      \
+        constexpr auto parse(format_parse_context& ctx)                    \
+        {                                                                  \
+            return ctx.begin();                                            \
+        }                                                                  \
+        auto format(EventName const& event, format_context& ctx) const     \
+        {                                                                  \
+            return fmtquill::format_to(ctx.out(), Fmt, __VA_ARGS__);       \
+        }                                                                  \
+    };                                                                     \
+    template<>                                                             \
+    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName> \
+    {                                                                      \
     }
 
 /// Shall be called after each declaration of an event. The format should match as if overloading ostream.
 /// @param EventName Event's class name with its full namespace
 /// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "event." prefix
-#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                                                                       \
-    std::ostream& operator<<(std::ostream& os, EventName const& event)                                                 \
-    {                                                                                                                  \
-        os << __VA_ARGS__;                                                                                             \
-        return os;                                                                                                     \
-    }                                                                                                                  \
-    template<>                                                                                                         \
-    struct fmtquill::formatter<EventName> : fmtquill::ostream_formatter                                                \
-    {                                                                                                                  \
-    };                                                                                                                 \
-    template<>                                                                                                         \
-    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName>                                             \
-    {                                                                                                                  \
+#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                           \
+    std::ostream& operator<<(std::ostream& os, EventName const& event)     \
+    {                                                                      \
+        os << __VA_ARGS__;                                                 \
+        return os;                                                         \
+    }                                                                      \
+    template<>                                                             \
+    struct fmtquill::formatter<EventName> : fmtquill::ostream_formatter    \
+    {                                                                      \
+    };                                                                     \
+    template<>                                                             \
+    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName> \
+    {                                                                      \
     }
 
 #endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_HPP_

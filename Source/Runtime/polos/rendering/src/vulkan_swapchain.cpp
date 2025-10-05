@@ -169,4 +169,24 @@ auto VulkanSwapchain::Destroy() -> Result<void>
     return {};
 }
 
+auto VulkanSwapchain::GetSurfaceFormat() const -> VkSurfaceFormatKHR const&
+{
+    return m_surface_format;
+}
+
+auto VulkanSwapchain::GetExtent() const -> VkExtent2D const&
+{
+    return m_extent;
+}
+
+auto VulkanSwapchain::GetScissor() const -> VkRect2D const&
+{
+    return m_scissor;
+}
+
+auto VulkanSwapchain::GetViewport() const -> VkViewport const&
+{
+    return m_viewport;
+}
+
 }// namespace polos::rendering
