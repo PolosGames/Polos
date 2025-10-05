@@ -25,6 +25,8 @@ class VulkanSwapchain;
 struct resource_manager_create_details
 {
     // Custom name, Path
+    VkDevice device;
+
     std::vector<std::pair<std::string, std::filesystem::path>> shader_files;
 };
 

@@ -7,6 +7,7 @@
 
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/logging/logger.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -349,12 +350,36 @@ auto ChooseSwapPreset(VkSurfaceCapabilitiesKHR const& t_surface_capabilities) ->
 
 auto CreateShaderModule(std::span<std::byte const> const t_code) -> std::expected<VkShaderModule, VkResult>
 {
+    if (t_code.size() % 4 != 0)// ensure we can convert to std::uint32_t
+    {
+        LogError("The SPIR-V code that has been read cannot be used for shader creation!");
+        return VkShaderModule{VK_NULL_HANDLE};
+    }
+
+    union byte_to_uint32
+    {
+        std::byte     array[4];
+        std::uint32_t opcode;
+    } converter;
+
+    std::vector<std::uint32_t> code(t_code.size() / 4);
+    for (std::size_t i{0U}; i < code.size(); ++i)
+    {
+        std::size_t current_uint = i * 4;
+        converter.array[0]       = t_code[current_uint + 0];
+        converter.array[1]       = t_code[current_uint + 1];
+        converter.array[2]       = t_code[current_uint + 2];
+        converter.array[3]       = t_code[current_uint + 3];
+
+        code[i] = converter.opcode;
+    }
+
     VkShaderModuleCreateInfo create_info{
         .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext    = nullptr,
         .flags    = 0U,
         .codeSize = t_code.size(),
-        .pCode    = reinterpret_cast<std::uint32_t const*>(t_code.data()),
+        .pCode    = code.data(),
     };
 
     VkResult result = vkCreateShaderModule(g_logical_device, &create_info, nullptr, &shader_module);
@@ -1206,6 +1231,7 @@ polos::rendering::VulkanState* InitializeVulkan(GLFWwindow* const t_window)
     if (!result.has_value())
     {
         LogError("Error reloading Vulkan, ErrorCode: {}", static_cast<std::uint32_t>(result.error()));
+        polos::logging::FlushLogger(LOG_CTX_POLOS);
         return nullptr;
     }
     return *result;

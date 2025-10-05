@@ -14,7 +14,12 @@ foreach(SHADER_SOURCE_FILE ${SHADER_SOURCE_FILES})
     set(SHADER_BINARY_FILE ${SHADER_BINARY_DIR}/${SHADER_SOURCE_FILE}.spv)
     add_custom_command(
         OUTPUT ${SHADER_BINARY_FILE}
-        COMMAND ${SLANG_EXECUTABLE} -target spirv -profile spirv_1_4 -fvk-use-entrypoint-name -o ${SHADER_BINARY_FILE} ${SHADER_SOURCE_DIR}/${SHADER_SOURCE_FILE}
+        COMMAND ${SLANG_EXECUTABLE}
+            -target spirv
+            -profile spirv_1_6
+            -fvk-use-entrypoint-name
+            -o ${SHADER_BINARY_FILE}
+            ${SHADER_SOURCE_DIR}/${SHADER_SOURCE_FILE}
         DEPENDS ${SHADER_SOURCE_DIR}/${SHADER_SOURCE_FILE}
         COMMENT "Compiling shader: ${SHADER_SOURCE_FILE} to ${SHADER_BINARY_FILE}"
         VERBATIM

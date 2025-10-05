@@ -1,6 +1,9 @@
 CompileFlags:
     Add: [/std:c++latest, -std=c++23]
 
+Completion:
+    HeaderInsertion: Never
+
 ---
 # Vulkan gives too many errors. Emit them.
 If:

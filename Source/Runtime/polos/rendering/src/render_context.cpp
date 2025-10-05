@@ -12,8 +12,8 @@
 #include "polos/rendering/vulkan_swapchain.hpp"
 
 #include <GLFW/glfw3.h>
+
 #include <filesystem>
-#include <vulkan/vulkan_core.h>
 
 #define INIT_VULKAN_COMPONENT(SubmodulePtr, ...)         \
     {                                                    \
@@ -27,9 +27,8 @@
 namespace polos::rendering
 {
 
-RenderContext* RenderContext::s_instance       = nullptr;
-bool           RenderContext::s_is_initialized = false;
-
+namespace
+{
 auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueFlags t_flags) -> Result<std::uint32_t>
 {
     std::uint32_t queue_family_count{0U};
@@ -71,6 +70,11 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
     return queue_index;
 }
 
+}// namespace
+
+RenderContext* RenderContext::s_instance       = nullptr;
+bool           RenderContext::s_is_initialized = false;
+
 RenderContext::RenderContext(GLFWwindow* t_window)
     : m_window{t_window},
       m_vrm{std::make_unique<VRM>()},
@@ -78,6 +82,13 @@ RenderContext::RenderContext(GLFWwindow* t_window)
       m_device{std::make_unique<VulkanDevice>(m_window)},
       m_swapchain{std::make_unique<VulkanSwapchain>(m_window)}
 {}
+
+RenderContext::~RenderContext() = default;
+
+auto RenderContext::Instance() -> RenderContext&
+{
+    return *s_instance;
+}
 
 auto RenderContext::Initialize() -> Result<void>
 {
@@ -149,6 +160,7 @@ auto RenderContext::Initialize() -> Result<void>
         swapchain_create_details details{
             .device      = m_device.get(),
             .phys_device = phys_device,
+            .surface     = m_surface,
             .preferred_surface_formats =
                 {
                     {
@@ -174,6 +186,7 @@ auto RenderContext::Initialize() -> Result<void>
 
     {
         resource_manager_create_details details{
+            .device = m_device->logi_device,
             .shader_files =
                 {
                     {"Basic Color", std::filesystem::path{"Shaders/basic_color.slang.spv"}},
@@ -188,7 +201,35 @@ auto RenderContext::Initialize() -> Result<void>
 
 auto RenderContext::Shutdown() -> Result<void>
 {
+    vkDeviceWaitIdle(m_device->logi_device);
+
+    for (auto fence : m_frame_fences) { vkDestroyFence(m_device->logi_device, fence, nullptr); }
+    for (auto semaphore : m_image_acquire_semaphores) { vkDestroySemaphore(m_device->logi_device, semaphore, nullptr); }
+    for (auto semaphore : m_render_complete_semaphores)
+    {
+        vkDestroySemaphore(m_device->logi_device, semaphore, nullptr);
+    }
+    vkDestroyCommandPool(m_device->logi_device, m_command_pool, nullptr);
+
+    std::ignore = m_vrm->Destroy();
+    std::ignore = m_swapchain->Destroy();
+    std::ignore = m_device->Destroy();
+    vkDestroySurfaceKHR(m_context->instance, m_surface, nullptr);
+    std::ignore = m_context->Destroy();
+
     return {};
+}
+
+auto RenderContext::BeginFrame() -> VkCommandBuffer
+{
+    return VK_NULL_HANDLE;
+}
+
+auto RenderContext::EndFrame() -> void {}
+
+auto RenderingInstance() -> RenderContext&
+{
+    return RenderContext::Instance();
 }
 
 }// namespace polos::rendering

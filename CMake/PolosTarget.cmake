@@ -87,7 +87,7 @@ macro(define_polos_module)
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
         target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
         target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
-        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+        target_compile_definitions(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEFINES})
 
         # PDB files only for source code
         if (CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND MODULE_TYPE STREQUAL "SHARED")

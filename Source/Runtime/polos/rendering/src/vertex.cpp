@@ -4,12 +4,11 @@
 //
 
 #include "polos/rendering/vertex.hpp"
-#include <vulkan/vulkan_core.h>
 
 namespace polos::rendering
 {
 
-VertexInputDescription Vertex::GetDescription(VertexAttributes const t_flags)
+VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
 {
     VertexInputDescription description;
 
@@ -29,7 +28,7 @@ VertexInputDescription Vertex::GetDescription(VertexAttributes const t_flags)
     {
         VkVertexInputAttributeDescription attr{
             .location = 0U,
-            .binding  = 1U,
+            .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
             .offset   = offsetof(Vertex, position),
         };

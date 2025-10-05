@@ -19,4 +19,11 @@
         return polos::ErrorType{Errc};        \
     }
 
+namespace polos::rendering
+{
+
+using RendererResourceHandle = std::uint32_t;
+
+}// namespace polos::rendering
+
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_COMMON_HPP_

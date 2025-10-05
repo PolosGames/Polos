@@ -14,9 +14,7 @@
 #include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
 
-
 #include <memory>
-#include <vulkan/vulkan_core.h>
 
 namespace polos::rendering
 {
@@ -31,14 +29,19 @@ public:
     RenderContext& operator=(RenderContext&&) = delete;
     RenderContext& operator=(RenderContext&)  = delete;
 
-    static auto Instance() -> RenderContext const&;
+    static auto Instance() -> RenderContext&;
 
     auto Initialize() -> Result<void>;
     auto Shutdown() -> Result<void>;
 
     auto GetVkSurface() -> VkSurfaceKHR;
     auto GetGfxQueue() -> VkQueue;
+
+    auto BeginFrame() -> VkCommandBuffer;
+    auto EndFrame() -> void;
 private:
+    friend class Engine;
+
     static RenderContext* s_instance;
     static bool           s_is_initialized;
 
@@ -49,10 +52,21 @@ private:
     std::unique_ptr<VulkanDevice>    m_device;
     std::unique_ptr<VulkanSwapchain> m_swapchain;
 
+    VkCommandPool m_command_pool{VK_NULL_HANDLE};
+
+    std::vector<VkFence>         m_frame_fences;
+    std::vector<VkSemaphore>     m_image_acquire_semaphores;
+    std::vector<VkSemaphore>     m_render_complete_semaphores;
+    std::vector<VkCommandBuffer> m_frame_command_buffers;
+    std::uint32_t                m_current_frame_index{0U};
+    std::uint32_t                m_swapchain_image_index{0U};
+
     VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
     VkQueue              m_gfx_queue{VK_NULL_HANDLE};
     queue_family_indices m_queue_family_indices;
 };
+
+auto RenderingInstance() -> RenderContext&;
 
 }// namespace polos::rendering
 

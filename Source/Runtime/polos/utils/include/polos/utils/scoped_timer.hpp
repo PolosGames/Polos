@@ -26,7 +26,7 @@ namespace polos::utils
 /// [Starting timer for scope: "Main Loop"]
 /// [Scope: "Main Loop", took: 1.0002s]
 /// ```
-class UTILS_EXPORT ScopedTimer
+class ScopedTimer
 {
 public:
     explicit ScopedTimer(std::string t_name)

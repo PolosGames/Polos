@@ -27,6 +27,16 @@ enum class VertexAttributes : std::uint32_t
     Full = kPositionOnly | kWithNormals | kWithColors | kWithTexCoords
 };
 
+inline constexpr std::uint32_t operator&(VertexAttributes const t_lhs, VertexAttributes const t_rhs)
+{
+    return static_cast<std::uint32_t>(t_lhs) & static_cast<std::uint32_t>(t_rhs);
+}
+
+inline constexpr VertexAttributes operator|(VertexAttributes const t_lhs, VertexAttributes const t_rhs)
+{
+    return static_cast<VertexAttributes>(static_cast<std::uint32_t>(t_lhs) & static_cast<std::uint32_t>(t_rhs));
+}
+
 /// @brief A struct to hold the generated Vulkan descriptions.
 struct VertexInputDescription
 {
@@ -40,10 +50,9 @@ struct Vertex
     glm::vec3 normal;
     glm::vec3 color;
     glm::vec2 tex_coord;
-
-    // The static factory function that generates the description.
-    static VertexInputDescription GetDescription(VertexAttributes const flags);
 };
+
+VertexInputDescription CreateVertexDescription(VertexAttributes const flags);
 
 }// namespace polos::rendering
 

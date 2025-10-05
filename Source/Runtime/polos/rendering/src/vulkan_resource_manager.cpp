@@ -25,6 +25,8 @@ auto VulkanResourceManager::Instance() -> VulkanResourceManager&
 
 auto VulkanResourceManager::Create(resource_manager_create_details const& t_details) -> Result<void>
 {
+    m_device = t_details.device;
+
     for (auto const& shader_file : t_details.shader_files)
     {
         auto shader_result = load_shader_from_file(shader_file.first, shader_file.second);
@@ -40,6 +42,7 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
 
 auto VulkanResourceManager::Destroy() -> Result<void>
 {
+    for (auto const& [name, shader] : m_shader_cache) { vkDestroyShaderModule(m_device, shader.module, nullptr); }
     return {};
 }
 
@@ -65,12 +68,36 @@ auto VulkanResourceManager::load_shader_from_file(
         return ErrorType{RenderingErrc::kShaderModuleNotCreated};
     }
 
+    if (shader_code->data.size() % 4 != 0)// ensure we can convert to std::uint32_t
+    {
+        LogError("The SPIR-V code that has been read cannot be used for shader creation!");
+        return ErrorType{RenderingErrc::kShaderModuleNotCreated};
+    }
+
+    union byte_to_uint32
+    {
+        std::byte     array[4];
+        std::uint32_t opcode;
+    } converter;
+
+    std::vector<std::uint32_t> code(shader_code->data.size() / 4);
+    for (std::size_t i{0U}; i < code.size(); ++i)
+    {
+        std::size_t current_uint = i * 4;
+        converter.array[0]       = shader_code->data[current_uint + 0];
+        converter.array[1]       = shader_code->data[current_uint + 1];
+        converter.array[2]       = shader_code->data[current_uint + 2];
+        converter.array[3]       = shader_code->data[current_uint + 3];
+
+        code[i] = converter.opcode;
+    }
+
     VkShaderModuleCreateInfo create_info{
         .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext    = nullptr,
         .flags    = 0U,
         .codeSize = shader_code->data.size(),
-        .pCode    = reinterpret_cast<std::uint32_t const*>(shader_code->data.data()),
+        .pCode    = code.data(),
     };
 
     VkShaderModule shader_module{VK_NULL_HANDLE};

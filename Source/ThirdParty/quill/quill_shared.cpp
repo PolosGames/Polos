@@ -11,6 +11,7 @@
 #include <quill/core/PatternFormatterOptions.h>
 #include <quill/sinks/ConsoleSink.h>
 #include <quill/sinks/FileSink.h>
+
 #include <string>
 
 // Define a global variable for a logger to avoid looking up the logger each time.
@@ -35,14 +36,14 @@ void setup_quill()
     };
 
     auto std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
-    auto pl_sink  = quill::Frontend::create_or_get_sink<quill::FileSink>("polos.log", []() {
-        quill::FileSinkConfig config;
-        config.set_open_mode('a');
-        config.set_filename_append_option(quill::FilenameAppendOption::StartDateTime);
-        return config;
-    }());
+    // auto pl_sink  = quill::Frontend::create_or_get_sink<quill::FileSink>("polos.log", []() {
+    //     quill::FileSinkConfig config;
+    //     config.set_open_mode('a');
+    //     config.set_filename_append_option(quill::FilenameAppendOption::StartDateTime);
+    //     return config;
+    // }());
 
-    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", pl_sink, formatter_options);
+    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
     g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
     g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 

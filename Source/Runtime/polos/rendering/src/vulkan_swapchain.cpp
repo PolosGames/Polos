@@ -12,10 +12,10 @@
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
 #include <GLFW/glfw3.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <limits>
-#include <vulkan/vulkan_core.h>
 
 namespace polos::rendering
 {
@@ -28,6 +28,9 @@ VulkanSwapchain::~VulkanSwapchain() = default;
 
 auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Result<void>
 {
+    m_surface   = t_details.surface;
+    m_gfx_queue = t_details.gfx_queue;
+
     VkSurfaceCapabilitiesKHR cap;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(t_details.phys_device, m_surface, &cap);
 
@@ -126,8 +129,8 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
         RenderingErrc::kSwapchainNotCreated);
 
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, nullptr);
-    m_swap_chain_images.resize(static_cast<std::size_t>(m_img_count));
-    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, m_swap_chain_images.data());
+    m_images.resize(static_cast<std::size_t>(m_img_count));
+    vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, m_images.data());
     m_image_views.resize(static_cast<std::size_t>(m_img_count));
 
     for (std::size_t i = 0U; i < static_cast<std::size_t>(m_img_count); ++i)
@@ -136,7 +139,7 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
             .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .pNext    = nullptr,
             .flags    = 0U,
-            .image    = m_swap_chain_images[i],
+            .image    = m_images[i],
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format   = m_surface_format.format,
             .components{
@@ -164,9 +167,74 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 
 auto VulkanSwapchain::Destroy() -> Result<void>
 {
+    for (auto const& view : m_image_views) { vkDestroyImageView(m_device, view, nullptr); }
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
 
     return {};
+}
+
+auto VulkanSwapchain::GetSurfaceFormat() const -> VkSurfaceFormatKHR const&
+{
+    return m_surface_format;
+}
+
+auto VulkanSwapchain::GetExtent() const -> VkExtent2D const&
+{
+    return m_extent;
+}
+
+auto VulkanSwapchain::GetScissor() const -> VkRect2D const&
+{
+    return m_scissor;
+}
+
+auto VulkanSwapchain::GetViewport() const -> VkViewport const&
+{
+    return m_viewport;
+}
+
+auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>
+{
+    std::uint32_t image_index{0U};
+
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkAcquireNextImageKHR(
+            m_device,
+            m_swapchain,
+            t_details.timeout,
+            t_details.semaphore,
+            t_details.fence,
+            &image_index),
+        RenderingErrc::kFailedToAcquireSwapchainImage);
+
+    return image_index;
+}
+
+auto VulkanSwapchain::QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wait_semaphore) const -> Result<void>
+{
+    VkPresentInfoKHR present_info{
+        .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext              = nullptr,
+        .waitSemaphoreCount = (t_wait_semaphore != VK_NULL_HANDLE) ? 1U : 0U,
+        .pWaitSemaphores    = (t_wait_semaphore != VK_NULL_HANDLE) ? &t_wait_semaphore : nullptr,
+        .swapchainCount     = 1U,
+        .pSwapchains        = &m_swapchain,
+        .pImageIndices      = &t_image_index,
+        .pResults           = nullptr,
+    };
+    CHECK_VK_SUCCESS_OR_ERR(vkQueuePresentKHR(m_gfx_queue, &present_info), RenderingErrc::kFailedToPresentQueue);
+
+    return {};
+}
+
+auto VulkanSwapchain::GetImage(std::uint32_t t_index) const -> VkImage
+{
+    return m_images[static_cast<std::size_t>(t_index)];
+}
+
+auto VulkanSwapchain::GetImageView(std::uint32_t t_index) const -> VkImageView
+{
+    return m_image_views[static_cast<std::size_t>(t_index)];
 }
 
 }// namespace polos::rendering

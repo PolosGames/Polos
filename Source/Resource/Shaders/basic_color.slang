@@ -1,14 +1,8 @@
-// Output of the vertex shader, and input to the fragment shader.
-struct CoarseVertex
-{
-    float3 color;
-};
-
 // Vertex  Shader
 struct VertexStageOutput
 {
-    CoarseVertex coarseVertex : CoarseVertex;
-    float4       sv_position : SV_Position;
+    float3 color : TEXCOORD0;
+    float4 sv_position : SV_Position;
 };
 
 // clang-format off
@@ -31,15 +25,15 @@ VertexStageOutput vertexMain(uint vertexId: SV_VertexID)
     VertexStageOutput output;
 
     // Look up position and color using the vertex index.
-    output.sv_position        = float4(k_positions[vertexId], 0.0, 1.0);
-    output.coarseVertex.color = k_colors[vertexId];
+    output.sv_position = float4(k_positions[vertexId], 0.0, 1.0);
+    output.color       = k_colors[vertexId];
 
     return output;
 }
 
 // Fragment Shader
 [shader("fragment")]
-float4 fragmentMain(CoarseVertex coarseVertex: CoarseVertex)
+float4 fragmentMain(VertexStageOutput coarseVertex)
     : SV_Target
 {
     // Add an alpha component of 1.0 to the interpolated color.

@@ -15,7 +15,9 @@ struct engine_update final : base_event
 {
     DECLARE_POLOS_EVENT(engine_update)
 
-    explicit engine_update(float t_delta_time) : delta_time{t_delta_time} {}
+    explicit engine_update(float t_delta_time)
+        : delta_time{t_delta_time}
+    {}
 
     float delta_time{0.0f};
 };

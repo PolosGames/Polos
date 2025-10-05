@@ -14,7 +14,7 @@ namespace polos::communication
 
 EventBus::EventBus()
     : m_allocator{"EventBus"},
-      m_callbacks{ m_allocator.GetMemoryResource() }
+      m_callbacks{m_allocator.GetMemoryResource()}
 {}
 
 auto EventBus::Instance() -> EventBus&

@@ -13,11 +13,9 @@
 #include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
-
 #include <algorithm>
 #include <cassert>
 #include <limits>
-#include <vulkan/vulkan_core.h>
 
 namespace polos::rendering
 {

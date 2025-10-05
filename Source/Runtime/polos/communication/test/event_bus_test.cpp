@@ -23,8 +23,7 @@ TEST_F(EventBusTestFixture, SubscribeToEventTest)
 {
     float ref_delta_time{0.0f};
 
-    auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event)
-    {
+    auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event) {
         LogError("{}", t_event);
         ref_delta_time = t_event.delta_time;
     };

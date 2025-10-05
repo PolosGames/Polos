@@ -14,6 +14,7 @@
 namespace polos::rendering
 {
 
+// TODO: Auto generate error codes and messages from a JSON or XML file
 enum class RenderingErrc : communication::ErrorDomain::CodeType
 {
     kInstanceNotCreated             = 0U,
@@ -26,6 +27,14 @@ enum class RenderingErrc : communication::ErrorDomain::CodeType
     kNoAdequateSurface              = 7U,
     kSwapchainImageViewCreationFail = 8U,
     kShaderModuleNotCreated         = 9U,
+    kPipelineNotFoundInCache        = 10U,
+    kFailedToCreatePipelineLayout   = 11U,
+    kFailedToCreatePipeline         = 12U,
+    kFailedToAcquireSwapchainImage  = 13U,
+    kFailedToPresentQueue           = 14U,
+    kErrorDestroyingRenderSubmodule = 15U,
+
+    kRenderingErrcCount,
 };
 
 class RenderingErrorDomain : public communication::ErrorDomain
@@ -40,12 +49,18 @@ public:
               "Could not create a window surface! Where are we going to draw?",
               "Could not find any physical devices on machine... I hope this toaster makes good toasts.",
               "No adequate physical device found on machine! Come on...",
-              "Could not find a suitable queue family on physical device!"
+              "Could not find a suitable queue family on physical device!",
               "Logical device creation for has failed!",
               "Could not create a swapchain for the window surface!",
               "No adequate surface found for swapchain.",
               "Could not create image views for the swap chain images!",
               "Could not create a shader module!",
+              "Requested pipeline was not found in pipeline cache. Create it with LoadOrCreatePipeline!",
+              "Could not create a pipeline layout!",
+              "Could not create VkPipeline object!",
+              "Could not acquire next image from the swapchain!",
+              "Could not present the image to the presentation queue!",
+              "Error occurred while destroying a rendering submodule!",
           })
     {}
 
@@ -61,7 +76,7 @@ public:
         return m_messages[static_cast<std::size_t>(t_code)];
     }
 private:
-    std::array<std::string_view const, 10> const m_messages;
+    std::array<std::string_view const, static_cast<std::size_t>(RenderingErrc::kRenderingErrcCount)> const m_messages;
 };
 
 namespace internal
