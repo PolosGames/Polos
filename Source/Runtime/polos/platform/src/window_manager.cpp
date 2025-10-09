@@ -95,7 +95,7 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
     init_vulkan();
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
-        communication::Dispatch<communication::window_close>(t_handle);
+        communication::DispatchNow<communication::window_close>(t_handle);
     });
 
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* p_Window, std::int32_t t_is_focused) {
@@ -103,11 +103,11 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
         {
             glfwMakeContextCurrent(p_Window);
         }
-        communication::Dispatch<communication::window_focus>(t_is_focused);
+        communication::DispatchNow<communication::window_focus>(t_is_focused);
     });
 
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /*p_Window*/, std::int32_t t_width, std::int32_t t_height) {
-        communication::Dispatch<communication::window_framebuffer_resize>(t_width, t_height);
+        communication::DispatchNow<communication::window_framebuffer_resize>(t_width, t_height);
     });
 
     glfwSetKeyCallback(
@@ -119,7 +119,7 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
            std::int32_t /*t_mods*/) {
             if (t_action == GLFW_RELEASE)
             {
-                polos::communication::Dispatch<communication::key_release>(t_key);
+                polos::communication::DispatchNow<communication::key_release>(t_key);
             }
         });
 
@@ -160,23 +160,7 @@ void WindowManager::on_end_frame() const
 
 void WindowManager::on_window_close()
 {
-    if (nullptr == m_window)
-    {
-        return;
-    }
-
-    LogInfo("Window close event received, terminating WindowManager...");
-    m_window = nullptr;
-
-#if defined(NDEBUG)
-    rendering::TerminateVulkan();
-#else
-    if (nullptr != rendering_dll.terminate_vulkan_func)
-    {
-        rendering_dll.terminate_vulkan_func();
-    }
-#endif// NDEBUG
-    glfwTerminate();
+    communication::DispatchDefer<communication::engine_terminate>();
 }
 
 void WindowManager::on_engine_terminate()
@@ -188,7 +172,6 @@ void WindowManager::on_engine_terminate()
 
     m_window = nullptr;
     LogInfo("Terminating WindowManager...");
-
 
 #if defined(NDEBUG)
     rendering::TerminateVulkan();

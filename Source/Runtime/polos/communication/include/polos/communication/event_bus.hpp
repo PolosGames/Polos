@@ -7,6 +7,7 @@
 #define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
 
 #include "polos/communication/event.hpp"
+#include "polos/communication/event_defer_options.hpp"
 #include "polos/communication/module_macros.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/memory/debug_memory_resource.hpp"
@@ -42,13 +43,13 @@ public:
     EventBus& operator=(EventBus&&)      = delete;
 
     ///
-    /// Get EventBus singleton
+    /// @brief Get EventBus singleton
     ///
     /// @return Instance of EventBus
     static auto Instance() -> EventBus&;
 
     ///
-    /// Subscribe to the specific event in the engine. Return type needs to be kept in order to unsubscribe.
+    /// @brief Subscribe to the specific event in the engine. Return type needs to be kept in order to unsubscribe.
     ///
     /// @todo make return type std::expected
     /// @tparam EventType Type of event to subscribe to (should be deduced)
@@ -57,21 +58,26 @@ public:
     template<PolosEvent EventType>
     auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t;
 
-    /// Trigger an event dispatch to all subscribers of the specific event.
+    /// @brief Trigger an event dispatch to all subscribers of the specific event.
     /// @tparam EventType
     /// @tparam Args
     /// @param args
     template<PolosEvent EventType, typename... Args>
-    auto Dispatch(Args&&... args) -> std::size_t;
+    auto Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> std::size_t;
+
+    /// @brief Dispatches all deferred events that were queued with EventDeferOptions::NextFrame.
+    /// This should be called at the beginning of each frame.
+    auto DispatchDeferredEvents() -> void;
 private:
     EventBus();
 
     // TODO: Make a freelist so we can unsubscribe
     using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
 
-    polos::memory::DebugMemoryResource m_allocator;
-    std::int64_t                       m_next_id{0};
-    CallbackMap                        m_callbacks;
+    polos::memory::DebugMemoryResource            m_allocator;
+    std::int64_t                                  m_next_id{0};
+    CallbackMap                                   m_callbacks;
+    std::pmr::vector<std::unique_ptr<base_event>> m_deferred_events;
 };
 
 template<PolosEvent EventType>
@@ -93,7 +99,7 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
 }
 
 template<PolosEvent EventType, typename... Args>
-auto EventBus::Dispatch(Args&&... args) -> std::size_t
+auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> std::size_t
 {
     CallbackMap::iterator it = m_callbacks.find(EventHash<EventType>());
     if (it == m_callbacks.end())
@@ -104,10 +110,15 @@ auto EventBus::Dispatch(Args&&... args) -> std::size_t
 
     auto& subcribers_callbacks = it->second;
 
-    for (auto const& subscriber : subcribers_callbacks)
+    if (t_defer == EventDeferOptions::kImmediate)
     {
-        EventType event(std::forward<Args>(args)...);
-        std::invoke(subscriber, event);
+        EventType event{std::forward<Args>(t_args)...};
+
+        for (auto& callback : subcribers_callbacks) { callback(event); }
+    }
+    else if (t_defer == EventDeferOptions::kNextFrame)
+    {
+        m_deferred_events.push_back(std::make_unique<EventType>(std::forward<Args>(t_args)...));
     }
 
     return subcribers_callbacks.size();
@@ -120,10 +131,18 @@ auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
 }
 
 template<PolosEvent EventType, typename... Args>
-auto Dispatch(Args&&... args) -> std::size_t
+auto DispatchNow(Args&&... args) -> std::size_t
 {
-    return EventBus::Instance().Dispatch<EventType>(std::forward<Args>(args)...);
+    return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(args)...);
 }
+
+template<PolosEvent EventType, typename... Args>
+auto DispatchDefer(Args&&... args) -> std::size_t
+{
+    return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(args)...);
+}
+
+COMMUNICATION_EXPORT auto DispatchDeferredEvents() -> void;
 
 }// namespace polos::communication
 

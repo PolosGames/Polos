@@ -1,4 +1,4 @@
-﻿{
+{
     "version": 5,
     "cmakeMinimumRequired": {
         "major": 3,
@@ -20,7 +20,8 @@
                 "PATH": "${sourceDir}/out/build/${presetName}/Source/Editor${pathListSep}$penv{PATH}"
             },
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "POLOS_INSTALL_DIR": "${sourceDir}/out/bin/${presetName}"
             }
         },
         {
@@ -116,6 +117,12 @@
             "configurePreset": "win-debug"
         },
         {
+            "name": "win-release",
+            "inherits": "win-debug",
+            "displayName": "x64-Release",
+            "configurePreset": "win-release"
+        },
+        {
             "name": "linux-debug",
             "inherits": "base",
             "condition": {
@@ -125,6 +132,14 @@
             },
             "displayName": "x64-Debug",
             "configurePreset": "linux-debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "PolosTest",
+            "description": "",
+            "displayName": "polos-test-release",
+            "configurePreset": "win-release"
         }
     ]
 }

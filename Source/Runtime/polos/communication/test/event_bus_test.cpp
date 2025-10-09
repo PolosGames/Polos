@@ -24,24 +24,88 @@ TEST_F(EventBusTestFixture, SubscribeToEventTest)
     float ref_delta_time{0.0f};
 
     auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event) {
-        LogError("{}", t_event);
         ref_delta_time = t_event.delta_time;
     };
 
     polos::communication::Subscribe<polos::communication::engine_update>(lambda);
-    polos::communication::Dispatch<polos::communication::engine_update>(expected_delta_time);
+    polos::communication::DispatchNow<polos::communication::engine_update>(expected_delta_time);
 
     EXPECT_EQ(ref_delta_time, expected_delta_time);
 }
 
+TEST_F(EventBusTestFixture, SubscribeMultipleTimes)
+{
+    float ref_delta_time_1{0.0f};
+    float ref_delta_time_2{0.0f};
+
+    auto lambda_1 = [&ref_delta_time_1](polos::communication::engine_update& t_event) {
+        ref_delta_time_1 = t_event.delta_time;
+    };
+
+    auto lambda_2 = [&ref_delta_time_2](polos::communication::engine_update& t_event) {
+        ref_delta_time_2 = t_event.delta_time;
+    };
+
+    polos::communication::Subscribe<polos::communication::engine_update>(lambda_1);
+    polos::communication::Subscribe<polos::communication::engine_update>(lambda_2);
+    polos::communication::DispatchNow<polos::communication::engine_update>(expected_delta_time);
+
+    EXPECT_EQ(ref_delta_time_1, expected_delta_time);
+    EXPECT_EQ(ref_delta_time_2, expected_delta_time);
+}
+
 TEST_F(EventBusTestFixture, DispatchWithoutSubscribers)
 {
-    constexpr float const expected_delta_time{44.0f};
-
     std::size_t total_dispatched =
-        polos::communication::Dispatch<polos::communication::engine_update>(expected_delta_time);
+        polos::communication::DispatchNow<polos::communication::engine_update>(expected_delta_time);
 
     EXPECT_EQ(total_dispatched, 0);
+}
+
+TEST_F(EventBusTestFixture, DispatchDeferredEvent)
+{
+    float ref_delta_time{0.0f};
+
+    auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event) {
+        ref_delta_time = t_event.delta_time;
+    };
+
+    polos::communication::Subscribe<polos::communication::engine_update>(lambda);
+    polos::communication::DispatchDefer<polos::communication::engine_update>(expected_delta_time);
+
+    // Event should not be dispatched yet
+    EXPECT_EQ(ref_delta_time, 0.0f);
+
+    polos::communication::DispatchDeferredEvents();
+
+    EXPECT_EQ(ref_delta_time, expected_delta_time);
+}
+
+TEST_F(EventBusTestFixture, DispatchMultipleDeferredEvents)
+{
+    float ref_delta_time_1{0.0f};
+    float ref_delta_time_2{0.0f};
+
+    auto lambda_1 = [&ref_delta_time_1](polos::communication::engine_update& t_event) {
+        ref_delta_time_1 = t_event.delta_time;
+    };
+
+    auto lambda_2 = [&ref_delta_time_2](polos::communication::engine_update& t_event) {
+        ref_delta_time_2 = t_event.delta_time;
+    };
+
+    polos::communication::Subscribe<polos::communication::engine_update>(lambda_1);
+    polos::communication::Subscribe<polos::communication::engine_update>(lambda_2);
+    polos::communication::DispatchDefer<polos::communication::engine_update>(expected_delta_time);
+
+    // Event should not be dispatched yet
+    EXPECT_EQ(ref_delta_time_1, 0.0f);
+    EXPECT_EQ(ref_delta_time_2, 0.0f);
+
+    polos::communication::DispatchDeferredEvents();
+
+    EXPECT_EQ(ref_delta_time_1, expected_delta_time);
+    EXPECT_EQ(ref_delta_time_2, expected_delta_time);
 }
 
 }// namespace

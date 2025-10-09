@@ -59,9 +59,11 @@ void MainLoop::Run()
 
             while (lag >= kTimestep)
             {
-                communication::Dispatch<communication::engine_update>(delta_time_in_secs);
+                communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
                 lag -= kTimestep;
             }
+
+            communication::DispatchDeferredEvents();
         }
 
         LogInfo("-- Update Thread Finished");
@@ -71,9 +73,9 @@ void MainLoop::Run()
 
     while (m_is_running)
     {
-        communication::Dispatch<communication::render_update>(0.0f);
+        communication::DispatchNow<communication::render_update>(0.0f);
 
-        communication::Dispatch<communication::end_frame>();
+        communication::DispatchNow<communication::end_frame>();
     }
 
     // Wait for update thread to finish

@@ -8,6 +8,8 @@
 
 #include "polos/communication/module_macros.hpp"
 
+#include "polos/utils/string_id.hpp"
+
 #include <quill/DeferredFormatCodec.h>
 #include <quill/bundled/fmt/ostream.h>
 
@@ -16,30 +18,23 @@
 namespace polos::communication
 {
 
-namespace detail
-{
-
-COMMUNICATION_EXPORT auto RetrieveEventHash(char const* t_name) -> std::int64_t;
-
-}
-
 /// Base struct for declaring new events.
 ///
 /// Every event should inherit this struct and override the Name function.
 struct base_event
 {
     virtual ~base_event() = default;
-protected:
-    virtual std::int64_t Id() = 0;
+public:
+    virtual utils::string_id Hash() const = 0;
 };
 
 /// Utility function to quickly get a hash for an event based on the return string of Name()
 /// @return hash of the event name based on FNV-1a hashing
 template<typename Event>
-auto EventHash() -> std::int64_t
+auto EventHash() -> utils::string_id
 {
     std::string const event_name = Event::Name();
-    return detail::RetrieveEventHash(event_name.c_str());
+    return utils::StrHash64(std::string_view{event_name});
 }
 
 }// namespace polos::communication
@@ -50,13 +45,16 @@ auto EventHash() -> std::int64_t
 #define DECLARE_POLOS_EVENT(EventName)                   \
 private:                                                 \
     friend struct quill::DeferredFormatCodec<EventName>; \
-    std::int64_t Id() override                           \
+    utils::string_id Hash() const override               \
     {                                                    \
-        return 0;                                        \
+        static constexpr utils::string_id hash = []() {  \
+            return polos::utils::StrHash64(#EventName);  \
+        }();                                             \
+        return hash;                                     \
     }                                                    \
 public:                                                  \
     EventName() = default;                               \
-    static auto Name() -> char const*                    \
+    static constexpr auto Name() -> char const*          \
     {                                                    \
         return #EventName;                               \
     }
