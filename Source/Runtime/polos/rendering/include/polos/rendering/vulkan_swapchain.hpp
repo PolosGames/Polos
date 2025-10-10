@@ -61,6 +61,7 @@ public:
 
     auto GetImage(std::uint32_t t_index) const -> VkImage;
     auto GetImageView(std::uint32_t t_index) const -> VkImageView;
+    auto GetImageCount() const -> std::uint32_t;
 private:
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
 

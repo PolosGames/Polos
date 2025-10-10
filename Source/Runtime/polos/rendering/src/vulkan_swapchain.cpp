@@ -237,4 +237,9 @@ auto VulkanSwapchain::GetImageView(std::uint32_t t_index) const -> VkImageView
     return m_image_views[static_cast<std::size_t>(t_index)];
 }
 
+auto VulkanSwapchain::GetImageCount() const -> std::uint32_t
+{
+    return m_img_count;
+}
+
 }// namespace polos::rendering

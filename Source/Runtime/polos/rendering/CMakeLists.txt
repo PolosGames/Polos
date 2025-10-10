@@ -19,6 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/dll_main.cpp"
         "src/pipeline_cache.cpp"
         "src/render_context.cpp"
         "src/vertex.cpp"

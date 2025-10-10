@@ -1,10 +1,10 @@
-///
-/// Copyright (c) 2025 Kayra Urfali
-/// Permission is hereby granted under the MIT License - see LICENSE for details.
-///
+//
+// Copyright (c) 2025 Kayra Urfali
+// Permission is hereby granted under the MIT License - see LICENSE for details.
+//
 
-#ifndef POLOS_MAIN_HPP
-#define POLOS_MAIN_HPP
+#ifndef POLOS_CORE_INCLUDE_POLOS_CORE_POLOS_MAIN_HPP_
+#define POLOS_CORE_INCLUDE_POLOS_CORE_POLOS_MAIN_HPP_
 
 #include "polos/core/engine.hpp"
 #include "polos/core/i_live_layer.hpp"
@@ -26,4 +26,4 @@ int main(int, char*[])
 #    pragma warning(pop)
 #endif
 
-#endif// POLOS_MAIN_HPP
+#endif// POLOS_CORE_INCLUDE_POLOS_CORE_POLOS_MAIN_HPP_

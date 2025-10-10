@@ -33,6 +33,10 @@ enum class RenderingErrc : communication::ErrorDomain::CodeType
     kFailedToAcquireSwapchainImage  = 13U,
     kFailedToPresentQueue           = 14U,
     kErrorDestroyingRenderSubmodule = 15U,
+    kCommandPoolNotCreated          = 16U,
+    kCommandBufferAllocationFail    = 17U,
+    kSemaphoreCreationFail          = 18U,
+    kFenceCreationFail              = 19U,
 
     kRenderingErrcCount,
 };
@@ -61,6 +65,10 @@ public:
               "Could not acquire next image from the swapchain!",
               "Could not present the image to the presentation queue!",
               "Error occurred while destroying a rendering submodule!",
+              "Could not create a command pool!",
+              "Could not allocate command buffers from the command pool!",
+              "Could not create a semaphore!",
+              "Could not create in-flight fence!",
           })
     {}
 

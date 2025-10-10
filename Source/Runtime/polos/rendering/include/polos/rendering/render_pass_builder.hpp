@@ -25,6 +25,13 @@ public:
     /// @param t_attachment_info The attachment information for the resource being written.
     auto Write(AttachmentInfo const& t_attachment_info) -> void;
 private:
+    friend class RenderGraph;
+
+    explicit RenderPassBuilder(RenderGraph* t_parent_graph, std::uint32_t t_pass_index = 0U);
+    ~RenderPassBuilder() = default;
+
+    RenderGraph*  m_parent_graph{nullptr};
+    std::uint32_t m_pass_index{0U};
 };
 
 }// namespace polos::rendering

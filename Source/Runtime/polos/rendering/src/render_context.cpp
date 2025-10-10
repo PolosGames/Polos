@@ -196,6 +196,63 @@ auto RenderContext::Initialize() -> Result<void>
         INIT_VULKAN_COMPONENT(m_vrm, details);
     }
 
+    // --- Command Pool creation ---
+    VkCommandPoolCreateInfo pool_info{
+        .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext            = nullptr,
+        .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = m_queue_family_indices.gfx_q_index,
+    };
+
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateCommandPool(m_device->logi_device, &pool_info, nullptr, &m_command_pool),
+        RenderingErrc::kCommandPoolNotCreated);
+
+    std::size_t const kMaxFramesInFlight = static_cast<std::size_t>(m_swapchain->GetImageCount());
+
+    m_frame_command_buffers.resize(m_swapchain->GetImageCount());
+    m_image_acquire_semaphores.resize(kMaxFramesInFlight);
+    m_render_complete_semaphores.resize(kMaxFramesInFlight);
+    m_frame_fences.resize(kMaxFramesInFlight);
+
+    // --- Command buffer allocations ---
+    VkCommandBufferAllocateInfo alloc_info{
+        .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext              = nullptr,
+        .commandPool        = m_command_pool,
+        .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = m_swapchain->GetImageCount(),
+    };
+
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkAllocateCommandBuffers(m_device->logi_device, &alloc_info, m_frame_command_buffers.data()),
+        RenderingErrc::kCommandBufferAllocationFail);
+
+    // --- Synchronization objects creation ---
+    VkSemaphoreCreateInfo semaphore_info{
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0U,
+    };
+    VkFenceCreateInfo fence_info{
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+    };
+
+    for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
+    {
+        CHECK_VK_SUCCESS_OR_ERR(
+            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_image_acquire_semaphores[i]),
+            RenderingErrc::kSemaphoreCreationFail);
+        CHECK_VK_SUCCESS_OR_ERR(
+            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_render_complete_semaphores[i]),
+            RenderingErrc::kSemaphoreCreationFail);
+        CHECK_VK_SUCCESS_OR_ERR(
+            vkCreateFence(m_device->logi_device, &fence_info, nullptr, &m_frame_fences[i]),
+            RenderingErrc::kFenceCreationFail);
+    }
+
     return {};
 }
 
@@ -203,12 +260,14 @@ auto RenderContext::Shutdown() -> Result<void>
 {
     vkDeviceWaitIdle(m_device->logi_device);
 
-    for (auto fence : m_frame_fences) { vkDestroyFence(m_device->logi_device, fence, nullptr); }
-    for (auto semaphore : m_image_acquire_semaphores) { vkDestroySemaphore(m_device->logi_device, semaphore, nullptr); }
-    for (auto semaphore : m_render_complete_semaphores)
+    for (std::size_t i{0U}; i < m_image_acquire_semaphores.size(); ++i)
     {
-        vkDestroySemaphore(m_device->logi_device, semaphore, nullptr);
+        vkDestroySemaphore(m_device->logi_device, m_image_acquire_semaphores[i], nullptr);
+        vkDestroySemaphore(m_device->logi_device, m_render_complete_semaphores[i], nullptr);
+        vkDestroyFence(m_device->logi_device, m_frame_fences[i], nullptr);
     }
+
+    vkFreeCommandBuffers(m_device->logi_device, m_command_pool, 3U, m_frame_command_buffers.data());
     vkDestroyCommandPool(m_device->logi_device, m_command_pool, nullptr);
 
     std::ignore = m_vrm->Destroy();
