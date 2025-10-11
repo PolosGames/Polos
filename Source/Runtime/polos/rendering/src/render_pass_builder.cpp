@@ -15,6 +15,6 @@ RenderPassBuilder::RenderPassBuilder(RenderGraph* t_parent_graph, std::uint32_t 
 
 auto RenderPassBuilder::Read(RendererResourceHandle t_handle) -> void {}
 
-auto RenderPassBuilder::Write(AttachmentInfo const& t_attachment_info) -> void {}
+auto RenderPassBuilder::Write(attachment_info const& t_attachment_info) -> void {}
 
 }// namespace polos::rendering

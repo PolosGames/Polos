@@ -17,3 +17,6 @@ A C++ game engine project.
 You need:
 - CMake 3.21
 - vcpkg (Need to set `VCPKG_ROOT` environment variable to the installation of the vcpkg)
+- [OPTIONAL]
+    - Workspace file can be obtained by running `./get-workspace.sh`
+    - Either curl or wget is required

@@ -8,6 +8,7 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/module_macros.hpp"
+#include "polos/rendering/pipeline_cache.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 #include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
@@ -45,12 +46,12 @@ private:
     static RenderContext* s_instance;
     static bool           s_is_initialized;
 
-    GLFWwindow* m_window{nullptr};
-
+    GLFWwindow*                      m_window{nullptr};
     std::unique_ptr<VRM>             m_vrm;
     std::unique_ptr<VulkanContext>   m_context;
     std::unique_ptr<VulkanDevice>    m_device;
     std::unique_ptr<VulkanSwapchain> m_swapchain;
+    std::unique_ptr<PipelineCache>   m_pipeline_cache;
 
     VkCommandPool m_command_pool{VK_NULL_HANDLE};
 

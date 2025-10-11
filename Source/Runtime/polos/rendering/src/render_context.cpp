@@ -80,7 +80,8 @@ RenderContext::RenderContext(GLFWwindow* t_window)
       m_vrm{std::make_unique<VRM>()},
       m_context{std::make_unique<VulkanContext>()},
       m_device{std::make_unique<VulkanDevice>(m_window)},
-      m_swapchain{std::make_unique<VulkanSwapchain>(m_window)}
+      m_swapchain{std::make_unique<VulkanSwapchain>(m_window)},
+      m_pipeline_cache{std::make_unique<PipelineCache>()}
 {}
 
 RenderContext::~RenderContext() = default;

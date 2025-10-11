@@ -6,7 +6,9 @@
 #ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
 
+#include "polos/rendering/compiled_render_pass.hpp"
 #include "polos/rendering/i_render_pass.hpp"
+#include "polos/rendering/render_graph_resource_node.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 
 #include <memory>
@@ -41,8 +43,12 @@ public:
     auto Compile() -> void;
     auto Execute(VkCommandBuffer t_cmd_buf) -> void;
     auto Clear() -> void;
+
+    auto ImportTexture(std::string_view t_name, VkImage t_image) -> RendererResourceHandle;
 private:
     std::vector<std::unique_ptr<IRenderPass>> m_passes;
+    std::vector<render_graph_resource_node>   m_resources;
+    std::vector<compiled_render_pass>         m_compiled_passes;
 };
 }// namespace polos::rendering
 
