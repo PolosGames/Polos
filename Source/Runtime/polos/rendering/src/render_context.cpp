@@ -6,7 +6,10 @@
 #include "polos/rendering/render_context.hpp"
 
 #include "polos/rendering/common.hpp"
+#include "polos/rendering/pipeline_cache.hpp"
+#include "polos/rendering/render_graph.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+#include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
@@ -80,7 +83,8 @@ RenderContext::RenderContext(GLFWwindow* t_window)
       m_vrm{std::make_unique<VRM>()},
       m_context{std::make_unique<VulkanContext>()},
       m_device{std::make_unique<VulkanDevice>(m_window)},
-      m_swapchain{std::make_unique<VulkanSwapchain>(m_window)}
+      m_swapchain{std::make_unique<VulkanSwapchain>(m_window)},
+      m_pipeline_cache{std::make_unique<PipelineCache>()}
 {}
 
 RenderContext::~RenderContext() = default;
@@ -285,6 +289,16 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
 }
 
 auto RenderContext::EndFrame() -> void {}
+
+auto RenderContext::GetRenderGraph() -> RenderGraph&
+{
+    return *m_render_graph;
+}
+
+auto RenderContext::GetSwapchain() -> VulkanSwapchain&
+{
+    return *m_swapchain;
+}
 
 auto RenderingInstance() -> RenderContext&
 {

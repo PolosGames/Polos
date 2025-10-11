@@ -60,6 +60,10 @@ public:
     auto AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>;
     auto QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wait_semaphore) const -> Result<void>;
 
+    auto GetCurrentImage() const -> VkImage;
+    auto GetCurrentImageIndex() const -> std::uint32_t;
+    auto GetCurrentImageView() const -> VkImageView;
+
     auto GetImage(std::uint32_t t_index) const -> VkImage;
     auto GetImageView(std::uint32_t t_index) const -> VkImageView;
     auto GetImageCount() const -> std::uint32_t;
@@ -76,6 +80,7 @@ private:
     VkRect2D           m_scissor;
     VkViewport         m_viewport;
 
+    std::uint32_t            m_current_image{0U};
     std::uint32_t            m_img_count{0U};
     std::vector<VkImage>     m_images;
     std::vector<VkImageView> m_image_views;

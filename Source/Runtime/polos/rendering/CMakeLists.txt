@@ -19,9 +19,15 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
+        "src/clear_screen_pass.cpp"
+        "src/clear_screen_system.cpp"
+        "src/common.cpp"
         "src/dll_main.cpp"
+        "src/lambda_pass.cpp"
         "src/pipeline_cache.cpp"
         "src/render_context.cpp"
+        "src/render_graph.cpp"
+        "src/render_pass_resolver.cpp"
         "src/vertex.cpp"
         "src/vk_instance.cpp"
         "src/vulkan_context.cpp"

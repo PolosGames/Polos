@@ -11,7 +11,7 @@
 namespace polos::rendering
 {
 
-struct AttachmentInfo
+struct attachment_info
 {
     RendererResourceHandle handle;
     VkAttachmentLoadOp     load_op;

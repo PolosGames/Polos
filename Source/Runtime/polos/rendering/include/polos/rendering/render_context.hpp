@@ -7,17 +7,21 @@
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_
 
 #include "polos/communication/error_code.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
-#include "polos/rendering/vulkan_context.hpp"
-#include "polos/rendering/vulkan_device.hpp"
-#include "polos/rendering/vulkan_resource_manager.hpp"
-#include "polos/rendering/vulkan_swapchain.hpp"
 
 #include <memory>
 
 namespace polos::rendering
 {
+
+class VulkanContext;
+class VulkanDevice;
+class VulkanSwapchain;
+class VulkanResourceManager;
+class PipelineCache;
+class RenderGraph;
 
 class RENDERING_EXPORT RenderContext
 {
@@ -39,18 +43,22 @@ public:
 
     auto BeginFrame() -> VkCommandBuffer;
     auto EndFrame() -> void;
+
+    auto GetRenderGraph() -> RenderGraph&;
+    auto GetSwapchain() -> VulkanSwapchain&;
 private:
     friend class Engine;
 
     static RenderContext* s_instance;
     static bool           s_is_initialized;
 
-    GLFWwindow* m_window{nullptr};
-
-    std::unique_ptr<VRM>             m_vrm;
-    std::unique_ptr<VulkanContext>   m_context;
-    std::unique_ptr<VulkanDevice>    m_device;
-    std::unique_ptr<VulkanSwapchain> m_swapchain;
+    GLFWwindow*                            m_window{nullptr};
+    std::unique_ptr<VulkanResourceManager> m_vrm;
+    std::unique_ptr<VulkanContext>         m_context;
+    std::unique_ptr<VulkanDevice>          m_device;
+    std::unique_ptr<VulkanSwapchain>       m_swapchain;
+    std::unique_ptr<PipelineCache>         m_pipeline_cache;
+    std::unique_ptr<RenderGraph>           m_render_graph;
 
     VkCommandPool m_command_pool{VK_NULL_HANDLE};
 

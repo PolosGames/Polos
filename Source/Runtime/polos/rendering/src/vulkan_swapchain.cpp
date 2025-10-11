@@ -195,8 +195,6 @@ auto VulkanSwapchain::GetViewport() const -> VkViewport const&
 
 auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>
 {
-    std::uint32_t image_index{0U};
-
     CHECK_VK_SUCCESS_OR_ERR(
         vkAcquireNextImageKHR(
             m_device,
@@ -204,10 +202,10 @@ auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_detai
             t_details.timeout,
             t_details.semaphore,
             t_details.fence,
-            &image_index),
+            &m_current_image),
         RenderingErrc::kFailedToAcquireSwapchainImage);
 
-    return image_index;
+    return m_current_image;
 }
 
 auto VulkanSwapchain::QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wait_semaphore) const -> Result<void>
@@ -225,6 +223,21 @@ auto VulkanSwapchain::QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wa
     CHECK_VK_SUCCESS_OR_ERR(vkQueuePresentKHR(m_gfx_queue, &present_info), RenderingErrc::kFailedToPresentQueue);
 
     return {};
+}
+
+auto VulkanSwapchain::GetCurrentImage() const -> VkImage
+{
+    return GetImage(m_current_image);
+}
+
+auto VulkanSwapchain::GetCurrentImageIndex() const -> std::uint32_t
+{
+    return m_current_image;
+}
+
+auto VulkanSwapchain::GetCurrentImageView() const -> VkImageView
+{
+    return GetImageView(m_current_image);
 }
 
 auto VulkanSwapchain::GetImage(std::uint32_t t_index) const -> VkImage
