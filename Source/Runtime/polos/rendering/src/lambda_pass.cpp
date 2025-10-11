@@ -5,6 +5,9 @@
 
 #include "polos/rendering/render_pass/lambda_pass.hpp"
 
+#include "polos/rendering/render_graph_registry.hpp"
+#include "polos/rendering/render_pass_resolver.hpp"
+
 namespace polos::rendering
 {
 
@@ -13,7 +16,7 @@ LambdaPass::LambdaPass(SetupFunc t_setup_f, ExecuteFunc t_execute_f)
       m_execute_func{std::move(t_execute_f)}
 {}
 
-void LambdaPass::Setup(RenderPassBuilder& t_builder)
+void LambdaPass::Setup(RenderPassResolver& t_builder)
 {
     if (nullptr != m_setup_func)
     {
@@ -21,7 +24,7 @@ void LambdaPass::Setup(RenderPassBuilder& t_builder)
     }
 }
 
-void LambdaPass::Execute(VkCommandBuffer t_cmd_buf, const RenderPassRegistry& t_registry)
+void LambdaPass::Execute(VkCommandBuffer t_cmd_buf, const RenderGraphRegistry& t_registry)
 {
     if (nullptr != m_execute_func)
     {

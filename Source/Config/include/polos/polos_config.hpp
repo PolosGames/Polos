@@ -1,7 +1,7 @@
 #pragma once
 
 /* #undef ENABLE_PROFILING */
-#define GUI_USE_IMGUI
+/* #undef GUI_USE_IMGUI */
 /* #undef QUILL_DISABLE_NON_PREFIXED_MACROS */
 
 #if defined(_WIN64)

@@ -3,15 +3,15 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_INFO_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_INFO_HPP_
+#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_USAGE_HPP_
+#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_USAGE_HPP_
 
 #include "polos/rendering/common.hpp"
 
 namespace polos::rendering
 {
 
-struct AttachmentInfo
+struct attachment_usage
 {
     RendererResourceHandle handle;
     VkAttachmentLoadOp     load_op;
@@ -20,5 +20,4 @@ struct AttachmentInfo
 };
 
 }// namespace polos::rendering
-
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_INFO_HPP_
+#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_ATTACHMENT_USAGE_HPP_
