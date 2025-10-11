@@ -3,9 +3,10 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#if defined(POLOS_WIN)
+#    define NOMINMAX
+#    include <windows.h>
+#endif
 
 #include "dummy_app.hpp"
 
@@ -15,16 +16,20 @@
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
 #include <polos/platform/window_manager.hpp>
-#include <polos/rendering/dll_out.hpp>
+#if defined(HOT_RELOAD)
+#    include <polos/rendering/shared_lib_out.hpp>
+#endif// HOT_RELOAD
 #include <polos/rendering/vk_instance.hpp>
 
 namespace dummy_app
 {
 
+#if defined(HOT_RELOAD)
 namespace
 {
-polos::rendering::rendering_dll_out rendering_dll;
+polos::rendering::rendering_shared_lib_out rendering_dll;
 }// namespace
+#endif
 
 DummyApp::DummyApp()
 {
@@ -43,10 +48,11 @@ DummyApp::DummyApp()
             on_key_release(t_event);
         });
 
-    polos::rendering::LoadRenderingModule(rendering_dll);
-
     auto& win_inst = polos::platform::WindowManager::Instance();
+#if defined(HOT_RELOAD)
+    polos::rendering::LoadRenderingModule(rendering_dll);
     win_inst.UpdateRenderingModule(rendering_dll);
+#endif// HOT_RELOAD
 
     assert(win_inst.CreateNewWindow(1280, 720, Name()));
 }
@@ -65,14 +71,19 @@ void DummyApp::on_engine_update(polos::communication::engine_update&)
 
 void DummyApp::on_render_update(polos::communication::render_update&)
 {
+#if defined(HOT_RELOAD)
     if (nullptr != rendering_dll.render_frame_func && !m_unload_in_progress)
     {
         rendering_dll.render_frame_func();
     }
+#else
+    polos::rendering::RenderFrame();
+#endif
 }
 
 void DummyApp::on_key_release(polos::communication::key_release t_event)
 {
+#if defined(HOT_RELOAD)
     if (t_event.key == GLFW_KEY_R)
     {
         m_unload_in_progress = true;
@@ -88,6 +99,7 @@ void DummyApp::on_key_release(polos::communication::key_release t_event)
             m_unload_in_progress = false;
         }
     }
+#endif// HOT_RELOAD
 }
 
 

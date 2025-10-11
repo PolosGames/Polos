@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_DLL_MAIN_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_DLL_MAIN_HPP_
+#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
+#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
 
 #include "polos/rendering/vulkan_state.hpp"
 #include "polos/utils/windows_hot_reload_utils.hpp"
@@ -13,7 +13,7 @@ struct GLFWwindow;
 
 namespace polos::rendering
 {
-struct rendering_dll_out : utils::base_dll_out
+struct rendering_shared_lib_out : utils::base_shared_lib_out
 {
     using initialize_vulkan_func_t = polos::rendering::VulkanState* (*)(GLFWwindow* const);
     using terminate_vulkan_func_t  = void (*)();
@@ -24,7 +24,7 @@ struct rendering_dll_out : utils::base_dll_out
     render_frame_func_t      render_frame_func{nullptr};
 };
 
-inline bool LoadRenderingModule(rendering_dll_out& t_dll_out)
+inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
     if (!polos::utils::LoadDLL(t_dll_out, "polos_rendering.dll"))
     {
@@ -47,7 +47,7 @@ inline bool LoadRenderingModule(rendering_dll_out& t_dll_out)
     return true;
 }
 
-inline void UnloadRenderingModule(rendering_dll_out& t_dll_out)
+inline void UnloadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
     if (t_dll_out.handle != nullptr)
     {
@@ -57,4 +57,4 @@ inline void UnloadRenderingModule(rendering_dll_out& t_dll_out)
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_DLL_MAIN_HPP_
+#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_

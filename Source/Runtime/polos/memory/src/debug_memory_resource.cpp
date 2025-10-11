@@ -38,15 +38,15 @@ auto DebugMemoryResource::GetUsedMemoryInBytes() const -> std::int64_t
 void* DebugMemoryResource::do_allocate(std::size_t bytes, std::size_t alignment)
 {
     LogTrace("[{} (alloc)] Size: {}, Alignment: {}", m_name, bytes, alignment);
-    m_total_allocation += bytes;
-    m_used_memory_in_bytes += bytes;
+    m_total_allocation += static_cast<std::int64_t>(bytes);
+    m_used_memory_in_bytes += static_cast<std::int64_t>(bytes);
     return m_upstream->allocate(bytes, alignment);
 }
 
 void DebugMemoryResource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
 {
     LogTrace("[{} (dealloc)] Size: {}, Alignment: {}", m_name, bytes, alignment);
-    m_used_memory_in_bytes -= bytes;
+    m_used_memory_in_bytes -= static_cast<std::int64_t>(bytes);
     m_upstream->deallocate(p, bytes, alignment);
 }
 

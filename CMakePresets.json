@@ -28,7 +28,7 @@
             "name": "linux-base",
             "inherits": "base",
             "environment": {
-                "VCPKG_ROOT": "~/vcpkg-bin"
+                "VCPKG_ROOT": "~/vcpkg"
             },
             "condition": {
                 "type": "equals",

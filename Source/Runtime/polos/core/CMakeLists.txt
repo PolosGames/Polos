@@ -29,6 +29,6 @@ define_polos_module(
         polos::filesystem
         polos::logging
         polos::platform
-        polos::rendering_INTERFACE
+        polos::rendering
         polos::utils
 )

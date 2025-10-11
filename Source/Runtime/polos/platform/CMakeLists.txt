@@ -26,5 +26,5 @@ define_polos_module(
         Vulkan::Vulkan
         polos::communication
         polos::logging
-        polos::rendering_INTERFACE
+        polos::rendering
 )

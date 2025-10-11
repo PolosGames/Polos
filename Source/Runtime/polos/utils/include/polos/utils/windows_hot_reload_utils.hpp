@@ -6,17 +6,20 @@
 #ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_
 #define POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_
 
-#include "polos/logging/log_macros.hpp"
+#if defined(POLOS_WIN)
 
-#include <filesystem>
-#define NOMINMAX
-#include <string>
-#include <windows.h>
+#    include "polos/logging/log_macros.hpp"
+
+#    include <filesystem>
+#    include <string>
+
+#    define NOMINMAX
+#    include <windows.h>
 
 namespace polos::utils
 {
 
-struct base_dll_out
+struct base_shared_lib_out
 {
     HMODULE handle;
 
@@ -54,7 +57,7 @@ inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string&
 }
 
 
-inline void UnloadDLL(base_dll_out& t_dll_out)
+inline void UnloadDLL(base_shared_lib_out& t_dll_out)
 {
     if (t_dll_out.handle)
     {
@@ -71,7 +74,7 @@ inline void UnloadDLL(base_dll_out& t_dll_out)
 }
 
 // Copy and Load
-inline bool LoadDLL(base_dll_out& t_dll_out, const std::string& t_original_dll_path_str)
+inline bool LoadDLL(base_shared_lib_out& t_dll_out, const std::string& t_original_dll_path_str)
 {
     if (nullptr != t_dll_out.handle)
     {
@@ -124,7 +127,7 @@ inline bool LoadDLL(base_dll_out& t_dll_out, const std::string& t_original_dll_p
 }
 
 template<typename F>
-inline bool GetFuncFromDLL(base_dll_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
+inline bool GetFuncFromDLL(base_shared_lib_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
 {
     // Get the address of the exported function
     t_func_ptr = reinterpret_cast<F>(GetProcAddress(t_dll_out.handle, t_func_name.data()));
@@ -141,5 +144,6 @@ inline bool GetFuncFromDLL(base_dll_out& t_dll_out, F& t_func_ptr, std::string_v
 
 }// namespace polos::utils
 
+#endif// POLOS_WIN
 
 #endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_

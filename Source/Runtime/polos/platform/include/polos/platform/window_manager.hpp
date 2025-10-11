@@ -8,7 +8,9 @@
 
 #include "polos/platform/module_macros.hpp"
 
-#include "polos/rendering/dll_out.hpp"
+#if defined(HOT_RELOAD)
+#    include "polos/rendering/shared_lib_out.hpp"
+#endif// HOT_RELOAD
 #include "polos/rendering/vulkan_state.hpp"
 
 #include <cstdint>
@@ -42,10 +44,10 @@ public:
     bool                  CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
     GLFWwindow*           GetRawWindow() const;
 
-#ifndef NDEBUG
+#if defined(HOT_RELOAD)
     /// @brief Must be called before CreateNewWindow
-    void UpdateRenderingModule(rendering::rendering_dll_out& t_dll_out);
-#endif// NDEBUG
+    void UpdateRenderingModule(rendering::rendering_shared_lib_out& t_dll_out);
+#endif// HOT_RELOAD
 private:
     WindowManager();
 

@@ -20,7 +20,7 @@ if (NOT POLOS_INSTALL_DIR)
 endif()
 string(REPLACE "\\" "/" POLOS_INSTALL_DIR ${POLOS_INSTALL_DIR})
 
-configure_file(polos_config.h.in ${POLOS_DIR}/polos_config.h USE_SOURCE_PERMISSIONS)
+configure_file(polos_config.hpp.in ${POLOS_DIR}/Config/include/polos/polos_config.hpp USE_SOURCE_PERMISSIONS)
 
 option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)

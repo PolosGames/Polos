@@ -76,6 +76,11 @@ macro(define_polos_module)
 
         file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
 
+        # Remove dll_main from linux build
+        if (LINUX)
+            list(REMOVE_ITEM MODULE_SOURCES "src/dll_main.cpp")
+        endif()
+
         target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
 
         target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
@@ -83,6 +88,7 @@ macro(define_polos_module)
             PUBLIC
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         )
+        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_DIR}/Config/include)
 
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
         target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
@@ -116,8 +122,14 @@ macro(define_polos_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
             $<INSTALL_INTERFACE:include>
     )
-    add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
-    add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+
+    if (HOT_RELOAD)
+        # just expose polos::modulename_INTERFACE as the actual interface for when HOT_RELOAD is enabled
+        add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME_INTERFACE})
+    else()
+        add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
+        add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+    endif()
 
     if (${BUILD_TESTS} AND MODULE_TEST_SOURCES)
         message(STATUS "[POLOS] Building tests for: ${MODULE_NAME}")

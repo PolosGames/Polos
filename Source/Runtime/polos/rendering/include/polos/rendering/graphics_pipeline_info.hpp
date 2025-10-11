@@ -9,7 +9,9 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/shader.hpp"
 #include "polos/rendering/vertex.hpp"
+
 #include <cstdint>
+#include <string>
 
 namespace polos::rendering
 {

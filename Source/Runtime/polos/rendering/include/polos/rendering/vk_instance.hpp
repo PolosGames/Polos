@@ -23,8 +23,8 @@ namespace polos::rendering
 /// @brief Try to initialize Vulkan with predefined options
 /// @return VulkanState with initialized instance and device if successfull.
 /// @error A Vulkan error in the form of VkResult
-[[nodiscard]] RENDERING_EXPORT auto
-InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState*, VkResult>;
+[[nodiscard]] RENDERING_EXPORT auto InitializeVulkan(GLFWwindow* const t_window)
+    -> std::expected<VulkanState*, VkResult>;
 
 /// @brief Terminate Vulkan and cleanup all resources related to the instance
 RENDERING_EXPORT void TerminateVulkan();
@@ -34,17 +34,19 @@ RENDERING_EXPORT void RenderFrame();
 
 }// namespace polos::rendering
 
-#if defined(__cplusplus)
+#if defined(HOT_RELOAD)
+#    if defined(__cplusplus)
 extern "C"
 {
-#endif// __cplusplus
+#    endif// __cplusplus
 
     RENDERING_EXPORT polos::rendering::VulkanState* InitializeVulkan(GLFWwindow* const t_window);
     RENDERING_EXPORT void                           TerminateVulkan();
     RENDERING_EXPORT void                           RenderFrame();
 
-#if defined(__cplusplus)
+#    if defined(__cplusplus)
 }
-#endif// __cplusplus
+#    endif// __cplusplus
+#endif    // HOT_RELOAD
 
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VK_INSTANCE_HPP_

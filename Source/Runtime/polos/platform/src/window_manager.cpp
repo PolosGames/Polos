@@ -24,10 +24,12 @@ struct VulkanState;
 namespace polos::platform
 {
 
+#if defined(HOT_RELOAD)
 namespace
 {
-rendering::rendering_dll_out rendering_dll;
+rendering::rendering_shared_lib_out rendering_dll;
 }
+#endif
 
 WindowManager::WindowManager()
 {
@@ -106,9 +108,11 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
         communication::DispatchNow<communication::window_focus>(t_is_focused);
     });
 
-    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /*p_Window*/, std::int32_t t_width, std::int32_t t_height) {
-        communication::DispatchNow<communication::window_framebuffer_resize>(t_width, t_height);
-    });
+    glfwSetFramebufferSizeCallback(
+        m_window,
+        [](GLFWwindow* /*p_Window*/, std::int32_t t_new_width, std::int32_t t_new_height) {
+            communication::DispatchNow<communication::window_framebuffer_resize>(t_new_width, t_new_height);
+        });
 
     glfwSetKeyCallback(
         m_window,
@@ -131,7 +135,8 @@ GLFWwindow* WindowManager::GetRawWindow() const
     return m_window;
 }
 
-void WindowManager::UpdateRenderingModule(rendering::rendering_dll_out& t_dll_out)
+#if defined(HOT_RELOAD)
+void WindowManager::UpdateRenderingModule(rendering::rendering_shared_lib_out& t_dll_out)
 {
     rendering_dll = t_dll_out;
 
@@ -140,16 +145,23 @@ void WindowManager::UpdateRenderingModule(rendering::rendering_dll_out& t_dll_ou
         init_vulkan();
     }
 }
+#endif// HOT_RELOAD
 
 void WindowManager::init_vulkan()
 {
-#if defined(NDEBUG)
-    auto result    = rendering::InitializeVulkan(m_window);
+#ifndef HOT_RELOAD
+    auto result = rendering::InitializeVulkan(m_window);
+    if (!result.has_value())
+    {
+        LogCritical("Failed to Initialize vulkan, VkResult: {}", static_cast<std::uint32_t>(result.error()));
+        communication::DispatchDefer<communication::engine_terminate>();
+        return;
+    }
     m_vulkan_state = *result.value();
 #else
     polos::rendering::VulkanState* result = rendering_dll.initialize_vulkan_func(m_window);
     m_vulkan_state                        = *result;
-#endif// NDEBUG
+#endif// HOT_RELOAD
 }
 
 void WindowManager::on_end_frame() const
@@ -173,14 +185,15 @@ void WindowManager::on_engine_terminate()
     m_window = nullptr;
     LogInfo("Terminating WindowManager...");
 
-#if defined(NDEBUG)
+
+#ifndef HOT_RELOAD
     rendering::TerminateVulkan();
 #else
     if (nullptr != rendering_dll.terminate_vulkan_func)
     {
         rendering_dll.terminate_vulkan_func();
     }
-#endif// NDEBUG
+#endif// HOT_RELOAD
     glfwTerminate();
 }
 

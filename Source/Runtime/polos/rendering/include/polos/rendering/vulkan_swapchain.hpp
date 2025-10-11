@@ -10,6 +10,7 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/module_macros.hpp"
 
+#include <limits>
 #include <vector>
 
 namespace polos::rendering
