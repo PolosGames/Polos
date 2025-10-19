@@ -201,25 +201,26 @@ auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_detai
             m_swapchain,
             t_details.timeout,
             t_details.semaphore,
-            t_details.fence,
+            VK_NULL_HANDLE,
             &m_current_image),
         RenderingErrc::kFailedToAcquireSwapchainImage);
 
     return m_current_image;
 }
 
-auto VulkanSwapchain::QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wait_semaphore) const -> Result<void>
+auto VulkanSwapchain::QueuePresent(VkSemaphore t_wait_semaphore) const -> Result<void>
 {
     VkPresentInfoKHR present_info{
         .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext              = nullptr,
-        .waitSemaphoreCount = (t_wait_semaphore != VK_NULL_HANDLE) ? 1U : 0U,
-        .pWaitSemaphores    = (t_wait_semaphore != VK_NULL_HANDLE) ? &t_wait_semaphore : nullptr,
+        .waitSemaphoreCount = 1U,
+        .pWaitSemaphores    = &t_wait_semaphore,
         .swapchainCount     = 1U,
         .pSwapchains        = &m_swapchain,
-        .pImageIndices      = &t_image_index,
+        .pImageIndices      = &m_current_image,
         .pResults           = nullptr,
     };
+
     CHECK_VK_SUCCESS_OR_ERR(vkQueuePresentKHR(m_gfx_queue, &present_info), RenderingErrc::kFailedToPresentQueue);
 
     return {};

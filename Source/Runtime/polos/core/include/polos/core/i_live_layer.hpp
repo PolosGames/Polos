@@ -17,6 +17,9 @@ public:
     ILiveLayer()          = default;
     virtual ~ILiveLayer() = default;
 
+    virtual void Create()  = 0;
+    virtual void Destroy() = 0;
+
     virtual char const* Name() const = 0;
 };
 

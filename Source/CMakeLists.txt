@@ -20,6 +20,7 @@ target_link_libraries(
             polos::communication
             polos::core
             polos::datatypes
+            polos::filesystem
             polos::logging
             polos::platform
             polos::rendering

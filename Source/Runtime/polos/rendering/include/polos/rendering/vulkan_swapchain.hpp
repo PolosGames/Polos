@@ -35,7 +35,7 @@ struct acquire_next_image_details
 {
     VkSemaphore   semaphore{VK_NULL_HANDLE};
     VkFence       fence{VK_NULL_HANDLE};
-    std::uint32_t timeout{std::numeric_limits<std::uint32_t>::max()};
+    std::uint64_t timeout{std::numeric_limits<std::uint64_t>::max()};
 };
 
 class RENDERING_EXPORT VulkanSwapchain
@@ -58,7 +58,7 @@ public:
     auto GetViewport() const -> VkViewport const&;
 
     auto AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>;
-    auto QueuePresent(std::uint32_t t_image_index, VkSemaphore t_wait_semaphore) const -> Result<void>;
+    auto QueuePresent(VkSemaphore t_wait_semaphore) const -> Result<void>;
 
     auto GetCurrentImage() const -> VkImage;
     auto GetCurrentImageIndex() const -> std::uint32_t;

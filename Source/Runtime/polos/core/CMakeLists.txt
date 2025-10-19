@@ -23,12 +23,13 @@ define_polos_module(
         "src/main_loop.cpp"
         "src/engine.cpp"
         "src/base_live_layer.cpp"
+    PUBLIC_DEPS
+        polos::rendering
     PRIVATE_DEPS
         polos::communication
         polos::datatypes
         polos::filesystem
         polos::logging
         polos::platform
-        polos::rendering
         polos::utils
 )

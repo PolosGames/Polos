@@ -13,11 +13,11 @@ namespace polos::rendering
 
 struct texture_2d
 {
-    VkImage            image{VK_NULL_HANDLE};
-    VkImageView        view{VK_NULL_HANDLE};
-    VkFormat           format{VK_FORMAT_UNDEFINED};
-    VkExtent2D         extent{.width = 0, .height = 0};
-    VkSampleCountFlags samples{VK_SAMPLE_COUNT_1_BIT};
+    VkImage               image{VK_NULL_HANDLE};
+    VkImageView           view{VK_NULL_HANDLE};
+    VkFormat              format{VK_FORMAT_UNDEFINED};
+    VkExtent2D            extent{.width = 0, .height = 0};
+    VkSampleCountFlagBits samples{VK_SAMPLE_COUNT_1_BIT};
 };
 
 }// namespace polos::rendering

@@ -8,8 +8,6 @@
 
 #include "polos/rendering/common.hpp"
 
-#include "polos/rendering/render_pass_layout_description.hpp"
-
 namespace polos::rendering
 {
 
@@ -21,9 +19,11 @@ class IRenderPass
 public:
     virtual ~IRenderPass() = default;
 
-    virtual void Setup(RenderPassResolver& t_builder)                                      = 0;
-    virtual void Execute(VkCommandBuffer t_cmd_buf, const RenderGraphRegistry& t_registry) = 0;
-    virtual render_pass_layout_description const& GetLayout() const                        = 0;
+    virtual void        Setup(RenderPassResolver& t_builder)                                      = 0;
+    virtual void        Execute(VkCommandBuffer t_cmd_buf, const RenderGraphRegistry& t_registry) = 0;
+    virtual char const* Name() const                                                              = 0;
+
+    VkRenderPass vk_pass{VK_NULL_HANDLE};
 };
 }// namespace polos::rendering
 

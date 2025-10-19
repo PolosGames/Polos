@@ -70,6 +70,12 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
     m_surface   = t_info.surface;
     phys_device = t_info.phys_device;
 
+    m_device_props = {
+        .sType      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+        .pNext      = nullptr,
+        .properties = {},
+    };
+
     /// ====================================================================================
     /// Print out device information
     /// ====================================================================================
@@ -138,7 +144,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext                   = nullptr,
         .flags                   = 0U,
-        .queueCreateInfoCount    = static_cast<std::uint32_t>(q_create_infos.size()),
+        .queueCreateInfoCount    = VK_SIZE_CAST(q_create_infos.size()),
         .pQueueCreateInfos       = q_create_infos.data(),
         .enabledLayerCount       = 0U,     // deprecated
         .ppEnabledLayerNames     = nullptr,// deprecated

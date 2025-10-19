@@ -11,12 +11,17 @@
 #if defined(HOT_RELOAD)
 #    include "polos/rendering/shared_lib_out.hpp"
 #endif// HOT_RELOAD
-#include "polos/rendering/vulkan_state.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <string_view>
 
 struct GLFWwindow;
+
+namespace polos::rendering
+{
+class RenderContext;
+}// namespace polos::rendering
 
 namespace polos::communication
 {
@@ -41,8 +46,10 @@ public:
     WindowManager& operator=(WindowManager&&)      = delete;
 
     static WindowManager& Instance();
-    bool                  CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
-    GLFWwindow*           GetRawWindow() const;
+
+    bool        CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
+    void        ChangeWindowTitle(std::string_view const t_title);
+    GLFWwindow* GetRawWindow() const;
 
 #if defined(HOT_RELOAD)
     /// @brief Must be called before CreateNewWindow
@@ -57,9 +64,8 @@ private:
     void on_window_close();
     void on_engine_terminate();
 
-    GLFWwindow* m_window{nullptr};
-
-    rendering::VulkanState m_vulkan_state;
+    GLFWwindow*                               m_window{nullptr};
+    std::unique_ptr<rendering::RenderContext> m_rendering_context;
 };
 
 }// namespace polos::platform

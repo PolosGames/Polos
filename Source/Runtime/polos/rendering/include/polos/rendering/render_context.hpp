@@ -10,8 +10,14 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
+#include "polos/rendering/texture_2d.hpp"
 
 #include <memory>
+
+namespace polos::platform
+{
+class WindowManager;
+}
 
 namespace polos::rendering
 {
@@ -22,6 +28,7 @@ class VulkanSwapchain;
 class VulkanResourceManager;
 class PipelineCache;
 class RenderGraph;
+struct render_pass_layout_description;
 
 class RENDERING_EXPORT RenderContext
 {
@@ -46,35 +53,44 @@ public:
 
     auto GetRenderGraph() -> RenderGraph&;
     auto GetSwapchain() -> VulkanSwapchain&;
+
+    auto GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>;
+    auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
 private:
-    friend class Engine;
+    friend class platform::WindowManager;
 
     static RenderContext* s_instance;
     static bool           s_is_initialized;
 
     GLFWwindow*                            m_window{nullptr};
-    std::unique_ptr<VulkanResourceManager> m_vrm;
     std::unique_ptr<VulkanContext>         m_context;
     std::unique_ptr<VulkanDevice>          m_device;
     std::unique_ptr<VulkanSwapchain>       m_swapchain;
+    std::unique_ptr<VulkanResourceManager> m_vrm;
     std::unique_ptr<PipelineCache>         m_pipeline_cache;
     std::unique_ptr<RenderGraph>           m_render_graph;
 
     VkCommandPool m_command_pool{VK_NULL_HANDLE};
 
     std::vector<VkFence>         m_frame_fences;
-    std::vector<VkSemaphore>     m_image_acquire_semaphores;
+    std::vector<VkSemaphore>     m_image_acquired_semaphores;
     std::vector<VkSemaphore>     m_render_complete_semaphores;
     std::vector<VkCommandBuffer> m_frame_command_buffers;
     std::uint32_t                m_current_frame_index{0U};
-    std::uint32_t                m_swapchain_image_index{0U};
+
+    std::vector<VkRenderPass> m_vk_render_passes;
 
     VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
     VkQueue              m_gfx_queue{VK_NULL_HANDLE};
     queue_family_indices m_queue_family_indices;
+
+    bool m_is_initialized{false};
 };
 
-auto RenderingInstance() -> RenderContext&;
+RENDERING_EXPORT auto RenderingInstance() -> RenderContext&;
+
+[[nodiscard]] RENDERING_EXPORT auto BeginFrame() -> VkCommandBuffer;
+RENDERING_EXPORT auto               EndFrame() -> void;
 
 }// namespace polos::rendering
 

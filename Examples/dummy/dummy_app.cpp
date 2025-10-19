@@ -10,6 +10,7 @@
 
 #include "dummy_app.hpp"
 
+#include <polos/communication/engine_terminate.hpp>
 #include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
 #include <polos/communication/render_update.hpp>
@@ -19,7 +20,6 @@
 #if defined(HOT_RELOAD)
 #    include <polos/rendering/shared_lib_out.hpp>
 #endif// HOT_RELOAD
-#include <polos/rendering/vk_instance.hpp>
 
 namespace dummy_app
 {
@@ -31,7 +31,10 @@ polos::rendering::rendering_shared_lib_out rendering_dll;
 }// namespace
 #endif
 
-DummyApp::DummyApp()
+DummyApp::DummyApp() = default;
+DummyApp::~DummyApp() {}
+
+void DummyApp::Create()
 {
     polos::communication::Subscribe<polos::communication::engine_update>(
         [this](polos::communication::engine_update& t_event) {
@@ -47,17 +50,15 @@ DummyApp::DummyApp()
         [this](polos::communication::key_release& t_event) {
             on_key_release(t_event);
         });
-
-    auto& win_inst = polos::platform::WindowManager::Instance();
 #if defined(HOT_RELOAD)
     polos::rendering::LoadRenderingModule(rendering_dll);
     win_inst.UpdateRenderingModule(rendering_dll);
 #endif// HOT_RELOAD
 
-    assert(win_inst.CreateNewWindow(1280, 720, Name()));
+    polos::platform::WindowManager::Instance().ChangeWindowTitle("Dummy");
 }
 
-DummyApp::~DummyApp() {}
+void DummyApp::Destroy() {}
 
 char const* DummyApp::Name() const
 {
@@ -77,11 +78,11 @@ void DummyApp::on_render_update(polos::communication::render_update&)
         rendering_dll.render_frame_func();
     }
 #else
-    polos::rendering::RenderFrame();
+    // NOOP
 #endif
 }
 
-void DummyApp::on_key_release(polos::communication::key_release t_event)
+void DummyApp::on_key_release(polos::communication::key_release)
 {
 #if defined(HOT_RELOAD)
     if (t_event.key == GLFW_KEY_R)
@@ -101,7 +102,6 @@ void DummyApp::on_key_release(polos::communication::key_release t_event)
     }
 #endif// HOT_RELOAD
 }
-
 
 }// namespace dummy_app
 

@@ -13,10 +13,10 @@ namespace polos::rendering
 
 struct attachment_usage
 {
-    RendererResourceHandle handle;
-    VkAttachmentLoadOp     load_op;
-    VkAttachmentStoreOp    store_op;
-    VkClearValue           clear_value;
+    RenderGraphResourceHandle handle;
+    VkAttachmentLoadOp        load_op;
+    VkAttachmentStoreOp       store_op;
+    VkClearValue              clear_value;
 };
 
 }// namespace polos::rendering

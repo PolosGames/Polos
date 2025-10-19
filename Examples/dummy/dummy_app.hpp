@@ -24,6 +24,9 @@ public:
     DummyApp();
     ~DummyApp() override;
 
+    void Create() override;
+    void Destroy() override;
+
     char const* Name() const override;
 private:
     void on_engine_update(polos::communication::engine_update& t_event);

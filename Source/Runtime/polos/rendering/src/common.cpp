@@ -39,9 +39,9 @@ auto RenderGraphResourceHandle::Index16() -> std::uint16_t
     return GetUnderlying<std::uint16_t>(id, kIndexShift, kIndexMask);
 }
 
-auto RenderGraphResourceHandle::Type() -> RendererResourceType
+auto RenderGraphResourceHandle::Type() -> RenderGraphResourceType
 {
-    return GetUnderlying<RendererResourceType>(id, kTypeShift, kTypeMask);
+    return GetUnderlying<RenderGraphResourceType>(id, kTypeShift, kTypeMask);
 }
 
 auto RenderGraphResourceHandle::Version() -> std::uint16_t
@@ -54,7 +54,7 @@ auto RenderGraphResourceHandle::IsValid() -> bool
     return id != 0U;
 }
 
-auto RenderGraphResourceHandle::Create(std::uint16_t t_index, RendererResourceType t_type, std::uint16_t t_version)
+auto RenderGraphResourceHandle::Create(std::uint16_t t_index, RenderGraphResourceType t_type, std::uint16_t t_version)
     -> RenderGraphResourceHandle
 {
     // clang-format off

@@ -26,12 +26,14 @@ option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)
 option(BUILD_EXAMPLES    "Will build all example projects under Examples directory." ON)
 option(BUILD_TESTS       "Build all unit and component tests for all modules" ON)
+option(HOT_RELOAD        "Enable hot-reloading capabilities" OFF)
 
 set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include")
 set(POLOS_INSTALL_LIB_DIR "${POLOS_INSTALL_DIR}")
 
 message(STATUS "[POLOS] ENABLE_PROFILING: ${ENABLE_PROFILING}")
 message(STATUS "[POLOS] POLOS_INSTALL_DIR: ${POLOS_INSTALL_DIR}")
+message(STATUS "[POLOS] HOT_RELOAD: ${HOT_RELOAD}")
 
 include(CMake/BuildOptions.cmake)
 include(CMake/PolosTarget.cmake)

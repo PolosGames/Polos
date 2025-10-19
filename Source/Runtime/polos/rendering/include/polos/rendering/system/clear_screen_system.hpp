@@ -7,24 +7,20 @@
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SYSTEM_CLEAR_SCREEN_SYSTEM_HPP_
 
 #include "polos/rendering/i_render_system.hpp"
+#include "polos/rendering/module_macros.hpp"
 
 namespace polos::rendering
 {
 
-class RenderContext;
-class RenderGraph;
-class VulkanSwapchain;
-
-class ClearScreenSystem : public IRenderSystem
+class RENDERING_EXPORT ClearScreenSystem : public IRenderSystem
 {
 public:
     ClearScreenSystem();
 
-    void Update(RenderGraphRegistry& t_registry) override;
+    void Initialize(RenderContext& t_context) override;
+    void Update(RenderContext& t_context, RenderGraph& t_graph) override;
 private:
-    RenderContext&   m_context;
-    RenderGraph&     m_graph;
-    VulkanSwapchain& m_swapchain;
+    RenderGraphResourceHandle m_sc_img_handle;
 };
 
 }// namespace polos::rendering

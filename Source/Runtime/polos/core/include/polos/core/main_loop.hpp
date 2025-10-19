@@ -7,6 +7,15 @@
 #define POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_
 
 #include "polos/core/module_macros.hpp"
+#include "polos/rendering/i_render_system.hpp"
+
+#include <memory>
+#include <vector>
+
+namespace polos::rendering
+{
+class IRenderSystem;
+}// namespace polos::rendering
 
 namespace polos::communication
 {
@@ -25,6 +34,8 @@ public:
 private:
     void on_window_close();
     void on_engine_terminate();
+
+    std::vector<std::unique_ptr<rendering::IRenderSystem>> m_render_systems;
 
     bool m_is_running{true};
 };

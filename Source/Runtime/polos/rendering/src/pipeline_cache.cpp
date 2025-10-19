@@ -14,6 +14,9 @@
 namespace polos::rendering
 {
 
+PipelineCache::PipelineCache()  = default;
+PipelineCache::~PipelineCache() = default;
+
 auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Result<void>
 {
     m_device    = t_details.logi_device;
@@ -129,9 +132,9 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext                           = nullptr,
         .flags                           = 0U,
-        .vertexBindingDescriptionCount   = static_cast<std::uint32_t>(t_pipeline_info.vertex_input.bindings.size()),
+        .vertexBindingDescriptionCount   = VK_SIZE_CAST(t_pipeline_info.vertex_input.bindings.size()),
         .pVertexBindingDescriptions      = t_pipeline_info.vertex_input.bindings.data(),
-        .vertexAttributeDescriptionCount = static_cast<std::uint32_t>(t_pipeline_info.vertex_input.attributes.size()),
+        .vertexAttributeDescriptionCount = VK_SIZE_CAST(t_pipeline_info.vertex_input.attributes.size()),
         .pVertexAttributeDescriptions    = t_pipeline_info.vertex_input.attributes.data(),
     };
 
@@ -202,7 +205,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .flags           = 0U,
         .logicOpEnable   = VK_FALSE,
         .logicOp         = VK_LOGIC_OP_NO_OP,
-        .attachmentCount = static_cast<std::uint32_t>(t_pipeline_info.color_blend_attachments.size()),
+        .attachmentCount = VK_SIZE_CAST(t_pipeline_info.color_blend_attachments.size()),
         .pAttachments    = t_pipeline_info.color_blend_attachments.data(),
         .blendConstants  = {0.0f, 0.0f, 0.0f, 0.0f},
     };
@@ -211,7 +214,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext             = nullptr,
         .flags             = 0U,
-        .dynamicStateCount = static_cast<std::uint32_t>(t_pipeline_info.dynamic_states.size()),
+        .dynamicStateCount = VK_SIZE_CAST(t_pipeline_info.dynamic_states.size()),
         .pDynamicStates    = t_pipeline_info.dynamic_states.data(),
     };
 

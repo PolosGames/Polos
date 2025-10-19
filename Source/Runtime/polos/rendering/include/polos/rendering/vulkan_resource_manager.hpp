@@ -6,9 +6,7 @@
 #ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP_
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP_
 
-#include "polos/filesystem/resource.hpp"
 #include "polos/rendering/common.hpp"
-
 #include "polos/rendering/shader.hpp"
 
 #include <filesystem>
@@ -21,11 +19,13 @@ namespace polos::rendering
 class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
+struct texture_2d;
 
 struct resource_manager_create_details
 {
     // Custom name, Path
-    VkDevice device;
+    VkDevice         device;
+    VulkanSwapchain* swapchain;
 
     std::vector<std::pair<std::string, std::filesystem::path>> shader_files;
 };
@@ -47,16 +47,19 @@ public:
     auto Destroy() -> Result<void>;
 
     auto GetShaderModule(std::string const& t_name) -> VkShaderModule;
+    auto GetTexture(std::string const& t_name) -> VkShaderModule;
 private:
     auto load_shader_from_file(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
         -> Result<std::pair<std::string, shader>>;
 
-    friend class Renderer;
+    friend class RenderContext;
     static VulkanResourceManager* s_instance;
 
-    VkDevice m_device;
+    VkDevice         m_device;
+    VulkanSwapchain* m_swapchain;
 
-    std::unordered_map<std::string, shader> m_shader_cache;
+    std::unordered_map<std::string, shader>  m_shader_cache;
+    std::vector<std::shared_ptr<texture_2d>> m_textures;
 };
 
 using VRM = VulkanResourceManager;

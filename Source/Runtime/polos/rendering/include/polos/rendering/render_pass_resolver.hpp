@@ -6,7 +6,7 @@
 #ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_PASS_RESOLVER_HPP_
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_PASS_RESOLVER_HPP_
 
-#include "polos/rendering/attachment_info.hpp"
+#include "polos/rendering/attachment_usage.hpp"
 #include "polos/rendering/common.hpp"
 
 namespace polos::rendering
@@ -24,8 +24,8 @@ public:
     auto Read(RenderGraphResourceHandle t_handle) -> void;
 
     /// @brief Declares that this pass will write to a resource.
-    /// @param t_attachment_info The attachment information for the resource being written.
-    auto Write(attachment_info const& t_attachment_info) -> void;
+    /// @param t_usage The attachment information for the resource being written.
+    auto Write(attachment_usage const& t_usage) -> void;
 private:
     friend class RenderGraph;
 

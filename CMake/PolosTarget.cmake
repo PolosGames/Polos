@@ -257,8 +257,8 @@ macro (define_polos_app)
     if (LINUX)
         set_target_properties(${app_NAME}
             PROPERTIES
-            INSTALL_RPATH ${POLOS_INSTALL_DIR}
-            BUILD_WITH_INSTALL_RPATH 1
+                INSTALL_RPATH ${POLOS_INSTALL_DIR}
+                BUILD_WITH_INSTALL_RPATH 1
         )
     endif()
 

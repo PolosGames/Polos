@@ -9,6 +9,8 @@
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+#include "polos/rendering/texture_2d.hpp"
+#include "polos/rendering/vulkan_swapchain.hpp"
 
 namespace polos::rendering
 {
@@ -25,7 +27,8 @@ auto VulkanResourceManager::Instance() -> VulkanResourceManager&
 
 auto VulkanResourceManager::Create(resource_manager_create_details const& t_details) -> Result<void>
 {
-    m_device = t_details.device;
+    m_device    = t_details.device;
+    m_swapchain = t_details.swapchain;
 
     for (auto const& shader_file : t_details.shader_files)
     {
@@ -37,6 +40,23 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
 
         m_shader_cache.try_emplace(shader_result->first, shader_result->second.module);
     }
+
+    VkFormat const   sc_img_fmt = m_swapchain->GetSurfaceFormat().format;
+    VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
+
+    // Create swapchain images as textures if they have been created.
+    // always make sure they are the first n images.
+    for (std::uint32_t i{0U}; i < m_swapchain->GetImageCount(); ++i)
+    {
+        m_textures.push_back(
+            std::make_shared<texture_2d>(
+                m_swapchain->GetImage(i),
+                m_swapchain->GetImageView(i),
+                sc_img_fmt,
+                sc_img_ext,
+                VK_SAMPLE_COUNT_1_BIT));
+    }
+
     return {};
 }
 

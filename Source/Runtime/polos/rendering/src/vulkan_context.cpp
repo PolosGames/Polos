@@ -98,9 +98,9 @@ auto VulkanContext::Create() -> Result<void>
         .pNext                   = m_instance_pnext,
         .flags                   = 0U,
         .pApplicationInfo        = &app,
-        .enabledLayerCount       = static_cast<std::uint32_t>(m_layers.size()),
+        .enabledLayerCount       = VK_SIZE_CAST(m_layers.size()),
         .ppEnabledLayerNames     = m_layers.data(),
-        .enabledExtensionCount   = static_cast<std::uint32_t>(m_extensions.size()),
+        .enabledExtensionCount   = VK_SIZE_CAST(m_extensions.size()),
         .ppEnabledExtensionNames = m_extensions.data(),// provides VK_KHR_swapchain
     };
 

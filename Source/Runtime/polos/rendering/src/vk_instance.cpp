@@ -9,6 +9,8 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"
 
+#define VK_SIZE_CAST(Var) static_cast<std::uint32_t>(Var)
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -239,7 +241,7 @@ auto FindQueueFamilies(VkPhysicalDevice t_device) -> std::expected<std::uint32_t
         }
     }
 
-    if (queue_index == static_cast<std::uint32_t>(queue_families.size()))
+    if (queue_index == VK_SIZE_CAST(queue_families.size()))
     {
         LogCritical("Graphics Queue family was not found for the Graphics Card!");
         return std::unexpected{false};
@@ -487,7 +489,7 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState*,
         .pApplicationInfo        = &app_info,
         .enabledLayerCount       = enabled_layer_count,
         .ppEnabledLayerNames     = enabled_layer_names,
-        .enabledExtensionCount   = static_cast<std::uint32_t>(extensions.size()),
+        .enabledExtensionCount   = VK_SIZE_CAST(extensions.size()),
         .ppEnabledExtensionNames = extensions.data(),// provides VK_KHR_swapchain
     };
 
@@ -924,7 +926,7 @@ auto InitializeVulkan(GLFWwindow* const t_window) -> std::expected<VulkanState*,
         .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext             = nullptr,
         .flags             = 0U,
-        .dynamicStateCount = static_cast<std::uint32_t>(dynamic_states.size()),
+        .dynamicStateCount = VK_SIZE_CAST(dynamic_states.size()),
         .pDynamicStates    = dynamic_states.data(),
     };
 

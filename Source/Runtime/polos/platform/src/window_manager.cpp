@@ -9,9 +9,11 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/key_release.hpp"
-#include "polos/communication/system_created.hpp"
-#include "polos/communication/window_events.hpp"
+#include "polos/communication/window_close.hpp"
+#include "polos/communication/window_focus.hpp"
+#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/render_context.hpp"
 #include "polos/rendering/vk_instance.hpp"
 
 #define GLFW_INCLUDE_VULKAN
@@ -94,6 +96,9 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
         return false;
     }
 
+    m_rendering_context             = std::make_unique<rendering::RenderContext>(m_window);
+    m_rendering_context->s_instance = m_rendering_context.get();
+
     init_vulkan();
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
@@ -130,6 +135,11 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
     return true;
 }
 
+void WindowManager::ChangeWindowTitle(std::string_view const t_title)
+{
+    glfwSetWindowTitle(m_window, t_title.data());
+}
+
 GLFWwindow* WindowManager::GetRawWindow() const
 {
     return m_window;
@@ -150,14 +160,15 @@ void WindowManager::UpdateRenderingModule(rendering::rendering_shared_lib_out& t
 void WindowManager::init_vulkan()
 {
 #ifndef HOT_RELOAD
-    auto result = rendering::InitializeVulkan(m_window);
-    if (!result.has_value())
     {
-        LogCritical("Failed to Initialize vulkan, VkResult: {}", static_cast<std::uint32_t>(result.error()));
-        communication::DispatchDefer<communication::engine_terminate>();
-        return;
+        auto result = m_rendering_context->Initialize();
+        if (!result.has_value())
+        {
+            LogCritical("RenderContext could not be initialized! {}", result.error().Message());
+            communication::DispatchNow<communication::engine_terminate>();
+            return;
+        }
     }
-    m_vulkan_state = *result.value();
 #else
     polos::rendering::VulkanState* result = rendering_dll.initialize_vulkan_func(m_window);
     m_vulkan_state                        = *result;
@@ -187,7 +198,7 @@ void WindowManager::on_engine_terminate()
 
 
 #ifndef HOT_RELOAD
-    rendering::TerminateVulkan();
+    std::ignore = m_rendering_context->Shutdown();
 #else
     if (nullptr != rendering_dll.terminate_vulkan_func)
     {

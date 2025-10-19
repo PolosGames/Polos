@@ -22,6 +22,9 @@ auto RenderPassResolver::Read(RenderGraphResourceHandle t_handle) -> void
     pass.read_resources.push_back(t_handle);
 }
 
-auto RenderPassResolver::Write(attachment_info const&) -> void {}
+auto RenderPassResolver::Write(attachment_usage const& t_usage) -> void
+{
+    m_parent_graph->GetCompiledRenderPass(m_pass_index).attachments.push_back(t_usage);
+}
 
 }// namespace polos::rendering
