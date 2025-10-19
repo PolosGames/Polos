@@ -56,6 +56,7 @@ public:
 
     auto GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>;
     auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
+    auto AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void;
 private:
     friend class platform::WindowManager;
 
@@ -73,12 +74,15 @@ private:
     VkCommandPool m_command_pool{VK_NULL_HANDLE};
 
     std::vector<VkFence>         m_frame_fences;
-    std::vector<VkSemaphore>     m_image_acquired_semaphores;
-    std::vector<VkSemaphore>     m_render_complete_semaphores;
+    std::vector<VkSemaphore>     m_acquire_semaphores;
+    std::vector<VkSemaphore>     m_submit_semaphores;
     std::vector<VkCommandBuffer> m_frame_command_buffers;
     std::uint32_t                m_current_frame_index{0U};
+    std::uint32_t                m_swapchain_image_index{0U};
 
-    std::vector<VkRenderPass> m_vk_render_passes;
+    static constexpr std::size_t const                         kMaxFramesInFlight{3U};
+    std::vector<VkRenderPass>                                  m_vk_render_passes;
+    std::array<std::vector<VkFramebuffer>, kMaxFramesInFlight> m_transient_fbufs;
 
     VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
     VkQueue              m_gfx_queue{VK_NULL_HANDLE};

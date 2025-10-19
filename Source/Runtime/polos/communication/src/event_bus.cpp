@@ -5,17 +5,13 @@
 
 #include "polos/communication/event_bus.hpp"
 
-#include <mutex>
 #include <unordered_map>
 #include <vector>
 
 namespace polos::communication
 {
 
-EventBus::EventBus()
-    : m_allocator{"EventBus"},
-      m_callbacks{m_allocator.GetMemoryResource()}
-{}
+EventBus::EventBus() = default;
 
 auto EventBus::Instance() -> EventBus&
 {

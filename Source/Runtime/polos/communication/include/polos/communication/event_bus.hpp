@@ -72,12 +72,11 @@ private:
     EventBus();
 
     // TODO: Make a freelist so we can unsubscribe
-    using CallbackMap = std::pmr::unordered_map<std::int64_t, std::pmr::vector<BaseEventDelegate>>;
+    using CallbackMap = std::unordered_map<std::int64_t, std::vector<BaseEventDelegate>>;
 
-    polos::memory::DebugMemoryResource            m_allocator;
-    std::int64_t                                  m_next_id{0};
-    CallbackMap                                   m_callbacks;
-    std::pmr::vector<std::unique_ptr<base_event>> m_deferred_events;
+    std::int64_t                             m_next_id{0};
+    CallbackMap                              m_callbacks;
+    std::vector<std::unique_ptr<base_event>> m_deferred_events;
 };
 
 template<PolosEvent EventType>
@@ -91,7 +90,7 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
     // Give each subscriber of any event a unique id.
     auto subscriber_id = m_next_id++;
 
-    m_callbacks.emplace(event_hash, std::pmr::vector<BaseEventDelegate>{m_allocator.GetMemoryResource()});
+    m_callbacks.insert({event_hash, std::vector<BaseEventDelegate>()});
     auto& event_queue = m_callbacks[event_hash];
     event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
 

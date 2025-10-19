@@ -5,6 +5,7 @@
 
 #include "polos/rendering/vulkan_swapchain.hpp"
 
+#include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/vulkan_context.hpp"
@@ -34,21 +35,13 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
     VkSurfaceCapabilitiesKHR cap;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(t_details.phys_device, m_surface, &cap);
 
-    if (cap.currentExtent.width != std::numeric_limits<std::uint32_t>::max())
-    {
-        m_extent = cap.currentExtent;
-    }
-    else
-    {
-        std::int32_t width{0U};
-        std::int32_t height{0U};
-        glfwGetFramebufferSize(m_window, &width, &height);
+    std::int32_t width{0U};
+    std::int32_t height{0U};
+    glfwGetFramebufferSize(m_window, &width, &height);
 
-        m_extent.width =
-            std::clamp(static_cast<std::uint32_t>(width), cap.minImageExtent.width, cap.maxImageExtent.width);
-        m_extent.height =
-            std::clamp(static_cast<std::uint32_t>(height), cap.minImageExtent.height, cap.maxImageExtent.height);
-    };
+    m_extent.width = std::clamp(static_cast<std::uint32_t>(width), cap.minImageExtent.width, cap.maxImageExtent.width);
+    m_extent.height =
+        std::clamp(static_cast<std::uint32_t>(height), cap.minImageExtent.height, cap.maxImageExtent.height);
 
     m_scissor.offset = {0, 0};
     m_scissor.extent = m_extent;
@@ -221,7 +214,14 @@ auto VulkanSwapchain::QueuePresent(VkSemaphore t_wait_semaphore) const -> Result
         .pResults           = nullptr,
     };
 
-    CHECK_VK_SUCCESS_OR_ERR(vkQueuePresentKHR(m_gfx_queue, &present_info), RenderingErrc::kFailedToPresentQueue);
+    VkResult res = vkQueuePresentKHR(m_gfx_queue, &present_info);
+
+    if (VK_ERROR_OUT_OF_DATE_KHR == res || VK_SUBOPTIMAL_KHR == res)
+    {
+        LogError("Swapchain image is out of date.");
+    }
+
+    CHECK_VK_SUCCESS_OR_ERR(res, RenderingErrc::kFailedToPresentQueue);
 
     return {};
 }

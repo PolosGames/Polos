@@ -42,7 +42,7 @@ void ClearScreenSystem::Initialize(RenderContext& t_context)
     render_graph_resource_node const& node = render_graph.GetResourceNode(m_sc_img_handle);
 
     texture_2d const* raw_resource = [&node]() -> texture_2d const* {
-        if (auto ptr = std::get<0>(node.raw_resource).lock())
+        if (auto ptr = node.raw_resource.lock())
         {
             return ptr.get();
         }
@@ -106,8 +106,17 @@ void ClearScreenSystem::Initialize(RenderContext& t_context)
     m_vk_render_pass = *result;
 }
 
-void ClearScreenSystem::Update(RenderContext&, RenderGraph& t_graph)
+void ClearScreenSystem::Update(RenderContext& t_context, RenderGraph& t_graph)
 {
+    auto frame_as_texture_res = t_context.GetCurrentFrameTexture();
+    if (!frame_as_texture_res.has_value())
+    {
+        LogError("Could not acquire current frame as a texture. Skipping ClearScreenSystem::Update");
+        return;
+    }
+
+    m_sc_img_handle = t_graph.ImportTexture("SwapchainImage", *frame_as_texture_res);
+
     auto* pass    = t_graph.AddRenderPass<ClearScreenPass>(m_sc_img_handle);
     pass->vk_pass = m_vk_render_pass;
 }

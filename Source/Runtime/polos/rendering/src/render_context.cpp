@@ -23,6 +23,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <filesystem>
 
 #define INIT_VULKAN_COMPONENT(SubmodulePtr, ...)         \
@@ -36,8 +37,6 @@
 
 namespace polos::rendering
 {
-
-constexpr std::size_t const kMaxFramesInFlight{2U};
 
 namespace
 {
@@ -224,8 +223,11 @@ auto RenderContext::Initialize() -> Result<void>
         RenderingErrc::kCommandPoolNotCreated);
 
     m_frame_command_buffers.resize(kMaxFramesInFlight);
-    m_image_acquired_semaphores.resize(kMaxFramesInFlight);
-    m_render_complete_semaphores.resize(kMaxFramesInFlight);
+    m_acquire_semaphores.resize(kMaxFramesInFlight);
+
+    // Create submission semaphores with number of images in swapchain
+    // https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html#_discussion_of_solution
+    m_submit_semaphores.resize(m_swapchain->GetImageCount());
     m_frame_fences.resize(kMaxFramesInFlight);
 
     // --- Command buffer allocations ---
@@ -253,13 +255,17 @@ auto RenderContext::Initialize() -> Result<void>
         .flags = VK_FENCE_CREATE_SIGNALED_BIT,
     };
 
+    for (std::uint32_t i{0U}; i < m_swapchain->GetImageCount(); ++i)
+    {
+        CHECK_VK_SUCCESS_OR_ERR(
+            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_submit_semaphores[i]),
+            RenderingErrc::kSemaphoreCreationFail);
+    }
+
     for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
     {
         CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_image_acquired_semaphores[i]),
-            RenderingErrc::kSemaphoreCreationFail);
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_render_complete_semaphores[i]),
+            vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_acquire_semaphores[i]),
             RenderingErrc::kSemaphoreCreationFail);
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateFence(m_device->logi_device, &fence_info, nullptr, &m_frame_fences[i]),
@@ -287,15 +293,27 @@ auto RenderContext::Shutdown() -> Result<void>
 
     std::ignore = m_render_graph->Destroy();
 
-    for (std::size_t i{0U}; i < m_image_acquired_semaphores.size(); ++i)
+    for (std::uint32_t i{0U}; i < m_swapchain->GetImageCount(); ++i)
     {
-        vkDestroySemaphore(m_device->logi_device, m_image_acquired_semaphores[i], nullptr);
-        vkDestroySemaphore(m_device->logi_device, m_render_complete_semaphores[i], nullptr);
+        vkDestroySemaphore(m_device->logi_device, m_submit_semaphores[i], nullptr);
+    }
+
+    for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
+    {
+        vkDestroySemaphore(m_device->logi_device, m_acquire_semaphores[i], nullptr);
         vkDestroyFence(m_device->logi_device, m_frame_fences[i], nullptr);
     }
 
-    vkFreeCommandBuffers(m_device->logi_device, m_command_pool, 3U, m_frame_command_buffers.data());
+    vkFreeCommandBuffers(m_device->logi_device, m_command_pool, kMaxFramesInFlight, m_frame_command_buffers.data());
     vkDestroyCommandPool(m_device->logi_device, m_command_pool, nullptr);
+
+    for (auto const& fbs : m_transient_fbufs)
+    {
+        std::ranges::for_each(fbs, [this](VkFramebuffer t_fbuf) {
+            vkDestroyFramebuffer(m_device->logi_device, t_fbuf, nullptr);
+        });
+    }
+    for (auto pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
 
     std::ignore = m_pipeline_cache->Destroy();
     std::ignore = m_vrm->Destroy();
@@ -315,10 +333,20 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         &m_frame_fences[m_current_frame_index],
         VK_TRUE,
         std::numeric_limits<std::uint64_t>::max());
+
+    if (!m_transient_fbufs[m_current_frame_index].empty())
+    {
+        for (auto fb : m_transient_fbufs[m_current_frame_index])
+        {
+            vkDestroyFramebuffer(m_device->logi_device, fb, nullptr);
+        }
+        m_transient_fbufs[m_current_frame_index].clear();
+    }
+
     vkResetFences(m_device->logi_device, 1U, &m_frame_fences[m_current_frame_index]);
 
     acquire_next_image_details next_img_dets{
-        .semaphore = m_image_acquired_semaphores[m_current_frame_index],
+        .semaphore = m_acquire_semaphores[m_current_frame_index],
         .fence     = m_frame_fences[m_current_frame_index],
         .timeout   = std::numeric_limits<std::uint64_t>::max(),
     };
@@ -329,6 +357,8 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         LogError("{}", acq_result.error().Message());
         return VK_NULL_HANDLE;
     }
+
+    m_swapchain_image_index = *acq_result;
 
     VkCommandBuffer          cur_cmd_buf = m_frame_command_buffers[m_current_frame_index];
     VkCommandBufferBeginInfo begin_info{
@@ -362,12 +392,12 @@ auto RenderContext::EndFrame() -> void
         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext                = nullptr,
         .waitSemaphoreCount   = 1U,
-        .pWaitSemaphores      = &m_image_acquired_semaphores[m_current_frame_index],
+        .pWaitSemaphores      = &m_acquire_semaphores[m_current_frame_index],
         .pWaitDstStageMask    = wait_stages,
         .commandBufferCount   = 1U,
         .pCommandBuffers      = &m_frame_command_buffers[m_current_frame_index],
         .signalSemaphoreCount = 1U,
-        .pSignalSemaphores    = &m_render_complete_semaphores[m_current_frame_index],
+        .pSignalSemaphores    = &m_submit_semaphores[m_swapchain_image_index],
     };
 
     if (VK_SUCCESS != vkQueueSubmit(m_gfx_queue, 1U, &submit_info, m_frame_fences[m_current_frame_index]))
@@ -376,7 +406,7 @@ auto RenderContext::EndFrame() -> void
         return;
     }
 
-    auto result = m_swapchain->QueuePresent(m_render_complete_semaphores[m_current_frame_index]);
+    auto result = m_swapchain->QueuePresent(m_submit_semaphores[m_swapchain_image_index]);
     if (!result.has_value())
     {
         LogError("{}", result.error().Message());
@@ -400,13 +430,12 @@ auto RenderContext::GetSwapchain() -> VulkanSwapchain&
 
 auto RenderContext::GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>
 {
-    if (m_swapchain->GetCurrentImageIndex() > kMaxFramesInFlight)
+    if (m_swapchain_image_index > m_swapchain->GetImageCount())
     {
         return ErrorType{RenderingErrc::kFailedToCreateCurrFrameAsTexture};
     }
 
-    // Return the current frame rather than the swapchain image index. Because we may be writing to the next image.
-    return m_vrm->m_textures[static_cast<std::size_t>(m_current_frame_index)];
+    return m_vrm->m_textures[static_cast<std::size_t>(m_swapchain_image_index)];
 }
 
 auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>
@@ -434,6 +463,11 @@ auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_lay
     m_vk_render_passes.push_back(vk_render_pass);
 
     return vk_render_pass;
+}
+
+auto RenderContext::AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void
+{
+    m_transient_fbufs[m_current_frame_index].push_back(t_fbuf);
 }
 
 auto RenderingInstance() -> RenderContext&

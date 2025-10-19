@@ -7,6 +7,7 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/i_render_pass.hpp"
+#include "polos/rendering/render_context.hpp"
 #include "polos/rendering/render_graph_registry.hpp"
 #include "polos/rendering/render_graph_resource_node.hpp"
 #include "polos/rendering/render_pass_resolver.hpp"
@@ -27,7 +28,6 @@ auto RenderGraph::Create(render_graph_creation_details const& t_details) -> Resu
 
 auto RenderGraph::Destroy() -> Result<void>
 {
-    for (auto fb : m_fb_to_destroy) { vkDestroyFramebuffer(m_device, fb, nullptr); }
     for (auto& pass : m_passes) { vkDestroyRenderPass(m_device, pass->vk_pass, nullptr); }
     return {};
 }
@@ -53,7 +53,6 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 {
     RenderGraphRegistry registry;
     {
-        LogDebug("Compiled passes size: {}, passes size: {}", m_compiled_passes.size(), m_passes.size());
         for (auto const& pass : m_compiled_passes)
         {
             if (!pass.is_graphical)
@@ -72,14 +71,14 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 
             VkClearValue clear_color = pass.attachments[0].clear_value;
 
-            if (auto ptr = std::get<0>(GetResourceNode(pass.attachments[0].handle).raw_resource).lock())
+            if (auto ptr = GetResourceNode(pass.attachments[0].handle).raw_resource.lock())
             {
                 root_extent = ptr->extent;
             }
 
             for (auto const& attachment : pass.attachments)
             {
-                if (auto ptr = std::get<0>(GetResourceNode(attachment.handle).raw_resource).lock())
+                if (auto ptr = GetResourceNode(attachment.handle).raw_resource.lock())
                 {
                     attachment_views.push_back(ptr->view);
                 }
@@ -99,6 +98,7 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 
             VkFramebuffer pass_fb{VK_NULL_HANDLE};
             vkCreateFramebuffer(m_device, &fb_info, nullptr, &pass_fb);
+            RenderingInstance().AddFramebufferToCurrentFrame(pass_fb);
 
             VkRenderPassBeginInfo pass_begin_info{
                 .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -119,8 +119,6 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
             pass.raw_pass->Execute(t_cmd_buf, registry);
 
             vkCmdEndRenderPass(t_cmd_buf);
-
-            m_fb_to_destroy.push_back(pass_fb);
         }
     }
 }
@@ -219,7 +217,6 @@ auto RenderGraph::is_handle_valid(RenderGraphResourceHandle t_handle) -> bool
 
 auto RenderGraph::destroy_transient_resources() -> void
 {
-    for (auto const& fb : m_fb_to_destroy) { vkDestroyFramebuffer(m_device, fb, nullptr); }
     m_compiled_passes.clear();
     m_passes.clear();
 }

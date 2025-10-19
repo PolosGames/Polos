@@ -72,9 +72,6 @@ private:
     std::vector<std::uint16_t>              m_handle_versions;
     std::vector<std::size_t>                m_free_resource_indices;
 
-    // Transients
-    std::vector<VkFramebuffer> m_fb_to_destroy;
-
     std::vector<compiled_render_pass> m_compiled_passes;
 };
 }// namespace polos::rendering

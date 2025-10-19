@@ -22,7 +22,7 @@ struct render_graph_resource_node
     std::string               name;
     RenderGraphResourceHandle handle{RenderGraphResourceHandle::Invalid()};
 
-    std::variant<std::weak_ptr<texture_2d>> raw_resource;
+    std::weak_ptr<texture_2d> raw_resource;
 
     bool        is_imported{false};
     std::size_t producer_pass_index{std::numeric_limits<std::size_t>::max()};
