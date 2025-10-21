@@ -21,7 +21,8 @@
             },
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "POLOS_INSTALL_DIR": "${sourceDir}/out/bin/${presetName}"
+                "POLOS_INSTALL_DIR": "${sourceDir}/out/bin/${presetName}",
+                "HOT_RELOAD": "ON"
             }
         },
         {

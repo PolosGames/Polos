@@ -8,6 +8,11 @@
 
 #if defined(POLOS_WIN)
 
+namespace polos::utils
+{
+using LibHandle = HMODULE;// this is also void* under the hood, but whatever, i am a syntax b*tch
+}
+
 #    include "polos/logging/log_macros.hpp"
 
 #    include <filesystem>
@@ -21,7 +26,7 @@ namespace polos::utils
 
 struct base_shared_lib_out
 {
-    HMODULE handle;
+    utils::LibHandle handle;
 
     std::filesystem::file_time_type last_write_time;
     std::string                     temp_dll_path;
@@ -57,7 +62,7 @@ inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string&
 }
 
 
-inline void UnloadDLL(base_shared_lib_out& t_dll_out)
+inline void UnloadSharedLib(base_shared_lib_out& t_dll_out)
 {
     if (t_dll_out.handle)
     {
@@ -74,7 +79,7 @@ inline void UnloadDLL(base_shared_lib_out& t_dll_out)
 }
 
 // Copy and Load
-inline bool LoadDLL(base_shared_lib_out& t_dll_out, const std::string& t_original_dll_path_str)
+inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_original_dll_path_str)
 {
     if (nullptr != t_dll_out.handle)
     {
@@ -127,18 +132,16 @@ inline bool LoadDLL(base_shared_lib_out& t_dll_out, const std::string& t_origina
 }
 
 template<typename F>
-inline bool GetFuncFromDLL(base_shared_lib_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
+inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
 {
     // Get the address of the exported function
     t_func_ptr = reinterpret_cast<F>(GetProcAddress(t_dll_out.handle, t_func_name.data()));
     if (nullptr == t_func_ptr)
     {
-        LogError("Failed to get function 'game_update' from DLL.");
+        LogError("Failed to get function {} from Shared lib.", std::string(t_func_name));
         FreeLibrary(t_dll_out.handle);
         return false;
     }
-
-    LogInfo("Successfully loaded new DLL version: {}", t_dll_out.temp_dll_path);
     return true;
 }
 

@@ -470,19 +470,9 @@ auto RenderContext::AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void
     m_transient_fbufs[m_current_frame_index].push_back(t_fbuf);
 }
 
-auto RenderingInstance() -> RenderContext&
+auto RenderContext::IsInitialized() -> bool
 {
-    return RenderContext::Instance();
-}
-
-auto BeginFrame() -> VkCommandBuffer
-{
-    return RenderContext::Instance().BeginFrame();
-}
-
-auto EndFrame() -> void
-{
-    return RenderContext::Instance().EndFrame();
+    return m_is_initialized;
 }
 
 }// namespace polos::rendering

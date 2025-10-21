@@ -9,12 +9,12 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/key_release.hpp"
+#include "polos/communication/module_reload.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/communication/window_focus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/render_context.hpp"
-#include "polos/rendering/vk_instance.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -33,6 +33,15 @@ rendering::rendering_shared_lib_out rendering_dll;
 }
 #endif
 
+void WindowManager::render_context_deleter::operator()(rendering::RenderContext* t_ptr)
+{
+#ifndef HOT_RELOAD
+    DestroyRenderContext(t_ptr);
+#else
+    wm->m_rendering_module->destroy_context_func(t_ptr);
+#endif// HOT_RELOAD
+}
+
 WindowManager::WindowManager()
 {
     communication::Subscribe<communication::end_frame>([this](communication::end_frame&) {
@@ -46,6 +55,12 @@ WindowManager::WindowManager()
     communication::Subscribe<communication::engine_terminate>([this](communication::engine_terminate&) {
         on_engine_terminate();
     });
+
+#if defined(HOT_RELOAD)
+    communication::Subscribe<communication::module_reload>([this](communication::module_reload& t_event) {
+        on_module_reload(t_event);
+    });
+#endif
 
     if (!glfwInit())
     {
@@ -96,13 +111,11 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
         return false;
     }
 
-    m_rendering_context             = std::make_unique<rendering::RenderContext>(m_window);
-    m_rendering_context->s_instance = m_rendering_context.get();
-
+    create_render_context();
     init_vulkan();
 
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
-        communication::DispatchNow<communication::window_close>(t_handle);
+        communication::DispatchDefer<communication::window_close>(t_handle);
     });
 
     glfwSetWindowFocusCallback(m_window, [](GLFWwindow* p_Window, std::int32_t t_is_focused) {
@@ -110,13 +123,13 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
         {
             glfwMakeContextCurrent(p_Window);
         }
-        communication::DispatchNow<communication::window_focus>(t_is_focused);
+        communication::DispatchDefer<communication::window_focus>(t_is_focused);
     });
 
     glfwSetFramebufferSizeCallback(
         m_window,
         [](GLFWwindow* /*p_Window*/, std::int32_t t_new_width, std::int32_t t_new_height) {
-            communication::DispatchNow<communication::window_framebuffer_resize>(t_new_width, t_new_height);
+            communication::DispatchDefer<communication::window_framebuffer_resize>(t_new_width, t_new_height);
         });
 
     glfwSetKeyCallback(
@@ -128,7 +141,7 @@ bool WindowManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height,
            std::int32_t /*t_mods*/) {
             if (t_action == GLFW_RELEASE)
             {
-                polos::communication::DispatchNow<communication::key_release>(t_key);
+                polos::communication::DispatchDefer<communication::key_release>(t_key);
             }
         });
 
@@ -145,34 +158,35 @@ GLFWwindow* WindowManager::GetRawWindow() const
     return m_window;
 }
 
-#if defined(HOT_RELOAD)
-void WindowManager::UpdateRenderingModule(rendering::rendering_shared_lib_out& t_dll_out)
+void WindowManager::create_render_context()
 {
-    rendering_dll = t_dll_out;
-
-    if (nullptr != m_window)
+    if (nullptr != m_rendering_context)
     {
-        init_vulkan();
+        std::ignore = m_rendering_context->Shutdown();
+        m_rendering_context.reset();
     }
-}
+
+    rendering::RenderContext* context{nullptr};
+#ifndef HOT_RELOAD
+    context             = CreateRenderContext(m_window);
+    context->s_instance = context;
+#else
+    context                     = m_rendering_module->create_context_func(m_window);
+    m_rendering_module->context = context;
 #endif// HOT_RELOAD
+
+    m_rendering_context = decltype(m_rendering_context)(context, m_deleter);
+}
 
 void WindowManager::init_vulkan()
 {
-#ifndef HOT_RELOAD
+    auto result = m_rendering_module->context->Initialize();
+    if (!result.has_value())
     {
-        auto result = m_rendering_context->Initialize();
-        if (!result.has_value())
-        {
-            LogCritical("RenderContext could not be initialized! {}", result.error().Message());
-            communication::DispatchNow<communication::engine_terminate>();
-            return;
-        }
+        LogCritical("RenderContext could not be initialized! {}", result.error().Message());
+        communication::DispatchNow<communication::engine_terminate>();
+        return;
     }
-#else
-    polos::rendering::VulkanState* result = rendering_dll.initialize_vulkan_func(m_window);
-    m_vulkan_state                        = *result;
-#endif// HOT_RELOAD
 }
 
 void WindowManager::on_end_frame() const
@@ -197,15 +211,18 @@ void WindowManager::on_engine_terminate()
     LogInfo("Terminating WindowManager...");
 
 
-#ifndef HOT_RELOAD
     std::ignore = m_rendering_context->Shutdown();
-#else
-    if (nullptr != rendering_dll.terminate_vulkan_func)
-    {
-        rendering_dll.terminate_vulkan_func();
-    }
-#endif// HOT_RELOAD
+
     glfwTerminate();
+}
+
+void WindowManager::on_module_reload(communication::module_reload& t_event)
+{
+    m_rendering_module = &t_event.module;
+    if (t_event.module_name == "Rendering")
+    {
+        init_vulkan();
+    }
 }
 
 }// namespace polos::platform

@@ -17,13 +17,14 @@ endmacro()
 include(GenerateExportHeader)
 
 macro(define_polos_module)
+    set(options ENABLE_HOT_RELOAD)
     set(oneValueArgs NAME TYPE)
     set(multiValueArgs SOURCES
                        PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS
                        PUBLIC_DEFINES PRIVATE_DEFINES
                        TEST_SOURCES TEST_DEPS TEST_DEFINES TEST_EXTRA_ARGS TEST_DATA)
     cmake_parse_arguments(MODULE
-        "" "${oneValueArgs}" "${multiValueArgs}"
+        "${options}" "${oneValueArgs}" "${multiValueArgs}"
         ${ARGN}
     )
 
@@ -123,13 +124,19 @@ macro(define_polos_module)
             $<INSTALL_INTERFACE:include>
     )
 
-    if (HOT_RELOAD)
-        # just expose polos::modulename_INTERFACE as the actual interface for when HOT_RELOAD is enabled
-        add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME_INTERFACE})
+    if (MODULE_ENABLE_HOT_RELOAD)
+        if (HOT_RELOAD)
+            set(HOT_RELOAD_DEFINITION)
+            string(TOUPPER ${MODULE_NAME} HOT_RELOAD_DEFINITION)
+            string(APPEND HOT_RELOAD_DEFINITION "_HOT_RELOAD")
+            target_compile_definitions(${MODULE_NAME} PUBLIC ${HOT_RELOAD_DEFINITION})
+            add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME_INTERFACE})
+        endif()
     else()
         add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
         add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
     endif()
+
 
     if (${BUILD_TESTS} AND MODULE_TEST_SOURCES)
         message(STATUS "[POLOS] Building tests for: ${MODULE_NAME}")

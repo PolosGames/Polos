@@ -4,12 +4,11 @@
 ///
 
 #include "polos/core/main_loop.hpp"
-
-#include "polos/communication/begin_frame.hpp"
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/module_reload.hpp"
 #include "polos/communication/render_update.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
@@ -39,6 +38,10 @@ MainLoop::MainLoop()
         on_engine_terminate();
     });
 
+    communication::Subscribe<communication::module_reload>([this](polos::communication::module_reload& t_event) {
+        m_rendering_module = &t_event.module;
+    });
+
     m_render_systems.emplace_back(new rendering::ClearScreenSystem{});
 }
 
@@ -58,10 +61,10 @@ void MainLoop::Run()
     constexpr std::int16_t const target_frames{60};
     constexpr Duration const     kTimestep{1_sec / target_frames};
 
-    auto& render_context = rendering::RenderingInstance();
-    auto& render_graph   = render_context.GetRenderGraph();
+    auto* render_context = m_rendering_module->context;
+    auto& render_graph   = render_context->GetRenderGraph();
 
-    for (auto& system : m_render_systems) { system->Initialize(render_context); }
+    for (auto& system : m_render_systems) { system->Initialize(*render_context); }
 
     while (m_is_running)
     {
@@ -79,16 +82,16 @@ void MainLoop::Run()
             lag -= kTimestep;
         }
 
-        auto cmd_buf = rendering::BeginFrame();
+        auto cmd_buf = render_context->BeginFrame();
 
         communication::DispatchNow<communication::render_update>(delta_time_in_secs);
 
-        for (auto const& system : m_render_systems) { system->Update(render_context, render_graph); }
+        for (auto const& system : m_render_systems) { system->Update(*render_context, render_graph); }
 
         render_graph.Compile();
         render_graph.Execute(cmd_buf);
 
-        rendering::EndFrame();
+        render_context->EndFrame();
         communication::DispatchNow<communication::end_frame>();
 
         render_graph.Clear();

@@ -13,13 +13,11 @@
 #include <polos/communication/engine_terminate.hpp>
 #include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
+#include <polos/communication/module_reload.hpp>
 #include <polos/communication/render_update.hpp>
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
 #include <polos/platform/window_manager.hpp>
-#if defined(HOT_RELOAD)
-#    include <polos/rendering/shared_lib_out.hpp>
-#endif// HOT_RELOAD
 
 namespace dummy_app
 {
@@ -50,10 +48,6 @@ void DummyApp::Create()
         [this](polos::communication::key_release& t_event) {
             on_key_release(t_event);
         });
-#if defined(HOT_RELOAD)
-    polos::rendering::LoadRenderingModule(rendering_dll);
-    win_inst.UpdateRenderingModule(rendering_dll);
-#endif// HOT_RELOAD
 
     polos::platform::WindowManager::Instance().ChangeWindowTitle("Dummy");
 }
@@ -70,38 +64,9 @@ void DummyApp::on_engine_update(polos::communication::engine_update&)
     //LogInfo("Engine Thread Update");
 }
 
-void DummyApp::on_render_update(polos::communication::render_update&)
-{
-#if defined(HOT_RELOAD)
-    if (nullptr != rendering_dll.render_frame_func && !m_unload_in_progress)
-    {
-        rendering_dll.render_frame_func();
-    }
-#else
-    // NOOP
-#endif
-}
+void DummyApp::on_render_update(polos::communication::render_update&) {}
 
-void DummyApp::on_key_release(polos::communication::key_release)
-{
-#if defined(HOT_RELOAD)
-    if (t_event.key == GLFW_KEY_R)
-    {
-        m_unload_in_progress = true;
-        rendering_dll.terminate_vulkan_func();
-        polos::rendering::UnloadRenderingModule(rendering_dll);
-    }
-
-    if (t_event.key == GLFW_KEY_S)
-    {
-        if (polos::rendering::LoadRenderingModule(rendering_dll))
-        {
-            polos::platform::WindowManager::Instance().UpdateRenderingModule(rendering_dll);
-            m_unload_in_progress = false;
-        }
-    }
-#endif// HOT_RELOAD
-}
+void DummyApp::on_key_release(polos::communication::key_release) {}
 
 }// namespace dummy_app
 

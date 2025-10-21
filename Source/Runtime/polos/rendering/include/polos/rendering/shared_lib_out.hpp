@@ -6,41 +6,56 @@
 #ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
 
-#include "polos/rendering/vulkan_state.hpp"
-#include "polos/utils/windows_hot_reload_utils.hpp"
+#include "polos/polos_config.hpp"
+
+#if defined(POLOS_WIN)
+#    include "polos/utils/windows_hot_reload_utils.hpp"
+#elif defined(POLOS_LINUX)
+#    include "polos/utils/linux_hot_reload_utils.hpp"
+#endif
 
 struct GLFWwindow;
 
 namespace polos::rendering
 {
+
+class RenderContext;
+
+namespace
+{
+
+#if defined(POLOS_WIN)
+inline constexpr char const* kRenderingLibName{"polos_rendering.dll"};
+#elif defined(POLOS_LINUX)
+inline constexpr char const* kRenderingLibName{"libpolos_rendering.so"};
+#endif
+
+}// namespace
+
 struct rendering_shared_lib_out : utils::base_shared_lib_out
 {
-    using initialize_vulkan_func_t = polos::rendering::VulkanState* (*)(GLFWwindow* const);
-    using terminate_vulkan_func_t  = void (*)();
-    using render_frame_func_t      = void (*)();
+    RenderContext* context;
 
-    initialize_vulkan_func_t initialize_vulkan_func{nullptr};
-    terminate_vulkan_func_t  terminate_vulkan_func{nullptr};
-    render_frame_func_t      render_frame_func{nullptr};
+    RenderContext* (*create_context_func)(GLFWwindow*);
+    void (*destroy_context_func)(RenderContext*);
 };
 
 inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
-    if (!polos::utils::LoadDLL(t_dll_out, "polos_rendering.dll"))
+    if (!utils::LoadSharedLib(t_dll_out, kRenderingLibName))
     {
-        LogError("Could not load rendering dll");
+        LogCritical("Could not load {}!", kRenderingLibName);
         return false;
     }
 
-    bool ret = utils::GetFuncFromDLL(t_dll_out, t_dll_out.initialize_vulkan_func, "InitializeVulkan");
-    ret &= utils::GetFuncFromDLL(t_dll_out, t_dll_out.terminate_vulkan_func, "TerminateVulkan");
-    ret &= polos::utils::GetFuncFromDLL(t_dll_out, t_dll_out.render_frame_func, "RenderFrame");
-
-    if (!ret)
+    if (utils::GetFuncFromSharedLib(t_dll_out, t_dll_out.create_context_func, "CreateRenderContext"))
     {
-        polos::utils::UnloadDLL(t_dll_out);
-
-        LogCritical("Could not find either of the rendering functions!! Leaving.!!");
+        LogCritical("Could not find symbol CreateRenderContext inside {}", kRenderingLibName);
+        return false;
+    }
+    if (utils::GetFuncFromSharedLib(t_dll_out, t_dll_out.destroy_context_func, "DestroyRenderContext"))
+    {
+        LogCritical("Could not find symbol DestroyRenderContext inside {}", kRenderingLibName);
         return false;
     }
 
@@ -51,7 +66,7 @@ inline void UnloadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
     if (t_dll_out.handle != nullptr)
     {
-        polos::utils::UnloadDLL(t_dll_out);
+        polos::utils::UnloadSharedLib(t_dll_out);
     }
 }
 

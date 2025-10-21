@@ -46,9 +46,8 @@ add_compile_options(
 )
 
 add_compile_definitions(
-        UUID_SYSTEM_GENERATOR
-        UUID_USING_CXX20_SPAN
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+        $<$<BOOL:HOT_RELOAD>:HOT_RELOAD>
 )
 
 find_package(GTest CONFIG REQUIRED)

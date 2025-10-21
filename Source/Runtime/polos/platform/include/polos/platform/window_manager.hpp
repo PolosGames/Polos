@@ -26,8 +26,7 @@ class RenderContext;
 namespace polos::communication
 {
 
-struct end_frame;
-struct window_close;
+struct module_reload;
 
 }// namespace polos::communication
 
@@ -50,22 +49,32 @@ public:
     bool        CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title);
     void        ChangeWindowTitle(std::string_view const t_title);
     GLFWwindow* GetRawWindow() const;
-
-#if defined(HOT_RELOAD)
-    /// @brief Must be called before CreateNewWindow
-    void UpdateRenderingModule(rendering::rendering_shared_lib_out& t_dll_out);
-#endif// HOT_RELOAD
 private:
     WindowManager();
 
+    void create_render_context();
     void init_vulkan();
 
     void on_end_frame() const;
     void on_window_close();
     void on_engine_terminate();
+    void on_module_reload(communication::module_reload& t_event);
 
-    GLFWwindow*                               m_window{nullptr};
-    std::unique_ptr<rendering::RenderContext> m_rendering_context;
+    GLFWwindow* m_window{nullptr};
+
+    struct render_context_deleter
+    {
+        void operator()(rendering::RenderContext* t_ptr);
+
+        WindowManager* wm;
+    };
+
+    std::unique_ptr<rendering::RenderContext, render_context_deleter> m_rendering_context;
+    render_context_deleter                                            m_deleter{this};
+
+#if defined(HOT_RELOAD)
+    rendering::rendering_shared_lib_out* m_rendering_module{nullptr};
+#endif
 };
 
 }// namespace polos::platform

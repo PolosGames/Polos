@@ -16,15 +16,21 @@ project(
 define_polos_module(
     NAME
         core
+
     TYPE
         SHARED
+
     SOURCES
-        "src/dll_main.cpp"
-        "src/main_loop.cpp"
-        "src/engine.cpp"
         "src/base_live_layer.cpp"
+        "src/dll_main.cpp"
+        "src/engine_layer.cpp"
+        "src/engine.cpp"
+        "src/main_loop.cpp"
+        "src/module_operations.cpp"
+
     PUBLIC_DEPS
         polos::rendering
+
     PRIVATE_DEPS
         polos::communication
         polos::datatypes

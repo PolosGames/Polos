@@ -17,7 +17,10 @@ class CORE_EXPORT BaseLiveLayer : public ILiveLayer
 {
 public:
     BaseLiveLayer();
-    virtual ~BaseLiveLayer() override = default;
+    virtual ~BaseLiveLayer() override;
+
+    void Create() override;
+    void Destroy() override;
 private:
     char const* Name() const override;
 };

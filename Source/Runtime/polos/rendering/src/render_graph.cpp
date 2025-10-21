@@ -98,7 +98,7 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 
             VkFramebuffer pass_fb{VK_NULL_HANDLE};
             vkCreateFramebuffer(m_device, &fb_info, nullptr, &pass_fb);
-            RenderingInstance().AddFramebufferToCurrentFrame(pass_fb);
+            RenderContext::Instance().AddFramebufferToCurrentFrame(pass_fb);
 
             VkRenderPassBeginInfo pass_begin_info{
                 .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,

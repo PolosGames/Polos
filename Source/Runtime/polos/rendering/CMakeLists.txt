@@ -16,8 +16,12 @@ project(
 define_polos_module(
     NAME
         rendering
+
+    ENABLE_HOT_RELOAD
+
     TYPE
         SHARED
+
     SOURCES
         "src/clear_screen_pass.cpp"
         "src/clear_screen_system.cpp"
@@ -29,15 +33,16 @@ define_polos_module(
         "src/render_graph.cpp"
         "src/render_pass_resolver.cpp"
         "src/vertex.cpp"
-        "src/vk_instance.cpp"
         "src/vulkan_context.cpp"
         "src/vulkan_device.cpp"
         "src/vulkan_resource_manager.cpp"
         "src/vulkan_swapchain.cpp"
+
     PUBLIC_DEPS
         glfw
         Vulkan::Vulkan
         polos::logging
+
     PRIVATE_DEPS
         polos::communication
         polos::filesystem

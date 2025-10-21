@@ -57,6 +57,8 @@ public:
     auto GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>;
     auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
     auto AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void;
+
+    auto IsInitialized() -> bool;
 private:
     friend class platform::WindowManager;
 
@@ -91,11 +93,16 @@ private:
     bool m_is_initialized{false};
 };
 
-RENDERING_EXPORT auto RenderingInstance() -> RenderContext&;
-
-[[nodiscard]] RENDERING_EXPORT auto BeginFrame() -> VkCommandBuffer;
-RENDERING_EXPORT auto               EndFrame() -> void;
-
 }// namespace polos::rendering
+
+#if defined(__cplusplus)
+extern "C"
+{
+#endif// __cplusplus
+    RENDERING_EXPORT polos::rendering::RenderContext* CreateRenderContext(GLFWwindow* t_window);
+    RENDERING_EXPORT void                             DestroyRenderContext(polos::rendering::RenderContext* t_context);
+#if defined(__cplusplus)
+}
+#endif// __cplusplus
 
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_
