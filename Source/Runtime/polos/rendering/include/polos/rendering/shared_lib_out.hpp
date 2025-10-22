@@ -14,14 +14,11 @@
 #    include "polos/utils/linux_hot_reload_utils.hpp"
 #endif
 
+#include "polos/rendering/i_render_context.hpp"
+
 struct GLFWwindow;
 
 namespace polos::rendering
-{
-
-class RenderContext;
-
-namespace
 {
 
 #if defined(POLOS_WIN)
@@ -30,14 +27,9 @@ inline constexpr char const* kRenderingLibName{"polos_rendering.dll"};
 inline constexpr char const* kRenderingLibName{"libpolos_rendering.so"};
 #endif
 
-}// namespace
-
 struct rendering_shared_lib_out : utils::base_shared_lib_out
 {
-    RenderContext* context;
-
-    RenderContext* (*create_context_func)(GLFWwindow*);
-    void (*destroy_context_func)(RenderContext*);
+    IRenderContext* (*CreateRenderContext)();
 };
 
 inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
@@ -48,14 +40,9 @@ inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
         return false;
     }
 
-    if (utils::GetFuncFromSharedLib(t_dll_out, t_dll_out.create_context_func, "CreateRenderContext"))
+    if (!utils::GetFuncFromSharedLib(t_dll_out, t_dll_out.CreateRenderContext, "CreateRenderContext"))
     {
         LogCritical("Could not find symbol CreateRenderContext inside {}", kRenderingLibName);
-        return false;
-    }
-    if (utils::GetFuncFromSharedLib(t_dll_out, t_dll_out.destroy_context_func, "DestroyRenderContext"))
-    {
-        LogCritical("Could not find symbol DestroyRenderContext inside {}", kRenderingLibName);
         return false;
     }
 

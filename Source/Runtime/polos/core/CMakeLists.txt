@@ -26,7 +26,6 @@ define_polos_module(
         "src/engine_layer.cpp"
         "src/engine.cpp"
         "src/main_loop.cpp"
-        "src/module_operations.cpp"
 
     PUBLIC_DEPS
         polos::rendering

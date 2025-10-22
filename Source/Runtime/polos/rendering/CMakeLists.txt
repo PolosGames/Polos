@@ -35,6 +35,7 @@ define_polos_module(
         "src/vertex.cpp"
         "src/vulkan_context.cpp"
         "src/vulkan_device.cpp"
+        "src/vulkan_render_api.cpp"
         "src/vulkan_resource_manager.cpp"
         "src/vulkan_swapchain.cpp"
 

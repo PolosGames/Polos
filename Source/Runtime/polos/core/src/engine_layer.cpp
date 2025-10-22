@@ -8,7 +8,6 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/key_release.hpp"
-#include "polos/core/module_operations.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -26,15 +25,9 @@ EngineLayer::~EngineLayer() {}
 
 void EngineLayer::on_key_release(communication::key_release t_event)
 {
+    std::ignore = t_event;
 #if defined(HOT_RELOAD)
-    if (t_event.key == GLFW_KEY_R)
-    {
-        if (!LoadRenderingModule())
-        {
-            LogCritical("Could not reload Rendering module. Terminating!");
-            communication::DispatchNow<communication::engine_terminate>();
-        }
-    }
+    if (t_event.key == GLFW_KEY_R) {}
 #endif// HOT_RELOAD
 }
 

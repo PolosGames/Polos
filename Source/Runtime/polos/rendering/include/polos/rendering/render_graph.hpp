@@ -7,25 +7,20 @@
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
 
 #include "polos/rendering/compiled_render_pass.hpp"
+#include "polos/rendering/i_render_graph.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/texture_2d.hpp"
 
-#include <memory>
 #include <string_view>
-#include <vector>
 
 namespace polos::rendering
 {
 
-struct render_graph_creation_details
-{
-    VkDevice device;
-};
-
 struct render_graph_resource_node;
 class IRenderPass;
+class RenderContext;
 
-class RENDERING_EXPORT RenderGraph
+class RENDERING_EXPORT RenderGraph : public IRenderGraph
 {
 public:
     RenderGraph();
@@ -35,21 +30,12 @@ public:
     RenderGraph& operator=(RenderGraph&&) = delete;
     RenderGraph& operator=(RenderGraph&)  = delete;
 
-    auto Create(render_graph_creation_details const& t_details) -> Result<void>;
-    auto Destroy() -> Result<void>;
+    Result<void> Create(render_graph_creation_details const& t_details) override;
+    Result<void> Destroy() override;
 
-    template<typename PassType, typename... Args>
-        requires std::is_base_of_v<IRenderPass, PassType>
-    auto AddRenderPass(Args&&... args) -> IRenderPass*
-    {
-        m_passes.push_back(std::make_unique<PassType>(std::forward<Args>(args)...));
-
-        return (*m_passes.rbegin()).get();
-    }
-
-    auto Compile() -> void;
-    auto Execute(VkCommandBuffer t_cmd_buf) -> void;
-    auto Clear() -> void;
+    void Compile() override;
+    void Execute(VkCommandBuffer t_cmd_buf) override;
+    void Reset() override;
 
     [[nodiscard]] auto GetResourceNode(RenderGraphResourceHandle t_handle) -> render_graph_resource_node&;
     [[nodiscard]] auto GetCompiledRenderPass(std::size_t t_pass_index) -> compiled_render_pass&;
@@ -66,13 +52,13 @@ private:
 
     VkDevice m_device{VK_NULL_HANDLE};
 
-    std::vector<std::unique_ptr<IRenderPass>> m_passes;
-
     std::vector<render_graph_resource_node> m_resources;
     std::vector<std::uint16_t>              m_handle_versions;
     std::vector<std::size_t>                m_free_resource_indices;
 
     std::vector<compiled_render_pass> m_compiled_passes;
+
+    RenderContext* m_context;
 };
 }// namespace polos::rendering
 

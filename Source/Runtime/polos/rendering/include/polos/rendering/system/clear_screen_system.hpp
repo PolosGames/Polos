@@ -15,10 +15,10 @@ namespace polos::rendering
 class RENDERING_EXPORT ClearScreenSystem : public IRenderSystem
 {
 public:
-    ClearScreenSystem();
+    ClearScreenSystem(RenderContext& t_context, RenderGraph& t_graph);
 
-    void Initialize(RenderContext& t_context) override;
-    void Update(RenderContext& t_context, RenderGraph& t_graph) override;
+    void Initialize() override;
+    void Update() override;
 private:
     RenderGraphResourceHandle m_sc_img_handle;
 };

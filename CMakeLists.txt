@@ -47,7 +47,7 @@ add_compile_options(
 
 add_compile_definitions(
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
-        $<$<BOOL:HOT_RELOAD>:HOT_RELOAD>
+        $<$<BOOL:${HOT_RELOAD}>:HOT_RELOAD>
 )
 
 find_package(GTest CONFIG REQUIRED)

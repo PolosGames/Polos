@@ -7,13 +7,6 @@
 #define POLOS_CORE_INCLUDE_POLOS_CORE_MAIN_LOOP_HPP_
 
 #include "polos/core/module_macros.hpp"
-#include "polos/rendering/i_render_system.hpp"
-#if defined(HOT_RELOAD)
-#    include "polos/rendering/shared_lib_out.hpp"
-#endif// HOT_RELOAD
-
-#include <memory>
-#include <vector>
 
 namespace polos::rendering
 {
@@ -37,9 +30,6 @@ public:
 private:
     void on_window_close();
     void on_engine_terminate();
-
-    std::vector<std::unique_ptr<rendering::IRenderSystem>> m_render_systems;
-    polos::rendering::rendering_shared_lib_out*            m_rendering_module{nullptr};
 
     bool m_is_running{true};
 };

@@ -103,7 +103,7 @@ auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> st
     CallbackMap::iterator it = m_callbacks.find(EventHash<EventType>());
     if (it == m_callbacks.end())
     {
-        LogDebugCtx(LOG_CTX_POLOS, "[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
+        LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
         return 0U;
     }
 

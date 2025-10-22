@@ -25,21 +25,21 @@ constexpr VkAttachmentReference2 const color_attachment_ref{
 };
 }// namespace
 
-ClearScreenSystem::ClearScreenSystem() = default;
+ClearScreenSystem::ClearScreenSystem(RenderContext& t_context, RenderGraph& t_graph)
+    : IRenderSystem(t_context, t_graph)
+{}
 
-void ClearScreenSystem::Initialize(RenderContext& t_context)
+void ClearScreenSystem::Initialize()
 {
-    auto& render_graph = t_context.GetRenderGraph();
-
-    auto frame_as_texture_res = t_context.GetCurrentFrameTexture();
+    auto frame_as_texture_res = m_context.GetCurrentFrameTexture();
     if (!frame_as_texture_res.has_value())
     {
         LogError("Could not acquire current frame as a texture. Skipping ClearScreenSystem::Update");
         return;
     }
 
-    m_sc_img_handle                        = render_graph.ImportTexture("SwapchainImage", *frame_as_texture_res);
-    render_graph_resource_node const& node = render_graph.GetResourceNode(m_sc_img_handle);
+    m_sc_img_handle                        = m_graph.ImportTexture("SwapchainImage", *frame_as_texture_res);
+    render_graph_resource_node const& node = m_graph.GetResourceNode(m_sc_img_handle);
 
     texture_2d const* raw_resource = [&node]() -> texture_2d const* {
         if (auto ptr = node.raw_resource.lock())
@@ -96,7 +96,7 @@ void ClearScreenSystem::Initialize(RenderContext& t_context)
 
     render_pass_layout_description const& layout = m_layout;
 
-    auto result = t_context.CreateRenderPass(layout);
+    auto result = m_context.CreateRenderPass(layout);
     if (!result.has_value())
     {
         LogError("Could not create compatible VkRenderPass.");
@@ -106,18 +106,18 @@ void ClearScreenSystem::Initialize(RenderContext& t_context)
     m_vk_render_pass = *result;
 }
 
-void ClearScreenSystem::Update(RenderContext& t_context, RenderGraph& t_graph)
+void ClearScreenSystem::Update()
 {
-    auto frame_as_texture_res = t_context.GetCurrentFrameTexture();
+    auto frame_as_texture_res = m_context.GetCurrentFrameTexture();
     if (!frame_as_texture_res.has_value())
     {
         LogError("Could not acquire current frame as a texture. Skipping ClearScreenSystem::Update");
         return;
     }
 
-    m_sc_img_handle = t_graph.ImportTexture("SwapchainImage", *frame_as_texture_res);
+    m_sc_img_handle = m_graph.ImportTexture("SwapchainImage", *frame_as_texture_res);
 
-    auto* pass    = t_graph.AddRenderPass<ClearScreenPass>(m_sc_img_handle);
+    auto* pass    = m_graph.AddRenderPass<ClearScreenPass>(m_sc_img_handle);
     pass->vk_pass = m_vk_render_pass;
 }
 

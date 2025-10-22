@@ -8,6 +8,8 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/common.hpp"
+#include "polos/rendering/i_render_context.hpp"
+#include "polos/rendering/i_render_system.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 #include "polos/rendering/texture_2d.hpp"
@@ -16,7 +18,7 @@
 
 namespace polos::platform
 {
-class WindowManager;
+class PlatformManager;
 }
 
 namespace polos::rendering
@@ -30,48 +32,44 @@ class PipelineCache;
 class RenderGraph;
 struct render_pass_layout_description;
 
-class RENDERING_EXPORT RenderContext
+class RENDERING_EXPORT RenderContext : public IRenderContext
 {
 public:
-    explicit RenderContext(GLFWwindow* t_window);
+    RenderContext();
     ~RenderContext();
     RenderContext(RenderContext&&)            = delete;
     RenderContext(RenderContext&)             = delete;
     RenderContext& operator=(RenderContext&&) = delete;
     RenderContext& operator=(RenderContext&)  = delete;
 
-    static auto Instance() -> RenderContext&;
+    Result<void> Initialize(GLFWwindow* t_window) override;
+    Result<void> Shutdown() override;
 
-    auto Initialize() -> Result<void>;
-    auto Shutdown() -> Result<void>;
+    VkCommandBuffer BeginFrame() override;
+    void            EndFrame() override;
+
+    IRenderGraph& GetRenderGraph() const override;
+
+    bool IsInitialized() const override;
 
     auto GetVkSurface() -> VkSurfaceKHR;
     auto GetGfxQueue() -> VkQueue;
-
-    auto BeginFrame() -> VkCommandBuffer;
-    auto EndFrame() -> void;
-
-    auto GetRenderGraph() -> RenderGraph&;
     auto GetSwapchain() -> VulkanSwapchain&;
 
     auto GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>;
     auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
     auto AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void;
-
-    auto IsInitialized() -> bool;
 private:
-    friend class platform::WindowManager;
+    friend class platform::PlatformManager;
 
-    static RenderContext* s_instance;
-    static bool           s_is_initialized;
-
-    GLFWwindow*                            m_window{nullptr};
-    std::unique_ptr<VulkanContext>         m_context;
-    std::unique_ptr<VulkanDevice>          m_device;
-    std::unique_ptr<VulkanSwapchain>       m_swapchain;
-    std::unique_ptr<VulkanResourceManager> m_vrm;
-    std::unique_ptr<PipelineCache>         m_pipeline_cache;
-    std::unique_ptr<RenderGraph>           m_render_graph;
+    GLFWwindow*                                            m_window{nullptr};
+    std::unique_ptr<VulkanContext>                         m_context;
+    std::unique_ptr<VulkanDevice>                          m_device;
+    std::unique_ptr<VulkanSwapchain>                       m_swapchain;
+    std::unique_ptr<VulkanResourceManager>                 m_vrm;
+    std::unique_ptr<PipelineCache>                         m_pipeline_cache;
+    std::unique_ptr<RenderGraph>                           m_render_graph;
+    std::vector<std::unique_ptr<rendering::IRenderSystem>> m_render_systems;
 
     VkCommandPool m_command_pool{VK_NULL_HANDLE};
 
@@ -94,15 +92,5 @@ private:
 };
 
 }// namespace polos::rendering
-
-#if defined(__cplusplus)
-extern "C"
-{
-#endif// __cplusplus
-    RENDERING_EXPORT polos::rendering::RenderContext* CreateRenderContext(GLFWwindow* t_window);
-    RENDERING_EXPORT void                             DestroyRenderContext(polos::rendering::RenderContext* t_context);
-#if defined(__cplusplus)
-}
-#endif// __cplusplus
 
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_

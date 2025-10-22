@@ -17,6 +17,7 @@ using LibHandle = void*;
 
 #    include "polos/logging/log_macros.hpp"
 
+#    include <ctime>
 #    include <dlfcn.h>
 #    include <filesystem>
 #    include <string>
@@ -28,8 +29,8 @@ struct base_shared_lib_out
 {
     utils::LibHandle handle;
 
-    std::filesystem::file_time_type last_write_time;
-    std::string                     temp_dll_path;
+    std::time_t last_write_time;
+    std::string temp_dll_path;
 };
 
 inline void CleanupOldFiles(const std::filesystem::path&, const std::string&)
@@ -72,14 +73,14 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
 }
 
 template<typename F>
-inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
+inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, char const* t_func_name)
 {
-    t_func_ptr = reinterpret_cast<F>(dlsym(t_dll_out.handle, t_func_name.data()));
+    t_func_ptr = reinterpret_cast<F>(dlsym(t_dll_out.handle, t_func_name));
     if (nullptr == t_func_ptr)
     {
         dlclose(t_dll_out.handle);
 
-        LogError("Failed to get function {} from Shared lib. {}", std::string(t_func_name), std::string(dlerror()));
+        LogError("Failed to get function {} from Shared lib. {}", t_func_name, dlerror());
         return false;
     }
     return true;

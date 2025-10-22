@@ -13,24 +13,16 @@
 #include <polos/communication/engine_terminate.hpp>
 #include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
-#include <polos/communication/module_reload.hpp>
 #include <polos/communication/render_update.hpp>
+#include <polos/communication/rendering_module_reload.hpp>
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
-#include <polos/platform/window_manager.hpp>
 
 namespace dummy_app
 {
 
-#if defined(HOT_RELOAD)
-namespace
-{
-polos::rendering::rendering_shared_lib_out rendering_dll;
-}// namespace
-#endif
-
-DummyApp::DummyApp() = default;
-DummyApp::~DummyApp() {}
+DummyApp::DummyApp()  = default;
+DummyApp::~DummyApp() = default;
 
 void DummyApp::Create()
 {
@@ -48,8 +40,6 @@ void DummyApp::Create()
         [this](polos::communication::key_release& t_event) {
             on_key_release(t_event);
         });
-
-    polos::platform::WindowManager::Instance().ChangeWindowTitle("Dummy");
 }
 
 void DummyApp::Destroy() {}

@@ -11,7 +11,6 @@
 #include "polos/rendering/render_graph_registry.hpp"
 #include "polos/rendering/render_graph_resource_node.hpp"
 #include "polos/rendering/render_pass_resolver.hpp"
-#include "polos/rendering/rendering_error_domain.hpp"
 
 namespace polos::rendering
 {
@@ -21,7 +20,8 @@ RenderGraph::~RenderGraph() = default;
 
 auto RenderGraph::Create(render_graph_creation_details const& t_details) -> Result<void>
 {
-    m_device = t_details.device;
+    m_device  = t_details.device;
+    m_context = reinterpret_cast<RenderContext*>(std::launder(t_details.context));
 
     return {};
 }
@@ -98,7 +98,7 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 
             VkFramebuffer pass_fb{VK_NULL_HANDLE};
             vkCreateFramebuffer(m_device, &fb_info, nullptr, &pass_fb);
-            RenderContext::Instance().AddFramebufferToCurrentFrame(pass_fb);
+            m_context->AddFramebufferToCurrentFrame(pass_fb);
 
             VkRenderPassBeginInfo pass_begin_info{
                 .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -123,7 +123,7 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
     }
 }
 
-auto RenderGraph::Clear() -> void
+auto RenderGraph::Reset() -> void
 {
     destroy_transient_resources();
 }

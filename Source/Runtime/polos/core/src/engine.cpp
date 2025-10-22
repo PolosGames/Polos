@@ -9,10 +9,9 @@
 #include "polos/communication/event_bus.hpp"
 #include "polos/core/engine_layer.hpp"
 #include "polos/core/main_loop.hpp"
-#include "polos/core/module_operations.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"
-#include "polos/platform/window_manager.hpp"
+#include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/render_context.hpp"
 
 #include <memory>
@@ -22,9 +21,12 @@ namespace polos::core
 
 std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 {
-    if (!LoadAllModules())
+    std::unique_ptr<platform::PlatformManager> platform_manager = std::make_unique<platform::PlatformManager>();
+    platform_manager->s_instance                                = platform_manager.get();
+
+    if (!platform_manager->CreateNewWindow(1280, 720, "PolosEngine"))
     {
-        LogCritical("Could not load necessary dynamic modules. Terminating!");
+        LogCritical("Could not create engine window. Terminating!");
         return 2;
     }
 
@@ -32,15 +34,6 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
     std::unique_ptr<ILiveLayer> app_layer{t_app_layer};
     engine_layer->Create();
     app_layer->Create();
-
-    auto& win_inst = platform::WindowManager::Instance();
-
-    if (!win_inst.CreateNewWindow(1280, 720, "PolosEngine"))
-    {
-        LogCritical("GLFW window could not be created. Terminating!");
-        polos::communication::DispatchNow<polos::communication::engine_terminate>();
-        return 2;
-    }
 
     MainLoop loop{};
     loop.Run();

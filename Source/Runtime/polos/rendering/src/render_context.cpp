@@ -18,7 +18,6 @@
 #include "polos/rendering/vulkan_swapchain.hpp"
 
 #include "polos/rendering/render_pass/clear_screen_pass.hpp"
-
 #include "polos/rendering/system/clear_screen_system.hpp"
 
 #include <GLFW/glfw3.h>
@@ -83,28 +82,19 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
 
 }// namespace
 
-RenderContext* RenderContext::s_instance       = nullptr;
-bool           RenderContext::s_is_initialized = false;
-
-RenderContext::RenderContext(GLFWwindow* t_window)
-    : m_window{t_window},
-      m_context{std::make_unique<VulkanContext>()},
-      m_device{std::make_unique<VulkanDevice>(m_window)},
-      m_swapchain{std::make_unique<VulkanSwapchain>(m_window)},
-      m_vrm{std::make_unique<VRM>()},
-      m_pipeline_cache{std::make_unique<PipelineCache>()},
-      m_render_graph{std::make_unique<RenderGraph>()}
-{}
-
+RenderContext::RenderContext()  = default;
 RenderContext::~RenderContext() = default;
 
-auto RenderContext::Instance() -> RenderContext&
+auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 {
-    return *s_instance;
-}
+    m_window         = t_window;
+    m_context        = std::make_unique<VulkanContext>();
+    m_device         = std::make_unique<VulkanDevice>(m_window);
+    m_swapchain      = std::make_unique<VulkanSwapchain>(m_window);
+    m_vrm            = std::make_unique<VRM>();
+    m_pipeline_cache = std::make_unique<PipelineCache>();
+    m_render_graph   = std::make_unique<RenderGraph>();
 
-auto RenderContext::Initialize() -> Result<void>
-{
     // --- Initialize Vulkan context ---
     INIT_VULKAN_COMPONENT(m_context);
 
@@ -274,10 +264,15 @@ auto RenderContext::Initialize() -> Result<void>
 
     {
         render_graph_creation_details details{
-            .device = m_device->logi_device,
+            .device  = m_device->logi_device,
+            .context = this,
         };
         INIT_VULKAN_COMPONENT(m_render_graph, details);
     };
+
+    m_render_systems.emplace_back(new ClearScreenSystem{*this, *m_render_graph});
+
+    for (auto& system : m_render_systems) { system->Initialize(); }
 
     m_is_initialized = true;
 
@@ -342,6 +337,7 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         }
         m_transient_fbufs[m_current_frame_index].clear();
     }
+    m_render_graph->Reset();
 
     vkResetFences(m_device->logi_device, 1U, &m_frame_fences[m_current_frame_index]);
 
@@ -380,6 +376,11 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
 
 auto RenderContext::EndFrame() -> void
 {
+    for (auto const& system : m_render_systems) { system->Update(); }
+
+    m_render_graph->Compile();
+    m_render_graph->Execute(m_frame_command_buffers[m_current_frame_index]);
+
     if (VK_SUCCESS != vkEndCommandBuffer(m_frame_command_buffers[m_current_frame_index]))
     {
         LogError("Could not record command buffer.");
@@ -418,9 +419,14 @@ auto RenderContext::EndFrame() -> void
     return;
 }
 
-auto RenderContext::GetRenderGraph() -> RenderGraph&
+auto RenderContext::GetRenderGraph() const -> IRenderGraph&
 {
     return *m_render_graph;
+}
+
+auto RenderContext::IsInitialized() const -> bool
+{
+    return m_is_initialized;
 }
 
 auto RenderContext::GetSwapchain() -> VulkanSwapchain&
@@ -468,11 +474,6 @@ auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_lay
 auto RenderContext::AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void
 {
     m_transient_fbufs[m_current_frame_index].push_back(t_fbuf);
-}
-
-auto RenderContext::IsInitialized() -> bool
-{
-    return m_is_initialized;
 }
 
 }// namespace polos::rendering

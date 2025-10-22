@@ -18,11 +18,17 @@ class RenderGraph;
 class RENDERING_EXPORT IRenderSystem
 {
 public:
+    IRenderSystem(RenderContext& t_context, RenderGraph& t_graph)
+        : m_context{t_context},
+          m_graph{t_graph}
+    {}
     virtual ~IRenderSystem() = default;
 
-    virtual void Initialize(RenderContext& t_context)                   = 0;
-    virtual void Update(RenderContext& t_context, RenderGraph& t_graph) = 0;
+    virtual void Initialize() = 0;
+    virtual void Update()     = 0;
 protected:
+    RenderContext&                 m_context;
+    RenderGraph&                   m_graph;
     render_pass_layout_description m_layout;
     VkRenderPass                   m_vk_render_pass{VK_NULL_HANDLE};
 };

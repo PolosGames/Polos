@@ -24,7 +24,8 @@ void ClearScreenPass::Setup(RenderPassResolver& t_builder)
             .handle      = m_sc_img_handle,
             .load_op     = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .store_op    = VK_ATTACHMENT_STORE_OP_STORE,
-            .clear_value = kPolosClear,
+            .clear_value = VkClearValue{.color{.float32 = {0.0f, 0.0f, 0.5f, 1.0f}}},
+            // .clear_value = kPolosClear,
         });
 }
 
