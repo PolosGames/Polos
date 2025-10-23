@@ -1,6 +1,6 @@
 <img src=".github/resources/logo_bw.svg" alt="logo" width="500"/>
 
-# [![GitHub](https://img.shields.io/github/license/PolosGames/Polos)](https://github.com/PolosGames/Polos/blob/master/LICENSE) ![Build](https://img.shields.io/github/actions/workflow/status/PolosGames/Polos/build.yaml?branch=master)
+# [![GitHub](https://img.shields.io/github/license/PolosGames/Polos)](https://github.com/PolosGames/Polos/blob/master/LICENSE)
 
 A C++ game engine project.
 
