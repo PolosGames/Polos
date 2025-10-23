@@ -1,5 +1,12 @@
 CompileFlags:
-    Add: [/std:c++latest]
-    Add: [-std=c++23]
+    Add: [/std:c++latest, -std=c++23]
+
+Completion:
+    HeaderInsertion: Never
+
+---
+# Vulkan gives too many errors. Emit them.
+If:
+    PathMatch: .*/vulkan/.*
 Diagnostics:
-  Suppress: attributes_not_allowed
+    Suppress: '*'

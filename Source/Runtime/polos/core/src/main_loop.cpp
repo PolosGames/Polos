@@ -4,7 +4,6 @@
 ///
 
 #include "polos/core/main_loop.hpp"
-
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
@@ -12,12 +11,13 @@
 #include "polos/communication/render_update.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/platform/window_manager.hpp"
+#include "polos/rendering/rendering_api.hpp"
 #include "polos/utils/time.hpp"
 
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <thread>
 
 namespace polos::core
 {
@@ -39,39 +39,39 @@ void MainLoop::Run()
 {
     using namespace std::literals::chrono_literals;
 
-    std::thread update_thread{[this]() {
-        Duration                     delta_time{Duration::zero()};
-        TimePoint                    start = utils::GetTimeNow();
-        Duration                     lag{Duration::zero()};
-        constexpr std::int16_t const target_frames{60};
-        constexpr Duration const     kTimestep{1_sec / target_frames};
-
-        while (m_is_running)
-        {
-            auto current_time = utils::GetTimeNow();
-            delta_time        = current_time - start;
-            start             = current_time;
-
-            lag += delta_time;
-
-            std::float_t delta_time_in_secs = utils::ConvertToSeconds(delta_time);
-
-            while (lag >= kTimestep)
-            {
-                communication::Dispatch<communication::engine_update>(delta_time_in_secs);
-                lag -= kTimestep;
-            }
-        }
-    }};
-
-    update_thread.detach();
+    Duration                     delta_time{Duration::zero()};
+    TimePoint                    start = utils::GetTimeNow();
+    Duration                     lag{Duration::zero()};
+    constexpr std::int16_t const target_frames{60};
+    constexpr Duration const     kTimestep{1_sec / target_frames};
 
     while (m_is_running)
     {
-        communication::Dispatch<communication::render_update>(0.0f);
+        auto current_time = utils::GetTimeNow();
+        delta_time        = current_time - start;
+        start             = current_time;
 
-        communication::Dispatch<communication::end_frame>();
+        lag += delta_time;
+
+        std::float_t delta_time_in_secs = utils::ConvertToSeconds(delta_time);
+
+        communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
+        lag -= kTimestep;
+
+        rendering::RenderingApi::BeginFrame();
+        communication::DispatchNow<communication::render_update>(delta_time_in_secs);
+
+        rendering::RenderingApi::EndFrame();
+        communication::DispatchNow<communication::end_frame>();
+
+        communication::DispatchDeferredEvents();
+
+#if defined(HOT_RELOAD)
+        rendering::RenderingApi::ReloadIfNeeded();
+#endif// HOT_RELOAD
     }
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void MainLoop::on_window_close()

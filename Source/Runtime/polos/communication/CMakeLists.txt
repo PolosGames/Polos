@@ -19,7 +19,7 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "src/event.cpp"
+        "src/dll_main.cpp"
         "src/event_bus.cpp"
     PUBLIC_DEPS
         polos::logging

@@ -17,13 +17,14 @@ endmacro()
 include(GenerateExportHeader)
 
 macro(define_polos_module)
+    set(options ENABLE_HOT_RELOAD)
     set(oneValueArgs NAME TYPE)
     set(multiValueArgs SOURCES
                        PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS
                        PUBLIC_DEFINES PRIVATE_DEFINES
                        TEST_SOURCES TEST_DEPS TEST_DEFINES TEST_EXTRA_ARGS TEST_DATA)
     cmake_parse_arguments(MODULE
-        "" "${oneValueArgs}" "${multiValueArgs}"
+        "${options}" "${oneValueArgs}" "${multiValueArgs}"
         ${ARGN}
     )
 
@@ -75,6 +76,12 @@ macro(define_polos_module)
         )
 
         file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
+
+        # Remove dll_main from linux build
+        if (LINUX)
+            list(REMOVE_ITEM MODULE_SOURCES "src/dll_main.cpp")
+        endif()
+
         target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
 
         target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
@@ -82,11 +89,12 @@ macro(define_polos_module)
             PUBLIC
                 $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         )
+        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_DIR}/Config/include)
 
         target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
         target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
         target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
-        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PUBLIC_DEFINES})
+        target_compile_definitions(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEFINES})
 
         # PDB files only for source code
         if (CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND MODULE_TYPE STREQUAL "SHARED")
@@ -104,22 +112,34 @@ macro(define_polos_module)
     target_include_directories(${MODULE_NAME}
         INTERFACE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-    )
-    target_include_directories(${MODULE_NAME}
-        INTERFACE
             $<INSTALL_INTERFACE:include>
     )
 
-    install(
-        TARGETS ${MODULE_NAME}
-        LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        #PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
-        PERMISSIONS OWNER_READ OWNER_WRITE
+    set(MODULE_NAME_INTERFACE ${MODULE_NAME}_INTERFACE)
+
+    add_library(${MODULE_NAME_INTERFACE} INTERFACE)
+    target_include_directories(${MODULE_NAME_INTERFACE}
+        INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+            $<INSTALL_INTERFACE:include>
     )
 
-    add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+    if (MODULE_ENABLE_HOT_RELOAD)
+        if (HOT_RELOAD)
+            set(HOT_RELOAD_DEFINITION)
+            string(TOUPPER ${MODULE_NAME} HOT_RELOAD_DEFINITION)
+            string(APPEND HOT_RELOAD_DEFINITION "_HOT_RELOAD")
+            target_compile_definitions(${MODULE_NAME} PUBLIC ${HOT_RELOAD_DEFINITION})
+            add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME_INTERFACE})
+        else()
+            add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
+            add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+        endif()
+    else()
+        add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
+        add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
+    endif()
+
 
     if (${BUILD_TESTS} AND MODULE_TEST_SOURCES)
         message(STATUS "[POLOS] Building tests for: ${MODULE_NAME}")
@@ -186,6 +206,35 @@ macro(define_polos_module)
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif()
+
+    if (MSVC AND NOT MODULE_TYPE STREQUAL "INTERFACE" AND NOT MODULE_TYPE STREQUAL "STATIC")
+        set(PDB_FILE "$<TARGET_PDB_FILE:${MODULE_NAME}>")
+        set(PDB_FILE_LOCKED "${PDB_FILE}.locked")
+
+        add_custom_command(
+            TARGET ${MODULE_NAME} PRE_BUILD
+            COMMAND cmd /c "echo [DEBUG] PDB file path is ${PDB_FILE}"
+            COMMAND cmd /c "if exist \"${PDB_FILE}\" move /Y \"${PDB_FILE}\" \"${PDB_FILE_LOCKED}\""
+            COMMENT "Moving locked PDB for hot-reload (if it exists)"
+            VERBATIM
+        )
+
+        add_custom_command(
+            TARGET ${MODULE_NAME} PRE_BUILD
+            COMMAND cmd /c "if exist \"${PDB_FILE_LOCKED}\" copy /Y \"${PDB_FILE_LOCKED}\" \"${PDB_FILE}\""
+            COMMENT "Copying PDB back to prevent unnecessary relink (if it exists)"
+            VERBATIM
+        )
+    endif()
+
+    install(
+        TARGETS ${MODULE_NAME}
+        LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+        #PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
+        PERMISSIONS OWNER_READ OWNER_WRITE
+    )
 endmacro()
 
 # NAME: Should be the same as the folder name where this macro is called as well.
@@ -218,8 +267,8 @@ macro (define_polos_app)
     if (LINUX)
         set_target_properties(${app_NAME}
             PROPERTIES
-            INSTALL_RPATH ${POLOS_INSTALL_DIR}
-            BUILD_WITH_INSTALL_RPATH 1
+                INSTALL_RPATH ${POLOS_INSTALL_DIR}
+                BUILD_WITH_INSTALL_RPATH 1
         )
     endif()
 

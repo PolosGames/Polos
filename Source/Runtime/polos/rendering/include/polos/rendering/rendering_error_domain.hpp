@@ -14,14 +14,33 @@
 namespace polos::rendering
 {
 
+// TODO: Auto generate error codes and messages from a JSON or XML file
 enum class RenderingErrc : communication::ErrorDomain::CodeType
 {
-    kInstanceNotCreated,
-    kSurfaceNotCreated,
-    kNoPhysicalDeviceOnHost,
-    kExtensionsNotSupported,
-    kPreferableQueueFamilyNotFound,
-    kSwapchainInadequate,
+    kInstanceNotCreated               = 0U,
+    kSurfaceNotCreated                = 1U,
+    kNoPhysicalDeviceOnHost           = 2U,
+    kNoAdequatePhysicalDeviceFound    = 3U,
+    kPreferableQueueFamilyNotFound    = 4U,
+    kFailedDeviceCreation             = 5U,
+    kSwapchainNotCreated              = 6U,
+    kNoAdequateSurface                = 7U,
+    kSwapchainImageViewCreationFail   = 8U,
+    kShaderModuleNotCreated           = 9U,
+    kPipelineNotFoundInCache          = 10U,
+    kFailedToCreatePipelineLayout     = 11U,
+    kFailedToCreatePipeline           = 12U,
+    kFailedToAcquireSwapchainImage    = 13U,
+    kFailedToPresentQueue             = 14U,
+    kErrorDestroyingRenderSubmodule   = 15U,
+    kCommandPoolNotCreated            = 16U,
+    kCommandBufferAllocationFail      = 17U,
+    kSemaphoreCreationFail            = 18U,
+    kFenceCreationFail                = 19U,
+    kFailedToCreateCurrFrameAsTexture = 20U,
+    kFailedToCreateRenderPass         = 21U,
+
+    kRenderingErrcCount,
 };
 
 class RenderingErrorDomain : public communication::ErrorDomain
@@ -32,15 +51,32 @@ public:
     constexpr RenderingErrorDomain()
         : polos::communication::ErrorDomain(0x07U),
           m_messages({
-              "Vulkan instance could not be created! SERIOUS SHII",
+              "Vulkan instance could not be created! SERIOUS SHIT",
               "Could not create a window surface! Where are we going to draw?",
-              "Could not find any physical devices on machine... Is this a toaster?",
-              "Required extensions are not supported by device! Puny device...",
-              "Could not find a suitable queue family on physical device!"
-              "All these command buffers... They waited the queue for nothing?",
-              "Swapchain support is inadequate! He won't come out anytime soon...",
+              "Could not find any physical devices on machine... I hope this toaster makes good toasts.",
+              "No adequate physical device found on machine! Come on...",
+              "Could not find a suitable queue family on physical device!",
+              "Logical device creation for has failed!",
+              "Could not create a swapchain for the window surface!",
+              "No adequate surface found for swapchain.",
+              "Could not create image views for the swap chain images!",
+              "Could not create a shader module!",
+              "Requested pipeline was not found in pipeline cache. Create it with LoadOrCreatePipeline!",
+              "Could not create a pipeline layout!",
+              "Could not create VkPipeline object!",
+              "Could not acquire next image from the swapchain!",
+              "Could not present the image to the presentation queue!",
+              "Error occurred while destroying a rendering submodule!",
+              "Could not create a command pool!",
+              "Could not allocate command buffers from the command pool!",
+              "Could not create a semaphore!",
+              "Could not create in-flight fence!",
+              "Failed to create current frame as texture!",
+              "Failed to create render pass for a pass object.",
           })
     {}
+
+    virtual ~RenderingErrorDomain() = default;
 
     constexpr std::string_view Name() const override
     {
@@ -49,15 +85,15 @@ public:
 
     constexpr std::string_view Message(CodeType t_code) const override
     {
-        return m_messages[static_cast<std::ptrdiff_t>(t_code)];
+        return m_messages[static_cast<std::size_t>(t_code)];
     }
 private:
-    std::array<std::string_view const, 10> const m_messages;
+    std::array<std::string_view const, static_cast<std::size_t>(RenderingErrc::kRenderingErrcCount)> const m_messages;
 };
 
 namespace internal
 {
-constexpr RenderingErrorDomain g_error_domain;
+inline constexpr RenderingErrorDomain g_error_domain;
 }
 
 constexpr communication::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc t_err)

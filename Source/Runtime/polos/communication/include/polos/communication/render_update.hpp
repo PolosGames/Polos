@@ -8,6 +8,8 @@
 
 #include "polos/communication/event.hpp"
 
+#include <cmath>
+
 namespace polos::communication
 {
 
@@ -15,11 +17,11 @@ struct render_update final : base_event
 {
     DECLARE_POLOS_EVENT(render_update)
 
-    explicit render_update(float t_delta_time)
+    explicit render_update(std::float_t t_delta_time)
         : delta_time{t_delta_time}
     {}
 
-    float delta_time{0.0f};
+    std::float_t delta_time{0.0f};
 };
 
 }// namespace polos::communication

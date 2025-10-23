@@ -13,7 +13,12 @@
 namespace polos::core
 {
 
-BaseLiveLayer::BaseLiveLayer() {}
+BaseLiveLayer::BaseLiveLayer()  = default;
+BaseLiveLayer::~BaseLiveLayer() = default;
+
+void BaseLiveLayer::Create() {}
+
+void BaseLiveLayer::Destroy() {}
 
 char const* BaseLiveLayer::Name() const
 {

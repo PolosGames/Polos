@@ -6,8 +6,6 @@
 #ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_TIME_HPP_
 #define POLOS_UTILS_INCLUDE_POLOS_UTILS_TIME_HPP_
 
-#include "polos/utils/module_macros.hpp"
-
 #include <chrono>
 #include <cstdint>
 
@@ -21,7 +19,10 @@ using TimePoint = std::chrono::time_point<Clock, Duration>;
 namespace utils
 {
 
-UTILS_EXPORT auto GetTimeNow() -> TimePoint;
+inline auto GetTimeNow() -> TimePoint
+{
+    return std::chrono::time_point_cast<Duration>(Clock::now());
+}
 
 inline constexpr auto ConvertToSeconds(std::chrono::microseconds const t_usecs) -> float
 {

@@ -19,7 +19,8 @@ define_polos_module(
     TYPE
         SHARED
     SOURCES
-        "src/window_manager.cpp"
+        "src/dll_main.cpp"
+        "src/platform_manager.cpp"
     PUBLIC_DEPS
         glfw
         Vulkan::Vulkan
