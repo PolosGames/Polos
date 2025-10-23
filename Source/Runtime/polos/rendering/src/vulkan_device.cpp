@@ -59,10 +59,7 @@ VulkanDevice::VulkanDevice(GLFWwindow* t_window)
     : m_window{t_window}
 {}
 
-VulkanDevice::~VulkanDevice()
-{
-    LogInfo("VulkanDevice destroyed.");
-}
+VulkanDevice::~VulkanDevice() {}
 
 auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
 {
@@ -162,6 +159,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
 
 auto VulkanDevice::Destroy() -> Result<void>
 {
+    LogInfo("Destroying VkDevice...");
     vkDestroyDevice(logi_device, nullptr);
 
     return {};

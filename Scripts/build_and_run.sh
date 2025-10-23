@@ -23,13 +23,13 @@ fi
 
 cd "$POLOS_DIR" || { echo "Error: Failed to change to directory $POLOS_DIR"; exit 1; }
 
-cmake --preset "$1"
+cmake --preset "$1" -DHOT_RELOAD=ON
 if [ $? -ne 0 ]; then
     echo "Error: CMake configure step failed for preset '$1'."
     exit 1
 fi
 
-if [ $2 == "configure" ]; then
+if [ "$2" = "configure" ]; then
     exit 0
 fi
 
@@ -39,7 +39,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ $2 == "build" ]; then
+if [ "$2" = "build" ]; then
     exit 0
 fi
 

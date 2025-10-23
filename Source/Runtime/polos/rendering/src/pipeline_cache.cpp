@@ -27,6 +27,7 @@ auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Re
 
 auto PipelineCache::Destroy() -> Result<void>
 {
+    LogInfo("Destroying and invalidating pipeline cache...");
     for (auto const& [_, pipeline] : m_cache)
     {
         if (pipeline.pipeline != VK_NULL_HANDLE)

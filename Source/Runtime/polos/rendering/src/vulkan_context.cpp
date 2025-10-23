@@ -136,6 +136,8 @@ auto VulkanContext::Destroy() -> Result<void>
 #endif// !NDEBUG
     vkDestroyInstance(instance, nullptr);
 
+    LogInfo("Destoyed VulkanContext and DebugMessenger");
+
     return {};
 }
 

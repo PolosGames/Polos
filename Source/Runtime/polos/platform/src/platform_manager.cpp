@@ -14,14 +14,10 @@
 #include "polos/communication/window_focus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
-#if defined(HOT_RELOAD)
-#    include "polos/rendering/shared_lib_out.hpp"
-#else
-#    include "polos/rendering/render_api.hpp"
-#endif// HOT_RELOAD
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <sys/inotify.h>
 
 namespace polos::rendering
 {
@@ -95,9 +91,6 @@ bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_heigh
         return false;
     }
 
-    create_render_context();
-    init_vulkan();
-
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
         communication::DispatchDefer<communication::window_close>(t_handle);
     });
@@ -142,77 +135,6 @@ GLFWwindow* PlatformManager::GetMainWindow() const
     return m_window;
 }
 
-#if defined(HOT_RELOAD)
-bool PlatformManager::CheckNeedModuleReload()
-{
-    LogInfo("Checking write time of rendering module");
-
-    m_last_modified = std::filesystem::last_write_time(rendering::kRenderingLibName);
-    m_last_check    = std::chrono::steady_clock::now();
-
-    LogInfo(
-        "last check: {}, last_modify: {}",
-        m_last_check.time_since_epoch().count(),
-        m_last_modified.time_since_epoch().count());
-
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_last_check).count() <
-        100)
-    {
-        return false;
-    }
-    m_last_check = std::chrono::steady_clock::now();
-
-    LogDebug("Reloading Rendering module");
-
-    auto current_modification_time = std::filesystem::last_write_time(rendering::kRenderingLibName);
-    if (current_modification_time > m_last_modified)
-    {
-        m_last_modified = current_modification_time;
-        create_render_context();
-    }
-
-    return false;
-}
-#endif// HOT_RELOAD
-
-auto PlatformManager::RenderingContextInstance() const -> rendering::IRenderContext&
-{
-    return *m_render_context;
-}
-
-void PlatformManager::create_render_context()
-{
-    if (nullptr != m_render_context)
-    {
-        std::ignore = m_render_context->Shutdown();
-        m_render_context.reset();
-    }
-
-#if defined(HOT_RELOAD)
-    rendering::rendering_shared_lib_out rendering_module;
-    if (!rendering::LoadRenderingModule(rendering_module))
-    {
-        communication::DispatchNow<communication::engine_terminate>();
-        return;
-    }
-    m_render_context = std::unique_ptr<rendering::IRenderContext>(rendering_module.CreateRenderContext());
-#else
-    m_render_context = std::unique_ptr<rendering::IRenderContext>(CreateRenderContext());
-#endif// HOT_RELOAD
-    communication::DispatchNow<communication::rendering_module_reload>();
-}
-
-void PlatformManager::init_vulkan()
-{
-    auto result = m_render_context->Initialize(m_window);
-    if (!result.has_value())
-    {
-        LogCritical("RenderContext could not be initialized! {}", result.error().Message());
-        communication::DispatchNow<communication::engine_terminate>();
-        return;
-    }
-}
-
 void PlatformManager::on_end_frame() const
 {
     glfwSwapBuffers(m_window);
@@ -233,12 +155,6 @@ void PlatformManager::on_engine_terminate()
 
     m_window = nullptr;
     LogInfo("Terminating PlatformManager...");
-
-
-    if (nullptr != m_render_context)
-    {
-        std::ignore = m_render_context->Shutdown();
-    }
 
     glfwTerminate();
 }

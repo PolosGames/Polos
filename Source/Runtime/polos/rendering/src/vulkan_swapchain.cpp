@@ -160,6 +160,8 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 
 auto VulkanSwapchain::Destroy() -> Result<void>
 {
+    LogInfo("Destroying VulkanSwapchain and associated images...");
+
     for (auto const& view : m_image_views) { vkDestroyImageView(m_device, view, nullptr); }
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
 

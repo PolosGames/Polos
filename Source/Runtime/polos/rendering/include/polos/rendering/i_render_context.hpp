@@ -9,6 +9,8 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/texture_2d.hpp"
 
+#include "polos/rendering/module_macros.hpp"
+
 namespace polos::rendering
 {
 
@@ -29,5 +31,10 @@ public:
 };
 
 }// namespace polos::rendering
+
+extern "C"
+{
+    [[nodiscard]] RENDERING_EXPORT polos::rendering::IRenderContext* CreateRenderContext();
+}
 
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_CONTEXT_HPP_

@@ -27,9 +27,9 @@ namespace polos::utils
 
 struct base_shared_lib_out
 {
-    utils::LibHandle handle;
+    utils::LibHandle handle{nullptr};
 
-    std::time_t last_write_time;
+    std::time_t last_write_time{0};
     std::string temp_dll_path;
 };
 
@@ -62,12 +62,16 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
         return false;
     }
 
+    LogDebug("-- Found SO {}, loading...", original_dll_path.string());
+
     t_dll_out.handle = dlopen(original_dll_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (nullptr == t_dll_out.handle)
     {
         LogError("Failed to load SO from {} : {}", original_dll_path.string(), std::string(dlerror()));
         return false;
     }
+
+    LogDebug("-- Successfully loaded {}", original_dll_path.string());
 
     return true;
 }
@@ -83,6 +87,9 @@ inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, 
         LogError("Failed to get function {} from Shared lib. {}", t_func_name, dlerror());
         return false;
     }
+
+    LogDebug("-- Successfully got function {}", t_func_name);
+
     return true;
 }
 

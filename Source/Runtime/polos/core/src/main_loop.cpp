@@ -9,11 +9,9 @@
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/render_update.hpp"
-#include "polos/communication/rendering_module_reload.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/platform/platform_manager.hpp"
-#include "polos/rendering/system/clear_screen_system.hpp"
+#include "polos/rendering/rendering_api.hpp"
 #include "polos/utils/time.hpp"
 
 #include <chrono>
@@ -47,8 +45,6 @@ void MainLoop::Run()
     constexpr std::int16_t const target_frames{60};
     constexpr Duration const     kTimestep{1_sec / target_frames};
 
-    auto& render_context = platform::PlatformManager::Instance().RenderingContextInstance();
-
     while (m_is_running)
     {
         auto current_time = utils::GetTimeNow();
@@ -59,21 +55,19 @@ void MainLoop::Run()
 
         std::float_t delta_time_in_secs = utils::ConvertToSeconds(delta_time);
 
-        while (lag >= kTimestep)
-        {
-            communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
-            lag -= kTimestep;
-        }
+        communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
+        lag -= kTimestep;
 
-        std::ignore = render_context.BeginFrame();
+        rendering::RenderingApi::BeginFrame();
         communication::DispatchNow<communication::render_update>(delta_time_in_secs);
 
-        render_context.EndFrame();
+        rendering::RenderingApi::EndFrame();
         communication::DispatchNow<communication::end_frame>();
 
         communication::DispatchDeferredEvents();
+
 #if defined(HOT_RELOAD)
-        platform::PlatformManager::Instance().CheckNeedModuleReload();
+        rendering::RenderingApi::ReloadIfNeeded();
 #endif// HOT_RELOAD
     }
 

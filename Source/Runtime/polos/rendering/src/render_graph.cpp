@@ -28,7 +28,6 @@ auto RenderGraph::Create(render_graph_creation_details const& t_details) -> Resu
 
 auto RenderGraph::Destroy() -> Result<void>
 {
-    for (auto& pass : m_passes) { vkDestroyRenderPass(m_device, pass->vk_pass, nullptr); }
     return {};
 }
 

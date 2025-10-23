@@ -15,6 +15,7 @@
 #endif
 
 #include "polos/rendering/i_render_context.hpp"
+#include "polos/rendering/module_macros.hpp"
 
 struct GLFWwindow;
 
@@ -24,12 +25,13 @@ namespace polos::rendering
 #if defined(POLOS_WIN)
 inline constexpr char const* kRenderingLibName{"polos_rendering.dll"};
 #elif defined(POLOS_LINUX)
-inline constexpr char const* kRenderingLibName{"libpolos_rendering.so"};
+inline constexpr char const* kRenderingLibName{"libpolos_rendering_impl.so"};
 #endif
 
 struct rendering_shared_lib_out : utils::base_shared_lib_out
 {
-    IRenderContext* (*CreateRenderContext)();
+    using CreateRenderContextFuncT = IRenderContext* (*)();
+    CreateRenderContextFuncT CreateRenderContext{nullptr};
 };
 
 inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
@@ -46,15 +48,16 @@ inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
         return false;
     }
 
+    LogDebug("-- Successfully loaded Rendering module!");
+
     return true;
 }
 
 inline void UnloadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
-    if (t_dll_out.handle != nullptr)
-    {
-        polos::utils::UnloadSharedLib(t_dll_out);
-    }
+    polos::utils::UnloadSharedLib(t_dll_out);
+
+    LogDebug("-- Successfully unloaded Rendering module!");
 }
 
 }// namespace polos::rendering

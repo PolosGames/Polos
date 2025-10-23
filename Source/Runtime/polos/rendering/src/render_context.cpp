@@ -284,9 +284,11 @@ auto RenderContext::Shutdown() -> Result<void>
     if (!m_is_initialized)
         return {};
 
+    LogInfo("Waiting for device idle to destroy Vulkan RenderContext...");
+
     vkDeviceWaitIdle(m_device->logi_device);
 
-    std::ignore = m_render_graph->Destroy();
+    LogInfo("Destroying Vulkan resources...");
 
     for (std::uint32_t i{0U}; i < m_swapchain->GetImageCount(); ++i)
     {
@@ -298,8 +300,6 @@ auto RenderContext::Shutdown() -> Result<void>
         vkDestroySemaphore(m_device->logi_device, m_acquire_semaphores[i], nullptr);
         vkDestroyFence(m_device->logi_device, m_frame_fences[i], nullptr);
     }
-
-    vkFreeCommandBuffers(m_device->logi_device, m_command_pool, kMaxFramesInFlight, m_frame_command_buffers.data());
     vkDestroyCommandPool(m_device->logi_device, m_command_pool, nullptr);
 
     for (auto const& fbs : m_transient_fbufs)
@@ -308,14 +308,17 @@ auto RenderContext::Shutdown() -> Result<void>
             vkDestroyFramebuffer(m_device->logi_device, t_fbuf, nullptr);
         });
     }
-    for (auto pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
-
     std::ignore = m_pipeline_cache->Destroy();
+    for (auto pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
     std::ignore = m_vrm->Destroy();
+
+    std::ignore = m_render_graph->Destroy();
     std::ignore = m_swapchain->Destroy();
     std::ignore = m_device->Destroy();
     vkDestroySurfaceKHR(m_context->instance, m_surface, nullptr);
     std::ignore = m_context->Destroy();
+
+    LogInfo("Vulkan destroy complete!");
 
     return {};
 }
@@ -477,3 +480,9 @@ auto RenderContext::AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void
 }
 
 }// namespace polos::rendering
+
+polos::rendering::IRenderContext* CreateRenderContext()
+{
+    // Capsulated in PlatformManager
+    return new polos::rendering::RenderContext{};
+}

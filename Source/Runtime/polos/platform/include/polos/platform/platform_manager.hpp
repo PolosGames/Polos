@@ -8,9 +8,11 @@
 
 #include "polos/platform/module_macros.hpp"
 #include "polos/rendering/i_render_context.hpp"
+#if defined(HOT_RELOAD)
+#    include "polos/rendering/shared_lib_out.hpp"
+#endif// HOT_RELOAD
 
 #include <cstdint>
-#include <filesystem>
 #include <memory>
 #include <string_view>
 
@@ -51,32 +53,16 @@ public:
     auto CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title) -> bool;
     auto ChangeWindowTitle(std::string_view const t_title) -> void;
     auto GetMainWindow() const -> GLFWwindow*;
-
-#if defined(HOT_RELOAD)
-    auto CheckNeedModuleReload() -> bool;
-#endif// HOT_RELOAD
-
-    auto RenderingContextInstance() const -> rendering::IRenderContext&;
 private:
     friend class core::Engine;
 
     static PlatformManager* s_instance;
 
-    void create_render_context();
-    void init_vulkan();
-
     void on_end_frame() const;
     void on_window_close();
     void on_engine_terminate();
-    void on_module_reload(communication::rendering_module_reload& t_event);
 
-    GLFWwindow*                                m_window{nullptr};
-    std::unique_ptr<rendering::IRenderContext> m_render_context;
-
-#if defined(HOT_RELOAD)
-    std::filesystem::file_time_type       m_last_modified;
-    std::chrono::steady_clock::time_point m_last_check;
-#endif// HOT_RELOAD
+    GLFWwindow* m_window{nullptr};
 };
 
 }// namespace polos::platform

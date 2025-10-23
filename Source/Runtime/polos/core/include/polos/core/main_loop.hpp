@@ -32,6 +32,7 @@ private:
     void on_engine_terminate();
 
     bool m_is_running{true};
+    bool m_reload_progress{false};
 };
 }// namespace polos::core
 
