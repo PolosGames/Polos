@@ -8,6 +8,9 @@
 
 #include "polos/communication/error_domain.hpp"
 
+#include <quill/DeferredFormatCodec.h>
+#include <quill/bundled/fmt/ostream.h>
+
 #include <expected>
 #include <functional>
 #include <string_view>
@@ -81,6 +84,8 @@ public:
         return Message();
     }
 private:
+    friend struct quill::DeferredFormatCodec<ErrorCode>;
+
     CodeType                                  m_code;
     std::reference_wrapper<ErrorDomain const> m_domain;
 };
@@ -97,12 +102,26 @@ constexpr inline bool operator!=(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
 
 }// namespace polos::communication
 
+template<>
+struct fmtquill::formatter<polos::communication::ErrorCode> : fmtquill::formatter<std::string_view>
+{
+    auto format(polos::communication::ErrorCode const& event, format_context& ctx) const
+    {
+        return fmtquill::format_to(ctx.out(), "{}", event.Message());
+    }
+};
+
+template<>
+struct quill::Codec<polos::communication::ErrorCode> : quill::DeferredFormatCodec<polos::communication::ErrorCode>
+{
+};
+
 namespace polos
 {
 
 /// @brief Helper alias for return values of functions that return ErrorCode
-template<typename ExpectedT>
-using Result = std::expected<ExpectedT, communication::ErrorCode>;
+template<typename ExpectedT, typename Unexpected = communication::ErrorCode>
+using Result = std::expected<ExpectedT, Unexpected>;
 
 /// @brief Helper alias for returning std::unexpected.
 using ErrorType = std::unexpected<communication::ErrorCode>;

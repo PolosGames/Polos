@@ -5,6 +5,8 @@
 
 #include "polos/rendering/render_context.hpp"
 
+#include "polos/communication/event_bus.hpp"
+#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/i_render_system.hpp"
@@ -17,7 +19,6 @@
 #include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
 
-#include "polos/rendering/render_pass/clear_screen_pass.hpp"
 #include "polos/rendering/system/clear_screen_system.hpp"
 
 #include <GLFW/glfw3.h>
@@ -36,9 +37,9 @@
 
 namespace polos::rendering
 {
-
 namespace
 {
+
 auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueFlags t_flags) -> Result<std::uint32_t>
 {
     std::uint32_t queue_family_count{0U};
@@ -74,7 +75,7 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
 
     if (queue_index == VK_SIZE_CAST(queue_families.size()))
     {
-        return ErrorType{RenderingErrc::kPreferableQueueFamilyNotFound};
+        return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
     }
 
     return queue_index;
@@ -82,7 +83,14 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
 
 }// namespace
 
-RenderContext::RenderContext()  = default;
+RenderContext::RenderContext()
+{
+    communication::Subscribe<communication::window_framebuffer_resize>(
+        [this](communication::window_framebuffer_resize&) {
+            m_framebuffer_resized = true;
+        });
+};
+
 RenderContext::~RenderContext() = default;
 
 auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
@@ -101,14 +109,14 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     // --- Surface Creation ---
     CHECK_VK_SUCCESS_OR_ERR(
         glfwCreateWindowSurface(m_context->instance, m_window, nullptr, &m_surface),
-        RenderingErrc::kSurfaceNotCreated);
+        RenderingErrc::kFailedCreateSurface);
 
     // --- Physical device selection ---
     std::uint32_t device_count{0U};
     vkEnumeratePhysicalDevices(m_context->instance, &device_count, nullptr);
     if (0U == device_count)
     {
-        return ErrorType{RenderingErrc::kNoPhysicalDeviceOnHost};
+        return ErrorType{RenderingErrc::kFailedFindPhysDevice};
     }
 
     std::vector<VkPhysicalDevice> physical_devices(static_cast<std::size_t>(device_count));
@@ -122,7 +130,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_GRAPHICS_BIT);
         if (!q_result.has_value())
         {
-            return ErrorType{RenderingErrc::kPreferableQueueFamilyNotFound};
+            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
         }
         m_queue_family_indices.gfx_q_index = q_result.value();
     }
@@ -130,7 +138,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_TRANSFER_BIT);
         if (!q_result.has_value())
         {
-            return ErrorType{RenderingErrc::kPreferableQueueFamilyNotFound};
+            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
         }
         m_queue_family_indices.transfer_q_index = q_result.value();
     }
@@ -138,7 +146,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_COMPUTE_BIT);
         if (!q_result.has_value())
         {
-            return ErrorType{RenderingErrc::kPreferableQueueFamilyNotFound};
+            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
         }
         m_queue_family_indices.compute_q_index = q_result.value();
     }
@@ -210,7 +218,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 
     CHECK_VK_SUCCESS_OR_ERR(
         vkCreateCommandPool(m_device->logi_device, &pool_info, nullptr, &m_command_pool),
-        RenderingErrc::kCommandPoolNotCreated);
+        RenderingErrc::kFailedCreateCmdPool);
 
     m_frame_command_buffers.resize(kMaxFramesInFlight);
     m_acquire_semaphores.resize(kMaxFramesInFlight);
@@ -231,7 +239,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 
     CHECK_VK_SUCCESS_OR_ERR(
         vkAllocateCommandBuffers(m_device->logi_device, &alloc_info, m_frame_command_buffers.data()),
-        RenderingErrc::kCommandBufferAllocationFail);
+        RenderingErrc::kFailedCmdBufAlloc);
 
     // --- Synchronization objects creation ---
     VkSemaphoreCreateInfo semaphore_info{
@@ -249,17 +257,17 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     {
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_submit_semaphores[i]),
-            RenderingErrc::kSemaphoreCreationFail);
+            RenderingErrc::kFailedCreateSemaphore);
     }
 
     for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
     {
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_acquire_semaphores[i]),
-            RenderingErrc::kSemaphoreCreationFail);
+            RenderingErrc::kFailedCreateSemaphore);
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateFence(m_device->logi_device, &fence_info, nullptr, &m_frame_fences[i]),
-            RenderingErrc::kFenceCreationFail);
+            RenderingErrc::kFailedCreateFence);
     }
 
     {
@@ -342,8 +350,6 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     }
     m_render_graph->Reset();
 
-    vkResetFences(m_device->logi_device, 1U, &m_frame_fences[m_current_frame_index]);
-
     acquire_next_image_details next_img_dets{
         .semaphore = m_acquire_semaphores[m_current_frame_index],
         .fence     = m_frame_fences[m_current_frame_index],
@@ -353,9 +359,13 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     auto acq_result = m_swapchain->AcquireNextImage(next_img_dets);
     if (!acq_result.has_value())
     {
-        LogError("{}", acq_result.error().Message());
+        m_image_acq_results[m_current_frame_index] = ImageAcqusitionResult::kError;
+        onFramebufferResize();
+        LogError("{}", acq_result.error());
         return VK_NULL_HANDLE;
     }
+
+    vkResetFences(m_device->logi_device, 1U, &m_frame_fences[m_current_frame_index]);
 
     m_swapchain_image_index = *acq_result;
 
@@ -379,6 +389,13 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
 
 auto RenderContext::EndFrame() -> void
 {
+    // If image acquisition failed, skip rendering and presentation for this frame
+    if (m_image_acq_results[m_current_frame_index] == ImageAcqusitionResult::kError)
+    {
+        m_image_acq_results[m_current_frame_index] = ImageAcqusitionResult::kSuccess;
+        return;
+    }
+
     for (auto const& system : m_render_systems) { system->Update(); }
 
     m_render_graph->Compile();
@@ -413,8 +430,12 @@ auto RenderContext::EndFrame() -> void
     auto result = m_swapchain->QueuePresent(m_submit_semaphores[m_swapchain_image_index]);
     if (!result.has_value())
     {
-        LogError("{}", result.error().Message());
-        return;
+        if (m_framebuffer_resized)
+        {
+            m_framebuffer_resized = false;
+        }
+        onFramebufferResize();
+        LogError("{}", result.error());
     }
 
     m_current_frame_index = (m_current_frame_index + 1) % kMaxFramesInFlight;
@@ -441,7 +462,7 @@ auto RenderContext::GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2
 {
     if (m_swapchain_image_index > m_swapchain->GetImageCount())
     {
-        return ErrorType{RenderingErrc::kFailedToCreateCurrFrameAsTexture};
+        return ErrorType{RenderingErrc::kFailedCreateCurrFrameAsTexture};
     }
 
     return m_vrm->m_textures[static_cast<std::size_t>(m_swapchain_image_index)];
@@ -467,7 +488,7 @@ auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_lay
 
     CHECK_VK_SUCCESS_OR_ERR(
         vkCreateRenderPass2(m_device->logi_device, &pass_info, nullptr, &vk_render_pass),
-        RenderingErrc::kFailedToCreateRenderPass);
+        RenderingErrc::kFailedCreateRenderPass);
 
     m_vk_render_passes.push_back(vk_render_pass);
 
@@ -477,6 +498,45 @@ auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_lay
 auto RenderContext::AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void
 {
     m_transient_fbufs[m_current_frame_index].push_back(t_fbuf);
+}
+
+void RenderContext::onFramebufferResize()
+{
+    vkDeviceWaitIdle(m_device->logi_device);
+    LogInfo("Recreating swapchain due to framebuffer resize...");
+
+    std::ignore = m_swapchain->Destroy();
+    swapchain_create_details details{
+        .device      = m_device.get(),
+        .phys_device = m_device->phys_device,
+        .surface     = m_surface,
+        .preferred_surface_formats =
+            {
+                {
+                    .format     = VK_FORMAT_B8G8R8A8_SRGB,
+                    .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+                },
+                {
+                    .format     = VK_FORMAT_R8G8B8A8_SRGB,
+                    .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+                },
+            },
+        .preferred_present_modes =
+            {
+                VK_PRESENT_MODE_MAILBOX_KHR,
+                VK_PRESENT_MODE_FIFO_KHR,
+            },
+        .gfx_queue       = m_gfx_queue,
+        .transform_flags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+    };
+    vkDeviceWaitIdle(m_device->logi_device);
+    auto res = m_swapchain->Create(details);
+    if (!res.has_value())
+    {
+        LogCritical("{}", res.error());
+    }
+
+    m_vrm->onFramebufferResize();
 }
 
 }// namespace polos::rendering

@@ -31,15 +31,17 @@ PlatformManager* PlatformManager::s_instance{nullptr};
 
 PlatformManager::PlatformManager()
 {
-    communication::Subscribe<communication::end_frame>([this](communication::end_frame&) {
+    using namespace polos::communication;
+
+    Subscribe<end_frame>([this](end_frame&) {
         on_end_frame();
     });
 
-    communication::Subscribe<communication::window_close>([this](communication::window_close&) {
+    Subscribe<window_close>([this](window_close&) {
         on_window_close();
     });
 
-    communication::Subscribe<communication::engine_terminate>([this](communication::engine_terminate&) {
+    Subscribe<engine_terminate>([this](engine_terminate&) {
         on_engine_terminate();
     });
 

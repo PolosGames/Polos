@@ -104,7 +104,7 @@ auto VulkanContext::Create() -> Result<void>
         .ppEnabledExtensionNames = m_extensions.data(),// provides VK_KHR_swapchain
     };
 
-    CHECK_VK_SUCCESS_OR_ERR(vkCreateInstance(&instance_info, nullptr, &instance), RenderingErrc::kInstanceNotCreated);
+    CHECK_VK_SUCCESS_OR_ERR(vkCreateInstance(&instance_info, nullptr, &instance), RenderingErrc::kFailedCreateInstance);
 
 #ifndef NDEBUG
     VkDebugUtilsMessengerCreateInfoEXT debug_info_2 = create_debug_messenger_create_info();

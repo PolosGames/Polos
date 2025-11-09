@@ -49,8 +49,9 @@ public:
     auto GetShaderModule(std::string const& t_name) -> VkShaderModule;
     auto GetTexture(std::string const& t_name) -> VkShaderModule;
 private:
-    auto load_shader_from_file(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
+    auto loadShaderFromFile(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
         -> Result<std::pair<std::string, shader>>;
+    auto onFramebufferResize() -> void;
 
     friend class RenderContext;
     static VulkanResourceManager* s_instance;

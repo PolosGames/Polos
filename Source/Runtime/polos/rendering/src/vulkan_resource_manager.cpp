@@ -6,6 +6,8 @@
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
 #include "polos/communication/error_code.hpp"
+#include "polos/communication/event_bus.hpp"
+#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
@@ -32,7 +34,7 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
 
     for (auto const& shader_file : t_details.shader_files)
     {
-        auto shader_result = load_shader_from_file(shader_file.first, shader_file.second);
+        auto shader_result = loadShaderFromFile(shader_file.first, shader_file.second);
         if (!shader_result.has_value())
         {
             return ErrorType{shader_result.error()};
@@ -78,20 +80,20 @@ auto VulkanResourceManager::GetShaderModule(std::string const& t_name) -> VkShad
     return it->second.module;
 }
 
-auto VulkanResourceManager::load_shader_from_file(
+auto VulkanResourceManager::loadShaderFromFile(
     std::string_view const       t_shader_custom_name,
     std::filesystem::path const& t_path) -> Result<std::pair<std::string, shader>>
 {
     auto shader_code = fs::ReadFile(t_path);
     if (!shader_code.has_value())
     {
-        return ErrorType{RenderingErrc::kShaderModuleNotCreated};
+        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
 
     if (shader_code->data.size() % 4 != 0)// ensure we can convert to std::uint32_t
     {
         LogError("The SPIR-V code that has been read cannot be used for shader creation!");
-        return ErrorType{RenderingErrc::kShaderModuleNotCreated};
+        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
 
     union byte_to_uint32
@@ -125,7 +127,7 @@ auto VulkanResourceManager::load_shader_from_file(
     VkResult result = vkCreateShaderModule(m_device, &create_info, nullptr, &shader_module);
     if (result != VK_SUCCESS)
     {
-        return ErrorType{RenderingErrc::kShaderModuleNotCreated};
+        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
 
     return std::pair<std::string, shader>{
@@ -133,6 +135,18 @@ auto VulkanResourceManager::load_shader_from_file(
         shader{
             .module = shader_module,
         }};
+}
+
+auto VulkanResourceManager::onFramebufferResize() -> void
+{
+    VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
+
+    for (std::uint32_t i{0U}; i < m_swapchain->GetImageCount(); ++i)
+    {
+        m_textures[i]->image  = m_swapchain->GetImage(i);
+        m_textures[i]->view   = m_swapchain->GetImageView(i);
+        m_textures[i]->extent = sc_img_ext;
+    }
 }
 
 VulkanResourceManager& GetVRM()

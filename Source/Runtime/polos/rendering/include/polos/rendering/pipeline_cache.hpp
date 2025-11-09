@@ -20,8 +20,7 @@ class VulkanSwapchain;
 
 struct pipeline_cache_create_details
 {
-    VkDevice logi_device{VK_NULL_HANDLE};
-
+    VkDevice         logi_device{VK_NULL_HANDLE};
     VulkanSwapchain* swapchain{nullptr};
 };
 

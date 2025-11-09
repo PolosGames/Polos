@@ -142,7 +142,7 @@ auto RenderGraph::ImportTexture(std::string_view t_name, std::shared_ptr<texture
 {
     RenderGraphResourceHandle handle = create_handle(RenderGraphResourceType::kTexture);
 
-    auto& node = m_resources[handle.Index()];
+    render_graph_resource_node& node = m_resources[handle.Index()];
 
     node.name         = t_name;
     node.handle       = handle;
