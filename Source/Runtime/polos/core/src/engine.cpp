@@ -5,8 +5,6 @@
 
 #include "polos/core/engine.hpp"
 
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/event_bus.hpp"
 #include "polos/core/engine_layer.hpp"
 #include "polos/core/main_loop.hpp"
 #include "polos/logging/log_macros.hpp"

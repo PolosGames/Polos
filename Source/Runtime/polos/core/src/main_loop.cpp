@@ -26,11 +26,13 @@ MainLoop::MainLoop()
 {
     LogInfo("MainLoop constructed!");
 
-    communication::Subscribe<communication::window_close>([this](communication::window_close&) {
+    using namespace polos::communication;
+
+    Subscribe<window_close>([this](window_close&) {
         on_window_close();
     });
 
-    communication::Subscribe<communication::engine_terminate>([this](communication::engine_terminate&) {
+    Subscribe<engine_terminate>([this](engine_terminate&) {
         on_engine_terminate();
     });
 }

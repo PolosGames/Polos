@@ -34,7 +34,7 @@ void ClearScreenSystem::Initialize()
     auto frame_as_texture_res = m_context.GetCurrentFrameTexture();
     if (!frame_as_texture_res.has_value())
     {
-        LogError("Could not acquire current frame as a texture. Skipping ClearScreenSystem::Update");
+        LogError("{}", frame_as_texture_res.error());
         return;
     }
 
@@ -111,7 +111,7 @@ void ClearScreenSystem::Update()
     auto frame_as_texture_res = m_context.GetCurrentFrameTexture();
     if (!frame_as_texture_res.has_value())
     {
-        LogError("Could not acquire current frame as a texture. Skipping ClearScreenSystem::Update");
+        LogError("{}", frame_as_texture_res.error());
         return;
     }
 

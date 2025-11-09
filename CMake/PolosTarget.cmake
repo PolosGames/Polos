@@ -39,15 +39,15 @@ macro(define_polos_module)
         endif()
     endif ()
 
-    set_target_properties(
-        ${MODULE_NAME} PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
-        POSITION_INDEPENDENT_CODE True
-        OUTPUT_NAME               "polos_${MODULE_NAME}"
-        CXX_VISIBILITY_PRESET     hidden
-        VISIBILITY_INLINES_HIDDEN True
-        LINKER_LANGUAGE           CXX
+    set_target_properties(${MODULE_NAME}
+        PROPERTIES
+            CXX_STANDARD              ${POLOS_CXX_STANDARD}
+            CXX_STANDARD_REQUIRED     True
+            POSITION_INDEPENDENT_CODE True
+            OUTPUT_NAME               "polos_${MODULE_NAME}"
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN True
+            LINKER_LANGUAGE           CXX
     )
 
     if (LINUX)
@@ -230,11 +230,18 @@ macro(define_polos_module)
     install(
         TARGETS ${MODULE_NAME}
         LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        #PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
+        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
         PERMISSIONS OWNER_READ OWNER_WRITE
     )
+
+    if (WIN32 AND MODULE_TYPE STREQUAL "SHARED")
+        install(
+            TARGETS ${MODULE_NAME}
+            ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            PERMISSIONS   OWNER_READ OWNER_WRITE
+        )
+    endif()
 endmacro()
 
 # NAME: Should be the same as the folder name where this macro is called as well.

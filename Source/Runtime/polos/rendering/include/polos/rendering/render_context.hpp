@@ -19,7 +19,12 @@
 namespace polos::platform
 {
 class PlatformManager;
-}
+}// namespace polos::platform
+
+namespace polos::communication
+{
+struct window_framebuffer_resize;
+}// namespace polos::communication
 
 namespace polos::rendering
 {
@@ -62,6 +67,8 @@ public:
 private:
     friend class platform::PlatformManager;
 
+    void onFramebufferResize();
+
     GLFWwindow*                                            m_window{nullptr};
     std::unique_ptr<VulkanContext>                         m_context;
     std::unique_ptr<VulkanDevice>                          m_device;
@@ -84,9 +91,18 @@ private:
     std::vector<VkRenderPass>                                  m_vk_render_passes;
     std::array<std::vector<VkFramebuffer>, kMaxFramesInFlight> m_transient_fbufs;
 
+    enum class ImageAcqusitionResult
+    {
+        kSuccess,
+        kError,
+    };
+    std::array<ImageAcqusitionResult, kMaxFramesInFlight> m_image_acq_results;
+
     VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
     VkQueue              m_gfx_queue{VK_NULL_HANDLE};
     queue_family_indices m_queue_family_indices;
+
+    bool m_framebuffer_resized{false};
 
     bool m_is_initialized{false};
 };

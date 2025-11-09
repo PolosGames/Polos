@@ -3,10 +3,13 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#define NOMINMAX
-#include <windows.h>
+#include "polos/polos_config.hpp"
 
-#include "polos/logging/log_macros.hpp"
+#if defined(POLOS_WIN)
+#    define NOMINMAX
+#    include <windows.h>
+
+#    include "polos/logging/log_macros.hpp"
 
 BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
 {
@@ -20,7 +23,7 @@ BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
             // Code to run when a thread is created or destroyed
             break;
         case DLL_PROCESS_DETACH:
-            LogCriticalCtx(LOG_CTX_POLOS, "Unloding Rendering.dll");
+            LogCriticalCtx(LOG_CTX_POLOS, "Unloding polos_rendering.dll");
             // Ensure any pending logs are flushed before the DLL is unloaded
             polos::logging::FlushLogger(LOG_CTX_APP);
             polos::logging::FlushLogger(LOG_CTX_POLLY);
@@ -29,3 +32,4 @@ BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
     }
     return TRUE;// Successfully processed
 }
+#endif// POLOS_WIN

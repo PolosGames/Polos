@@ -8,7 +8,6 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
-#include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
@@ -16,7 +15,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <limits>
 
 namespace polos::rendering
 {
@@ -119,12 +117,16 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 
     CHECK_VK_SUCCESS_OR_ERR(
         vkCreateSwapchainKHR(m_device, &info, nullptr, &m_swapchain),
-        RenderingErrc::kSwapchainNotCreated);
+        RenderingErrc::kFailedCreateSwapchain);
+
+    LogInfo("Swapchain object created, receiving images for it...");
 
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, nullptr);
     m_images.resize(static_cast<std::size_t>(m_img_count));
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, m_images.data());
     m_image_views.resize(static_cast<std::size_t>(m_img_count));
+
+    LogInfo("Received {} swapchain images.", m_img_count);
 
     for (std::size_t i = 0U; i < static_cast<std::size_t>(m_img_count); ++i)
     {
@@ -152,8 +154,11 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateImageView(t_details.device->logi_device, &create_info, nullptr, &m_image_views[i]),
-            RenderingErrc::kSwapchainImageViewCreationFail);
+            RenderingErrc::kFailedCreateSwapchainImageViews);
     }
+
+    LogInfo("Created {} image views.", m_image_views.size());
+    LogInfo("Swapchain creation done!");
 
     return {};
 }
@@ -162,8 +167,14 @@ auto VulkanSwapchain::Destroy() -> Result<void>
 {
     LogInfo("Destroying VulkanSwapchain and associated images...");
 
-    for (auto const& view : m_image_views) { vkDestroyImageView(m_device, view, nullptr); }
+    std::ranges::for_each(m_image_views, [this](VkImageView& t_view) {
+        vkDestroyImageView(m_device, t_view, nullptr);
+    });
+
     vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+    m_image_views.clear();
+    m_images.clear();
 
     return {};
 }
@@ -190,15 +201,20 @@ auto VulkanSwapchain::GetViewport() const -> VkViewport const&
 
 auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>
 {
-    CHECK_VK_SUCCESS_OR_ERR(
-        vkAcquireNextImageKHR(
-            m_device,
-            m_swapchain,
-            t_details.timeout,
-            t_details.semaphore,
-            VK_NULL_HANDLE,
-            &m_current_image),
-        RenderingErrc::kFailedToAcquireSwapchainImage);
+    VkResult res = vkAcquireNextImageKHR(
+        m_device,
+        m_swapchain,
+        t_details.timeout,
+        t_details.semaphore,
+        VK_NULL_HANDLE,
+        &m_current_image);
+
+    if (VK_ERROR_OUT_OF_DATE_KHR == res)
+    {
+        LogError("Swapchain image is out of date.");
+    }
+
+    CHECK_VK_SUCCESS_OR_ERR(res, RenderingErrc::kFailedAcquireNextImage);
 
     return m_current_image;
 }
@@ -218,12 +234,12 @@ auto VulkanSwapchain::QueuePresent(VkSemaphore t_wait_semaphore) const -> Result
 
     VkResult res = vkQueuePresentKHR(m_gfx_queue, &present_info);
 
-    if (VK_ERROR_OUT_OF_DATE_KHR == res || VK_SUBOPTIMAL_KHR == res)
+    if (VK_ERROR_OUT_OF_DATE_KHR == res)
     {
         LogError("Swapchain image is out of date.");
     }
 
-    CHECK_VK_SUCCESS_OR_ERR(res, RenderingErrc::kFailedToPresentQueue);
+    CHECK_VK_SUCCESS_OR_ERR(res, RenderingErrc::kFailedPresentQueue);
 
     return {};
 }

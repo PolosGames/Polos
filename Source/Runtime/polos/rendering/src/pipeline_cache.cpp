@@ -56,7 +56,7 @@ auto PipelineCache::GetPipeline(utils::string_id const t_pipeline_name) const ->
     auto it = m_cache.find(t_pipeline_name);
     if (it == m_cache.end())
     {
-        return ErrorType{RenderingErrc::kPipelineNotFoundInCache};
+        return ErrorType{RenderingErrc::kFailedFindPipeline};
     };
 
     return it->second;
@@ -234,7 +234,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
 
     if (vkCreatePipelineLayout(m_device, &pipeline_layout_info, nullptr, &pipeline_layout) != VK_SUCCESS)
     {
-        return ErrorType{RenderingErrc::kFailedToCreatePipelineLayout};
+        return ErrorType{RenderingErrc::kFailedCreatePipelineLayout};
     }
 
     VkGraphicsPipelineCreateInfo pipeline_info{
@@ -268,7 +268,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
             nullptr,
             &m_cache[pipeline_key].pipeline) != VK_SUCCESS)
     {
-        return ErrorType{RenderingErrc::kFailedToCreatePipeline};
+        return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
     m_cache.insert({pipeline_key, {pipeline, pipeline_layout}});

@@ -10,7 +10,6 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
-#include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
 #include <algorithm>
@@ -152,7 +151,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
 
     CHECK_VK_SUCCESS_OR_ERR(
         vkCreateDevice(phys_device, &device_create_info, nullptr, &logi_device),
-        RenderingErrc::kFailedDeviceCreation);
+        RenderingErrc::kFailedCreateDevice);
 
     return {};
 }
