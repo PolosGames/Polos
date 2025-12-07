@@ -39,6 +39,8 @@ enum class RenderingErrc : communication::ErrorDomain::CodeType
     kFailedCreateRenderPass,
     kFailedFindPipeline,
     kFailedAcquireNextImage,
+    kFailedCreateImage,
+    kFailedCreateBuffer,
 
     kRenderingErrcCount,
 };
@@ -72,6 +74,8 @@ public:
               "Failed to create render pass for a pass object! Exiting...",
               "Failed to find pipeline in cache! Please create it first.",
               "Failed to acquire next image from the swapchain! Recreating swapchain...",
+              "Failed to create VMA image allocation!",
+              "Failed to create VMA buffer allocation!",
           })
     {}
 

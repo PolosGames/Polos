@@ -7,11 +7,13 @@
 #define POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/shader.hpp"
 
-#include <filesystem>
+#include <vk_mem_alloc.h>
+
+#include <vulkan/vulkan.h>
+
+#include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace polos::rendering
@@ -24,11 +26,9 @@ struct texture_2d;
 
 struct alignas(64) resource_manager_create_details// NOLINT
 {
-    // Custom name, Path
     VkDevice         device;
+    VmaAllocator     allocator;
     VulkanSwapchain* swapchain;
-
-    std::vector<std::pair<std::string, std::filesystem::path>> shader_files;
 };
 
 class VulkanResourceManager
@@ -47,26 +47,35 @@ public:
     auto Create(resource_manager_create_details const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    auto GetShaderModule(std::string const& t_name) -> VkShaderModule;
+    auto CreateImage(
+        VkImageCreateInfo const& t_image_info,
+        VmaMemoryUsage           t_usage,
+        VkImage&                 t_image,
+        VmaAllocation&           t_allocation) -> Result<void>;
+
+    auto DestroyImage(VkImage t_image, VmaAllocation t_allocation) -> void;
+
+    auto CreateBuffer(
+        VkBufferCreateInfo const& t_buffer_info,
+        VmaMemoryUsage            t_usage,
+        VkBuffer&                 t_buffer,
+        VmaAllocation&            t_allocation) -> Result<void>;
+
+    auto DestroyBuffer(VkBuffer t_buffer, VmaAllocation t_allocation) -> void;
+
     auto GetTexture(std::string const& t_name) -> VkShaderModule;
 private:
-    auto loadShaderFromFile(std::string_view t_shader_custom_name, std::filesystem::path const& t_path)
-        -> Result<std::pair<std::string, shader>>;
     auto onFramebufferResize() -> void;
 
     friend class RenderContext;
     static VulkanResourceManager* s_instance;
 
     VkDevice         m_device{VK_NULL_HANDLE};
+    VmaAllocator     m_allocator{VK_NULL_HANDLE};
     VulkanSwapchain* m_swapchain{nullptr};
 
-    std::unordered_map<std::string, shader>  m_shader_cache;
     std::vector<std::shared_ptr<texture_2d>> m_textures;
 };
-
-using VRM = VulkanResourceManager;
-
-VulkanResourceManager& GetVRM();
 
 }// namespace polos::rendering
 

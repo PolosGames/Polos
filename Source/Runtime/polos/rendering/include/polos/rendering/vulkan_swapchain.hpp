@@ -41,7 +41,7 @@ struct alignas(32) acquire_next_image_details// NOLINT
     std::uint64_t timeout{std::numeric_limits<std::uint64_t>::max()};
 };
 
-class RENDERING_EXPORT VulkanSwapchain
+class VulkanSwapchain
 {
 public:
     explicit VulkanSwapchain(GLFWwindow* t_window);

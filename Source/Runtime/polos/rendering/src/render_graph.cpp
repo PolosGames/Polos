@@ -80,21 +80,14 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
             }
 
             std::vector<VkImageView> attachment_views;
-            VkExtent2D               root_extent;
+            attachment_views.reserve(pass.attachments.size());
 
+            VkExtent2D const   root_extent = GetResourceNode(pass.attachments[0].handle).raw_resource->extent;
             VkClearValue const clear_color = pass.attachments[0].clear_value;
-
-            if (auto const ptr = GetResourceNode(pass.attachments[0].handle).raw_resource)
-            {
-                root_extent = ptr->extent;
-            }
 
             for (auto const& attachment : pass.attachments)
             {
-                if (auto const ptr = GetResourceNode(attachment.handle).raw_resource)
-                {
-                    attachment_views.push_back(ptr->view);
-                }
+                attachment_views.push_back(GetResourceNode(attachment.handle).raw_resource->view);
             }
 
             VkFramebufferCreateInfo const fb_info{

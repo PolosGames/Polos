@@ -10,8 +10,9 @@
 #    include <windows.h>
 
 #    include "polos/logging/log_macros.hpp"
+#    include "polos/logging/logger.hpp"
 
-BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
+BOOL APIENTRY DllMain(HMODULE /*h_module*/, DWORD ul_reason_for_call, LPVOID /*reserved*/)
 {
     switch (ul_reason_for_call)
     {
@@ -23,13 +24,13 @@ BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
             // Code to run when a thread is created or destroyed
             break;
         case DLL_PROCESS_DETACH:
-            LogCriticalCtx(LOG_CTX_POLOS, "Unloding polos_rendering.dll");
+            LogCriticalCtx(LOG_CTX_POLOS, "Unloading polos_rendering.dll");
             // Ensure any pending logs are flushed before the DLL is unloaded
             polos::logging::FlushLogger(LOG_CTX_APP);
             polos::logging::FlushLogger(LOG_CTX_POLLY);
             polos::logging::FlushLogger(LOG_CTX_POLOS);
             break;
     }
-    return TRUE;// Successfully processed
+    return TRUE;
 }
 #endif// POLOS_WIN

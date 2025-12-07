@@ -8,6 +8,7 @@
 #include "polos/communication/error_code.hpp"
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/texture_2d.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
@@ -32,24 +33,15 @@ auto VulkanResourceManager::Instance() -> VulkanResourceManager&
 auto VulkanResourceManager::Create(resource_manager_create_details const& t_details) -> Result<void>
 {
     m_device    = t_details.device;
+    m_allocator = t_details.allocator;
     m_swapchain = t_details.swapchain;
-
-    for (auto const& shader_file : t_details.shader_files)
-    {
-        auto const shader_result = loadShaderFromFile(shader_file.first, shader_file.second);
-        if (!shader_result.has_value())
-        {
-            return ErrorType{shader_result.error()};
-        }
-
-        m_shader_cache.try_emplace(shader_result->first, shader_result->second.module);
-    }
 
     VkFormat const   sc_img_fmt = m_swapchain->GetSurfaceFormat().format;
     VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
 
     // Create swapchain images as textures if they have been created.
     // always make sure they are the first n images.
+    // Note: Swapchain images are not allocated with VMA (managed by swapchain)
     std::uint32_t const img_count = m_swapchain->GetImageCount();
     for (std::uint32_t i{0U}; i < img_count; ++i)
     {
@@ -57,6 +49,7 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
             std::make_shared<texture_2d>(
                 m_swapchain->GetImage(i),
                 m_swapchain->GetImageView(i),
+                VK_NULL_HANDLE,// No VMA allocation for swapchain images
                 sc_img_fmt,
                 sc_img_ext,
                 VK_SAMPLE_COUNT_1_BIT));
@@ -65,85 +58,72 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
     return {};
 }
 
-auto VulkanResourceManager::Destroy() -> Result<void>
+auto VulkanResourceManager::Destroy() -> Result<void>// NOLINT
 {
-    for (auto const& [name, shader] : m_shader_cache) { vkDestroyShaderModule(m_device, shader.module, nullptr); }
+    // Clean up any VMA-allocated textures
+    for (auto& texture : m_textures)
+    {
+        if (texture && texture->allocation != VK_NULL_HANDLE)
+        {
+            if (texture->view != VK_NULL_HANDLE)
+            {
+                vkDestroyImageView(m_device, texture->view, nullptr);
+            }
+            vmaDestroyImage(m_allocator, texture->image, texture->allocation);
+        }
+    }
+    m_textures.clear();
+
     return {};
 }
 
-auto VulkanResourceManager::GetShaderModule(std::string const& t_name) -> VkShaderModule
+auto VulkanResourceManager::CreateImage(
+    VkImageCreateInfo const& t_image_info,
+    VmaMemoryUsage           t_usage,
+    VkImage&                 t_image,
+    VmaAllocation&           t_allocation) -> Result<void>
 {
-    auto const itr = m_shader_cache.find(t_name);
-    if (itr == m_shader_cache.end())
-    {
-        LogWarn("Requested shader not found in cache");
-        return VK_NULL_HANDLE;
-    }
+    VmaAllocationCreateInfo alloc_info{};
+    alloc_info.usage = t_usage;
 
-    return itr->second.module;
+    CHECK_VK_SUCCESS_OR_ERR(
+        vmaCreateImage(m_allocator, &t_image_info, &alloc_info, &t_image, &t_allocation, nullptr),
+        RenderingErrc::kFailedCreateImage);
+
+    return {};
 }
 
-auto VulkanResourceManager::loadShaderFromFile(
-    std::string_view const       t_shader_custom_name,
-    std::filesystem::path const& t_path) -> Result<std::pair<std::string, shader>>
+auto VulkanResourceManager::DestroyImage(VkImage t_image, VmaAllocation t_allocation) -> void
 {
-    auto const shader_code = fs::ReadFile(t_path);
-    if (!shader_code.has_value())
-    {
-        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
-    }
+    vmaDestroyImage(m_allocator, t_image, t_allocation);
+}
 
-    if (shader_code->data.size() % 4 != 0)// ensure we can convert to std::uint32_t
-    {
-        LogError("The SPIR-V code that has been read cannot be used for shader creation!");
-        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
-    }
+auto VulkanResourceManager::CreateBuffer(
+    VkBufferCreateInfo const& t_buffer_info,
+    VmaMemoryUsage            t_usage,
+    VkBuffer&                 t_buffer,
+    VmaAllocation&            t_allocation) -> Result<void>
+{
+    VmaAllocationCreateInfo alloc_info{};
+    alloc_info.usage = t_usage;
 
-    union byte_to_uint32
-    {
-        std::array<std::byte, 4> array;
-        std::uint32_t            opcode{0U};
-    } converter;
+    CHECK_VK_SUCCESS_OR_ERR(
+        vmaCreateBuffer(m_allocator, &t_buffer_info, &alloc_info, &t_buffer, &t_allocation, nullptr),
+        RenderingErrc::kFailedCreateBuffer);
 
-    std::vector<std::uint32_t> code(shader_code->data.size() / 4);
-    std::size_t const          code_size = code.size();
-    for (std::size_t i{0U}; i < code_size; ++i)
-    {
-        std::size_t const current_uint = i * 4;
-        converter.array[0]             = shader_code->data[current_uint + 0];
-        converter.array[1]             = shader_code->data[current_uint + 1];
-        converter.array[2]             = shader_code->data[current_uint + 2];
-        converter.array[3]             = shader_code->data[current_uint + 3];
+    return {};
+}
 
-        code[i] = converter.opcode;
-    }
-
-    VkShaderModuleCreateInfo const create_info{
-        .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-        .pNext    = nullptr,
-        .flags    = 0U,
-        .codeSize = shader_code->data.size(),
-        .pCode    = code.data(),
-    };
-
-    VkShaderModule shader_module{VK_NULL_HANDLE};
-
-    if (VkResult const result = vkCreateShaderModule(m_device, &create_info, nullptr, &shader_module);
-        result != VK_SUCCESS)
-    {
-        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
-    }
-
-    return std::pair<std::string, shader>{
-        t_shader_custom_name.data(),
-        shader{
-            .module = shader_module,
-        }};
+auto VulkanResourceManager::DestroyBuffer(VkBuffer t_buffer, VmaAllocation t_allocation) -> void
+{
+    vmaDestroyBuffer(m_allocator, t_buffer, t_allocation);
 }
 
 auto VulkanResourceManager::onFramebufferResize() -> void
 {
     VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
+
+    LogInfo("Updating texture extents to {}x{} due to framebuffer resize.", sc_img_ext.width, sc_img_ext.height);
 
     std::uint32_t const img_count = m_swapchain->GetImageCount();
     for (std::uint32_t i{0U}; i < img_count; ++i)
@@ -152,11 +132,6 @@ auto VulkanResourceManager::onFramebufferResize() -> void
         m_textures[i]->view   = m_swapchain->GetImageView(i);
         m_textures[i]->extent = sc_img_ext;
     }
-}
-
-VulkanResourceManager& GetVRM()
-{
-    return VRM::Instance();
 }
 
 }// namespace polos::rendering

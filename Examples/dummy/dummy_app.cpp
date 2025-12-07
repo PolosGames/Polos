@@ -17,6 +17,11 @@
 #include <polos/communication/rendering_module_reload.hpp>
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
+#include <polos/rendering/material.hpp>
+#include <polos/rendering/rendering_api.hpp>
+#include <polos/rendering/scene.hpp>
+
+#include <memory>
 
 namespace dummy_app
 {
@@ -40,6 +45,10 @@ void DummyApp::Create()
         [this](polos::communication::key_release& t_event) {
             on_key_release(t_event);
         });
+
+    polos::rendering::RenderingApi::GetMainScene()->AddObject(
+        glm::mat4{1.0F},
+        std::make_shared<polos::rendering::material>());
 }
 
 void DummyApp::Destroy() {}

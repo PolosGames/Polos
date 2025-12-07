@@ -132,6 +132,17 @@
             },
             "displayName": "x64-Debug",
             "configurePreset": "linux-debug"
+        },
+        {
+            "name": "linux-release",
+            "inherits": "base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "displayName": "x64-Release",
+            "configurePreset": "linux-release"
         }
     ],
     "testPresets": [

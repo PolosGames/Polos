@@ -75,8 +75,9 @@ auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> 
         m_surface_cap.minImageExtent.height,
         m_surface_cap.maxImageExtent.height);
 
-    m_scissor.offset = {.x = 0, .y = 0};
-    m_scissor.extent = m_extent;
+    m_scissor.offset.x = 0;
+    m_scissor.offset.y = 0;
+    m_scissor.extent   = m_extent;
 
     m_viewport.x        = 0.0F;
     m_viewport.y        = 0.0F;
@@ -86,7 +87,6 @@ auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> 
     m_viewport.maxDepth = 1.0F;
 
     m_img_count = m_surface_cap.minImageCount + 1U;
-    // No need to have more images then the surface supports for now.
     if (m_surface_cap.maxImageCount > 0U && m_img_count > m_surface_cap.maxImageCount)
     {
         m_img_count = m_surface_cap.maxImageCount;

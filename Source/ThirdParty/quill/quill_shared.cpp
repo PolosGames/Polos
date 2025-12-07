@@ -19,20 +19,24 @@
 
 namespace polos::logging
 {
-QUILL_EXPORT quill::Logger const* g_polos_logger;
-QUILL_EXPORT quill::Logger const* g_polly_logger;
-QUILL_EXPORT quill::Logger const* g_app_logger;
+QUILL_EXPORT quill::Logger const* g_polos_logger;// NOLINT
+QUILL_EXPORT quill::Logger const* g_polly_logger;// NOLINT
+QUILL_EXPORT quill::Logger const* g_app_logger;  // NOLINT
 
 void setup_quill()
 {
+#if defined(NDEBUG)
+    static constexpr quill::LogLevel log_level{quill::LogLevel::Info};
+#else
     static constexpr quill::LogLevel log_level{quill::LogLevel::Debug};
+#endif
 
     quill::BackendOptions const backend_options{};
     quill::Backend::start(backend_options);
 
     quill::PatternFormatterOptions const formatter_options{
-        "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)",// LOG
-        "%H:%M:%S.%Qms"                                                                // TIME
+        "%(log_level:<3): %(logger:<6) [%(short_source_location)] %(message)",// LOG
+        "%H:%M:%S.%Qms"                                                       // TIME
     };
 
     auto const std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");

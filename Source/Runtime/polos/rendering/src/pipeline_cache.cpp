@@ -53,7 +53,6 @@ auto PipelineCache::Destroy() -> Result<void>
     return {};
 }
 
-
 auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Result<vulkan_pipeline>
 {
     auto const itr = m_cache.find(t_pipeline_name);
@@ -70,36 +69,43 @@ auto PipelineCache::GetPipeline(std::string_view const t_pipeline_name) const ->
     return GetPipeline(utils::StrHash64(t_pipeline_name));
 }
 
-auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipeline_info) -> Result<vulkan_pipeline>
+auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_info) -> Result<vulkan_pipeline>
 {
-    // --- Pipeline cache gathering stage (OPTIONAL, no errors emitted) ---
-    {// START pipeline cache create
-        VkPipelineCacheCreateInfo info{
-            .sType           = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
-            .pNext           = nullptr,
-            .flags           = 0U,
-            .initialDataSize = 0U,
-            .pInitialData    = nullptr,
-        };
+    // // --- Pipeline cache gathering stage (OPTIONAL, no errors emitted) ---
+    // {// START pipeline cache create
+    //     VkPipelineCacheCreateInfo info{
+    //         .sType           = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+    //         .pNext           = nullptr,
+    //         .flags           = 0U,
+    //         .initialDataSize = 0U,
+    //         .pInitialData    = nullptr,
+    //     };
 
-        auto res = fs::ReadFile("Resource/Cache/pipeline.dat"_path);
-        if (!res.has_value())
-        {
-            LogWarn("Something went wrong when opening pipeline cache. |{}|", res.error().Message());
-        }
-        else
-        {
-            info.initialDataSize = res->uncompressed_size;
-            info.pInitialData    = res->data.data();
-        }
+    //     auto res = fs::ReadFile(std::filesystem::path("Resource/Cache/pipeline.dat"));
+    //     if (!res.has_value())
+    //     {
+    //         LogWarn("Something went wrong when opening pipeline cache. |{}|", res.error().Message());
+    //     }
+    //     else
+    //     {
+    //         info.initialDataSize = res->uncompressed_size;
+    //         info.pInitialData    = res->data.data();
+    //     }
 
-        if (vkCreatePipelineCache(m_device, &info, nullptr, &m_creation_cache) != VK_SUCCESS)
-        {
-            LogWarn("Something went wrong while creating VkPipelineCache.");
-        }
-    }// END pipeline cache create
+    //     if (vkCreatePipelineCache(m_device, &info, nullptr, &m_creation_cache) != VK_SUCCESS)
+    //     {
+    //         LogWarn("Something went wrong while creating VkPipelineCache.");
+    //     }
+    // }// END pipeline cache create
 
     utils::string_id const pipeline_key = utils::StrHash64(std::string_view{t_pipeline_info.name});
+
+    auto const itr = m_cache.find(pipeline_key);
+    if (itr != m_cache.end())
+    {
+        LogWarn("You are trying to create a pipeline that already exists in the cache: |{}|", t_pipeline_info.name);
+        return itr->second;
+    }
 
     VkPipelineRenderingCreateInfo const pipeline_rendering_info{
         .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
@@ -117,7 +123,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
             .pNext               = nullptr,
             .flags               = 0U,
             .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .module              = t_pipeline_info.vertex_shader.module,
+            .module              = t_pipeline_info.vertex_shader,
             .pName               = "vertexMain",
             .pSpecializationInfo = nullptr,
         },
@@ -126,24 +132,32 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
             .pNext               = nullptr,
             .flags               = 0U,
             .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module              = t_pipeline_info.fragment_shader.module,
+            .module              = t_pipeline_info.fragment_shader,
             .pName               = "fragmentMain",
             .pSpecializationInfo = nullptr,
         },
     };
 
-    VkPipelineVertexInputStateCreateInfo const vertex_input_info{
+    VkPipelineVertexInputStateCreateInfo vertex_input_info{
         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext                           = nullptr,
         .flags                           = 0U,
-        .vertexBindingDescriptionCount   = VK_SIZE_CAST(t_pipeline_info.vertex_input.bindings.size()),
-        .pVertexBindingDescriptions      = t_pipeline_info.vertex_input.bindings.data(),
-        .vertexAttributeDescriptionCount = VK_SIZE_CAST(t_pipeline_info.vertex_input.attributes.size()),
-        .pVertexAttributeDescriptions    = t_pipeline_info.vertex_input.attributes.data(),
+        .vertexBindingDescriptionCount   = 0U,
+        .pVertexBindingDescriptions      = nullptr,
+        .vertexAttributeDescriptionCount = 0U,
+        .pVertexAttributeDescriptions    = nullptr,
     };
+    if (t_pipeline_info.vertex_input.has_value())
+    {
+        vertex_input_info.vertexBindingDescriptionCount = VK_SIZE_CAST(t_pipeline_info.vertex_input->bindings.size());
+        vertex_input_info.pVertexBindingDescriptions    = t_pipeline_info.vertex_input->bindings.data();
+        vertex_input_info.vertexAttributeDescriptionCount =
+            VK_SIZE_CAST(t_pipeline_info.vertex_input->attributes.size());
+        vertex_input_info.pVertexAttributeDescriptions = t_pipeline_info.vertex_input->attributes.data();
+    }
 
     VkPipelineInputAssemblyStateCreateInfo const input_assembly{
-        .sType                  = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
         .pNext                  = nullptr,
         .flags                  = 0U,
         .topology               = t_pipeline_info.topology,
@@ -235,7 +249,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
 
     VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
 
-    if (vkCreatePipelineLayout(m_device, &pipeline_layout_info, nullptr, &pipeline_layout) != VK_SUCCESS)
+    if (VK_SUCCESS != vkCreatePipelineLayout(m_device, &pipeline_layout_info, nullptr, &pipeline_layout))
     {
         return ErrorType{RenderingErrc::kFailedCreatePipelineLayout};
     }
@@ -263,18 +277,12 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
     };
 
     VkPipeline pipeline{VK_NULL_HANDLE};
-    if (vkCreateGraphicsPipelines(
-            m_device,
-            m_creation_cache,
-            1U,
-            &pipeline_info,
-            nullptr,
-            &m_cache[pipeline_key].pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(m_device, m_creation_cache, 1U, &pipeline_info, nullptr, &pipeline) != VK_SUCCESS)
     {
         return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
-    m_cache.insert({pipeline_key, vulkan_pipeline{.pipeline = pipeline, .layout = pipeline_layout}});
+    m_cache[pipeline_key] = vulkan_pipeline{.pipeline = pipeline, .layout = pipeline_layout};
 
     return m_cache[pipeline_key];
 }

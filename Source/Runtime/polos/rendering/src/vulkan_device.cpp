@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Kayra Urfali
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
+#define VMA_IMPLEMENTATION
 
 #include "polos/rendering/vulkan_device.hpp"
 
@@ -56,8 +57,7 @@ auto DecodeDriverVersion(std::uint32_t t_vendor_id, std::uint32_t t_driver_versi
 
 }// namespace
 
-VulkanDevice::VulkanDevice() = default;
-
+VulkanDevice::VulkanDevice()  = default;
 VulkanDevice::~VulkanDevice() = default;
 
 auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
@@ -136,6 +136,30 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
     /// ==========================================
     ///         Logical device creation
     /// ==========================================
+
+    std::uint32_t count{0U};
+    vkEnumerateDeviceExtensionProperties(phys_device, nullptr, &count, nullptr);
+    std::vector<VkExtensionProperties> extensions(count);
+    vkEnumerateDeviceExtensionProperties(phys_device, nullptr, &count, extensions.data());
+
+    std::size_t satisifed_extensions{0U};
+
+    for (auto const* req_ext : t_info.enabled_extensions)
+    {
+        for (auto const& device_ext : extensions)
+        {
+            if (std::string_view{&device_ext.extensionName[0]} == std::string_view{req_ext})
+            {
+                ++satisifed_extensions;
+                break;
+            }
+        }
+    }
+
+    assert(
+        satisifed_extensions == t_info.enabled_extensions.size() &&
+        "Needed extensions are not supported on current device!");
+
     VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext                   = nullptr,
@@ -144,7 +168,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
         .pQueueCreateInfos       = q_create_infos.data(),
         .enabledLayerCount       = 0U,     // deprecated
         .ppEnabledLayerNames     = nullptr,// deprecated
-        .enabledExtensionCount   = 1U,
+        .enabledExtensionCount   = VK_SIZE_CAST(t_info.enabled_extensions.size()),
         .ppEnabledExtensionNames = t_info.enabled_extensions.data(),
         .pEnabledFeatures        = &device_features,
     };
@@ -153,15 +177,49 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
         vkCreateDevice(phys_device, &device_create_info, nullptr, &logi_device),
         RenderingErrc::kFailedCreateDevice);
 
+    // Create VMA allocator
+    VmaAllocatorCreateInfo allocator_info{};
+    allocator_info.flags            = 0U;
+    allocator_info.physicalDevice   = phys_device;
+    allocator_info.device           = logi_device;
+    allocator_info.instance         = m_instance;
+    allocator_info.vulkanApiVersion = VK_API_VERSION_1_3;
+
+    CHECK_VK_SUCCESS_OR_ERR(vmaCreateAllocator(&allocator_info, &allocator), RenderingErrc::kFailedCreateDevice);
+
+    LogInfo("Created VMA allocator");
+
     return {};
 }
 
 auto VulkanDevice::Destroy() -> Result<void>// NOLINT
 {
     LogInfo("Destroying VkDevice...");
+
+    if (allocator != VK_NULL_HANDLE)
+    {
+        vmaDestroyAllocator(allocator);
+        allocator = VK_NULL_HANDLE;
+    }
+
     vkDestroyDevice(logi_device, nullptr);
 
     return {};
+}
+
+auto VulkanDevice::GetLogicalDevice() const -> VkDevice
+{
+    return logi_device;
+}
+
+auto VulkanDevice::GetPhysicalDevice() const -> VkPhysicalDevice
+{
+    return phys_device;
+}
+
+auto VulkanDevice::GetAllocator() const -> VmaAllocator
+{
+    return allocator;
 }
 
 auto VulkanDevice::CheckSurfaceFormatSupport(VkSurfaceFormatKHR const& t_required_format) const -> bool

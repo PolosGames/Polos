@@ -6,6 +6,8 @@
 #ifndef POLOS_RENDERING_TEXTURE_2D_HPP
 #define POLOS_RENDERING_TEXTURE_2D_HPP
 
+#include <vk_mem_alloc.h>
+
 #include <vulkan/vulkan.h>
 
 namespace polos::rendering
@@ -15,8 +17,9 @@ struct alignas(32) texture_2d// NOLINT
 {
     VkImage               image{VK_NULL_HANDLE};
     VkImageView           view{VK_NULL_HANDLE};
+    VmaAllocation         allocation{VK_NULL_HANDLE};
     VkFormat              format{VK_FORMAT_UNDEFINED};
-    VkExtent2D            extent{.width = 0, .height = 0};
+    VkExtent2D            extent{.width = 0U, .height = 0U};
     VkSampleCountFlagBits samples{VK_SAMPLE_COUNT_1_BIT};
 };
 
