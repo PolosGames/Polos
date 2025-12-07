@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_RENDERING_API_HPP
 
 #include "polos/rendering/module_macros.hpp"
+#include "polos/rendering/scene.hpp"
 #include "polos/rendering/shared_lib_out.hpp"
 
 #include <memory>
@@ -38,19 +39,11 @@ public:
 
     static auto BeginFrame() -> VkCommandBuffer;
     static auto EndFrame() -> void;
-
-#if defined(HOT_RELOAD)
-    static auto ReloadIfNeeded() -> bool;
-    static auto DispatchReload() -> void;
-#endif// HOT_RELOAD
+    static auto GetMainScene() -> std::shared_ptr<Scene>;
 private:
     friend class core::Engine;
 
     static RenderingApi* s_instance;
-
-#if defined(HOT_RELOAD)
-    bool loadRenderingImplModule();
-#endif// HOT_RELOAD
 
     void createRenderContext();
     void initVulkan();
@@ -58,8 +51,15 @@ private:
     GLFWwindow* m_window{nullptr};
 
     std::shared_ptr<IRenderContext> m_render_context;
+    std::shared_ptr<Scene>          m_main_scene;
 
 #if defined(HOT_RELOAD)
+public:
+    static auto ReloadIfNeeded() -> bool;
+    static auto DispatchReload() -> void;
+private:
+    bool loadRenderingImplModule();
+
     rendering::rendering_shared_lib_out m_rendering_module;
     bool                                m_should_reload{false};
 #endif// HOT_RELOAD

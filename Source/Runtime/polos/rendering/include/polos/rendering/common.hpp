@@ -21,8 +21,8 @@ namespace polos::rendering
 
 enum class RenderGraphResourceType : uint8_t
 {
-    kTexture = 0U,
-    // kBuffer  = 1U,
+    kTexture,
+    kBuffer,
 };
 
 struct RenderGraphResourceHandle

@@ -34,6 +34,7 @@ class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
 class VulkanResourceManager;
+class ShaderCache;
 class PipelineCache;
 class RenderGraph;
 struct render_pass_layout_description;
@@ -56,6 +57,8 @@ public:
 
     [[nodiscard]] auto GetRenderGraph() const -> IRenderGraph& override;
     [[nodiscard]] auto IsInitialized() const -> bool override;
+    [[nodiscard]] auto GetShaderCache() const -> ShaderCache&;
+    [[nodiscard]] auto GetPipelineCache() const -> PipelineCache&;
 
     auto GetVkSurface() -> VkSurfaceKHR;
     auto GetGfxQueue() -> VkQueue;
@@ -74,6 +77,7 @@ private:
     std::unique_ptr<VulkanDevice>                          m_device;
     std::unique_ptr<VulkanSwapchain>                       m_swapchain;
     std::unique_ptr<VulkanResourceManager>                 m_vrm;
+    std::unique_ptr<ShaderCache>                           m_shader_cache;
     std::unique_ptr<PipelineCache>                         m_pipeline_cache;
     std::unique_ptr<RenderGraph>                           m_render_graph;
     std::vector<std::unique_ptr<rendering::IRenderSystem>> m_render_systems;

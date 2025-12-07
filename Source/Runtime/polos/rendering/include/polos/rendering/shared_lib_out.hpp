@@ -36,9 +36,24 @@ struct rendering_shared_lib_out : utils::base_shared_lib_out// NOLINT
 
 inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
 {
-    if (!utils::LoadSharedLib(t_dll_out, kRenderingLibName))
+    auto lib_path = std::filesystem::current_path() / kRenderingLibName;
+    
+    if (std::filesystem::exists(lib_path))
     {
-        LogCritical("Could not load {}!", kRenderingLibName);
+        auto ftime = std::filesystem::last_write_time(lib_path);
+        // Convert to a rough count for logging
+        auto count = std::chrono::duration_cast<std::chrono::seconds>(ftime.time_since_epoch()).count();
+        LogInfo("Requesting load of rendering module: {} (Timestamp: {})", lib_path.string(), count);
+    }
+    else
+    {
+        LogCritical("Rendering module not found at: {}", lib_path.string());
+        return false;
+    }
+
+    if (!utils::LoadSharedLib(t_dll_out, lib_path.string()))
+    {
+        LogCritical("Could not load {}!", lib_path.string());
         return false;
     }
 

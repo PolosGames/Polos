@@ -7,8 +7,10 @@
 #define POLOS_RENDERING_VULKAN_DEVICE_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/rendering/i_device.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
+
+#include <vk_mem_alloc.h>
 
 #include <vulkan/vulkan.h>
 
@@ -27,11 +29,11 @@ struct alignas(64) device_create_details// NOLINT
     std::vector<char const*> enabled_extensions;
 };
 
-class RENDERING_EXPORT VulkanDevice
+class VulkanDevice final : public IDevice
 {
 public:
     VulkanDevice();
-    ~VulkanDevice();
+    ~VulkanDevice() override;
 
     VulkanDevice(VulkanDevice&&)            = delete;
     VulkanDevice(VulkanDevice&)             = delete;
@@ -41,11 +43,16 @@ public:
     auto Create(device_create_details const& t_info) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    [[nodiscard]] auto CheckSurfaceFormatSupport(VkSurfaceFormatKHR const& t_required_format) const -> bool;
-    [[nodiscard]] auto CheckPresentModeSupport(VkPresentModeKHR t_required_mode) const -> bool;
+    [[nodiscard]] auto GetLogicalDevice() const -> VkDevice override;
+    [[nodiscard]] auto GetPhysicalDevice() const -> VkPhysicalDevice override;
+    [[nodiscard]] auto GetAllocator() const -> VmaAllocator override;
+
+    [[nodiscard]] auto CheckSurfaceFormatSupport(VkSurfaceFormatKHR const& t_required_format) const -> bool override;
+    [[nodiscard]] auto CheckPresentModeSupport(VkPresentModeKHR t_required_mode) const -> bool override;
 
     VkDevice         logi_device{VK_NULL_HANDLE};
     VkPhysicalDevice phys_device{VK_NULL_HANDLE};
+    VmaAllocator     allocator{VK_NULL_HANDLE};
 private:
     VkInstance   m_instance{VK_NULL_HANDLE};
     VkSurfaceKHR m_surface{VK_NULL_HANDLE};

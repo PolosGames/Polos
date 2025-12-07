@@ -21,11 +21,11 @@ struct graphics_pipeline_info
 {
     std::string name;
 
-    shader vertex_shader;
-    shader fragment_shader;
+    VkShaderModule vertex_shader;
+    VkShaderModule fragment_shader;
 
-    VkPrimitiveTopology    topology;
-    VertexInputDescription vertex_input;
+    VkPrimitiveTopology                   topology;
+    std::optional<VertexInputDescription> vertex_input;
 
     VkPolygonMode   polygon_mode;
     VkCullModeFlags cull_mode;

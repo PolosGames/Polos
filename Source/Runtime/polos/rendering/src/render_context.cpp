@@ -14,7 +14,8 @@
 #include "polos/rendering/render_graph.hpp"
 #include "polos/rendering/render_pass_layout_description.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
-#include "polos/rendering/system/clear_screen_system.hpp"
+#include "polos/rendering/shader_cache.hpp"
+#include "polos/rendering/system/geometry_render_system.hpp"
 #include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
@@ -91,6 +92,7 @@ RenderContext::RenderContext()
     communication::Subscribe<communication::window_framebuffer_resize>(
         [this](communication::window_framebuffer_resize&) {
             m_framebuffer_resized = true;
+            LogInfo("Framebuffer resize event received in RenderContext.");
         });
 };
 
@@ -102,7 +104,8 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     m_context        = std::make_unique<VulkanContext>();
     m_device         = std::make_unique<VulkanDevice>();
     m_swapchain      = std::make_unique<VulkanSwapchain>(m_window);
-    m_vrm            = std::make_unique<VRM>();
+    m_vrm            = std::make_unique<VulkanResourceManager>();
+    m_shader_cache   = std::make_unique<ShaderCache>();
     m_pipeline_cache = std::make_unique<PipelineCache>();
     m_render_graph   = std::make_unique<RenderGraph>();
 
@@ -162,7 +165,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
             .surface            = m_surface,
             .phys_device        = phys_device,
             .q_indices          = m_queue_family_indices,
-            .enabled_extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME},
+            .enabled_extensions = {{VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME}},
         };
         INIT_VULKAN_COMPONENT(m_device, info);
     }
@@ -202,14 +205,32 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     {
         resource_manager_create_details const details{
             .device    = m_device->logi_device,
+            .allocator = m_device->allocator,
             .swapchain = m_swapchain.get(),
+        };
+
+        INIT_VULKAN_COMPONENT(m_vrm, details);
+    }
+
+    {
+        pipeline_cache_create_details const details{
+            .logi_device = m_device->logi_device,
+            .swapchain   = m_swapchain.get(),
+        };
+
+        INIT_VULKAN_COMPONENT(m_pipeline_cache, details);
+    }
+
+    {
+        shader_cache_create_details const details{
+            .logi_device = m_device->logi_device,
             .shader_files =
                 {
                     {"Basic Color", "Resource/Shaders/basic_color.slang.spv"_path},
                 },
         };
 
-        INIT_VULKAN_COMPONENT(m_vrm, details);
+        INIT_VULKAN_COMPONENT(m_shader_cache, details);
     }
 
     // --- Command Pool creation ---
@@ -282,7 +303,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         INIT_VULKAN_COMPONENT(m_render_graph, details);
     };
 
-    m_render_systems.emplace_back(new ClearScreenSystem{*this, *m_render_graph});// NOLINT
+    m_render_systems.emplace_back(new GeometryRenderSystem{*this, *m_render_graph});// NOLINT
 
     for (auto& system : m_render_systems) { system->Initialize(); }
 
@@ -324,8 +345,8 @@ auto RenderContext::Shutdown() -> Result<void>
     }
     std::ignore = m_pipeline_cache->Destroy();
     for (auto* pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
+    std::ignore = m_shader_cache->Destroy();
     std::ignore = m_vrm->Destroy();
-
     std::ignore = m_render_graph->Destroy();
     std::ignore = m_swapchain->Destroy();
     std::ignore = m_device->Destroy();
@@ -446,11 +467,28 @@ auto RenderContext::EndFrame() -> void
     }
 
     m_current_frame_index = (m_current_frame_index + 1) % kMaxFramesInFlight;
+
+    // Handle framebuffer resize anyways in case it was not caught during presentation
+    if (m_framebuffer_resized)
+    {
+        m_framebuffer_resized = false;
+        onFramebufferResize();
+    }
 }
 
 auto RenderContext::GetRenderGraph() const -> IRenderGraph&
 {
     return *m_render_graph;
+}
+
+auto RenderContext::GetShaderCache() const -> ShaderCache&
+{
+    return *m_shader_cache;
+}
+
+auto RenderContext::GetPipelineCache() const -> PipelineCache&
+{
+    return *m_pipeline_cache;
 }
 
 auto RenderContext::IsInitialized() const -> bool

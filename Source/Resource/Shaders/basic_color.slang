@@ -1,4 +1,3 @@
-// Vertex  Shader
 struct VertexStageOutput
 {
     float3 color : TEXCOORD0;
@@ -31,7 +30,6 @@ VertexStageOutput vertexMain(uint vertexId: SV_VertexID)
     return output;
 }
 
-// Fragment Shader
 [shader("fragment")]
 float4 fragmentMain(VertexStageOutput coarseVertex)
     : SV_Target

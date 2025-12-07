@@ -110,7 +110,9 @@ auto VulkanContext::Create() -> Result<void>
     m_extensions.assign(glfw_extensions, std::next(glfw_extensions, static_cast<std::ptrdiff_t>(glfw_extension_count)));
 
 #ifndef NDEBUG
+    LogDebug("Creating Vulkan Instance with Debug Messenger");
     enable_validation_layers();
+    LogDebug("Enabled validation layers.");
 
     VkDebugUtilsMessengerCreateInfoEXT const debug_info = CreateDebugMessengerCreateInfo();
     m_instance_pnext                                    = &debug_info;

@@ -15,7 +15,7 @@ namespace polos::rendering
 class RenderContext;
 class RenderGraph;
 
-class RENDERING_EXPORT IRenderSystem
+class IRenderSystem
 {
 public:
     IRenderSystem(RenderContext& t_context, RenderGraph& t_graph)

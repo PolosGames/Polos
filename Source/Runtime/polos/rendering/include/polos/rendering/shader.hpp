@@ -8,12 +8,15 @@
 
 #include <vulkan/vulkan.h>
 
+#include <string>
+
 namespace polos::rendering
 {
 
 /// @brief Placeholder for using VkShaderModule
 struct shader
 {
+    std::string    name;
     VkShaderModule module;
 };
 

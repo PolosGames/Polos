@@ -14,15 +14,15 @@ project(
 )
 
 set(RENDERING_IMPL_SRC
-    "src/clear_screen_pass.cpp"
-    "src/clear_screen_system.cpp"
+    "src/render_pass/lambda_pass.cpp"
+    "src/system/geometry_render_system.cpp"
     "src/common.cpp"
     "src/dll_main.cpp"
-    "src/lambda_pass.cpp"
     "src/pipeline_cache.cpp"
     "src/render_context.cpp"
     "src/render_graph.cpp"
     "src/render_pass_resolver.cpp"
+    "src/shader_cache.cpp"
     "src/vertex.cpp"
     "src/vulkan_context.cpp"
     "src/vulkan_device.cpp"
@@ -30,9 +30,17 @@ set(RENDERING_IMPL_SRC
     "src/vulkan_swapchain.cpp"
 )
 
+set(RENDERING_THIRD_PARTY_DEPS
+    glfw
+    glm::glm
+    GPUOpen::VulkanMemoryAllocator
+    Vulkan::Vulkan
+)
+
 if (HOT_RELOAD)
     set(impl_lib polos::rendering_impl)
     set(RENDERING_SRC "")
+
     define_polos_module(
         NAME
             rendering_impl
@@ -46,8 +54,7 @@ if (HOT_RELOAD)
             ${RENDERING_IMPL_SRC}
 
         PUBLIC_DEPS
-            glfw
-            Vulkan::Vulkan
+            ${RENDERING_THIRD_PARTY_DEPS}
             polos::logging
 
         PRIVATE_DEPS
@@ -67,16 +74,22 @@ define_polos_module(
         SHARED
 
     SOURCES
+        "src/scene.cpp"
         "src/vulkan_rendering_api.cpp"
         ${RENDERING_SRC}
 
     PUBLIC_DEPS
-        glfw
-        Vulkan::Vulkan
-        polos::logging
         ${impl_lib}
+        ${RENDERING_THIRD_PARTY_DEPS}
+        polos::logging
 
     PRIVATE_DEPS
         polos::communication
         polos::filesystem
+
+    TEST_SOURCES
+        "test/mock/mock_vulkan_device.hpp"
+        "test/common_test.cpp"
+        "test/pipeline_cache_test.cpp"
+        "test/render_graph_test.cpp"
 )

@@ -49,8 +49,9 @@ public:
     auto GetPipeline(std::string_view t_pipeline_name) const -> Result<vulkan_pipeline>;
 
     /// @brief Tries to load the pipeline from cache disk
+    /// @todo We should have no need for this function after finalizing what pipelines we'll need.
     /// @param t_pipeline_info The information to create the pipeline with.
-    auto LoadOrCreatePipeline(graphics_pipeline_info const& t_pipeline_info) -> Result<vulkan_pipeline>;
+    auto ConstructPipeline(graphics_pipeline_info const& t_pipeline_info) -> Result<vulkan_pipeline>;
 private:
     VkDevice m_device{VK_NULL_HANDLE};
 

@@ -114,6 +114,23 @@ PlatformManager::PlatformManager()
         on_engine_terminate();
     });
 
+#if defined(__linux__)
+    std::string const session_type(std::getenv("XDG_SESSION_TYPE"));// NOLINT
+
+    if (session_type == "wayland")
+    {
+        LogInfo("GLFW: Setting platform to Wayland");
+        glfwInitHint(GLFW_PLATFORM_WAYLAND, GLFW_TRUE);
+    }
+    if (session_type == "x11")
+    {
+        LogInfo("GLFW: Setting platform to X11");
+        glfwInitHint(GLFW_PLATFORM_X11, GLFW_TRUE);
+    }
+#endif
+
+    glfwInitHint(GLFW_PLATFORM_WAYLAND, GLFW_TRUE);
+
     if (!glfwInit())// NOLINT
     {
         LogCritical("Could not initialize GLFW!");
