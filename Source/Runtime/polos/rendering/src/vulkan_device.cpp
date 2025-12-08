@@ -12,6 +12,8 @@
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
+#include <vulkan/vulkan.h>
+
 #include <algorithm>
 #include <cassert>
 #include <limits>
@@ -22,43 +24,41 @@ namespace polos::rendering
 namespace
 {
 
+constexpr std::uint32_t const kVendorNvidia{0x10DEU};
+constexpr std::uint32_t const kVendorAmd{0x1002U};
+
 auto DecodeDriverVersion(std::uint32_t t_vendor_id, std::uint32_t t_driver_version) -> std::string
 {
-    if (t_vendor_id == 0x10DE)// NVIDIA
+    if (t_vendor_id == kVendorNvidia)
     {
-        std::uint32_t driver_version = t_driver_version;
+        std::uint32_t const driver_version = t_driver_version;
 
-        std::uint32_t major = (driver_version >> 22) & 0x3FF;// 10 bits for major
-        std::uint32_t minor = (driver_version >> 14) & 0xFF; // 6 bits for minor
-        std::uint32_t patch = driver_version & 0xFFFF;       // 16 bits for patch
+        std::uint32_t major = (driver_version >> 22) & 0x3FF;// NOLINT 10 bits for major
+        std::uint32_t minor = (driver_version >> 14) & 0xFF; // NOLINT 6 bits for minor
+        std::uint32_t patch = driver_version & 0xFFFF;       // NOLINT 16 bits for patch
 
         return std::format("{}.{}.{}", major, minor, patch);
     }
-    else if (t_vendor_id == 0x1002)// AMD
+    if (t_vendor_id == kVendorAmd)// AMD
     {
-        std::uint32_t driver_version = t_driver_version;
+        std::uint32_t const driver_version = t_driver_version;
 
         // Extract version components for AMD
-        std::uint32_t major = (driver_version >> 22) & 0x3FF;// 10 bits for major
-        std::uint32_t minor = (driver_version >> 12) & 0x3FF;// 10 bits for minor
-        std::uint32_t patch = driver_version & 0xFFF;        // 12 bits for patch
+        std::uint32_t major = (driver_version >> 22U) & 0x3FF;// NOLINT 10 bits for major
+        std::uint32_t minor = (driver_version >> 12U) & 0x3FF;// NOLINT 10 bits for minor
+        std::uint32_t patch = driver_version & 0xFFF;         // NOLINT 12 bits for patch
 
         return std::format("{}.{}.{}", major, minor, patch);
     }
-    else
-    {
-        return "Not Found";
-    }
+    return "Not Found";
 }
 
 
 }// namespace
 
-VulkanDevice::VulkanDevice(GLFWwindow* t_window)
-    : m_window{t_window}
-{}
+VulkanDevice::VulkanDevice() = default;
 
-VulkanDevice::~VulkanDevice() {}
+VulkanDevice::~VulkanDevice() = default;
 
 auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
 {
@@ -85,13 +85,13 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
     VkPhysicalDeviceFeatures device_features;
     vkGetPhysicalDeviceFeatures(phys_device, &device_features);
 
-    constexpr float const queue_prio{1.0f};
+    constexpr float const queue_prio{1.0F};
 
     std::vector<VkDeviceQueueCreateInfo> q_create_infos;
 
     if (t_info.q_indices.gfx_q_index != std::numeric_limits<std::uint32_t>::max())
     {
-        VkDeviceQueueCreateInfo info{
+        VkDeviceQueueCreateInfo const info{
             .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext            = nullptr,
             .flags            = 0U,
@@ -106,7 +106,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
         // Create only if gfx queue doesn't include a VK_QUEUE_TRANSFER_BIT as well.
         t_info.q_indices.transfer_q_index != t_info.q_indices.gfx_q_index)
     {
-        VkDeviceQueueCreateInfo info{
+        VkDeviceQueueCreateInfo const info{
             .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext            = nullptr,
             .flags            = 0U,
@@ -122,7 +122,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
         t_info.q_indices.compute_q_index != t_info.q_indices.gfx_q_index &&
         t_info.q_indices.compute_q_index != t_info.q_indices.transfer_q_index)
     {
-        VkDeviceQueueCreateInfo info{
+        VkDeviceQueueCreateInfo const info{
             .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext            = nullptr,
             .flags            = 0U,
@@ -136,7 +136,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
     /// ==========================================
     ///         Logical device creation
     /// ==========================================
-    VkDeviceCreateInfo device_create_info{
+    VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext                   = nullptr,
         .flags                   = 0U,
@@ -156,7 +156,7 @@ auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
     return {};
 }
 
-auto VulkanDevice::Destroy() -> Result<void>
+auto VulkanDevice::Destroy() -> Result<void>// NOLINT
 {
     LogInfo("Destroying VkDevice...");
     vkDestroyDevice(logi_device, nullptr);
@@ -177,7 +177,7 @@ auto VulkanDevice::CheckSurfaceFormatSupport(VkSurfaceFormatKHR const& t_require
     });
 }
 
-auto VulkanDevice::CheckPresentModeSupport(VkPresentModeKHR const t_required_mode) const -> bool
+auto VulkanDevice::CheckPresentModeSupport(VkPresentModeKHR t_required_mode) const -> bool
 {
     std::uint32_t mode_count{0U};
     vkGetPhysicalDeviceSurfacePresentModesKHR(phys_device, m_surface, &mode_count, nullptr);

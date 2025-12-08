@@ -5,10 +5,13 @@
 
 #include "polos/rendering/pipeline_cache.hpp"
 
+#include "polos/communication/error_code.hpp"
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/graphics_pipeline_info.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+#include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
 
 namespace polos::rendering
@@ -28,7 +31,7 @@ auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Re
 auto PipelineCache::Destroy() -> Result<void>
 {
     LogInfo("Destroying and invalidating pipeline cache...");
-    for (auto const& [_, pipeline] : m_cache)
+    for (auto const& [_, pipeline] : m_cache)// NOLINT
     {
         if (pipeline.pipeline != VK_NULL_HANDLE)
         {
@@ -51,15 +54,15 @@ auto PipelineCache::Destroy() -> Result<void>
 }
 
 
-auto PipelineCache::GetPipeline(utils::string_id const t_pipeline_name) const -> Result<vulkan_pipeline>
+auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Result<vulkan_pipeline>
 {
-    auto it = m_cache.find(t_pipeline_name);
-    if (it == m_cache.end())
+    auto const itr = m_cache.find(t_pipeline_name);
+    if (itr == m_cache.end())
     {
         return ErrorType{RenderingErrc::kFailedFindPipeline};
     };
 
-    return it->second;
+    return itr->second;
 }
 
 auto PipelineCache::GetPipeline(std::string_view const t_pipeline_name) const -> Result<vulkan_pipeline>
@@ -79,7 +82,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
             .pInitialData    = nullptr,
         };
 
-        auto res = fs::ReadFile(std::filesystem::path("Resource/Cache/pipeline.dat"));
+        auto res = fs::ReadFile("Resource/Cache/pipeline.dat"_path);
         if (!res.has_value())
         {
             LogWarn("Something went wrong when opening pipeline cache. |{}|", res.error().Message());
@@ -96,9 +99,9 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         }
     }// END pipeline cache create
 
-    utils::string_id pipeline_key = utils::StrHash64(std::string_view{t_pipeline_info.name});
+    utils::string_id const pipeline_key = utils::StrHash64(std::string_view{t_pipeline_info.name});
 
-    VkPipelineRenderingCreateInfo pipeline_rendering_info{
+    VkPipelineRenderingCreateInfo const pipeline_rendering_info{
         .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
         .pNext                   = nullptr,
         .viewMask                = 0U,
@@ -108,7 +111,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
     };
 
-    VkPipelineShaderStageCreateInfo shader_stages[]{
+    VkPipelineShaderStageCreateInfo const shader_stages[] /*NOLINT*/ {
         {
             .sType               = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext               = nullptr,
@@ -129,7 +132,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         },
     };
 
-    VkPipelineVertexInputStateCreateInfo vertex_input_info{
+    VkPipelineVertexInputStateCreateInfo const vertex_input_info{
         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext                           = nullptr,
         .flags                           = 0U,
@@ -139,7 +142,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .pVertexAttributeDescriptions    = t_pipeline_info.vertex_input.attributes.data(),
     };
 
-    VkPipelineInputAssemblyStateCreateInfo input_assembly{
+    VkPipelineInputAssemblyStateCreateInfo const input_assembly{
         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
         .pNext                  = nullptr,
         .flags                  = 0U,
@@ -147,7 +150,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .primitiveRestartEnable = VK_FALSE,
     };
 
-    VkPipelineViewportStateCreateInfo viewport_state{
+    VkPipelineViewportStateCreateInfo const viewport_state{
         .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pNext         = nullptr,
         .flags         = 0U,
@@ -157,7 +160,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .pScissors     = &m_swapchain->GetScissor(),
     };
 
-    VkPipelineRasterizationStateCreateInfo rasterizer{
+    VkPipelineRasterizationStateCreateInfo const rasterizer{
         .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .pNext                   = nullptr,
         .flags                   = 0U,
@@ -167,25 +170,25 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .cullMode                = t_pipeline_info.cull_mode,
         .frontFace               = t_pipeline_info.front_face,
         .depthBiasEnable         = t_pipeline_info.depth_bias_enable,
-        .depthBiasConstantFactor = 0.0f,
-        .depthBiasClamp          = 0.0f,
-        .depthBiasSlopeFactor    = 0.0f,
-        .lineWidth               = 1.0f,
+        .depthBiasConstantFactor = 0.0F,
+        .depthBiasClamp          = 0.0F,
+        .depthBiasSlopeFactor    = 0.0F,
+        .lineWidth               = 1.0F,
     };
 
-    VkPipelineMultisampleStateCreateInfo multisampling{
+    VkPipelineMultisampleStateCreateInfo const multisampling{
         .sType                 = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pNext                 = nullptr,
         .flags                 = 0U,
         .rasterizationSamples  = t_pipeline_info.multisampling,
         .sampleShadingEnable   = VK_FALSE,
-        .minSampleShading      = 1.0f,
+        .minSampleShading      = 1.0F,
         .pSampleMask           = nullptr,
         .alphaToCoverageEnable = VK_FALSE,
         .alphaToOneEnable      = VK_FALSE,
     };
 
-    VkPipelineDepthStencilStateCreateInfo depth_stencil{
+    VkPipelineDepthStencilStateCreateInfo const depth_stencil{
         .sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .pNext                 = nullptr,
         .flags                 = 0U,
@@ -196,11 +199,11 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .stencilTestEnable     = VK_FALSE,
         .front                 = {},
         .back                  = {},
-        .minDepthBounds        = 0.0f,
-        .maxDepthBounds        = 1.0f,
+        .minDepthBounds        = 0.0F,
+        .maxDepthBounds        = 1.0F,
     };
 
-    VkPipelineColorBlendStateCreateInfo color_blend{
+    VkPipelineColorBlendStateCreateInfo const color_blend{
         .sType           = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pNext           = nullptr,
         .flags           = 0U,
@@ -208,10 +211,10 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         .logicOp         = VK_LOGIC_OP_NO_OP,
         .attachmentCount = VK_SIZE_CAST(t_pipeline_info.color_blend_attachments.size()),
         .pAttachments    = t_pipeline_info.color_blend_attachments.data(),
-        .blendConstants  = {0.0f, 0.0f, 0.0f, 0.0f},
+        .blendConstants  = {0.0F, 0.0F, 0.0F, 0.0F},
     };
 
-    VkPipelineDynamicStateCreateInfo dynamic_state{
+    VkPipelineDynamicStateCreateInfo const dynamic_state{
         .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .pNext             = nullptr,
         .flags             = 0U,
@@ -220,7 +223,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
     };
 
 
-    VkPipelineLayoutCreateInfo pipeline_layout_info{
+    VkPipelineLayoutCreateInfo const pipeline_layout_info{
         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext                  = nullptr,
         .flags                  = 0U,
@@ -237,12 +240,12 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         return ErrorType{RenderingErrc::kFailedCreatePipelineLayout};
     }
 
-    VkGraphicsPipelineCreateInfo pipeline_info{
+    VkGraphicsPipelineCreateInfo const pipeline_info{
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext               = &pipeline_rendering_info,
         .flags               = 0U,
         .stageCount          = 2U,
-        .pStages             = shader_stages,
+        .pStages             = &shader_stages[0],
         .pVertexInputState   = &vertex_input_info,
         .pInputAssemblyState = &input_assembly,
         .pTessellationState  = nullptr,
@@ -271,7 +274,7 @@ auto PipelineCache::LoadOrCreatePipeline(graphics_pipeline_info const& t_pipelin
         return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
-    m_cache.insert({pipeline_key, {pipeline, pipeline_layout}});
+    m_cache.insert({pipeline_key, vulkan_pipeline{.pipeline = pipeline, .layout = pipeline_layout}});
 
     return m_cache[pipeline_key];
 }

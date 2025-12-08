@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP_
+#ifndef POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP
+#define POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP
 
 #include "polos/communication/event.hpp"
 #include "polos/rendering/shared_lib_out.hpp"
@@ -19,4 +19,4 @@ struct rendering_module_reload final : base_event
 
 }// namespace polos::communication
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP_
+#endif// POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP

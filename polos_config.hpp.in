@@ -1,33 +1,41 @@
-#pragma once
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
+
+#ifndef POLOS_POLOS_CONFIG_HPP
+#define POLOS_POLOS_CONFIG_HPP
 
 #cmakedefine ENABLE_PROFILING
 #cmakedefine GUI_USE_IMGUI
 #cmakedefine QUILL_DISABLE_NON_PREFIXED_MACROS
 
 #if defined(_WIN64)
-#	define POLOS_WIN
+#    define POLOS_WIN
 
 #elif defined(__linux__)
-#	if defined(__ANDROID__)
-#		define POLOS_ANDROID
-#	else
-#		define POLOS_LINUX
-#	endif
+#    if defined(__ANDROID__)
+#        define POLOS_ANDROID
+#    else
+#        define POLOS_LINUX
+#    endif
 #elif defined(__APPLE__)
-#	include <TargetConditionals.h>
-#	if defined(TARGET_OS_MAC)
-#		define POLOS_MACOS
-#	elif defined(TARGET_OS_IPHONE)
-#		define POLOS_IPHONE
-#	endif
+#    include <TargetConditionals.h>
+#    if defined(TARGET_OS_MAC)
+#        define POLOS_MACOS
+#    elif defined(TARGET_OS_IPHONE)
+#        define POLOS_IPHONE
+#    endif
 #else
-#	error Platform not supported by Polos.
+#    error Platform not supported by Polos.
 #endif
 
 #if defined(__clang__) && (__clang_major__ >= 13)
-#   define POLOS_CLANG
+#    define POLOS_CLANG
 #elif defined(__GNUC__) && (__GNUC__ >= 11)
-#   define POLOS_GNUC
+#    define POLOS_GNUC
 #elif defined(_MSC_VER) && (_MSC_VER >= 1900)
-#   define POLOS_MSC
+#    define POLOS_MSC
 #endif
+
+#endif// POLOS_POLOS_CONFIG_HPP

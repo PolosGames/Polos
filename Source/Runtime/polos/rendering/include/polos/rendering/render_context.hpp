@@ -1,18 +1,19 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_
+#ifndef POLOS_RENDERING_RENDER_CONTEXT_HPP
+#define POLOS_RENDERING_RENDER_CONTEXT_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/i_render_context.hpp"
 #include "polos/rendering/i_render_system.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 #include "polos/rendering/texture_2d.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <memory>
 
@@ -41,21 +42,20 @@ class RENDERING_EXPORT RenderContext : public IRenderContext
 {
 public:
     RenderContext();
-    ~RenderContext();
+    ~RenderContext() override;
     RenderContext(RenderContext&&)            = delete;
     RenderContext(RenderContext&)             = delete;
     RenderContext& operator=(RenderContext&&) = delete;
     RenderContext& operator=(RenderContext&)  = delete;
 
-    Result<void> Initialize(GLFWwindow* t_window) override;
-    Result<void> Shutdown() override;
+    auto Initialize(GLFWwindow* t_window) -> Result<void> override;
+    auto Shutdown() -> Result<void> override;
 
-    VkCommandBuffer BeginFrame() override;
-    void            EndFrame() override;
+    auto BeginFrame() -> VkCommandBuffer override;
+    auto EndFrame() -> void override;
 
-    IRenderGraph& GetRenderGraph() const override;
-
-    bool IsInitialized() const override;
+    [[nodiscard]] auto GetRenderGraph() const -> IRenderGraph& override;
+    [[nodiscard]] auto IsInitialized() const -> bool override;
 
     auto GetVkSurface() -> VkSurfaceKHR;
     auto GetGfxQueue() -> VkQueue;
@@ -91,7 +91,7 @@ private:
     std::vector<VkRenderPass>                                  m_vk_render_passes;
     std::array<std::vector<VkFramebuffer>, kMaxFramesInFlight> m_transient_fbufs;
 
-    enum class ImageAcqusitionResult
+    enum class ImageAcqusitionResult : std::uint8_t
     {
         kSuccess,
         kError,
@@ -109,4 +109,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_CONTEXT_HPP_
+#endif// POLOS_RENDERING_RENDER_CONTEXT_HPP

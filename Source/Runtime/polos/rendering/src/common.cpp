@@ -5,51 +5,56 @@
 
 #include "polos/rendering/common.hpp"
 
+#include <cstddef>
+#include <cstdint>
+
 namespace polos::rendering
 {
 
 namespace
 {
-static constexpr std::uint32_t kIndexBits{16U};
-static constexpr std::uint32_t kTypeBits{4U};
-static constexpr std::uint32_t kVersionBits{12U};
 
-static constexpr std::uint32_t kIndexShift{0U};
-static constexpr std::uint32_t kTypeShift    = kIndexBits;
-static constexpr std::uint32_t kVersionShift = kIndexBits + kTypeBits;
+constexpr std::uint32_t kIndexBits{16U};
+constexpr std::uint32_t kTypeBits{4U};
+constexpr std::uint32_t kVersionBits{12U};
 
-static constexpr std::uint32_t kIndexMask   = (1 << kIndexBits) - 1;
-static constexpr std::uint32_t kTypeMask    = (1 << kTypeBits) - 1;
-static constexpr std::uint32_t kVersionMask = (1 << kVersionBits) - 1;
-}// namespace
+constexpr std::uint32_t kIndexShift{0U};
+constexpr std::uint32_t kTypeShift    = kIndexBits;
+constexpr std::uint32_t kVersionShift = kIndexBits + kTypeBits;
+
+constexpr std::uint32_t kIndexMask   = (1U << kIndexBits) - 1U;
+constexpr std::uint32_t kTypeMask    = (1U << kTypeBits) - 1U;
+constexpr std::uint32_t kVersionMask = (1U << kVersionBits) - 1U;
 
 template<typename T>
-T GetUnderlying(std::uint32_t t_id, std::uint32_t t_shift, std::uint32_t t_mask)
+[[nodiscard]] auto GetUnderlying(std::uint32_t t_id, std::uint32_t t_shift, std::uint32_t t_mask) -> T
 {
     return static_cast<T>((t_id >> t_shift) & t_mask);
 }
 
-auto RenderGraphResourceHandle::Index() -> std::size_t
+}// namespace
+
+auto RenderGraphResourceHandle::Index() const -> std::size_t
 {
     return GetUnderlying<std::size_t>(id, kIndexShift, kIndexMask);
 }
 
-auto RenderGraphResourceHandle::Index16() -> std::uint16_t
+auto RenderGraphResourceHandle::Index16() const -> std::uint16_t
 {
     return GetUnderlying<std::uint16_t>(id, kIndexShift, kIndexMask);
 }
 
-auto RenderGraphResourceHandle::Type() -> RenderGraphResourceType
+auto RenderGraphResourceHandle::Type() const -> RenderGraphResourceType
 {
     return GetUnderlying<RenderGraphResourceType>(id, kTypeShift, kTypeMask);
 }
 
-auto RenderGraphResourceHandle::Version() -> std::uint16_t
+auto RenderGraphResourceHandle::Version() const -> std::uint16_t
 {
     return GetUnderlying<std::uint16_t>(id, kVersionShift, kVersionMask);
 }
 
-auto RenderGraphResourceHandle::IsValid() -> bool
+auto RenderGraphResourceHandle::IsValid() const -> bool
 {
     return id != 0U;
 }
@@ -58,11 +63,11 @@ auto RenderGraphResourceHandle::Create(std::uint16_t t_index, RenderGraphResourc
     -> RenderGraphResourceHandle
 {
     // clang-format off
-    std::uint32_t const id = (static_cast<uint32_t>(t_index) << kIndexShift) |
-                       (static_cast<uint32_t>(t_type) << kTypeShift) |
-                       (static_cast<uint32_t>(t_version) << kVersionShift);
+    std::uint32_t const handle_id = (static_cast<uint32_t>(t_index) << kIndexShift) |
+                              (static_cast<uint32_t>(t_type) << kTypeShift) |
+                              (static_cast<uint32_t>(t_version) << kVersionShift);
     // clang-format on
-    return {id};
+    return {handle_id};
 }
 
 auto RenderGraphResourceHandle::Invalid() -> RenderGraphResourceHandle

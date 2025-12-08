@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_
-#define POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_
+#ifndef POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP
+#define POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP
 
 #if defined(POLOS_WIN)
 
@@ -149,4 +149,4 @@ inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, 
 
 #endif// POLOS_WIN
 
-#endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP_
+#endif// POLOS_UTILS_WINDOWS_HOT_RELOAD_UTILS_HPP

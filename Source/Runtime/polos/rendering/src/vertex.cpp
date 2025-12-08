@@ -14,7 +14,7 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
 
     // --- Binding Description ---
     // We have one binding for the per-vertex data.
-    VkVertexInputBindingDescription mainBinding{
+    VkVertexInputBindingDescription const mainBinding{
         .binding   = 0U,
         .stride    = sizeof(Vertex),
         .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
@@ -24,9 +24,9 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
     // --- Attribute Descriptions ---
     // We create an attribute description for each active attribute based on the flags.
 
-    if (t_flags & VertexAttributes::kPositionOnly)
+    if (0U != (t_flags & VertexAttributes::kPositionOnly))
     {
-        VkVertexInputAttributeDescription attr{
+        VkVertexInputAttributeDescription const attr{
             .location = 0U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
@@ -35,9 +35,9 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
         description.attributes.push_back(attr);
     }
 
-    if (t_flags & VertexAttributes::kWithNormals)
+    if (0U != (t_flags & VertexAttributes::kWithNormals))
     {
-        VkVertexInputAttributeDescription attr{
+        VkVertexInputAttributeDescription const attr{
             .location = 1U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
@@ -46,9 +46,9 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
         description.attributes.push_back(attr);
     }
 
-    if (t_flags & VertexAttributes::kWithColors)
+    if (0U != (t_flags & VertexAttributes::kWithColors))
     {
-        VkVertexInputAttributeDescription attr{
+        VkVertexInputAttributeDescription const attr{
             .location = 2U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
@@ -57,9 +57,9 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
         description.attributes.push_back(attr);
     }
 
-    if (t_flags & VertexAttributes::kWithTexCoords)
+    if (0U != (t_flags & VertexAttributes::kWithTexCoords))
     {
-        VkVertexInputAttributeDescription attr{
+        VkVertexInputAttributeDescription const attr{
             .location = 3U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32_SFLOAT,

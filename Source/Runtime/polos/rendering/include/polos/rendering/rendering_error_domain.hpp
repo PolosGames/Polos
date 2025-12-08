@@ -1,20 +1,21 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP_
+#ifndef POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP
+#define POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP
 
 #include "polos/communication/error_code.hpp"
 #include "polos/communication/error_domain.hpp"
 
 #include <array>
+#include <string_view>
 
 namespace polos::rendering
 {
 
-// TODO: Auto generate error codes and messages from a JSON or XML file
+// TODO(sorbatdev): Auto generate error codes and messages from a JSON or XML file
 enum class RenderingErrc : communication::ErrorDomain::CodeType
 {
     kFailedCreateInstance,
@@ -48,7 +49,7 @@ public:
     using Errc = RenderingErrc;
 
     constexpr RenderingErrorDomain()
-        : polos::communication::ErrorDomain(0x07U),
+        : polos::communication::ErrorDomain(polos::communication::kRenderingErrorDomainId),
           m_messages({
               "Failed to create Vulkan instance! Exiting...",
               "Failed to create surface! Where are we going to draw? Exiting...",
@@ -76,12 +77,12 @@ public:
 
     virtual ~RenderingErrorDomain() = default;
 
-    constexpr std::string_view Name() const override
+    [[nodiscard]] constexpr auto Name() const -> std::string_view override
     {
         return "Rendering";
     }
 
-    constexpr std::string_view Message(CodeType t_code) const override
+    [[nodiscard]] constexpr auto Message(CodeType t_code) const -> std::string_view override
     {
         return m_messages[static_cast<std::size_t>(t_code)];
     }
@@ -91,8 +92,10 @@ private:
 
 namespace internal
 {
-inline constexpr RenderingErrorDomain g_error_domain;
-}
+
+constexpr RenderingErrorDomain g_error_domain;
+
+}// namespace internal
 
 constexpr communication::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc t_err)
 {
@@ -101,4 +104,4 @@ constexpr communication::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc t_er
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP_
+#endif// POLOS_RENDERING_RENDERING_ERROR_DOMAIN_HPP

@@ -1,17 +1,17 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_PIPELINE_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_PIPELINE_HPP_
+#ifndef POLOS_RENDERING_VULKAN_PIPELINE_HPP
+#define POLOS_RENDERING_VULKAN_PIPELINE_HPP
 
-#include "polos/rendering/common.hpp"
+#include <vulkan/vulkan.h>
 
 namespace polos::rendering
 {
 
-struct vulkan_pipeline
+struct alignas(16) vulkan_pipeline// NOLINT
 {
     VkPipeline       pipeline{VK_NULL_HANDLE};
     VkPipelineLayout layout{VK_NULL_HANDLE};
@@ -19,4 +19,4 @@ struct vulkan_pipeline
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_PIPELINE_HPP_
+#endif// POLOS_RENDERING_VULKAN_PIPELINE_HPP

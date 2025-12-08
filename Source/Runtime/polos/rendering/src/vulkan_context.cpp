@@ -6,7 +6,10 @@
 #include "polos/rendering/vulkan_context.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+
+#include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <string>
@@ -18,11 +21,11 @@ namespace
 {
 constexpr char const* kValidationLayerName = "VK_LAYER_KHRONOS_validation";
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT      t_message_severity,
     VkDebugUtilsMessageTypeFlagsEXT             t_message_type,
     VkDebugUtilsMessengerCallbackDataEXT const* t_callback_data,
-    void*)
+    void* /*t_user_data*/)
 {
     std::string const message_type_str = [&]() {
         switch (t_message_type)
@@ -48,6 +51,24 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     return VK_FALSE;
 }
 
+auto CreateDebugMessengerCreateInfo() -> VkDebugUtilsMessengerCreateInfoEXT
+{
+    // clang-format off
+    return VkDebugUtilsMessengerCreateInfoEXT{
+        .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        .pNext           = nullptr,
+        .flags           = 0U,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+        .messageType     = static_cast<VkDebugUtilsMessageTypeFlagsEXT>(VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) |
+                           static_cast<VkDebugUtilsMessageTypeFlagsEXT>(VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) |
+                           static_cast<VkDebugUtilsMessageTypeFlagsEXT>(VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT),
+        .pfnUserCallback = DebugCallback,
+        .pUserData       = nullptr,
+    };
+    // clang-format on
+}
+
 bool IsValidationLayersAvailable()
 {
     std::uint32_t layer_count{0U};
@@ -61,7 +82,8 @@ bool IsValidationLayersAvailable()
     });
 
     return std::ranges::any_of(available_layers, [](VkLayerProperties const& layer) {
-        return std::strcmp(kValidationLayerName, layer.layerName) == 0;
+        std::span<char const> const layer_name(layer.layerName);
+        return std::strcmp(kValidationLayerName, layer_name.data()) == 0;
     });
 }
 
@@ -72,7 +94,7 @@ VulkanContext::~VulkanContext() = default;
 
 auto VulkanContext::Create() -> Result<void>
 {
-    VkApplicationInfo app{
+    VkApplicationInfo const app{
         .sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext              = nullptr,
         .pApplicationName   = "Polos App",
@@ -90,10 +112,10 @@ auto VulkanContext::Create() -> Result<void>
 #ifndef NDEBUG
     enable_validation_layers();
 
-    VkDebugUtilsMessengerCreateInfoEXT debug_info = create_debug_messenger_create_info();
-    m_instance_pnext                              = &debug_info;
+    VkDebugUtilsMessengerCreateInfoEXT const debug_info = CreateDebugMessengerCreateInfo();
+    m_instance_pnext                                    = &debug_info;
 #endif// NDEBUG
-    VkInstanceCreateInfo instance_info{
+    VkInstanceCreateInfo const instance_info{
         .sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext                   = m_instance_pnext,
         .flags                   = 0U,
@@ -107,8 +129,8 @@ auto VulkanContext::Create() -> Result<void>
     CHECK_VK_SUCCESS_OR_ERR(vkCreateInstance(&instance_info, nullptr, &instance), RenderingErrc::kFailedCreateInstance);
 
 #ifndef NDEBUG
-    VkDebugUtilsMessengerCreateInfoEXT debug_info_2 = create_debug_messenger_create_info();
-    auto                               func         = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+    VkDebugUtilsMessengerCreateInfoEXT const debug_info_2 = CreateDebugMessengerCreateInfo();
+    auto const                               func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(//NOLINT
         vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
     if (nullptr != func)
     {
@@ -126,7 +148,7 @@ auto VulkanContext::Create() -> Result<void>
 auto VulkanContext::Destroy() -> Result<void>
 {
 #ifndef NDEBUG
-    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+    auto const func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(// NOLINT
         vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
     if (func != nullptr && m_dbg_messenger != VK_NULL_HANDLE)
@@ -152,24 +174,6 @@ auto VulkanContext::enable_validation_layers() -> void
 
     m_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     m_layers.push_back("VK_LAYER_KHRONOS_validation");
-}
-
-VkDebugUtilsMessengerCreateInfoEXT VulkanContext::create_debug_messenger_create_info() const
-{
-    // clang-format off
-    return VkDebugUtilsMessengerCreateInfoEXT{
-        .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-        .pNext           = nullptr,
-        .flags           = 0,
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-        .messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                           VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-        .pfnUserCallback = DebugCallback,
-        .pUserData       = nullptr,
-    };
-    // clang-format on
 }
 
 }// namespace polos::rendering

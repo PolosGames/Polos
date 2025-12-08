@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
+#ifndef POLOS_RENDERING_SHARED_LIB_OUT_HPP
+#define POLOS_RENDERING_SHARED_LIB_OUT_HPP
 
 #include "polos/polos_config.hpp"
 
@@ -23,12 +23,12 @@ namespace polos::rendering
 {
 
 #if defined(POLOS_WIN)
-inline constexpr char const* kRenderingLibName{"polos_rendering.dll"};
+constexpr char const* kRenderingLibName{"polos_rendering.dll"};
 #elif defined(POLOS_LINUX)
-inline constexpr char const* kRenderingLibName{"libpolos_rendering_impl.so"};
+constexpr char const* kRenderingLibName{"libpolos_rendering_impl.so"};
 #endif
 
-struct rendering_shared_lib_out : utils::base_shared_lib_out
+struct rendering_shared_lib_out : utils::base_shared_lib_out// NOLINT
 {
     using CreateRenderContextFuncT = IRenderContext* (*)();
     CreateRenderContextFuncT CreateRenderContext{nullptr};
@@ -62,4 +62,4 @@ inline void UnloadRenderingModule(rendering_shared_lib_out& t_dll_out)
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHARED_LIB_OUT_HPP_
+#endif// POLOS_RENDERING_SHARED_LIB_OUT_HPP

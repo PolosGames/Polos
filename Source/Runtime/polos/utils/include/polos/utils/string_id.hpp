@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_STRING_ID_HPP_
-#define POLOS_UTILS_INCLUDE_POLOS_UTILS_STRING_ID_HPP_
+#ifndef POLOS_UTILS_STRING_ID_HPP
+#define POLOS_UTILS_STRING_ID_HPP
 
 #include <cstdint>
 #include <string_view>
@@ -14,7 +14,7 @@ namespace polos::utils
 
 using string_id = std::int64_t;
 
-inline constexpr string_id StrHash64(std::string_view const t_str) noexcept
+constexpr auto StrHash64(std::string_view const t_str) -> string_id
 {
     // FNV-1a 64-bit hash
     // This algorithm provides good distribution and fast updates for string data
@@ -24,11 +24,12 @@ inline constexpr string_id StrHash64(std::string_view const t_str) noexcept
 
     std::uint64_t hash = kFnvOffset;
 
-    unsigned char c{0U};
-    for (char const ch : t_str)
+    unsigned char cur_chr{0U};
+
+    for (char const chr : t_str)
     {
-        c = static_cast<unsigned char>(ch);
-        hash ^= c;        // XOR the low 8 bits
+        cur_chr = static_cast<unsigned char>(chr);
+        hash ^= cur_chr;  // XOR the low 8 bits
         hash *= kFnvPrime;// Multiply by the FNV prime
     }
 
@@ -38,9 +39,9 @@ inline constexpr string_id StrHash64(std::string_view const t_str) noexcept
 
 }// namespace polos::utils
 
-consteval polos::utils::string_id operator""_sid(char const* t_str, std::size_t t_size)
+consteval auto operator""_sid(char const* t_str, std::size_t t_size) -> polos::utils::string_id
 {
     return polos::utils::StrHash64(std::string_view{t_str, t_size});
 }
 
-#endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_STRING_ID_HPP_
+#endif// POLOS_UTILS_STRING_ID_HPP

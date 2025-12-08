@@ -1,42 +1,35 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP_
-#define POLOS_UTILS_INCLUDE_POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP_
+#ifndef POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP
+#define POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP
 
 #include "polos/polos_config.hpp"
 
 #if defined(POLOS_LINUX)
 
-namespace polos::utils
-{
-using LibHandle = void*;
-}
-
 #    include "polos/logging/log_macros.hpp"
 
-#    include <ctime>
 #    include <dlfcn.h>
+
+#    include <ctime>
 #    include <filesystem>
 #    include <string>
 
 namespace polos::utils
 {
 
-struct base_shared_lib_out
+using LibHandle = void*;
+
+struct alignas(64) base_shared_lib_out// NOLINT
 {
     utils::LibHandle handle{nullptr};
 
     std::time_t last_write_time{0};
     std::string temp_dll_path;
 };
-
-inline void CleanupOldFiles(const std::filesystem::path&, const std::string&)
-{
-    // NO-OP for linux
-}
 
 inline void UnloadSharedLib(base_shared_lib_out& t_dll_out)
 {
@@ -55,7 +48,7 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
         return false;
     }
 
-    std::filesystem::path original_dll_path(t_original_dll_path_str);
+    std::filesystem::path const original_dll_path(t_original_dll_path_str);
     if (!std::filesystem::exists(original_dll_path))
     {
         LogWarn("SO file not found.");
@@ -67,7 +60,7 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
     t_dll_out.handle = dlopen(original_dll_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (nullptr == t_dll_out.handle)
     {
-        LogError("Failed to load SO from {} : {}", original_dll_path.string(), std::string(dlerror()));
+        LogError("Failed to load SO from {} : {}", original_dll_path.string(), std::string(dlerror()));// NOLINT
         return false;
     }
 
@@ -79,12 +72,12 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
 template<typename F>
 inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, char const* t_func_name)
 {
-    t_func_ptr = reinterpret_cast<F>(dlsym(t_dll_out.handle, t_func_name));
+    t_func_ptr = reinterpret_cast<F>(dlsym(t_dll_out.handle, t_func_name));// NOLINT
     if (nullptr == t_func_ptr)
     {
         dlclose(t_dll_out.handle);
 
-        LogError("Failed to get function {} from Shared lib. {}", t_func_name, dlerror());
+        LogError("Failed to get function {} from Shared lib. {}", t_func_name, dlerror());// NOLINT
         return false;
     }
 
@@ -94,6 +87,7 @@ inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, 
 }
 
 }// namespace polos::utils
-#endif// POLOS_LINUX/
 
-#endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP_
+#endif// POLOS_LINUX
+
+#endif// POLOS_UTILS_LINUX_HOT_RELOAD_UTILS_HPP

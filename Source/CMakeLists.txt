@@ -19,7 +19,6 @@ target_link_libraries(
         INTERFACE
             polos::communication
             polos::core
-            polos::datatypes
             polos::filesystem
             polos::logging
             polos::platform

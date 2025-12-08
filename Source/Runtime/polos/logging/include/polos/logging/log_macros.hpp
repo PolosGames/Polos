@@ -3,14 +3,14 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_
-#define POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_
+#ifndef POLOS_LOGGING_LOG_MACROS_HPP
+#define POLOS_LOGGING_LOG_MACROS_HPP
 
 #include "polos/logging/logger.hpp"
-
 #include "polos/utils/macro_utilities.hpp"
 
 #include <quill/LogMacros.h>
+
 #include <source_location>
 
 #define MAKE_LOGGER_TYPE(Name) PL_CONCAT(::polos::logging::Logger::Instance().Get, PL_CONCAT(Name, Logger))
@@ -43,4 +43,5 @@
 #define LOG_VAR_IMPL(Str, Variable) LOG_POLOS_INFO(Str, __FILE__, __LINE__, QUILL_STRINGIFY(Variable), Variable)
 #define LogVariable(Variable)       LOG_VAR_IMPL("\n  File: {0},\n  Line: {1},\n  value of {2} = {3}", Variable)
 
-#endif// POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOG_MACROS_HPP_
+
+#endif// POLOS_LOGGING_LOG_MACROS_HPP

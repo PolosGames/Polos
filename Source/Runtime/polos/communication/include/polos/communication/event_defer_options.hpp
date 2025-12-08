@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP_
+#ifndef POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP
+#define POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP
 
 #include <cstdint>
 
@@ -19,4 +19,4 @@ enum class EventDeferOptions : std::uint8_t
 
 }// namespace polos::communication
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP_
+#endif// POLOS_COMMUNICATION_EVENT_DEFER_OPTIONS_HPP

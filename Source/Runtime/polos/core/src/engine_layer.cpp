@@ -15,16 +15,10 @@
 namespace polos::core
 {
 
-EngineLayer::EngineLayer()
+namespace
 {
-    communication::Subscribe<communication::key_release>([this](communication::key_release& t_event) {
-        on_key_release(t_event);
-    });
-}
 
-EngineLayer::~EngineLayer() {}
-
-void EngineLayer::on_key_release(communication::key_release t_event)
+void OnKeyRelease(communication::key_release const& t_event)
 {
     std::ignore = t_event;
 #if defined(HOT_RELOAD)
@@ -34,5 +28,16 @@ void EngineLayer::on_key_release(communication::key_release t_event)
     }
 #endif// HOT_RELOAD
 }
+
+}// namespace
+
+EngineLayer::EngineLayer()
+{
+    communication::Subscribe<communication::key_release>([](communication::key_release& t_event) {
+        OnKeyRelease(t_event);
+    });
+}
+
+EngineLayer::~EngineLayer() = default;
 
 }// namespace polos::core

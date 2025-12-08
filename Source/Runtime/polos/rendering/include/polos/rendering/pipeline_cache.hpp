@@ -1,15 +1,17 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_PIPELINE_CACHE_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_PIPELINE_CACHE_HPP_
+#ifndef POLOS_RENDERING_PIPELINE_CACHE_HPP
+#define POLOS_RENDERING_PIPELINE_CACHE_HPP
 
-#include "polos/rendering/common.hpp"
+#include "polos/communication/error_code.hpp"
 #include "polos/rendering/graphics_pipeline_info.hpp"
 #include "polos/rendering/vulkan_pipeline.hpp"
 #include "polos/utils/string_id.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <unordered_map>
 
@@ -18,7 +20,7 @@ namespace polos::rendering
 
 class VulkanSwapchain;
 
-struct pipeline_cache_create_details
+struct alignas(16) pipeline_cache_create_details// NOLINT
 {
     VkDevice         logi_device{VK_NULL_HANDLE};
     VulkanSwapchain* swapchain{nullptr};
@@ -40,11 +42,11 @@ public:
 
     /// @brief Gets a pipeline from the cache
     /// @param t_pipeline_name The name of the pipeline to get in string_id.
-    auto GetPipeline(utils::string_id const t_pipeline_name) const -> Result<vulkan_pipeline>;
+    auto GetPipeline(utils::string_id t_pipeline_name) const -> Result<vulkan_pipeline>;
 
     /// @brief Gets a pipeline from the cache
     /// @param t_pipeline_name The name of the pipeline to get.
-    auto GetPipeline(std::string_view const t_pipeline_name) const -> Result<vulkan_pipeline>;
+    auto GetPipeline(std::string_view t_pipeline_name) const -> Result<vulkan_pipeline>;
 
     /// @brief Tries to load the pipeline from cache disk
     /// @param t_pipeline_info The information to create the pipeline with.
@@ -60,4 +62,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_PIPELINE_CACHE_HPP_
+#endif// POLOS_RENDERING_PIPELINE_CACHE_HPP

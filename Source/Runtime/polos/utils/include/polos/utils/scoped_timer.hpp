@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_SCOPED_TIMER_HPP_
-#define POLOS_UTILS_INCLUDE_POLOS_UTILS_SCOPED_TIMER_HPP_
+#ifndef POLOS_UTILS_SCOPED_TIMER_HPP
+#define POLOS_UTILS_SCOPED_TIMER_HPP
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/macro_utilities.hpp"
@@ -56,4 +56,4 @@ private:
 /// @param NAME quoted string name of the ScopedTimer
 #define CREATE_SCOPED_TIMER(NAME) polos::utils::ScopedTimer PL_ANON_NAME(scopedtimer)(NAME)
 
-#endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_SCOPED_TIMER_HPP_
+#endif// POLOS_UTILS_SCOPED_TIMER_HPP

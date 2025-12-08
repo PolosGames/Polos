@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_SYSTEM_CREATED_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_SYSTEM_CREATED_HPP_
+#ifndef POLOS_COMMUNICATION_SYSTEM_CREATED_HPP
+#define POLOS_COMMUNICATION_SYSTEM_CREATED_HPP
 
 #include "polos/communication/event.hpp"
 
@@ -18,7 +18,7 @@ enum class SystemType : std::uint8_t
     kSystemTypeMax,
 };
 
-inline constexpr std::string_view SystemTypeToString(SystemType t_type)
+constexpr std::string_view SystemTypeToString(SystemType t_type)
 {
     switch (t_type)
     {
@@ -46,4 +46,4 @@ DEFINE_EVENT_LOG_FORMAT(
     "System Created: {}",
     ::polos::communication::SystemTypeToString(event.system_type));
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_SYSTEM_CREATED_HPP_
+#endif// POLOS_COMMUNICATION_SYSTEM_CREATED_HPP

@@ -5,11 +5,6 @@
 
 #include "polos/core/base_live_layer.hpp"
 
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/event_bus.hpp"
-
-#include <csignal>
-
 namespace polos::core
 {
 

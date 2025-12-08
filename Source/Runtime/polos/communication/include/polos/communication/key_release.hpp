@@ -1,17 +1,17 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_RELEASE_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_RELEASE_HPP_
+#ifndef POLOS_COMMUNICATION_KEY_RELEASE_HPP
+#define POLOS_COMMUNICATION_KEY_RELEASE_HPP
 
 #include "polos/communication/event.hpp"
 
 namespace polos::communication
 {
 
-struct key_release final : base_event
+struct key_release final : base_event// NOLINT
 {
     DECLARE_POLOS_EVENT(key_release);
 
@@ -26,4 +26,4 @@ struct key_release final : base_event
 
 DEFINE_EVENT_LOG_FORMAT(::polos::communication::key_release, "Released Key: {}", event.key);
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_RELEASE_HPP_
+#endif// POLOS_COMMUNICATION_KEY_RELEASE_HPP

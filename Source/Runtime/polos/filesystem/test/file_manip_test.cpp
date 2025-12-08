@@ -11,7 +11,7 @@
 namespace
 {
 
-TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
+TEST(FileManipTestFixture, OpenAndReadWhenCorrectFileName)
 {
     auto file = polos::fs::ReadFile("test_file.test"_path);
 
@@ -24,11 +24,11 @@ TEST(FileManipTestFixture, OpenAndRead_When_CorrectFileName)
     EXPECT_EQ(test_file.uncompressed_size, 513);
     EXPECT_EQ(test_file.data.size(), 513);
 
-    char first_letter = static_cast<char>(test_file.data[0]);
+    char const first_letter = static_cast<char>(test_file.data[0]);
     EXPECT_EQ(first_letter, 'L');
 }
 
-TEST(FileManipTestFixture, OpenAndRead_When_IncorrectFileName)
+TEST(FileManipTestFixture, OpenAndReadWhenIncorrectFileName)
 {
     auto file = polos::fs::ReadFile("test_fle.test"_path);
 

@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_LAYER_HPP_
-#define POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_LAYER_HPP_
+#ifndef POLOS_CORE_ENGINE_LAYER_HPP
+#define POLOS_CORE_ENGINE_LAYER_HPP
 
 #include "polos/communication/key_release.hpp"
 #include "polos/core/base_live_layer.hpp"
@@ -20,10 +20,8 @@ class EngineLayer : public BaseLiveLayer
 public:
     EngineLayer();
     ~EngineLayer() override;
-private:
-    void on_key_release(communication::key_release t_event);
 };
 
 }// namespace polos::core
 
-#endif// POLOS_CORE_INCLUDE_POLOS_CORE_ENGINE_LAYER_HPP_
+#endif// POLOS_CORE_ENGINE_LAYER_HPP

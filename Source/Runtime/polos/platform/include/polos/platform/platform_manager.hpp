@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_MANAGER_HPP_
-#define POLOS_PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_MANAGER_HPP_
+#ifndef POLOS_PLATFORM_PLATFORM_MANAGER_HPP
+#define POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 
 #include "polos/platform/module_macros.hpp"
 #include "polos/rendering/i_render_context.hpp"
@@ -40,7 +40,7 @@ class PLATFORM_EXPORT PlatformManager
 {
 public:
     PlatformManager();
-    ~PlatformManager();
+    ~PlatformManager() = default;
 
     PlatformManager(PlatformManager const&) = delete;
     PlatformManager(PlatformManager&&)      = delete;
@@ -48,18 +48,17 @@ public:
     PlatformManager& operator=(PlatformManager const&) = delete;
     PlatformManager& operator=(PlatformManager&&)      = delete;
 
-    static PlatformManager& Instance();
+    static auto Instance() -> PlatformManager&;
 
-    auto CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title) -> bool;
-    auto ChangeWindowTitle(std::string_view const t_title) -> void;
-    auto GetMainWindow() const -> GLFWwindow*;
+    auto               CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title) -> bool;
+    auto               ChangeWindowTitle(std::string_view t_title) -> void;
+    [[nodiscard]] auto GetMainWindow() const -> GLFWwindow*;
 private:
     friend class core::Engine;
 
     static PlatformManager* s_instance;
 
     void on_end_frame() const;
-    void on_window_close();
     void on_engine_terminate();
 
     GLFWwindow* m_window{nullptr};
@@ -67,4 +66,4 @@ private:
 
 }// namespace polos::platform
 
-#endif// POLOS_PLATFORM_INCLUDE_POLOS_PLATFORM_PLATFORM_MANAGER_HPP_
+#endif// POLOS_PLATFORM_PLATFORM_MANAGER_HPP

@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
+#ifndef POLOS_RENDERING_RENDER_GRAPH_HPP
+#define POLOS_RENDERING_RENDER_GRAPH_HPP
 
 #include "polos/rendering/compiled_render_pass.hpp"
 #include "polos/rendering/i_render_graph.hpp"
@@ -20,11 +20,11 @@ struct render_graph_resource_node;
 class IRenderPass;
 class RenderContext;
 
-class RENDERING_EXPORT RenderGraph : public IRenderGraph
+class RENDERING_EXPORT RenderGraph final : public IRenderGraph
 {
 public:
     RenderGraph();
-    ~RenderGraph();
+    ~RenderGraph() override;
     RenderGraph(RenderGraph&&)            = delete;
     RenderGraph(RenderGraph&)             = delete;
     RenderGraph& operator=(RenderGraph&&) = delete;
@@ -58,8 +58,8 @@ private:
 
     std::vector<compiled_render_pass> m_compiled_passes;
 
-    RenderContext* m_context;
+    RenderContext* m_context{nullptr};
 };
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_GRAPH_HPP_
+#endif// POLOS_RENDERING_RENDER_GRAPH_HPP

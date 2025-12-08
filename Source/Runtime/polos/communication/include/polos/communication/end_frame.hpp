@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_END_FRAME_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_END_FRAME_HPP_
+#ifndef POLOS_COMMUNICATION_END_FRAME_HPP
+#define POLOS_COMMUNICATION_END_FRAME_HPP
 
 #include "polos/communication/event.hpp"
 
@@ -18,4 +18,4 @@ struct end_frame final : base_event
 
 }// namespace polos::communication
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_END_FRAME_HPP_
+#endif// POLOS_COMMUNICATION_END_FRAME_HPP

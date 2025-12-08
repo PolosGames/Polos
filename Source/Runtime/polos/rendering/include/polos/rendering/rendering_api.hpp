@@ -1,12 +1,11 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_API_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_API_HPP_
+#ifndef POLOS_RENDERING_RENDERING_API_HPP
+#define POLOS_RENDERING_RENDERING_API_HPP
 
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/shared_lib_out.hpp"
 
@@ -16,6 +15,8 @@ namespace polos::core
 {
 class Engine;
 };// namespace polos::core
+
+struct GLFWwindow;
 
 namespace polos::rendering
 {
@@ -66,4 +67,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDERING_API_HPP_
+#endif// POLOS_RENDERING_RENDERING_API_HPP

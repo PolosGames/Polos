@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_PRESS_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_PRESS_HPP_
+#ifndef POLOS_COMMUNICATION_KEY_PRESS_HPP
+#define POLOS_COMMUNICATION_KEY_PRESS_HPP
 
 #include "polos/communication/event.hpp"
 
@@ -24,5 +24,4 @@ struct key_press final : base_event
 
 DEFINE_EVENT_LOG_FORMAT(::polos::communication::key_press, "Pressed Key: {}", event.key);
 
-
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_KEY_PRESS_HPP_
+#endif// POLOS_COMMUNICATION_KEY_PRESS_HPP
