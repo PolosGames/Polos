@@ -10,6 +10,8 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/i_render_context.hpp"
 
+#include <GLFW/glfw3.h>
+
 namespace polos::rendering
 {
 

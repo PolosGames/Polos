@@ -15,13 +15,13 @@ namespace
 class EventBusTestFixture : public ::testing::Test
 {
 protected:
-    static constexpr float const    expected_delta_time{44.0f};
+    static constexpr float const    expected_delta_time{44.0F};
     polos::communication::EventBus& m_event_bus = polos::communication::EventBus::Instance();
 };
 
 TEST_F(EventBusTestFixture, SubscribeToEventTest)
 {
-    float ref_delta_time{0.0f};
+    float ref_delta_time{0.0F};
 
     auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event) {
         ref_delta_time = t_event.delta_time;
@@ -35,8 +35,8 @@ TEST_F(EventBusTestFixture, SubscribeToEventTest)
 
 TEST_F(EventBusTestFixture, SubscribeMultipleTimes)
 {
-    float ref_delta_time_1{0.0f};
-    float ref_delta_time_2{0.0f};
+    float ref_delta_time_1{0.0F};
+    float ref_delta_time_2{0.0F};
 
     auto lambda_1 = [&ref_delta_time_1](polos::communication::engine_update& t_event) {
         ref_delta_time_1 = t_event.delta_time;
@@ -56,15 +56,15 @@ TEST_F(EventBusTestFixture, SubscribeMultipleTimes)
 
 TEST_F(EventBusTestFixture, DispatchWithoutSubscribers)
 {
-    std::size_t total_dispatched =
+    std::size_t const total_dispatched =
         polos::communication::DispatchNow<polos::communication::engine_update>(expected_delta_time);
 
-    EXPECT_EQ(total_dispatched, 0);
+    EXPECT_EQ(total_dispatched, 0U);
 }
 
 TEST_F(EventBusTestFixture, DispatchDeferredEvent)
 {
-    float ref_delta_time{0.0f};
+    float ref_delta_time{0.0F};
 
     auto lambda = [&ref_delta_time](polos::communication::engine_update& t_event) {
         ref_delta_time = t_event.delta_time;
@@ -74,7 +74,7 @@ TEST_F(EventBusTestFixture, DispatchDeferredEvent)
     polos::communication::DispatchDefer<polos::communication::engine_update>(expected_delta_time);
 
     // Event should not be dispatched yet
-    EXPECT_EQ(ref_delta_time, 0.0f);
+    EXPECT_EQ(ref_delta_time, 0.0F);
 
     polos::communication::DispatchDeferredEvents();
 
@@ -83,8 +83,8 @@ TEST_F(EventBusTestFixture, DispatchDeferredEvent)
 
 TEST_F(EventBusTestFixture, DispatchMultipleDeferredEvents)
 {
-    float ref_delta_time_1{0.0f};
-    float ref_delta_time_2{0.0f};
+    float ref_delta_time_1{0.0F};
+    float ref_delta_time_2{0.0F};
 
     auto lambda_1 = [&ref_delta_time_1](polos::communication::engine_update& t_event) {
         ref_delta_time_1 = t_event.delta_time;
@@ -99,8 +99,8 @@ TEST_F(EventBusTestFixture, DispatchMultipleDeferredEvents)
     polos::communication::DispatchDefer<polos::communication::engine_update>(expected_delta_time);
 
     // Event should not be dispatched yet
-    EXPECT_EQ(ref_delta_time_1, 0.0f);
-    EXPECT_EQ(ref_delta_time_2, 0.0f);
+    EXPECT_EQ(ref_delta_time_1, 0.0F);
+    EXPECT_EQ(ref_delta_time_2, 0.0F);
 
     polos::communication::DispatchDeferredEvents();
 

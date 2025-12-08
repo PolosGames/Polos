@@ -5,7 +5,6 @@
 
 #include "polos/communication/event_bus.hpp"
 
-#include <unordered_map>
 #include <vector>
 
 namespace polos::communication
@@ -25,11 +24,11 @@ auto EventBus::DispatchDeferredEvents() -> void
 {
     for (auto& event_ptr : m_deferred_events)
     {
-        std::int64_t          event_hash = event_ptr->Hash();
-        CallbackMap::iterator it         = m_callbacks.find(event_hash);
-        if (it != m_callbacks.end())
+        std::int64_t const event_hash = event_ptr->Hash();
+        auto const         iter       = m_callbacks.find(event_hash);
+        if (iter != m_callbacks.end())
         {
-            auto& subscribers_callbacks = it->second;
+            auto& subscribers_callbacks = iter->second;
             for (auto& callback : subscribers_callbacks) { callback(*event_ptr); }
         }
     }

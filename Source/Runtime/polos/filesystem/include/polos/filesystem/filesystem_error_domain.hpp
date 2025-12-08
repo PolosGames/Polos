@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP_
-#define POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP_
+#ifndef POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP
+#define POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP
 
 #include "polos/communication/error_code.hpp"
 #include "polos/communication/error_domain.hpp"
@@ -16,8 +16,10 @@ namespace polos::fs
 
 enum class FilesystemErrc : communication::ErrorDomain::CodeType
 {
-    kFileWasNotFound = 0U,
-    kFileOpenError   = 1U,
+    kFileWasNotFound,
+    kFileOpenError,
+
+    kFilesystemErrcCount,
 };
 
 class FilesystemErrorDomain : public communication::ErrorDomain
@@ -26,7 +28,7 @@ public:
     using Errc = FilesystemErrc;
 
     constexpr FilesystemErrorDomain()
-        : polos::communication::ErrorDomain(0x07U),
+        : polos::communication::ErrorDomain(polos::communication::kFilesystemErrorDomainId),
           m_messages({
               "Could not open file.",
               "Error when opening the file!",
@@ -35,29 +37,31 @@ public:
 
     virtual ~FilesystemErrorDomain() = default;
 
-    constexpr std::string_view Name() const override
+    [[nodiscard]] constexpr auto Name() const -> std::string_view override
     {
         return "Filesystem";
     }
 
-    constexpr std::string_view Message(CodeType t_code) const override
+    [[nodiscard]] constexpr auto Message(CodeType t_code) const -> std::string_view override
     {
         return m_messages[static_cast<std::size_t>(t_code)];
     }
 private:
-    std::array<std::string_view const, 10> const m_messages;
+    std::array<std::string_view const, static_cast<std::size_t>(FilesystemErrc::kFilesystemErrcCount)> const m_messages;
 };
 
 namespace internal
 {
-inline constexpr FilesystemErrorDomain g_error_domain;
-}
 
-constexpr communication::ErrorCode MakeErrorCode(FilesystemErrorDomain::Errc t_err)
+constexpr FilesystemErrorDomain g_error_domain;
+
+}// namespace internal
+
+constexpr auto MakeErrorCode(FilesystemErrorDomain::Errc t_err) -> communication::ErrorCode
 {
     return communication::ErrorCode{static_cast<communication::ErrorDomain::CodeType>(t_err), internal::g_error_domain};
 }
 
 }// namespace polos::fs
 
-#endif// POLOS_FILESYSTEM_INCLUDE_POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP_
+#endif// POLOS_FILESYSTEM_FILESYSTEM_ERROR_DOMAIN_HPP

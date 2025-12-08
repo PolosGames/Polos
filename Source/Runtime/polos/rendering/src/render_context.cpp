@@ -7,24 +7,25 @@
 
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
+#include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/i_render_system.hpp"
 #include "polos/rendering/pipeline_cache.hpp"
 #include "polos/rendering/render_graph.hpp"
 #include "polos/rendering/render_pass_layout_description.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+#include "polos/rendering/system/clear_screen_system.hpp"
 #include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
 
-#include "polos/rendering/system/clear_screen_system.hpp"
+#include <vulkan/vulkan.h>
 
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
-#include <filesystem>
+#include <array>
 
 #define INIT_VULKAN_COMPONENT(SubmodulePtr, ...)         \
     {                                                    \
@@ -49,19 +50,20 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
     vkGetPhysicalDeviceQueueFamilyProperties(t_device, &queue_family_count, queue_families.data());
 
     std::uint32_t queue_index{0U};
-    for (; queue_index < queue_families.size(); ++queue_index)
+    auto const    queue_families_size = static_cast<std::uint32_t>(queue_families.size());
+    for (; queue_index < queue_families_size; ++queue_index)
     {
         VkQueueFamilyProperties const& family = queue_families[queue_index];
 
-        if (family.queueFlags & t_flags)
+        if (0U != (family.queueFlags & t_flags))
         {
-            if (t_flags & VK_QUEUE_GRAPHICS_BIT)
+            if (0U != (t_flags & VK_QUEUE_GRAPHICS_BIT))
             {
                 // If gfx family is requested, also check if it has present capabilities
-                VkBool32 present_support{false};
+                VkBool32 present_support{0U};
                 vkGetPhysicalDeviceSurfaceSupportKHR(t_device, queue_index, t_surface, &present_support);
 
-                if (present_support)
+                if (0U != present_support)
                 {
                     break;
                 }
@@ -84,6 +86,7 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
 }// namespace
 
 RenderContext::RenderContext()
+    : m_image_acq_results{{ImageAcqusitionResult::kSuccess}}
 {
     communication::Subscribe<communication::window_framebuffer_resize>(
         [this](communication::window_framebuffer_resize&) {
@@ -97,7 +100,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 {
     m_window         = t_window;
     m_context        = std::make_unique<VulkanContext>();
-    m_device         = std::make_unique<VulkanDevice>(m_window);
+    m_device         = std::make_unique<VulkanDevice>();
     m_swapchain      = std::make_unique<VulkanSwapchain>(m_window);
     m_vrm            = std::make_unique<VRM>();
     m_pipeline_cache = std::make_unique<PipelineCache>();
@@ -122,12 +125,12 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     std::vector<VkPhysicalDevice> physical_devices(static_cast<std::size_t>(device_count));
     vkEnumeratePhysicalDevices(m_context->instance, &device_count, physical_devices.data());
 
-    // TODO: Select the first available GPU, no need for suitability checks for now.
+    // TODO(sorbatdev): Select the first available GPU, no need for suitability checks for now.
     VkPhysicalDevice phys_device = physical_devices[0];
 
     // --- Suitable queue family selection ---
     {// Graphics Family
-        auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_GRAPHICS_BIT);
+        auto const q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_GRAPHICS_BIT);
         if (!q_result.has_value())
         {
             return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
@@ -135,7 +138,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         m_queue_family_indices.gfx_q_index = q_result.value();
     }
     {// Transfer Family
-        auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_TRANSFER_BIT);
+        auto const q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_TRANSFER_BIT);
         if (!q_result.has_value())
         {
             return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
@@ -143,17 +146,18 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         m_queue_family_indices.transfer_q_index = q_result.value();
     }
     {// Compute Family
-        auto q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_COMPUTE_BIT);
+        auto const q_result = FindQueueFamily(phys_device, m_surface, VK_QUEUE_COMPUTE_BIT);
         if (!q_result.has_value())
         {
             return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
         }
+
         m_queue_family_indices.compute_q_index = q_result.value();
     }
 
     // --- Device creation ---
     {
-        device_create_details info{
+        device_create_details const info{
             .instance           = m_context->instance,
             .surface            = m_surface,
             .phys_device        = phys_device,
@@ -168,7 +172,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 
     // --- Swapchain creation ---
     {
-        swapchain_create_details details{
+        swapchain_create_details const details{
             .device      = m_device.get(),
             .phys_device = phys_device,
             .surface     = m_surface,
@@ -196,12 +200,12 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     }
 
     {
-        resource_manager_create_details details{
+        resource_manager_create_details const details{
             .device    = m_device->logi_device,
             .swapchain = m_swapchain.get(),
             .shader_files =
                 {
-                    {"Basic Color", std::filesystem::path{"Resource/Shaders/basic_color.slang.spv"}},
+                    {"Basic Color", "Resource/Shaders/basic_color.slang.spv"_path},
                 },
         };
 
@@ -209,7 +213,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     }
 
     // --- Command Pool creation ---
-    VkCommandPoolCreateInfo pool_info{
+    VkCommandPoolCreateInfo const pool_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext            = nullptr,
         .flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
@@ -229,7 +233,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     m_frame_fences.resize(kMaxFramesInFlight);
 
     // --- Command buffer allocations ---
-    VkCommandBufferAllocateInfo alloc_info{
+    VkCommandBufferAllocateInfo const alloc_info{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext              = nullptr,
         .commandPool        = m_command_pool,
@@ -242,12 +246,12 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         RenderingErrc::kFailedCmdBufAlloc);
 
     // --- Synchronization objects creation ---
-    VkSemaphoreCreateInfo semaphore_info{
+    VkSemaphoreCreateInfo const semaphore_info{
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0U,
     };
-    VkFenceCreateInfo fence_info{
+    VkFenceCreateInfo const fence_info{
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = nullptr,
         .flags = VK_FENCE_CREATE_SIGNALED_BIT,
@@ -271,14 +275,14 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     }
 
     {
-        render_graph_creation_details details{
+        render_graph_creation_details const details{
             .device  = m_device->logi_device,
             .context = this,
         };
         INIT_VULKAN_COMPONENT(m_render_graph, details);
     };
 
-    m_render_systems.emplace_back(new ClearScreenSystem{*this, *m_render_graph});
+    m_render_systems.emplace_back(new ClearScreenSystem{*this, *m_render_graph});// NOLINT
 
     for (auto& system : m_render_systems) { system->Initialize(); }
 
@@ -290,7 +294,9 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 auto RenderContext::Shutdown() -> Result<void>
 {
     if (!m_is_initialized)
+    {
         return {};
+    }
 
     LogInfo("Waiting for device idle to destroy Vulkan RenderContext...");
 
@@ -317,7 +323,7 @@ auto RenderContext::Shutdown() -> Result<void>
         });
     }
     std::ignore = m_pipeline_cache->Destroy();
-    for (auto pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
+    for (auto* pass : m_vk_render_passes) { vkDestroyRenderPass(m_device->logi_device, pass, nullptr); }
     std::ignore = m_vrm->Destroy();
 
     std::ignore = m_render_graph->Destroy();
@@ -340,23 +346,24 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         VK_TRUE,
         std::numeric_limits<std::uint64_t>::max());
 
+
     if (!m_transient_fbufs[m_current_frame_index].empty())
     {
-        for (auto fb : m_transient_fbufs[m_current_frame_index])
+        for (auto* fbuf : m_transient_fbufs[m_current_frame_index])
         {
-            vkDestroyFramebuffer(m_device->logi_device, fb, nullptr);
+            vkDestroyFramebuffer(m_device->logi_device, fbuf, nullptr);
         }
         m_transient_fbufs[m_current_frame_index].clear();
     }
     m_render_graph->Reset();
 
-    acquire_next_image_details next_img_dets{
+    acquire_next_image_details const next_img_dets{
         .semaphore = m_acquire_semaphores[m_current_frame_index],
         .fence     = m_frame_fences[m_current_frame_index],
         .timeout   = std::numeric_limits<std::uint64_t>::max(),
     };
 
-    auto acq_result = m_swapchain->AcquireNextImage(next_img_dets);
+    auto const acq_result = m_swapchain->AcquireNextImage(next_img_dets);
     if (!acq_result.has_value())
     {
         m_image_acq_results[m_current_frame_index] = ImageAcqusitionResult::kError;
@@ -369,8 +376,8 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
 
     m_swapchain_image_index = *acq_result;
 
-    VkCommandBuffer          cur_cmd_buf = m_frame_command_buffers[m_current_frame_index];
-    VkCommandBufferBeginInfo begin_info{
+    VkCommandBuffer                cur_cmd_buf = m_frame_command_buffers[m_current_frame_index];
+    VkCommandBufferBeginInfo const begin_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext            = nullptr,
         .flags            = 0U,
@@ -407,14 +414,14 @@ auto RenderContext::EndFrame() -> void
         return;
     }
 
-    VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    std::array<VkPipelineStageFlags, 1> const wait_stages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-    VkSubmitInfo submit_info{
+    VkSubmitInfo const submit_info{
         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext                = nullptr,
         .waitSemaphoreCount   = 1U,
         .pWaitSemaphores      = &m_acquire_semaphores[m_current_frame_index],
-        .pWaitDstStageMask    = wait_stages,
+        .pWaitDstStageMask    = wait_stages.data(),
         .commandBufferCount   = 1U,
         .pCommandBuffers      = &m_frame_command_buffers[m_current_frame_index],
         .signalSemaphoreCount = 1U,
@@ -427,8 +434,8 @@ auto RenderContext::EndFrame() -> void
         return;
     }
 
-    auto result = m_swapchain->QueuePresent(m_submit_semaphores[m_swapchain_image_index]);
-    if (!result.has_value())
+    if (auto const result = m_swapchain->QueuePresent(m_submit_semaphores[m_swapchain_image_index]);
+        !result.has_value())
     {
         if (m_framebuffer_resized)
         {
@@ -439,8 +446,6 @@ auto RenderContext::EndFrame() -> void
     }
 
     m_current_frame_index = (m_current_frame_index + 1) % kMaxFramesInFlight;
-
-    return;
 }
 
 auto RenderContext::GetRenderGraph() const -> IRenderGraph&
@@ -470,7 +475,7 @@ auto RenderContext::GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2
 
 auto RenderContext::CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>
 {
-    VkRenderPassCreateInfo2 pass_info{
+    VkRenderPassCreateInfo2 const pass_info{
         .sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
         .pNext                   = nullptr,
         .flags                   = 0U,
@@ -506,7 +511,7 @@ void RenderContext::onFramebufferResize()
     LogInfo("Recreating swapchain due to framebuffer resize...");
 
     std::ignore = m_swapchain->Destroy();
-    swapchain_create_details details{
+    swapchain_create_details const details{
         .device      = m_device.get(),
         .phys_device = m_device->phys_device,
         .surface     = m_surface,
@@ -530,8 +535,8 @@ void RenderContext::onFramebufferResize()
         .transform_flags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
     };
     vkDeviceWaitIdle(m_device->logi_device);
-    auto res = m_swapchain->Create(details);
-    if (!res.has_value())
+
+    if (auto const res = m_swapchain->Create(details); !res.has_value())
     {
         LogCritical("{}", res.error());
     }
@@ -544,5 +549,5 @@ void RenderContext::onFramebufferResize()
 polos::rendering::IRenderContext* CreateRenderContext()
 {
     // Capsulated in PlatformManager
-    return new polos::rendering::RenderContext{};
+    return new polos::rendering::RenderContext{};// NOLINT
 }

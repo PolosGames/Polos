@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_SYSTEM_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_SYSTEM_HPP_
+#ifndef POLOS_RENDERING_I_RENDER_SYSTEM_HPP
+#define POLOS_RENDERING_I_RENDER_SYSTEM_HPP
 
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/render_pass_layout_description.hpp"
@@ -35,4 +35,4 @@ protected:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_SYSTEM_HPP_
+#endif// POLOS_RENDERING_I_RENDER_SYSTEM_HPP

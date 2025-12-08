@@ -9,23 +9,92 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/key_release.hpp"
-#include "polos/communication/rendering_module_reload.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/communication/window_focus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include <sys/inotify.h>
 
-namespace polos::rendering
-{
-struct VulkanState;
-}
+#include <GLFW/glfw3.h>
 
 namespace polos::platform
 {
+
+namespace
+{
+
+#ifndef NDEBUG
+
+enum class GlfwLogLevel : std::uint8_t
+{
+    Warn,
+    Error,
+    Critical
+};
+
+struct GlfwErrorBehavior
+{
+    GlfwLogLevel level;
+    char const*  message;
+};
+
+GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t t_error_code)
+{
+    switch (t_error_code)
+    {
+        case GLFW_INVALID_ENUM:
+            return {
+                .level   = GlfwLogLevel::Warn,
+                .message = "GLFW received an invalid enum to it's function! Desc: {0}"};
+        case GLFW_INVALID_VALUE:
+            return {
+                .level   = GlfwLogLevel::Warn,
+                .message = "GLFW received an invalid value to it's function! Desc: {0}"};
+        case GLFW_OUT_OF_MEMORY:
+            return {
+                .level   = GlfwLogLevel::Critical,
+                .message = "A memory allocation failed within GLFW or the operating system! Desc: {0}"};
+        case GLFW_API_UNAVAILABLE:
+            return {
+                .level   = GlfwLogLevel::Error,
+                .message = "GLFW could not find support for the requested API on the system! Desc: {0}"};
+        case GLFW_FORMAT_UNAVAILABLE:
+            return {.level = GlfwLogLevel::Error, .message = "The requested pixel format is not supported! Desc: {0}"};
+        default: return {.level = GlfwLogLevel::Error, .message = ""};
+    }
+}
+
+
+void GlfwErrorCallback(std::int32_t t_error_code, const char* t_description)
+{
+    auto const behavior = GetGlfwErrorBehavior(t_error_code);
+    if (behavior.message == nullptr)
+    {
+        LogError("Unknown GLFW error code");
+        return;
+    }
+
+    switch (behavior.level)
+    {
+        case GlfwLogLevel::Warn: LogWarn("{} {}", behavior.message, t_description); break;
+        case GlfwLogLevel::Error: LogError("{} {}", behavior.message, t_description); break;
+        case GlfwLogLevel::Critical: LogCritical("{} {}", behavior.message, t_description); break;
+    }
+}
+#endif
+
+void OnWindowClose()
+{
+    communication::DispatchDefer<communication::engine_terminate>();
+}
+
+void OnEndFrame()
+{
+    glfwPollEvents();
+}
+
+}// namespace
 
 PlatformManager* PlatformManager::s_instance{nullptr};
 
@@ -33,19 +102,19 @@ PlatformManager::PlatformManager()
 {
     using namespace polos::communication;
 
-    Subscribe<end_frame>([this](end_frame&) {
-        on_end_frame();
+    Subscribe<end_frame>([](end_frame&) {
+        OnEndFrame();
     });
 
-    Subscribe<window_close>([this](window_close&) {
-        on_window_close();
+    Subscribe<window_close>([](window_close&) {
+        OnWindowClose();
     });
 
     Subscribe<engine_terminate>([this](engine_terminate&) {
         on_engine_terminate();
     });
 
-    if (!glfwInit())
+    if (!glfwInit())// NOLINT
     {
         LogCritical("Could not initialize GLFW!");
         return;
@@ -54,30 +123,9 @@ PlatformManager::PlatformManager()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 #ifndef NDEBUG
-    glfwSetErrorCallback([](std::int32_t t_error_code, const char* t_description) {
-        switch (t_error_code)
-        {
-            case GLFW_INVALID_ENUM:
-                LogWarn("GLFW received an invalid enum to it's function! Desc: {0}", t_description);
-                break;
-            case GLFW_INVALID_VALUE:
-                LogWarn("GLFW received an invalid value to it's function! Desc: {0}", t_description);
-                break;
-            case GLFW_OUT_OF_MEMORY:
-                LogCritical("A memory allocation failed within GLFW or the operating system! Desc: {0}", t_description);
-                break;
-            case GLFW_API_UNAVAILABLE:
-                LogError("GLFW could not find support for the requested API on the system! Desc: {0}", t_description);
-                break;
-            case GLFW_FORMAT_UNAVAILABLE:
-                LogError("The requested pixel format is not supported! Desc: {0}", t_description);
-                break;
-        }
-    });
+    glfwSetErrorCallback(GlfwErrorCallback);
 #endif// !NDEBUG
 }
-
-PlatformManager::~PlatformManager() {}
 
 PlatformManager& PlatformManager::Instance()
 {
@@ -86,7 +134,8 @@ PlatformManager& PlatformManager::Instance()
 
 bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title)
 {
-    m_window = glfwCreateWindow(t_width, t_height, t_title.data(), NULL, NULL);
+    std::string const title(t_title);
+    m_window = glfwCreateWindow(t_width, t_height, title.c_str(), nullptr, nullptr);
     if (nullptr == m_window)
     {
         LogCritical("Could not create window!");
@@ -97,19 +146,13 @@ bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_heigh
         communication::DispatchDefer<communication::window_close>(t_handle);
     });
 
-    glfwSetWindowFocusCallback(m_window, [](GLFWwindow* p_Window, std::int32_t t_is_focused) {
-        if (p_Window != glfwGetCurrentContext())
-        {
-            glfwMakeContextCurrent(p_Window);
-        }
+    glfwSetWindowFocusCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_is_focused) {
         communication::DispatchDefer<communication::window_focus>(t_is_focused);
     });
 
-    glfwSetFramebufferSizeCallback(
-        m_window,
-        [](GLFWwindow* /*p_Window*/, std::int32_t t_new_width, std::int32_t t_new_height) {
-            communication::DispatchDefer<communication::window_framebuffer_resize>(t_new_width, t_new_height);
-        });
+    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_new_width, std::int32_t t_new_height) {
+        communication::DispatchDefer<communication::window_framebuffer_resize>(t_new_width, t_new_height);
+    });
 
     glfwSetKeyCallback(
         m_window,
@@ -129,23 +172,13 @@ bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_heigh
 
 void PlatformManager::ChangeWindowTitle(std::string_view const t_title)
 {
-    glfwSetWindowTitle(m_window, t_title.data());
+    std::string const title(t_title);
+    glfwSetWindowTitle(m_window, title.c_str());
 }
 
 GLFWwindow* PlatformManager::GetMainWindow() const
 {
     return m_window;
-}
-
-void PlatformManager::on_end_frame() const
-{
-    glfwSwapBuffers(m_window);
-    glfwPollEvents();
-}
-
-void PlatformManager::on_window_close()
-{
-    communication::DispatchDefer<communication::engine_terminate>();
 }
 
 void PlatformManager::on_engine_terminate()

@@ -17,12 +17,20 @@
 namespace polos::core
 {
 
+namespace
+{
+
+constexpr std::int32_t const kWidth{1280};
+constexpr std::int32_t const kHeight{720};
+
+}// namespace
+
 std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 {
     std::unique_ptr<platform::PlatformManager> platform_manager = std::make_unique<platform::PlatformManager>();
     platform::PlatformManager::s_instance                       = platform_manager.get();
 
-    if (!platform_manager->CreateNewWindow(1280, 720, "PolosEngine"))
+    if (!platform_manager->CreateNewWindow(kWidth, kHeight, "PolosEngine"))
     {
         LogCritical("Could not create engine window. Terminating!");
         return 2;
@@ -37,7 +45,7 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
     engine_layer->Create();
     app_layer->Create();
 
-    MainLoop loop{};
+    MainLoop loop{};// NOLINT
     loop.Run();
 
     app_layer->Destroy();

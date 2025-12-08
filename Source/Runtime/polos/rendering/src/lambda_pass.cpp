@@ -16,6 +16,8 @@ LambdaPass::LambdaPass(SetupFunc t_setup_f, ExecuteFunc t_execute_f)
       m_execute_func{std::move(t_execute_f)}
 {}
 
+LambdaPass::~LambdaPass() = default;
+
 void LambdaPass::Setup(RenderPassResolver& t_builder)
 {
     if (nullptr != m_setup_func)

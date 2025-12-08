@@ -1,12 +1,12 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_HPP_
+#ifndef POLOS_RENDERING_SHADER_HPP
+#define POLOS_RENDERING_SHADER_HPP
 
-#include "polos/rendering/common.hpp"
+#include <vulkan/vulkan.h>
 
 namespace polos::rendering
 {
@@ -19,4 +19,4 @@ struct shader
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_HPP_
+#endif// POLOS_RENDERING_SHADER_HPP

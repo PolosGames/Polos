@@ -42,12 +42,10 @@ void ClearScreenSystem::Initialize()
     render_graph_resource_node const& node = m_graph.GetResourceNode(m_sc_img_handle);
 
     texture_2d const* raw_resource = [&node]() -> texture_2d const* {
-        if (auto ptr = node.raw_resource.lock())
+        if (auto ptr = node.raw_resource)
         {
             return ptr.get();
         }
-
-        LogError("Could not grab the texture: {}", node.name);
         return nullptr;
     }();
 

@@ -5,11 +5,14 @@
 
 #include "polos/rendering/vulkan_swapchain.hpp"
 
+#include "polos/communication/error_code.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <GLFW/glfw3.h>
 
@@ -29,60 +32,94 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 {
     m_surface   = t_details.surface;
     m_gfx_queue = t_details.gfx_queue;
+    m_device    = t_details.device->logi_device;
 
-    VkSurfaceCapabilitiesKHR cap;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(t_details.phys_device, m_surface, &cap);
+    setupExtentAndViewport(t_details.phys_device);
+
+    if (!selectFormatAndMode(t_details.device, t_details.preferred_surface_formats, t_details.preferred_present_modes))
+    {
+        return ErrorType{RenderingErrc::kNoAdequateSurface};
+    }
+
+    if (auto res = createSwapchainHandle(t_details.transform_flags); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    LogInfo("Swapchain object created, receiving images for it...");
+
+    if (auto res = createImageViews(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    LogInfo("Swapchain creation done!");
+
+    return {};
+}
+
+auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> void
+{
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(t_phys_device, m_surface, &m_surface_cap);
 
     std::int32_t width{0U};
     std::int32_t height{0U};
     glfwGetFramebufferSize(m_window, &width, &height);
 
-    m_extent.width = std::clamp(static_cast<std::uint32_t>(width), cap.minImageExtent.width, cap.maxImageExtent.width);
-    m_extent.height =
-        std::clamp(static_cast<std::uint32_t>(height), cap.minImageExtent.height, cap.maxImageExtent.height);
+    m_extent.width = std::clamp(
+        static_cast<std::uint32_t>(width),
+        m_surface_cap.minImageExtent.width,
+        m_surface_cap.maxImageExtent.width);
+    m_extent.height = std::clamp(
+        static_cast<std::uint32_t>(height),
+        m_surface_cap.minImageExtent.height,
+        m_surface_cap.maxImageExtent.height);
 
-    m_scissor.offset = {0, 0};
+    m_scissor.offset = {.x = 0, .y = 0};
     m_scissor.extent = m_extent;
 
-    m_viewport.x        = 0.0f;
-    m_viewport.y        = 0.0f;
+    m_viewport.x        = 0.0F;
+    m_viewport.y        = 0.0F;
     m_viewport.width    = static_cast<float>(m_extent.width);
     m_viewport.height   = static_cast<float>(m_extent.height);
-    m_viewport.minDepth = 0.0f;
-    m_viewport.maxDepth = 1.0f;
+    m_viewport.minDepth = 0.0F;
+    m_viewport.maxDepth = 1.0F;
 
-    m_img_count = cap.minImageCount + 1U;
+    m_img_count = m_surface_cap.minImageCount + 1U;
     // No need to have more images then the surface supports for now.
-    if (cap.maxImageCount > 0U && m_img_count > cap.maxImageCount)
+    if (m_surface_cap.maxImageCount > 0U && m_img_count > m_surface_cap.maxImageCount)
     {
-        m_img_count = cap.maxImageCount;
+        m_img_count = m_surface_cap.maxImageCount;
     }
+}
 
-    m_device = t_details.device->logi_device;
-
+auto VulkanSwapchain::selectFormatAndMode(
+    VulkanDevice const*                    t_device,
+    std::vector<VkSurfaceFormatKHR> const& t_formats,
+    std::vector<VkPresentModeKHR> const&   t_modes) -> bool
+{
     bool is_surface_adequate{false};
-    for (auto const& format : t_details.preferred_surface_formats)
+    for (auto const& format : t_formats)
     {
-        if (t_details.device->CheckSurfaceFormatSupport(format))
+        if (t_device->CheckSurfaceFormatSupport(format))
         {
             m_surface_format    = format;
             is_surface_adequate = true;
         }
     }
-    for (auto const mode : t_details.preferred_present_modes)
+    for (auto const mode : t_modes)
     {
-        if (t_details.device->CheckPresentModeSupport(mode))
+        if (t_device->CheckPresentModeSupport(mode))
         {
             m_present_mode      = mode;
             is_surface_adequate = true;
         }
     }
+    return is_surface_adequate;
+}
 
-    if (!is_surface_adequate)
-    {
-        return ErrorType{RenderingErrc::kNoAdequateSurface};
-    }
-
+auto VulkanSwapchain::createSwapchainHandle(VkSurfaceTransformFlagsKHR t_transform_flags) -> Result<void>
+{
     VkSwapchainCreateInfoKHR info{
         .sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext                 = nullptr,
@@ -97,7 +134,7 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
         .imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0U,
         .pQueueFamilyIndices   = nullptr,
-        .preTransform          = static_cast<VkSurfaceTransformFlagBitsKHR>(t_details.transform_flags),
+        .preTransform          = static_cast<VkSurfaceTransformFlagBitsKHR>(t_transform_flags),
         .compositeAlpha        = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode           = m_present_mode,
         .clipped               = VK_TRUE,
@@ -105,12 +142,12 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
     };
 
     // Enable transfer source on swap chain images if supported
-    if (cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT)
+    if (0U != (m_surface_cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT))
     {
         info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
     // Enable transfer destination on swap chain images if supported
-    if (cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+    if (0U != (m_surface_cap.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
     {
         info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     }
@@ -119,8 +156,11 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
         vkCreateSwapchainKHR(m_device, &info, nullptr, &m_swapchain),
         RenderingErrc::kFailedCreateSwapchain);
 
-    LogInfo("Swapchain object created, receiving images for it...");
+    return {};
+}
 
+auto VulkanSwapchain::createImageViews() -> Result<void>
+{
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, nullptr);
     m_images.resize(static_cast<std::size_t>(m_img_count));
     vkGetSwapchainImagesKHR(m_device, m_swapchain, &m_img_count, m_images.data());
@@ -128,9 +168,11 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
 
     LogInfo("Received {} swapchain images.", m_img_count);
 
-    for (std::size_t i = 0U; i < static_cast<std::size_t>(m_img_count); ++i)
+    auto const img_count = static_cast<std::size_t>(m_img_count);
+
+    for (std::size_t i = 0U; i < img_count; ++i)
     {
-        VkImageViewCreateInfo create_info{
+        VkImageViewCreateInfo const create_info{
             .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .pNext    = nullptr,
             .flags    = 0U,
@@ -153,12 +195,11 @@ auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Resul
         };
 
         CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateImageView(t_details.device->logi_device, &create_info, nullptr, &m_image_views[i]),
+            vkCreateImageView(m_device, &create_info, nullptr, &m_image_views[i]),
             RenderingErrc::kFailedCreateSwapchainImageViews);
     }
 
     LogInfo("Created {} image views.", m_image_views.size());
-    LogInfo("Swapchain creation done!");
 
     return {};
 }
@@ -201,7 +242,7 @@ auto VulkanSwapchain::GetViewport() const -> VkViewport const&
 
 auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>
 {
-    VkResult res = vkAcquireNextImageKHR(
+    VkResult const res = vkAcquireNextImageKHR(
         m_device,
         m_swapchain,
         t_details.timeout,
@@ -221,7 +262,7 @@ auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_detai
 
 auto VulkanSwapchain::QueuePresent(VkSemaphore t_wait_semaphore) const -> Result<void>
 {
-    VkPresentInfoKHR present_info{
+    VkPresentInfoKHR const present_info{
         .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext              = nullptr,
         .waitSemaphoreCount = 1U,
@@ -232,7 +273,7 @@ auto VulkanSwapchain::QueuePresent(VkSemaphore t_wait_semaphore) const -> Result
         .pResults           = nullptr,
     };
 
-    VkResult res = vkQueuePresentKHR(m_gfx_queue, &present_info);
+    VkResult const res = vkQueuePresentKHR(m_gfx_queue, &present_info);
 
     if (VK_ERROR_OUT_OF_DATE_KHR == res)
     {

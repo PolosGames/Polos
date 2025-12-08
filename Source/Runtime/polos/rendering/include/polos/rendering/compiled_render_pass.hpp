@@ -1,13 +1,12 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_COMPILED_RENDER_PASS_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_COMPILED_RENDER_PASS_HPP_
+#ifndef POLOS_RENDERING_COMPILED_RENDER_PASS_HPP
+#define POLOS_RENDERING_COMPILED_RENDER_PASS_HPP
 
 #include "polos/rendering/attachment_usage.hpp"
-#include "polos/rendering/common.hpp"
 
 #include <string>
 
@@ -29,4 +28,4 @@ struct compiled_render_pass
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_COMPILED_RENDER_PASS_HPP_
+#endif// POLOS_RENDERING_COMPILED_RENDER_PASS_HPP

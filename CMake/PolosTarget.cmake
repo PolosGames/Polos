@@ -68,11 +68,14 @@ macro(define_polos_module)
         target_link_libraries(${MODULE_NAME} INTERFACE ${MODULE_INTERFACE_DEPS})
     endif ()
 
+    string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPERCASE)
+
     if (NOT MODULE_TYPE STREQUAL "INTERFACE")
         build_options(${MODULE_NAME} true)
         generate_export_header(${MODULE_NAME}
             BASE_NAME ${MODULE_NAME}
             EXPORT_FILE_NAME ${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}/module_macros.hpp
+            INCLUDE_GUARD_NAME "POLOS_${MODULE_NAME_UPPERCASE}_MODULE_MACROS_HPP"
         )
 
         file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")

@@ -49,18 +49,23 @@ char const* DummyApp::Name() const
     return "DummyApp";
 }
 
-void DummyApp::on_engine_update(polos::communication::engine_update&)
+void DummyApp::on_engine_update(polos::communication::engine_update& /**/)
 {
     //LogInfo("Engine Thread Update");
 }
 
-void DummyApp::on_render_update(polos::communication::render_update&) {}
+void DummyApp::on_render_update(polos::communication::render_update& /**/) {}
 
-void DummyApp::on_key_release(polos::communication::key_release) {}
+void DummyApp::on_key_release(polos::communication::key_release /**/) {}
 
 }// namespace dummy_app
 
-polos::core::ILiveLayer* GetLiveLayer(void* t_ptr)
+namespace polos
 {
-    return nullptr == t_ptr ? new dummy_app::DummyApp{} : new (t_ptr) dummy_app::DummyApp{};
+
+polos::core::ILiveLayer* CreateApplication(int /*argc*/, char** /*argv*/)
+{
+    return new dummy_app::DummyApp{};
 }
+
+}// namespace polos

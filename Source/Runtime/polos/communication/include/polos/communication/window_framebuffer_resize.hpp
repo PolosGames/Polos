@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP_
+#ifndef POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP
+#define POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP
 
 #include "polos/communication/event.hpp"
 
@@ -20,8 +20,8 @@ struct window_framebuffer_resize final : base_event
           height{t_height}
     {}
 
-    std::int32_t width;
-    std::int32_t height;
+    std::int32_t width{0U};
+    std::int32_t height{0U};
 };
 
 }// namespace polos::communication
@@ -32,4 +32,4 @@ DEFINE_EVENT_LOG_FORMAT(
     event.width,
     event.height);
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP_
+#endif// POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP

@@ -5,12 +5,26 @@
 
 #include "polos/rendering/render_graph.hpp"
 
+#include "polos/communication/error_code.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
+#include "polos/rendering/i_render_graph.hpp"
 #include "polos/rendering/i_render_pass.hpp"
 #include "polos/rendering/render_context.hpp"
 #include "polos/rendering/render_graph_registry.hpp"
 #include "polos/rendering/render_graph_resource_node.hpp"
 #include "polos/rendering/render_pass_resolver.hpp"
+#include "polos/rendering/texture_2d.hpp"
+#include "polos/rendering/vulkan_resource_manager.hpp"
+
+#include <vulkan/vulkan.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <new>
+#include <string_view>
+#include <vector>
 
 namespace polos::rendering
 {
@@ -21,7 +35,7 @@ RenderGraph::~RenderGraph() = default;
 auto RenderGraph::Create(render_graph_creation_details const& t_details) -> Result<void>
 {
     m_device  = t_details.device;
-    m_context = reinterpret_cast<RenderContext*>(std::launder(t_details.context));
+    m_context = reinterpret_cast<RenderContext*>(std::launder(t_details.context));// NOLINT
 
     return {};
 }
@@ -50,7 +64,7 @@ auto RenderGraph::Compile() -> void
 
 auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
 {
-    RenderGraphRegistry registry;
+    RenderGraphRegistry const registry;
     {
         for (auto const& pass : m_compiled_passes)
         {
@@ -68,22 +82,22 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
             std::vector<VkImageView> attachment_views;
             VkExtent2D               root_extent;
 
-            VkClearValue clear_color = pass.attachments[0].clear_value;
+            VkClearValue const clear_color = pass.attachments[0].clear_value;
 
-            if (auto ptr = GetResourceNode(pass.attachments[0].handle).raw_resource.lock())
+            if (auto const ptr = GetResourceNode(pass.attachments[0].handle).raw_resource)
             {
                 root_extent = ptr->extent;
             }
 
             for (auto const& attachment : pass.attachments)
             {
-                if (auto ptr = GetResourceNode(attachment.handle).raw_resource.lock())
+                if (auto const ptr = GetResourceNode(attachment.handle).raw_resource)
                 {
                     attachment_views.push_back(ptr->view);
                 }
             }
 
-            VkFramebufferCreateInfo fb_info{
+            VkFramebufferCreateInfo const fb_info{
                 .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                 .pNext           = nullptr,
                 .flags           = 0U,
@@ -99,7 +113,7 @@ auto RenderGraph::Execute(VkCommandBuffer t_cmd_buf) -> void
             vkCreateFramebuffer(m_device, &fb_info, nullptr, &pass_fb);
             m_context->AddFramebufferToCurrentFrame(pass_fb);
 
-            VkRenderPassBeginInfo pass_begin_info{
+            VkRenderPassBeginInfo const pass_begin_info{
                 .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                 .pNext       = nullptr,
                 .renderPass  = pass.raw_pass->vk_pass,
@@ -140,7 +154,7 @@ auto RenderGraph::GetCompiledRenderPass(std::size_t t_pass_index) -> compiled_re
 auto RenderGraph::ImportTexture(std::string_view t_name, std::shared_ptr<texture_2d> const& t_texture)
     -> RenderGraphResourceHandle
 {
-    RenderGraphResourceHandle handle = create_handle(RenderGraphResourceType::kTexture);
+    RenderGraphResourceHandle const handle = create_handle(RenderGraphResourceType::kTexture);
 
     render_graph_resource_node& node = m_resources[handle.Index()];
 
@@ -172,8 +186,8 @@ auto RenderGraph::acquire_resource_slot_index() -> std::size_t
 
 auto RenderGraph::create_handle(RenderGraphResourceType t_type) -> RenderGraphResourceHandle
 {
-    std::uint16_t version{0U};
-    std::size_t   index = acquire_resource_slot_index();
+    std::uint16_t     version{0U};
+    std::size_t const index = acquire_resource_slot_index();
 
     // Fine for both invalid and valid handles, since invalid will just return 0.
     version = m_resources[index].handle.Version();
@@ -187,12 +201,12 @@ auto RenderGraph::destroy_handle(RenderGraphResourceHandle t_handle) -> void
         return;
     }
 
-    std::size_t index = t_handle.Index();
+    std::size_t const index = t_handle.Index();
 
     m_free_resource_indices.push_back(index);
 
-    RenderGraphResourceHandle current_handle = m_resources[index].handle;
-    m_resources[index].handle                = RenderGraphResourceHandle::Create(
+    RenderGraphResourceHandle const current_handle = m_resources[index].handle;
+    m_resources[index].handle                      = RenderGraphResourceHandle::Create(
         current_handle.Index16(),
         current_handle.Type(),
         current_handle.Version() + 1);
@@ -205,7 +219,7 @@ auto RenderGraph::is_handle_valid(RenderGraphResourceHandle t_handle) -> bool
         return false;
     }
 
-    std::size_t index = t_handle.Index();
+    std::size_t const index = t_handle.Index();
     if (index >= m_resources.size())
     {
         return false;

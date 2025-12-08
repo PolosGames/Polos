@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
-#define POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
+#ifndef POLOS_LOGGING_LOGGER_HPP
+#define POLOS_LOGGING_LOGGER_HPP
 
 #include "polos/logging/module_macros.hpp"
 
@@ -24,6 +24,8 @@ LOGGING_EXPORT void FlushLogger(quill::Logger* t_logger);
 class LOGGING_EXPORT Logger
 {
 public:
+    ~Logger() = default;
+
     Logger(Logger const&)            = delete;
     Logger(Logger&&)                 = delete;
     Logger& operator=(Logger const&) = delete;
@@ -52,4 +54,4 @@ private:
 
 }// namespace polos::logging
 
-#endif// POLOS_LOGGING_INCLUDE_POLOS_LOGGING_LOGGER_HPP_
+#endif// POLOS_LOGGING_LOGGER_HPP

@@ -1,17 +1,18 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP_
+#ifndef POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP
+#define POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP
 
-#include "polos/rendering/common.hpp"
+#include "polos/communication/error_code.hpp"
 #include "polos/rendering/shader.hpp"
 
 #include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace polos::rendering
 {
@@ -21,7 +22,7 @@ class VulkanDevice;
 class VulkanSwapchain;
 struct texture_2d;
 
-struct resource_manager_create_details
+struct alignas(64) resource_manager_create_details// NOLINT
 {
     // Custom name, Path
     VkDevice         device;
@@ -49,15 +50,15 @@ public:
     auto GetShaderModule(std::string const& t_name) -> VkShaderModule;
     auto GetTexture(std::string const& t_name) -> VkShaderModule;
 private:
-    auto loadShaderFromFile(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
+    auto loadShaderFromFile(std::string_view t_shader_custom_name, std::filesystem::path const& t_path)
         -> Result<std::pair<std::string, shader>>;
     auto onFramebufferResize() -> void;
 
     friend class RenderContext;
     static VulkanResourceManager* s_instance;
 
-    VkDevice         m_device;
-    VulkanSwapchain* m_swapchain;
+    VkDevice         m_device{VK_NULL_HANDLE};
+    VulkanSwapchain* m_swapchain{nullptr};
 
     std::unordered_map<std::string, shader>  m_shader_cache;
     std::vector<std::shared_ptr<texture_2d>> m_textures;
@@ -69,4 +70,4 @@ VulkanResourceManager& GetVRM();
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP_
+#endif// POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP

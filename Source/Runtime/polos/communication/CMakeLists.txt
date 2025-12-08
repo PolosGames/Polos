@@ -23,7 +23,6 @@ define_polos_module(
         "src/event_bus.cpp"
     PUBLIC_DEPS
         polos::logging
-        polos::memory
     PRIVATE_DEPS
         polos::utils
     TEST_SOURCES

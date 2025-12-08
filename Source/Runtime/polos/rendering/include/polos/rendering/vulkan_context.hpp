@@ -1,13 +1,14 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_CONTEXT_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_CONTEXT_HPP_
+#ifndef POLOS_RENDERING_VULKAN_CONTEXT_HPP
+#define POLOS_RENDERING_VULKAN_CONTEXT_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/common.hpp"
+
+#include <vulkan/vulkan.h>
 
 namespace polos::rendering
 {
@@ -26,11 +27,10 @@ public:
     auto Create() -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    VkInstance instance;
+    VkInstance instance{VK_NULL_HANDLE};
 private:
     auto create_instance() -> VkResult;
     auto enable_validation_layers() -> void;
-    auto create_debug_messenger_create_info() const -> VkDebugUtilsMessengerCreateInfoEXT;
 
     void const* m_instance_pnext{nullptr};
 
@@ -42,4 +42,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_VULKAN_CONTEXT_HPP_
+#endif// POLOS_RENDERING_VULKAN_CONTEXT_HPP

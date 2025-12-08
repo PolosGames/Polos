@@ -15,7 +15,7 @@ ClearScreenPass::ClearScreenPass(RenderGraphResourceHandle t_handle)
     : m_sc_img_handle{t_handle}
 {}
 
-void ClearScreenPass::Setup(RenderPassResolver& t_builder)
+auto ClearScreenPass::Setup(RenderPassResolver& t_builder) -> void
 {
     t_builder.Write(
         attachment_usage{
@@ -26,7 +26,7 @@ void ClearScreenPass::Setup(RenderPassResolver& t_builder)
         });
 }
 
-void ClearScreenPass::Execute(VkCommandBuffer, const RenderGraphRegistry&) {}
+auto ClearScreenPass::Execute(VkCommandBuffer /**/, const RenderGraphRegistry& /**/) -> void {}
 
 char const* ClearScreenPass::Name() const
 {

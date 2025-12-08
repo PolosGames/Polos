@@ -49,3 +49,4 @@ ptp.cpp
 
 **/polos_config.h
 **.code-workspace
+Source/Config/include/polos/polos_config.hpp

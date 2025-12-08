@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP_
+#ifndef POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP
+#define POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP
 
 #include "polos/rendering/i_render_pass.hpp"
 
@@ -20,7 +20,7 @@ public:
     using ExecuteFunc = std::function<void(VkCommandBuffer, const RenderGraphRegistry&)>;
 
     explicit LambdaPass(SetupFunc t_setup_f, ExecuteFunc t_execute_f);
-    ~LambdaPass() override = default;
+    ~LambdaPass() override;
 
     void Setup(RenderPassResolver& t_builder) override;
     void Execute(VkCommandBuffer t_cmd_buf, const RenderGraphRegistry& t_registry) override;
@@ -31,4 +31,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP_
+#endif// POLOS_RENDERING_RENDER_PASS_LAMBDA_PASS_HPP

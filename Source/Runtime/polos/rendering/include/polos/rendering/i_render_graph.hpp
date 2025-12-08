@@ -1,12 +1,14 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_GRAPH_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_GRAPH_HPP_
+#ifndef POLOS_RENDERING_I_RENDER_GRAPH_HPP
+#define POLOS_RENDERING_I_RENDER_GRAPH_HPP
 
-#include "polos/rendering/common.hpp"
+#include "polos/communication/error_code.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <memory>
 #include <vector>
@@ -16,6 +18,7 @@ namespace polos::rendering
 
 class IRenderContext;
 class IRenderPass;
+
 
 struct render_graph_creation_details
 {
@@ -28,8 +31,8 @@ class IRenderGraph
 public:
     virtual ~IRenderGraph() = default;
 
-    virtual Result<void> Create(render_graph_creation_details const& t_device) = 0;
-    virtual Result<void> Destroy()                                             = 0;
+    virtual auto Create(render_graph_creation_details const& t_device) -> Result<void> = 0;
+    virtual auto Destroy() -> Result<void>                                             = 0;
 
     template<typename PassType, typename... Args>
         requires std::is_base_of_v<IRenderPass, PassType>
@@ -40,14 +43,14 @@ public:
         return (*m_passes.rbegin()).get();
     }
 
-    virtual void Compile()                      = 0;
-    virtual void Execute(VkCommandBuffer t_buf) = 0;
-    virtual void Reset()                        = 0;
+    virtual auto Compile() -> void                      = 0;
+    virtual auto Execute(VkCommandBuffer t_buf) -> void = 0;
+    virtual auto Reset() -> void                        = 0;
 protected:
     std::vector<std::unique_ptr<IRenderPass>> m_passes;
-    IRenderContext*                           m_context;
+    IRenderContext*                           m_context{nullptr};
 };
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_I_RENDER_GRAPH_HPP_
+#endif// POLOS_RENDERING_I_RENDER_GRAPH_HPP

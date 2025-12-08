@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_CODE_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_CODE_HPP_
+#ifndef POLOS_COMMUNICATION_ERROR_CODE_HPP
+#define POLOS_COMMUNICATION_ERROR_CODE_HPP
 
 #include "polos/communication/error_domain.hpp"
 
@@ -39,7 +39,7 @@ public:
     /// @param t_code An enum-typed error code that belongs to a specific domain.
     template<typename EnumT>
         requires(HasMakeErrorCode<EnumT> && !std::is_same_v<EnumT, ErrorCode>)
-    constexpr ErrorCode(EnumT t_code)
+    constexpr explicit ErrorCode(EnumT t_code)
         : ErrorCode(MakeErrorCode(t_code))
     {}
 
@@ -52,7 +52,7 @@ public:
     /// @brief Return the raw error code enum.
     /// @return Raw error code value
     ///
-    constexpr CodeType Code() const
+    [[nodiscard]] constexpr auto Code() const -> CodeType
     {
         return m_code;
     }
@@ -61,7 +61,7 @@ public:
     /// @brief Return the domain that this ErrorCode object belongs to.
     /// @return ErrorDomain.
     ///
-    constexpr ErrorDomain const& Domain() const
+    [[nodiscard]] constexpr auto Domain() const -> ErrorDomain const&
     {
         return m_domain.get();
     }
@@ -70,7 +70,7 @@ public:
     /// @brief Return the message for this error code, that is determined by the ErrorDomain
     /// @return Error message asssociated with this error code.
     ///
-    constexpr std::string_view Message() const
+    [[nodiscard]] constexpr auto Message() const -> std::string_view
     {
         return Domain().Message(Code());
     }
@@ -79,7 +79,7 @@ public:
     /// @brief Return the message for this error code, that is determined by the ErrorDomain
     /// @return Error message asssociated with this error code.
     ///
-    constexpr operator std::string_view() const
+    [[nodiscard]] constexpr explicit operator std::string_view() const
     {
         return Message();
     }
@@ -90,12 +90,12 @@ private:
     std::reference_wrapper<ErrorDomain const> m_domain;
 };
 
-constexpr inline bool operator==(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
+constexpr bool operator==(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
 {
-    return (t_lhs.Domain() == t_rhs.Domain()) && (t_lhs.Code() && t_rhs.Code());
+    return (t_lhs.Domain() == t_rhs.Domain()) && (t_lhs.Code() == t_rhs.Code());
 }
 
-constexpr inline bool operator!=(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
+constexpr bool operator!=(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
 {
     return !operator==(t_lhs, t_rhs);
 }
@@ -103,9 +103,13 @@ constexpr inline bool operator!=(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
 }// namespace polos::communication
 
 template<>
-struct fmtquill::formatter<polos::communication::ErrorCode> : fmtquill::formatter<std::string_view>
+struct fmtquill::formatter<polos::communication::ErrorCode>
 {
-    auto format(polos::communication::ErrorCode const& event, format_context& ctx) const
+    constexpr auto parse(format_parse_context& ctx)// NOLINT
+    {
+        return ctx.begin();
+    }
+    constexpr auto format(polos::communication::ErrorCode const& event, format_context& ctx) const// NOLINT
     {
         return fmtquill::format_to(ctx.out(), "{}", event.Message());
     }
@@ -128,4 +132,4 @@ using ErrorType = std::unexpected<communication::ErrorCode>;
 
 }// namespace polos
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_CODE_HPP_
+#endif// POLOS_COMMUNICATION_ERROR_CODE_HPP

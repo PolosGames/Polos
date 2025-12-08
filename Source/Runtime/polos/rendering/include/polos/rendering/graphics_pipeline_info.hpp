@@ -1,14 +1,15 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP_
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP_
+#ifndef POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP
+#define POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP
 
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/shader.hpp"
 #include "polos/rendering/vertex.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <cstdint>
 #include <string>
@@ -29,12 +30,12 @@ struct graphics_pipeline_info
     VkPolygonMode   polygon_mode;
     VkCullModeFlags cull_mode;
     VkFrontFace     front_face;
-    bool            depth_bias_enable;
+    VkBool32        depth_bias_enable;
 
     VkSampleCountFlagBits multisampling;
 
-    bool        depth_test_enable;
-    bool        depth_write_enable;
+    VkBool32    depth_test_enable;
+    VkBool32    depth_write_enable;
     VkCompareOp depth_compare_op;
 
     // For a shadow pass, this will be empty as we don't write to color targets.
@@ -48,4 +49,4 @@ struct graphics_pipeline_info
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP_
+#endif// POLOS_RENDERING_GRAPHICS_PIPELINE_INFO_HPP

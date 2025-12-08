@@ -19,23 +19,23 @@
 
 namespace polos::logging
 {
-QUILL_EXPORT quill::Logger* g_polos_logger;
-QUILL_EXPORT quill::Logger* g_polly_logger;
-QUILL_EXPORT quill::Logger* g_app_logger;
+QUILL_EXPORT quill::Logger const* g_polos_logger;
+QUILL_EXPORT quill::Logger const* g_polly_logger;
+QUILL_EXPORT quill::Logger const* g_app_logger;
 
 void setup_quill()
 {
     static constexpr quill::LogLevel log_level{quill::LogLevel::Debug};
 
-    quill::BackendOptions backend_options;
+    quill::BackendOptions const backend_options{};
     quill::Backend::start(backend_options);
 
-    quill::PatternFormatterOptions formatter_options{
+    quill::PatternFormatterOptions const formatter_options{
         "[%(time)] %(log_level:<3) %(logger:<6) [%(short_source_location)] %(message)",// LOG
         "%H:%M:%S.%Qms"                                                                // TIME
     };
 
-    auto std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
+    auto const std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
     // auto pl_sink  = quill::Frontend::create_or_get_sink<quill::FileSink>("polos.log", []() {
     //     quill::FileSinkConfig config;
     //     config.set_open_mode('a');
@@ -43,13 +43,17 @@ void setup_quill()
     //     return config;
     // }());
 
-    g_polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
-    g_polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
-    g_app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
+    auto* const polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
+    auto* const polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
+    auto* const app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
 
-    g_polos_logger->set_log_level(log_level);
-    g_polly_logger->set_log_level(log_level);
-    g_app_logger->set_log_level(log_level);
+    polos_logger->set_log_level(log_level);
+    polly_logger->set_log_level(log_level);
+    app_logger->set_log_level(log_level);
+
+    g_polos_logger = polos_logger;
+    g_polly_logger = polly_logger;
+    g_app_logger   = app_logger;
 }
 
 quill::Logger* get_logger(std::string const& name)

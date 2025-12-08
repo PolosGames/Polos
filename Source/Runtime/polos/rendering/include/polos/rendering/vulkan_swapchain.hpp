@@ -1,24 +1,27 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_RENDERING_INCLUDE_VULKAN_SWAPCHAIN_HPP_
-#define POLOS_RENDERING_INCLUDE_VULKAN_SWAPCHAIN_HPP_
+#ifndef POLOS_RENDERING_VULKAN_SWAPCHAIN_HPP
+#define POLOS_RENDERING_VULKAN_SWAPCHAIN_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/module_macros.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <limits>
 #include <vector>
+
+struct GLFWwindow;
 
 namespace polos::rendering
 {
 
 class VulkanDevice;
 
-struct swapchain_create_details
+struct alignas(128) swapchain_create_details// NOLINT
 {
     VulkanDevice const* device;
     VkPhysicalDevice    phys_device{VK_NULL_HANDLE};
@@ -31,7 +34,7 @@ struct swapchain_create_details
     VkSurfaceTransformFlagsKHR transform_flags{0U};
 };
 
-struct acquire_next_image_details
+struct alignas(32) acquire_next_image_details// NOLINT
 {
     VkSemaphore   semaphore{VK_NULL_HANDLE};
     VkFence       fence{VK_NULL_HANDLE};
@@ -41,7 +44,7 @@ struct acquire_next_image_details
 class RENDERING_EXPORT VulkanSwapchain
 {
 public:
-    VulkanSwapchain(GLFWwindow* t_window);
+    explicit VulkanSwapchain(GLFWwindow* t_window);
     ~VulkanSwapchain();
 
     VulkanSwapchain(VulkanSwapchain const&)            = delete;
@@ -52,33 +55,42 @@ public:
     auto Create(swapchain_create_details const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
-    auto GetExtent() const -> VkExtent2D const&;
-    auto GetScissor() const -> VkRect2D const&;
-    auto GetViewport() const -> VkViewport const&;
+    [[nodiscard]] auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
+    [[nodiscard]] auto GetExtent() const -> VkExtent2D const&;
+    [[nodiscard]] auto GetScissor() const -> VkRect2D const&;
+    [[nodiscard]] auto GetViewport() const -> VkViewport const&;
 
     auto AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>;
     auto QueuePresent(VkSemaphore t_wait_semaphore) const -> Result<void>;
 
-    auto GetCurrentImage() const -> VkImage;
-    auto GetCurrentImageIndex() const -> std::uint32_t;
-    auto GetCurrentImageView() const -> VkImageView;
+    [[nodiscard]] auto GetCurrentImage() const -> VkImage;
+    [[nodiscard]] auto GetCurrentImageIndex() const -> std::uint32_t;
+    [[nodiscard]] auto GetCurrentImageView() const -> VkImageView;
 
-    auto GetImage(std::uint32_t t_index) const -> VkImage;
-    auto GetImageView(std::uint32_t t_index) const -> VkImageView;
-    auto GetImageCount() const -> std::uint32_t;
+    [[nodiscard]] auto GetImage(std::uint32_t t_index) const -> VkImage;
+    [[nodiscard]] auto GetImageView(std::uint32_t t_index) const -> VkImageView;
+    [[nodiscard]] auto GetImageCount() const -> std::uint32_t;
 private:
+    auto setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> void;
+    auto selectFormatAndMode(
+        VulkanDevice const*                    t_device,
+        std::vector<VkSurfaceFormatKHR> const& t_formats,
+        std::vector<VkPresentModeKHR> const&   t_modes) -> bool;
+    auto createSwapchainHandle(VkSurfaceTransformFlagsKHR t_transform_flags) -> Result<void>;
+    auto createImageViews() -> Result<void>;
+
     VkSwapchainKHR m_swapchain{VK_NULL_HANDLE};
 
     VkSurfaceKHR m_surface{VK_NULL_HANDLE};
     VkDevice     m_device{VK_NULL_HANDLE};
     VkQueue      m_gfx_queue{VK_NULL_HANDLE};
 
-    VkSurfaceFormatKHR m_surface_format;
-    VkPresentModeKHR   m_present_mode;
-    VkExtent2D         m_extent;
-    VkRect2D           m_scissor;
-    VkViewport         m_viewport;
+    VkSurfaceFormatKHR       m_surface_format{};
+    VkSurfaceCapabilitiesKHR m_surface_cap{};
+    VkPresentModeKHR         m_present_mode{};
+    VkExtent2D               m_extent{};
+    VkRect2D                 m_scissor{};
+    VkViewport               m_viewport{};
 
     std::uint32_t            m_current_image{0U};
     std::uint32_t            m_img_count{0U};
@@ -90,4 +102,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_VULKAN_SWAPCHAIN_HPP_
+#endif// POLOS_RENDERING_VULKAN_SWAPCHAIN_HPP

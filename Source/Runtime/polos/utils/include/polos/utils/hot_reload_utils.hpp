@@ -1,10 +1,10 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_UTILS_INCLUDE_POLOS_UTILS_HOT_RELOAD_UTILS_HPP_
-#define POLOS_UTILS_INCLUDE_POLOS_UTILS_HOT_RELOAD_UTILS_HPP_
+#ifndef POLOS_UTILS_HOT_RELOAD_UTILS_HPP
+#define POLOS_UTILS_HOT_RELOAD_UTILS_HPP
 
 #include "polos/polos_config.hpp"
 
@@ -14,4 +14,4 @@
 #    include "polos/utils/windows_hot_reload_utils.hpp"
 #endif
 
-#endif// POLOS_UTILS_INCLUDE_POLOS_UTILS_HOT_RELOAD_UTILS_HPP_
+#endif// POLOS_UTILS_HOT_RELOAD_UTILS_HPP

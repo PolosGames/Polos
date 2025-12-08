@@ -1,16 +1,19 @@
-//
-// Copyright (c) 2025 Kayra Urfali
-// Permission is hereby granted under the MIT License - see LICENSE for details.
-//
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_DOMAIN_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_DOMAIN_HPP_
+#ifndef POLOS_COMMUNICATION_ERROR_DOMAIN_HPP
+#define POLOS_COMMUNICATION_ERROR_DOMAIN_HPP
 
 #include <cstdint>
 #include <string_view>
 
 namespace polos::communication
 {
+
+constexpr std::uint8_t const kFilesystemErrorDomainId{0x03U};
+constexpr std::uint8_t const kRenderingErrorDomainId{0x06U};
 
 ///
 /// @brief A class representing a domain's all error values and their related messages.
@@ -36,19 +39,19 @@ public:
     /// @brief Returns the name of the error domain
     /// @return Name of error domain in a null-terminated string.
     ///
-    virtual std::string_view Name() const = 0;
+    [[nodiscard]] virtual auto Name() const -> std::string_view = 0;
 
     ///
     /// @brief Determines and returns the message that is corresponding to the error-code given.
     /// @return Name of error domain in a null-terminated string.
     ///
-    virtual std::string_view Message(CodeType t_code) const = 0;
+    [[nodiscard]] virtual auto Message(CodeType t_code) const -> std::string_view = 0;
 
     ///
     /// @brief Returns the pre-determined id for this domain
     /// @return Id for this domain
     ///
-    constexpr IdType Id() const
+    [[nodiscard]] constexpr IdType Id() const
     {
         return m_id;
     }
@@ -62,16 +65,16 @@ private:
     IdType const m_id;
 };
 
-constexpr bool operator==(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs)
+constexpr auto operator==(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs) -> bool
 {
     return t_lhs.Id() == t_rhs.Id();
 }
 
-constexpr bool operator!=(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs)
+constexpr auto operator!=(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs) -> bool
 {
     return !operator==(t_lhs, t_rhs);
 }
 
 }// namespace polos::communication
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_ERROR_DOMAIN_HPP_
+#endif// POLOS_COMMUNICATION_ERROR_DOMAIN_HPP

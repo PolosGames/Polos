@@ -3,19 +3,17 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
-#define POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
+#ifndef POLOS_COMMUNICATION_EVENT_BUS_HPP
+#define POLOS_COMMUNICATION_EVENT_BUS_HPP
 
 #include "polos/communication/event.hpp"
 #include "polos/communication/event_defer_options.hpp"
 #include "polos/communication/module_macros.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/memory/debug_memory_resource.hpp"
 
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <expected>
 #include <functional>
 #include <utility>
 
@@ -63,7 +61,7 @@ public:
     /// @tparam Args
     /// @param args
     template<PolosEvent EventType, typename... Args>
-    auto Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> std::size_t;
+    auto Dispatch(EventDeferOptions t_defer, Args&&... t_args) -> std::size_t;
 
     /// @brief Dispatches all deferred events that were queued with EventDeferOptions::NextFrame.
     /// This should be called at the beginning of each frame.
@@ -71,7 +69,7 @@ public:
 private:
     EventBus();
 
-    // TODO: Make a freelist so we can unsubscribe
+    // TODO(sorbatdev): Make a freelist so we can unsubscribe
     using CallbackMap = std::unordered_map<std::int64_t, std::vector<BaseEventDelegate>>;
 
     std::int64_t                             m_next_id{0};
@@ -84,15 +82,15 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
 {
     LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Subscribe]");
 
-    std::int64_t event_hash = EventHash<EventType>();
+    std::int64_t const event_hash = EventHash<EventType>();
     LogDebugCtx(LOG_CTX_POLOS, "Subscribing to: EventHash: {}, Name: {}", event_hash, EventType::Name());
 
     // Give each subscriber of any event a unique id.
-    auto subscriber_id = m_next_id++;
+    auto const subscriber_id = m_next_id++;
 
     m_callbacks.insert({event_hash, std::vector<BaseEventDelegate>()});
     auto& event_queue = m_callbacks[event_hash];
-    event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));
+    event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));// NOLINT
 
     return subscriber_id;
 }
@@ -100,14 +98,14 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
 template<PolosEvent EventType, typename... Args>
 auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> std::size_t
 {
-    CallbackMap::iterator it = m_callbacks.find(EventHash<EventType>());
-    if (it == m_callbacks.end())
+    auto const itr = m_callbacks.find(EventHash<EventType>());
+    if (itr == m_callbacks.end())
     {
         LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
         return 0U;
     }
 
-    auto& subcribers_callbacks = it->second;
+    auto& subcribers_callbacks = itr->second;
 
     if (t_defer == EventDeferOptions::kImmediate)
     {
@@ -126,7 +124,7 @@ auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> st
 template<PolosEvent EventType>
 auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
 {
-    return EventBus::Instance().Subscribe(t_callback);
+    return EventBus::Instance().Subscribe(std::move(t_callback));
 }
 
 template<PolosEvent EventType, typename... Args>
@@ -145,4 +143,5 @@ COMMUNICATION_EXPORT auto DispatchDeferredEvents() -> void;
 
 }// namespace polos::communication
 
-#endif// POLOS_COMMUNICATION_INCLUDE_POLOS_COMMUNICATION_EVENT_BUS_HPP_
+
+#endif// POLOS_COMMUNICATION_EVENT_BUS_HPP
