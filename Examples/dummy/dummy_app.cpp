@@ -33,7 +33,7 @@ void DummyApp::Create()
 {
     polos::communication::Subscribe<polos::communication::engine_update>(
         [this](polos::communication::engine_update& t_event) {
-            on_engine_update(t_event);
+            onEngineUpdate(t_event);
         });
 
     polos::communication::Subscribe<polos::communication::render_update>(
@@ -58,7 +58,7 @@ char const* DummyApp::Name() const
     return "DummyApp";
 }
 
-void DummyApp::on_engine_update(polos::communication::engine_update& /**/)
+void DummyApp::onEngineUpdate(polos::communication::engine_update& /**/)
 {
     //LogInfo("Engine Thread Update");
 }

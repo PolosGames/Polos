@@ -38,7 +38,6 @@ set(RENDERING_THIRD_PARTY_DEPS
 )
 
 if (HOT_RELOAD)
-    set(impl_lib polos::rendering_impl)
     set(RENDERING_SRC "")
 
     define_polos_module(
@@ -62,7 +61,6 @@ if (HOT_RELOAD)
             polos::filesystem
     )
 else()
-    set(impl_lib "")
     set(RENDERING_SRC ${RENDERING_IMPL_SRC})
 endif()
 
@@ -79,7 +77,6 @@ define_polos_module(
         ${RENDERING_SRC}
 
     PUBLIC_DEPS
-        ${impl_lib}
         ${RENDERING_THIRD_PARTY_DEPS}
         polos::logging
 
@@ -91,5 +88,4 @@ define_polos_module(
         "test/mock/mock_vulkan_device.hpp"
         "test/common_test.cpp"
         "test/pipeline_cache_test.cpp"
-        "test/render_graph_test.cpp"
 )

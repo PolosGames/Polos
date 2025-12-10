@@ -48,7 +48,7 @@ TEST(RenderGraphResourceHandleTest, DifferentTypesNotEqual)
 TEST(RenderGraphResourceHandleTest, MaxValues)
 {
     constexpr std::uint16_t max_index   = 0xFFFF;
-    constexpr std::uint16_t max_version = 0xFFFF;
+    constexpr std::uint16_t max_version = (1U << 12U) - 1U;// 12 bits for version
 
     auto handle = RenderGraphResourceHandle::Create(max_index, RenderGraphResourceType::kTexture, max_version);
 

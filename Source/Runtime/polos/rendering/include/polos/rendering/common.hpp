@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_COMMON_HPP
 
 #include "polos/communication/error_code.hpp"
+#include "polos/rendering/module_macros.hpp"
 
 #define CHECK_VK_SUCCESS_OR_ERR(Result, Errc) \
     if (VK_SUCCESS != (Result))               \
@@ -25,7 +26,7 @@ enum class RenderGraphResourceType : uint8_t
     kBuffer,
 };
 
-struct RenderGraphResourceHandle
+struct RENDERING_EXPORT RenderGraphResourceHandle
 {
     [[nodiscard]] auto Index() const -> std::size_t;
     [[nodiscard]] auto Index16() const -> std::uint16_t;
@@ -53,7 +54,7 @@ inline auto operator==(RenderGraphResourceHandle t_lhs, RenderGraphResourceHandl
 
 inline auto operator!=(RenderGraphResourceHandle t_lhs, RenderGraphResourceHandle t_rhs) -> bool
 {
-    return operator==(t_lhs, t_rhs);
+    return !operator==(t_lhs, t_rhs);
 }
 
 }// namespace polos::rendering
