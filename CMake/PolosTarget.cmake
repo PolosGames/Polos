@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 include(GoogleTest)
 
+file(WRITE "${CMAKE_BINARY_DIR}/test_main.cpp" "#include <gtest/gtest.h>\nint main(int argc, char** argv) { ::testing::InitGoogleTest(&argc, argv); return RUN_ALL_TESTS(); }")
+
 macro(generate_versioning_info)
     set(oneValueArgs
         NAME
@@ -143,50 +145,51 @@ macro(define_polos_module)
         add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
     endif()
 
+    set(MODULE_TARGET polos::${MODULE_NAME})
 
-    if (${BUILD_TESTS} AND MODULE_TEST_SOURCES)
-        message(STATUS "[POLOS] Building tests for: ${MODULE_NAME}")
+    if (${BUILD_TESTS} AND MODULE_TEST_SOURCES AND NOT HOT_RELOAD)
+        message(STATUS "[POLOS] Building tests for: ${MODULE_TARGET}")
 
-        set(MODULE_TEST_NAME ut-${MODULE_NAME})
-        set(MODULE_TEST_NAME ${MODULE_TEST_NAME} PARENT_SCOPE)
+        set(MODULE_TEST_TARGET ut-${MODULE_NAME})
 
-        add_executable(${MODULE_TEST_NAME} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA})
+        add_executable(${MODULE_TEST_TARGET} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA} "${CMAKE_BINARY_DIR}/test_main.cpp")
 
         set_target_properties(
-            ${MODULE_TEST_NAME} PROPERTIES
+            ${MODULE_TEST_TARGET} PROPERTIES
             CXX_STANDARD              ${POLOS_CXX_STANDARD}
             CXX_STANDARD_REQUIRED     True
             POSITION_INDEPENDENT_CODE True
-            OUTPUT_NAME               "${MODULE_TEST_NAME}"
+            OUTPUT_NAME               "${MODULE_TEST_TARGET}"
             LINKER_LANGUAGE           CXX
             CXX_VISIBILITY_PRESET     hidden
             VISIBILITY_INLINES_HIDDEN True
         )
 
         if (LINUX)
-            set_target_properties(${MODULE_TEST_NAME}
+            set_target_properties(${MODULE_TEST_TARGET}
                 PROPERTIES
                 INSTALL_RPATH ${POLOS_INSTALL_DIR}
                 BUILD_WITH_INSTALL_RPATH 1
             )
         endif()
 
-        target_include_directories(${MODULE_TEST_NAME} PRIVATE src)
-        target_link_libraries(${MODULE_TEST_NAME}
+        target_include_directories(${MODULE_TEST_TARGET} PRIVATE src)
+        target_link_libraries(${MODULE_TEST_TARGET}
             PRIVATE
                 GTest::gtest
-                ${MODULE_NAME}
+                ${MODULE_TARGET}
+                ${MODULE_PRIVATE_DEPS}
         )
 
         if (MODULE_TEST_DEPS)
-            target_link_libraries(${MODULE_TEST_NAME} PRIVATE ${MODULE_TEST_DEPS})
+            target_link_libraries(${MODULE_TEST_TARGET} PRIVATE ${MODULE_TEST_DEPS})
         endif ()
 
-        target_compile_definitions(${MODULE_TEST_NAME} PRIVATE PL_LOGGER_TYPE=App)
-        target_compile_definitions(${MODULE_TEST_NAME} PRIVATE QUILL_DLL_IMPORT)
+        target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE PL_LOGGER_TYPE=App)
+        target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE QUILL_DLL_IMPORT BUILD_TESTS)
 
         gtest_add_tests(
-            TARGET ${MODULE_TEST_NAME}
+            TARGET ${MODULE_TEST_TARGET}
             TEST_LIST MODULE_TEST_LIST
             EXTRA_ARGS ${MODULE_TEST_EXTRA_ARGS}
         )
@@ -199,8 +202,8 @@ macro(define_polos_module)
         )
 
         # TODO: Not cross platform. Only for Windows for now.
-        add_custom_command(TARGET ${MODULE_TEST_NAME} PRE_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_NAME}>
+        add_custom_command(TARGET ${MODULE_TEST_TARGET} PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_TARGET}>
             COMMAND_EXPAND_LISTS
         )
 

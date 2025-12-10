@@ -8,6 +8,7 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/graphics_pipeline_info.hpp"
+#include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/vulkan_pipeline.hpp"
 #include "polos/utils/string_id.hpp"
 
@@ -26,7 +27,7 @@ struct alignas(16) pipeline_cache_create_details// NOLINT
     VulkanSwapchain* swapchain{nullptr};
 };
 
-class PipelineCache
+class RENDERING_EXPORT PipelineCache
 {
 public:
     PipelineCache();

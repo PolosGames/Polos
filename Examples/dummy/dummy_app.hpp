@@ -24,14 +24,14 @@ public:
     DummyApp();
     ~DummyApp() override;
 
-    void Create() override;
-    void Destroy() override;
+    auto Create() -> void override;
+    auto Destroy() -> void override;
 
-    char const* Name() const override;
+    [[nodiscard]] auto Name() const -> char const* override;
 private:
-    void on_engine_update(polos::communication::engine_update& t_event);
-    void on_render_update(polos::communication::render_update& t_event);
-    void on_key_release(polos::communication::key_release t_event);
+    auto onEngineUpdate(polos::communication::engine_update& t_event) -> void;
+    auto onRenderUpdate(polos::communication::render_update& t_event) -> void;
+    auto onKeyRelease(polos::communication::key_release t_event) -> void;
 
     bool m_unload_in_progress{false};
 };
