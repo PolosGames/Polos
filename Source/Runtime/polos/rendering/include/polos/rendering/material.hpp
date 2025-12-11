@@ -9,6 +9,7 @@
 #include "polos/rendering/shader.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace polos::rendering
@@ -20,20 +21,21 @@ enum class MaterialType : std::uint8_t
     kTransparent,
 };
 
-struct texture_2d;
+struct allocated_image;
 
-struct material
+struct alignas(128) material// NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 {
     std::string name;
 
-    shader                      mat_shader;
-    std::shared_ptr<texture_2d> albedo_texture;
+    shader                           mat_shader;
+    std::shared_ptr<allocated_image> albedo_texture;
 
     MaterialType mat_type;
 
     VkPipeline       pipeline;
     VkPipelineLayout pipeline_layout;
 };
+
 }// namespace polos::rendering
 
 #endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_MATERIAL_HPP

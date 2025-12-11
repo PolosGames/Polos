@@ -16,7 +16,6 @@ struct GLFWwindow;
 namespace polos::rendering
 {
 
-class IRenderGraph;
 
 class IRenderContext
 {
@@ -26,10 +25,9 @@ public:
     virtual auto Initialize(GLFWwindow* t_window) -> Result<void> = 0;
     virtual auto Shutdown() -> Result<void>                       = 0;
 
-    virtual auto               BeginFrame() -> VkCommandBuffer         = 0;
-    virtual auto               EndFrame() -> void                      = 0;
-    [[nodiscard]] virtual auto GetRenderGraph() const -> IRenderGraph& = 0;
-    [[nodiscard]] virtual auto IsInitialized() const -> bool           = 0;
+    virtual auto               BeginFrame() -> VkCommandBuffer = 0;
+    virtual auto               EndFrame() -> void              = 0;
+    [[nodiscard]] virtual auto IsInitialized() const -> bool   = 0;
 };
 
 }// namespace polos::rendering

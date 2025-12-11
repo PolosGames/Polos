@@ -17,46 +17,8 @@
 
 #define VK_SIZE_CAST(Var) static_cast<std::uint32_t>(Var)// NOLINT
 
-namespace polos::rendering
-{
-
-enum class RenderGraphResourceType : uint8_t
-{
-    kTexture,
-    kBuffer,
-};
-
-struct RENDERING_EXPORT RenderGraphResourceHandle
-{
-    [[nodiscard]] auto Index() const -> std::size_t;
-    [[nodiscard]] auto Index16() const -> std::uint16_t;
-    [[nodiscard]] auto Type() const -> RenderGraphResourceType;
-    [[nodiscard]] auto Version() const -> std::uint16_t;
-    [[nodiscard]] auto IsValid() const -> bool;
-
-    static auto Create(std::uint16_t t_index, RenderGraphResourceType t_type, std::uint16_t t_version)
-        -> RenderGraphResourceHandle;
-
-    static auto Invalid() -> RenderGraphResourceHandle;
-
-    explicit operator std::uint32_t() const
-    {
-        return id;
-    }
-
-    std::uint32_t id{0U};
-};
-
-inline auto operator==(RenderGraphResourceHandle t_lhs, RenderGraphResourceHandle t_rhs) -> bool
-{
-    return t_lhs.id == t_rhs.id;
-}
-
-inline auto operator!=(RenderGraphResourceHandle t_lhs, RenderGraphResourceHandle t_rhs) -> bool
-{
-    return !operator==(t_lhs, t_rhs);
-}
-
-}// namespace polos::rendering
+constexpr std::float_t const kPolosRed{0.50980395F};
+constexpr std::float_t const kPolosGreen{0.59607846F};
+constexpr std::float_t const kPolosBlue{0.6431373F};
 
 #endif// POLOS_RENDERING_COMMON_HPP

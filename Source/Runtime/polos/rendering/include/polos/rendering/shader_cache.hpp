@@ -8,18 +8,27 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/shader.hpp"
+#include "polos/utils/string_id.hpp"
 
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace polos::rendering
 {
 
+struct shader_file
+{
+    std::string           custom_name;
+    ShaderStage           stage;
+    std::filesystem::path path;
+};
+
 struct shader_cache_create_details
 {
-    VkDevice                                                   logi_device{VK_NULL_HANDLE};
-    std::vector<std::pair<std::string, std::filesystem::path>> shader_files;
+    VkDevice                 logi_device{VK_NULL_HANDLE};
+    std::vector<shader_file> shader_files;
 };
 
 class ShaderCache
@@ -31,13 +40,12 @@ public:
     auto Create(shader_cache_create_details const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    auto GetShaderModule(std::string const& t_name) -> shader const&;
+    auto GetShaderModule(utils::string_id t_name) -> shader const*;
 private:
-    auto loadShaderFromFile(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
-        -> Result<shader>;
+    auto loadShaderFromFile(shader_file const& t_shader_file) -> Result<VkShaderModule>;
 
-    VkDevice            m_device{VK_NULL_HANDLE};
-    std::vector<shader> m_shader_cache;
+    VkDevice                             m_device{VK_NULL_HANDLE};
+    std::vector<std::unique_ptr<shader>> m_shader_cache;
 };
 
 }// namespace polos::rendering

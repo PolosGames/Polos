@@ -5,30 +5,19 @@
 
 #include "polos/rendering/vulkan_resource_manager.hpp"
 
-#include "polos/communication/error_code.hpp"
-#include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/allocated_image.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
-#include "polos/rendering/texture_2d.hpp"
-#include "polos/rendering/vulkan_swapchain.hpp"
 
 #include <vulkan/vulkan.h>
 
-#include <array>
-
 namespace polos::rendering
 {
-
-VulkanResourceManager* VulkanResourceManager::s_instance = nullptr;
+std::int32_t VulkanResourceManager::s_resource_id{0};
 
 VulkanResourceManager::VulkanResourceManager()  = default;
 VulkanResourceManager::~VulkanResourceManager() = default;
-
-auto VulkanResourceManager::Instance() -> VulkanResourceManager&
-{
-    return *s_instance;
-}
 
 auto VulkanResourceManager::Create(resource_manager_create_details const& t_details) -> Result<void>
 {
@@ -36,102 +25,109 @@ auto VulkanResourceManager::Create(resource_manager_create_details const& t_deta
     m_allocator = t_details.allocator;
     m_swapchain = t_details.swapchain;
 
-    VkFormat const   sc_img_fmt = m_swapchain->GetSurfaceFormat().format;
-    VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
-
-    // Create swapchain images as textures if they have been created.
-    // always make sure they are the first n images.
-    // Note: Swapchain images are not allocated with VMA (managed by swapchain)
-    std::uint32_t const img_count = m_swapchain->GetImageCount();
-    for (std::uint32_t i{0U}; i < img_count; ++i)
-    {
-        m_textures.push_back(
-            std::make_shared<texture_2d>(
-                m_swapchain->GetImage(i),
-                m_swapchain->GetImageView(i),
-                VK_NULL_HANDLE,// No VMA allocation for swapchain images
-                sc_img_fmt,
-                sc_img_ext,
-                VK_SAMPLE_COUNT_1_BIT));
-    }
-
-    return {};
-}
-
-auto VulkanResourceManager::Destroy() -> Result<void>// NOLINT
-{
-    // Clean up any VMA-allocated textures
-    for (auto& texture : m_textures)
-    {
-        if (texture && texture->allocation != VK_NULL_HANDLE)
-        {
-            if (texture->view != VK_NULL_HANDLE)
-            {
-                vkDestroyImageView(m_device, texture->view, nullptr);
-            }
-            vmaDestroyImage(m_allocator, texture->image, texture->allocation);
-        }
-    }
-    m_textures.clear();
-
     return {};
 }
 
 auto VulkanResourceManager::CreateImage(
     VkImageCreateInfo const& t_image_info,
+    VmaAllocationCreateFlags t_flags,
     VmaMemoryUsage           t_usage,
-    VkImage&                 t_image,
-    VmaAllocation&           t_allocation) -> Result<void>
+    VkMemoryPropertyFlags    t_memory_property_flags) -> Result<allocated_image*>
 {
-    VmaAllocationCreateInfo alloc_info{};
-    alloc_info.usage = t_usage;
+    m_images.push_back(std::make_unique<allocated_image>());
+
+    auto& image    = m_images.back();
+    image->id      = s_resource_id++;
+    image->format  = t_image_info.format;
+    image->extent  = t_image_info.extent;
+    image->samples = t_image_info.samples;
+
+    VmaAllocationCreateInfo alloc_info{
+        .flags          = t_flags,
+        .usage          = t_usage,
+        .requiredFlags  = t_memory_property_flags,
+        .preferredFlags = 0U,
+        .memoryTypeBits = 0U,
+        .pool           = VK_NULL_HANDLE,
+        .pUserData      = nullptr,
+        .priority       = 1.0f,
+    };
 
     CHECK_VK_SUCCESS_OR_ERR(
-        vmaCreateImage(m_allocator, &t_image_info, &alloc_info, &t_image, &t_allocation, nullptr),
+        vmaCreateImage(m_allocator, &t_image_info, &alloc_info, &image->image, &image->allocation, nullptr),
         RenderingErrc::kFailedCreateImage);
 
-    return {};
+    return image.get();
 }
 
-auto VulkanResourceManager::DestroyImage(VkImage t_image, VmaAllocation t_allocation) -> void
+auto VulkanResourceManager::DestroyImage(std::int32_t t_resource_id) -> void
 {
-    vmaDestroyImage(m_allocator, t_image, t_allocation);
+    auto itr = std::ranges::find_if(m_images, [t_resource_id](auto const& image) {
+        return image->id == t_resource_id;
+    });
+    if (itr != m_images.end())
+    {
+        vmaDestroyImage(m_allocator, (*itr)->image, (*itr)->allocation);
+        (*itr).reset();
+        m_images.erase(itr);
+    }
 }
 
 auto VulkanResourceManager::CreateBuffer(
     VkBufferCreateInfo const& t_buffer_info,
+    VmaAllocationCreateFlags  t_flags,
     VmaMemoryUsage            t_usage,
-    VkBuffer&                 t_buffer,
-    VmaAllocation&            t_allocation) -> Result<void>
+    VkMemoryPropertyFlags     t_memory_property_flags) -> Result<allocated_buffer*>
 {
-    VmaAllocationCreateInfo alloc_info{};
-    alloc_info.usage = t_usage;
+    m_buffers.push_back(std::make_unique<allocated_buffer>());
+
+    auto& buffer   = m_buffers.back();
+    buffer->id     = s_resource_id++;
+    buffer->buffer = VK_NULL_HANDLE;
+    buffer->usage  = t_buffer_info.usage;
+
+    VmaAllocationCreateInfo alloc_info{
+        .flags          = t_flags,
+        .usage          = t_usage,
+        .requiredFlags  = t_memory_property_flags,
+        .preferredFlags = 0U,
+        .memoryTypeBits = 0U,
+        .pool           = VK_NULL_HANDLE,
+        .pUserData      = nullptr,
+        .priority       = 1.0f,
+    };
 
     CHECK_VK_SUCCESS_OR_ERR(
-        vmaCreateBuffer(m_allocator, &t_buffer_info, &alloc_info, &t_buffer, &t_allocation, nullptr),
+        vmaCreateBuffer(m_allocator, &t_buffer_info, &alloc_info, &buffer->buffer, &buffer->allocation, nullptr),
         RenderingErrc::kFailedCreateBuffer);
 
-    return {};
+    return buffer.get();
 }
 
-auto VulkanResourceManager::DestroyBuffer(VkBuffer t_buffer, VmaAllocation t_allocation) -> void
+auto VulkanResourceManager::DestroyBuffer(std::int32_t t_resource_id) -> void
 {
-    vmaDestroyBuffer(m_allocator, t_buffer, t_allocation);
-}
+    auto itr = std::ranges::find_if(m_buffers, [t_resource_id](auto const& buffer) {
+        return buffer->id == t_resource_id;
+    });
 
-auto VulkanResourceManager::onFramebufferResize() -> void
-{
-    VkExtent2D const sc_img_ext = m_swapchain->GetExtent();
-
-    LogInfo("Updating texture extents to {}x{} due to framebuffer resize.", sc_img_ext.width, sc_img_ext.height);
-
-    std::uint32_t const img_count = m_swapchain->GetImageCount();
-    for (std::uint32_t i{0U}; i < img_count; ++i)
+    if (itr != m_buffers.end())
     {
-        m_textures[i]->image  = m_swapchain->GetImage(i);
-        m_textures[i]->view   = m_swapchain->GetImageView(i);
-        m_textures[i]->extent = sc_img_ext;
+        vmaDestroyBuffer(m_allocator, (*itr)->buffer, (*itr)->allocation);
+        (*itr).reset();
+        m_buffers.erase(itr);
     }
+}
+
+auto VulkanResourceManager::Destroy() -> Result<void>// NOLINT
+{
+    LogInfo("Destroying and invalidating Vulkan Resource Manager...");
+
+    for (auto& texture : m_images) { DestroyImage(texture->id); }
+    for (auto& buffer : m_buffers) { DestroyBuffer(buffer->id); }
+
+    m_images.clear();
+    m_buffers.clear();
+    return {};
 }
 
 }// namespace polos::rendering

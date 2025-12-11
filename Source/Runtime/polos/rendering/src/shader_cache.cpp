@@ -10,6 +10,7 @@
 #include "polos/rendering/rendering_error_domain.hpp"
 
 #include <array>
+#include <memory>
 
 namespace polos::rendering
 {
@@ -23,13 +24,20 @@ auto ShaderCache::Create(shader_cache_create_details const& t_details) -> Result
 
     for (auto const& shader_file : t_details.shader_files)
     {
-        auto shader_result = loadShaderFromFile(shader_file.first, shader_file.second);
+        auto shader_result = loadShaderFromFile(shader_file);
         if (!shader_result.has_value())
         {
             return ErrorType{shader_result.error()};
         }
 
-        m_shader_cache.push_back(std::move(*shader_result));
+        VkShaderModule shader_module = shader_result.value();
+
+        // NOLINTNEXTLINE
+        m_shader_cache.emplace_back(new shader{
+            .name   = utils::StrHash64(shader_file.custom_name),
+            .stage  = shader_file.stage,
+            .module = shader_module,
+        });
     }
 
     return {};
@@ -37,24 +45,23 @@ auto ShaderCache::Create(shader_cache_create_details const& t_details) -> Result
 
 auto ShaderCache::Destroy() -> Result<void>
 {
-    for (auto const& shader : m_shader_cache) { vkDestroyShaderModule(m_device, shader.module, nullptr); }
+    for (auto const& shader : m_shader_cache) { vkDestroyShaderModule(m_device, shader->module, nullptr); }
     return {};
 }
 
-auto ShaderCache::GetShaderModule(std::string const& t_name) -> shader const&
+auto ShaderCache::GetShaderModule(utils::string_id const t_name) -> shader const*
 {
-    auto const itr = std::ranges::find_if(m_shader_cache, [&t_name](shader const& t_shader) {
-        return t_shader.name == t_name;
+    auto const itr = std::ranges::find_if(m_shader_cache, [&t_name](std::unique_ptr<shader> const& t_shader) {
+        return t_shader->name == t_name;
     });
     assert(itr != m_shader_cache.end() && "Shader module not loaded to engine!");
 
-    return *itr;
+    return itr->get();
 }
 
-auto ShaderCache::loadShaderFromFile(std::string_view const t_shader_custom_name, std::filesystem::path const& t_path)
-    -> Result<shader>
+auto ShaderCache::loadShaderFromFile(shader_file const& t_shader_file) -> Result<VkShaderModule>
 {
-    auto shader_code = fs::ReadFile(t_path);
+    auto shader_code = fs::ReadFile(t_shader_file.path);
     if (!shader_code.has_value())
     {
         return ErrorType{RenderingErrc::kFailedCreateShaderModule};
@@ -100,10 +107,7 @@ auto ShaderCache::loadShaderFromFile(std::string_view const t_shader_custom_name
         return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
 
-    return shader{
-        .name   = std::string{t_shader_custom_name},
-        .module = shader_module,
-    };
+    return shader_module;
 }
 
 }// namespace polos::rendering

@@ -19,6 +19,7 @@ namespace polos::rendering
 
 namespace
 {
+
 constexpr char const* kValidationLayerName = "VK_LAYER_KHRONOS_validation";
 
 VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(

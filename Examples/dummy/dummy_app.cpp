@@ -38,12 +38,12 @@ void DummyApp::Create()
 
     polos::communication::Subscribe<polos::communication::render_update>(
         [this](polos::communication::render_update& t_event) {
-            on_render_update(t_event);
+            onRenderUpdate(t_event);
         });
 
     polos::communication::Subscribe<polos::communication::key_release>(
         [this](polos::communication::key_release& t_event) {
-            on_key_release(t_event);
+            onKeyRelease(t_event.key);
         });
 
     polos::rendering::RenderingApi::GetMainScene()->AddObject(
@@ -58,23 +58,26 @@ char const* DummyApp::Name() const
     return "DummyApp";
 }
 
-void DummyApp::onEngineUpdate(polos::communication::engine_update& /**/)
+auto DummyApp::onEngineUpdate(polos::communication::engine_update& /**/) -> void
 {
     //LogInfo("Engine Thread Update");
 }
 
-void DummyApp::on_render_update(polos::communication::render_update& /**/) {}
+auto DummyApp::onRenderUpdate(polos::communication::render_update& /**/) -> void
+{
+    //LogInfo("Render Thread Update");
+}
 
-void DummyApp::on_key_release(polos::communication::key_release /**/) {}
+auto DummyApp::onKeyRelease(std::int32_t /*t_key*/) -> void {}
 
 }// namespace dummy_app
 
 namespace polos
 {
 
-polos::core::ILiveLayer* CreateApplication(int /*argc*/, char** /*argv*/)
+auto CreateApplication(int /*argc*/, char** /*argv*/) -> polos::core::ILiveLayer*
 {
-    return new dummy_app::DummyApp{};
+    return new dummy_app::DummyApp{};//NOLINT(cppcoreguidelines-owning-memory)
 }
 
 }// namespace polos
