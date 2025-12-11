@@ -8,40 +8,40 @@
 
 #include "polos/rendering/shader.hpp"
 #include "polos/rendering/vertex.hpp"
+#include "polos/utils/string_id.hpp"
 
 #include <vulkan/vulkan.h>
 
 #include <cstdint>
-#include <string>
+#include <optional>
+#include <span>
 
 namespace polos::rendering
 {
 
 struct graphics_pipeline_info
 {
-    std::string name;
+    utils::string_id name;
 
-    VkShaderModule vertex_shader;
-    VkShaderModule fragment_shader;
+    std::span<shader const*> shaders;
 
-    VkPrimitiveTopology                   topology;
+    VkPrimitiveTopology                   topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
     std::optional<VertexInputDescription> vertex_input;
 
-    VkPolygonMode   polygon_mode;
-    VkCullModeFlags cull_mode;
-    VkFrontFace     front_face;
-    VkBool32        depth_bias_enable;
+    VkPolygonMode   polygon_mode{VK_POLYGON_MODE_FILL};
+    VkCullModeFlags cull_mode{VK_CULL_MODE_BACK_BIT};
+    VkFrontFace     front_face{VK_FRONT_FACE_CLOCKWISE};
+    VkBool32        depth_bias_enable{VK_FALSE};
 
-    VkSampleCountFlagBits multisampling;
+    VkSampleCountFlagBits multisampling{VK_SAMPLE_COUNT_1_BIT};
 
-    VkBool32    depth_test_enable;
-    VkBool32    depth_write_enable;
-    VkCompareOp depth_compare_op;
+    VkBool32    depth_test_enable{VK_TRUE};
+    VkBool32    depth_write_enable{VK_TRUE};
+    VkCompareOp depth_compare_op{VK_COMPARE_OP_LESS};
 
-    // For a shadow pass, this will be empty as we don't write to color targets.
-    std::vector<VkPipelineColorBlendAttachmentState> color_blend_attachments;
+    std::span<VkPipelineColorBlendAttachmentState const> color_blend_attachments;
 
-    std::vector<VkDynamicState> dynamic_states;
+    std::span<VkDynamicState const> dynamic_states;
 
     VkRenderPass  render_pass{VK_NULL_HANDLE};
     std::uint32_t subpass{0U};

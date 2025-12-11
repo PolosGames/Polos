@@ -8,10 +8,10 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/i_render_context.hpp"
-#include "polos/rendering/i_render_system.hpp"
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
-#include "polos/rendering/texture_2d.hpp"
+#include "polos/rendering/texture_description.hpp"
+#include "polos/rendering/vertex.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -36,8 +36,9 @@ class VulkanSwapchain;
 class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
-class RenderGraph;
 struct render_pass_layout_description;
+struct allocated_image;
+struct allocated_buffer;
 
 class RENDERING_EXPORT RenderContext : public IRenderContext
 {
@@ -55,7 +56,6 @@ public:
     auto BeginFrame() -> VkCommandBuffer override;
     auto EndFrame() -> void override;
 
-    [[nodiscard]] auto GetRenderGraph() const -> IRenderGraph& override;
     [[nodiscard]] auto IsInitialized() const -> bool override;
     [[nodiscard]] auto GetShaderCache() const -> ShaderCache&;
     [[nodiscard]] auto GetPipelineCache() const -> PipelineCache&;
@@ -64,26 +64,23 @@ public:
     auto GetGfxQueue() -> VkQueue;
     auto GetSwapchain() -> VulkanSwapchain&;
 
-    auto GetCurrentFrameTexture() -> Result<std::shared_ptr<texture_2d>>;
     auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
     auto AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void;
 private:
     friend class platform::PlatformManager;
 
+    void renderFrame();
     void onFramebufferResize();
 
-    GLFWwindow*                                            m_window{nullptr};
-    std::unique_ptr<VulkanContext>                         m_context;
-    std::unique_ptr<VulkanDevice>                          m_device;
-    std::unique_ptr<VulkanSwapchain>                       m_swapchain;
-    std::unique_ptr<VulkanResourceManager>                 m_vrm;
-    std::unique_ptr<ShaderCache>                           m_shader_cache;
-    std::unique_ptr<PipelineCache>                         m_pipeline_cache;
-    std::unique_ptr<RenderGraph>                           m_render_graph;
-    std::vector<std::unique_ptr<rendering::IRenderSystem>> m_render_systems;
+    GLFWwindow*                            m_window{nullptr};
+    std::unique_ptr<VulkanContext>         m_context;
+    std::unique_ptr<VulkanDevice>          m_device;
+    std::unique_ptr<VulkanSwapchain>       m_swapchain;
+    std::unique_ptr<VulkanResourceManager> m_vrm;
+    std::unique_ptr<ShaderCache>           m_shader_cache;
+    std::unique_ptr<PipelineCache>         m_pipeline_cache;
 
-    VkCommandPool m_command_pool{VK_NULL_HANDLE};
-
+    VkCommandPool                m_command_pool{VK_NULL_HANDLE};
     std::vector<VkFence>         m_frame_fences;
     std::vector<VkSemaphore>     m_acquire_semaphores;
     std::vector<VkSemaphore>     m_submit_semaphores;
@@ -92,6 +89,7 @@ private:
     std::uint32_t                m_swapchain_image_index{0U};
 
     static constexpr std::size_t const                         kMaxFramesInFlight{3U};
+    std::vector<texture_description>                           m_swapchain_images;
     std::vector<VkRenderPass>                                  m_vk_render_passes;
     std::array<std::vector<VkFramebuffer>, kMaxFramesInFlight> m_transient_fbufs;
 
@@ -109,6 +107,14 @@ private:
     bool m_framebuffer_resized{false};
 
     bool m_is_initialized{false};
+
+    // RenderPass specific
+
+    VkPipeline                 m_pipeline_basic_color{VK_NULL_HANDLE};
+    allocated_buffer*          m_buf_basic_color_vert{nullptr};
+    allocated_buffer*          m_buf_basic_color_idx{nullptr};
+    std::vector<Vertex>        m_vertices_basic_color;
+    std::vector<std::uint16_t> m_indices_basic_color;
 };
 
 }// namespace polos::rendering

@@ -33,4 +33,4 @@ CheckOptions:
   - { key: readability-magic-numbers.IgnorePowersOf2IntegerValues, value: true }
   - { key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals, value: true }
   - { key: performance-unnecessary-value-param.AllowedTypes, value: 'std::string' }
-HeaderFilterRegex: ^(?!.*ThirdParty).*$
+HeaderFilterRegex: ^(?!.*(ThirdParty)).*$

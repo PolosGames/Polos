@@ -7,6 +7,8 @@
 #define POLOS_RENDERING_VULKAN_RESOURCE_MANAGER_HPP
 
 #include "polos/communication/error_code.hpp"
+#include "polos/rendering/allocated_buffer.hpp"
+#include "polos/rendering/allocated_image.hpp"
 
 #include <vk_mem_alloc.h>
 
@@ -22,7 +24,7 @@ namespace polos::rendering
 class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
-struct texture_2d;
+struct allocated_image;
 
 struct alignas(64) resource_manager_create_details// NOLINT
 {
@@ -42,39 +44,49 @@ public:
     VulkanResourceManager& operator=(VulkanResourceManager const&) = delete;
     VulkanResourceManager& operator=(VulkanResourceManager&&)      = delete;
 
-    static auto Instance() -> VulkanResourceManager&;
-
     auto Create(resource_manager_create_details const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    auto CreateImage(
-        VkImageCreateInfo const& t_image_info,
-        VmaMemoryUsage           t_usage,
-        VkImage&                 t_image,
-        VmaAllocation&           t_allocation) -> Result<void>;
-
-    auto DestroyImage(VkImage t_image, VmaAllocation t_allocation) -> void;
-
     auto CreateBuffer(
         VkBufferCreateInfo const& t_buffer_info,
+        VmaAllocationCreateFlags  t_flags,
         VmaMemoryUsage            t_usage,
-        VkBuffer&                 t_buffer,
-        VmaAllocation&            t_allocation) -> Result<void>;
+        VkMemoryPropertyFlags     t_memory_property_flags = 0U) -> Result<allocated_buffer*>;
+    auto DestroyBuffer(std::int32_t t_resource_id) -> void;
 
-    auto DestroyBuffer(VkBuffer t_buffer, VmaAllocation t_allocation) -> void;
+    auto CreateImage(
+        VkImageCreateInfo const& t_image_info,
+        VmaAllocationCreateFlags t_flags,
+        VmaMemoryUsage           t_usage,
+        VkMemoryPropertyFlags    t_memory_property_flags = 0U) -> Result<allocated_image*>;
+    auto DestroyImage(std::int32_t t_resource_id) -> void;
 
-    auto GetTexture(std::string const& t_name) -> VkShaderModule;
+    template<typename T>
+    auto GetResource(std::int32_t t_resource_id) -> T
+    {
+        if constexpr (std::is_same_v<T, allocated_image>)
+        {
+            return std::find_if(
+                m_images.begin(),
+                m_images.end(),
+                [t_resource_id](std::unique_ptr<allocated_image> const& img) {
+                    return img->id == t_resource_id;
+                });
+        }
+        else if constexpr (std::is_same_v<T, allocated_buffer>)
+        {
+            return m_buffers;
+        }
+    }
 private:
-    auto onFramebufferResize() -> void;
-
-    friend class RenderContext;
-    static VulkanResourceManager* s_instance;
+    static std::int32_t s_resource_id;
 
     VkDevice         m_device{VK_NULL_HANDLE};
     VmaAllocator     m_allocator{VK_NULL_HANDLE};
     VulkanSwapchain* m_swapchain{nullptr};
 
-    std::vector<std::shared_ptr<texture_2d>> m_textures;
+    std::vector<std::unique_ptr<allocated_image>>  m_images;
+    std::vector<std::unique_ptr<allocated_buffer>> m_buffers;
 };
 
 }// namespace polos::rendering

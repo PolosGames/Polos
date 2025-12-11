@@ -16,7 +16,6 @@ define_polos_module(
     TYPE
         INTERFACE
     INTERFACE_DEPS
-        assimp::assimp
         Vulkan::Vulkan
         glfw
         glm::glm

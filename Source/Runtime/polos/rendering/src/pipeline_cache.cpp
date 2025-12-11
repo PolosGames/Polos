@@ -98,7 +98,7 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
     //     }
     // }// END pipeline cache create
 
-    utils::string_id const pipeline_key = utils::StrHash64(std::string_view{t_pipeline_info.name});
+    utils::string_id const pipeline_key = t_pipeline_info.name;
 
     auto const itr = m_cache.find(pipeline_key);
     if (itr != m_cache.end())
@@ -117,26 +117,21 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
     };
 
-    VkPipelineShaderStageCreateInfo const shader_stages[] /*NOLINT*/ {
-        {
+    std::vector<VkPipelineShaderStageCreateInfo> shader_stages(t_pipeline_info.shaders.size());
+    for (std::size_t i{0U}; i < t_pipeline_info.shaders.size(); ++i)
+    {
+        shader const*                   shader = t_pipeline_info.shaders[i];
+        VkPipelineShaderStageCreateInfo shader_stage_info{
             .sType               = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext               = nullptr,
             .flags               = 0U,
-            .stage               = VK_SHADER_STAGE_VERTEX_BIT,
-            .module              = t_pipeline_info.vertex_shader,
-            .pName               = "vertexMain",
+            .stage               = static_cast<VkShaderStageFlagBits>(shader->stage),
+            .module              = shader->module,
+            .pName               = "main",
             .pSpecializationInfo = nullptr,
-        },
-        {
-            .sType               = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-            .pNext               = nullptr,
-            .flags               = 0U,
-            .stage               = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module              = t_pipeline_info.fragment_shader,
-            .pName               = "fragmentMain",
-            .pSpecializationInfo = nullptr,
-        },
-    };
+        };
+        shader_stages[i] = shader_stage_info;
+    }
 
     VkPipelineVertexInputStateCreateInfo vertex_input_info{
         .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -258,8 +253,8 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext               = &pipeline_rendering_info,
         .flags               = 0U,
-        .stageCount          = 2U,
-        .pStages             = &shader_stages[0],
+        .stageCount          = VK_SIZE_CAST(shader_stages.size()),
+        .pStages             = shader_stages.data(),
         .pVertexInputState   = &vertex_input_info,
         .pInputAssemblyState = &input_assembly,
         .pTessellationState  = nullptr,

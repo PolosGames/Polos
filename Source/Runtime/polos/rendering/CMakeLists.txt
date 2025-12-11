@@ -14,14 +14,9 @@ project(
 )
 
 set(RENDERING_IMPL_SRC
-    "src/render_pass/lambda_pass.cpp"
-    "src/system/geometry_render_system.cpp"
-    "src/common.cpp"
     "src/dll_main.cpp"
     "src/pipeline_cache.cpp"
     "src/render_context.cpp"
-    "src/render_graph.cpp"
-    "src/render_pass_resolver.cpp"
     "src/shader_cache.cpp"
     "src/vertex.cpp"
     "src/vulkan_context.cpp"
@@ -86,6 +81,5 @@ define_polos_module(
 
     TEST_SOURCES
         "test/mock/mock_vulkan_device.hpp"
-        "test/common_test.cpp"
         "test/pipeline_cache_test.cpp"
 )

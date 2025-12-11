@@ -119,12 +119,12 @@ PlatformManager::PlatformManager()
 
     if (session_type == "wayland")
     {
-        LogInfo("GLFW: Setting platform to Wayland");
+        LogInfo("GLFW: Setting GLFW platform to Wayland");
         glfwInitHint(GLFW_PLATFORM_WAYLAND, GLFW_TRUE);
     }
     if (session_type == "x11")
     {
-        LogInfo("GLFW: Setting platform to X11");
+        LogInfo("GLFW: Setting GLFW platform to X11");
         glfwInitHint(GLFW_PLATFORM_X11, GLFW_TRUE);
     }
 #endif

@@ -5,6 +5,8 @@
 
 #include "polos/rendering/vertex.hpp"
 
+#include "polos/logging/log_macros.hpp"
+
 namespace polos::rendering
 {
 
@@ -12,19 +14,16 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
 {
     VertexInputDescription description;
 
-    // --- Binding Description ---
-    // We have one binding for the per-vertex data.
-    VkVertexInputBindingDescription const mainBinding{
+    description.attributes.reserve(4U);
+
+    VkVertexInputBindingDescription const main_binding{
         .binding   = 0U,
         .stride    = sizeof(Vertex),
         .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
     };
-    description.bindings.push_back(mainBinding);
+    description.bindings.push_back(main_binding);
 
-    // --- Attribute Descriptions ---
-    // We create an attribute description for each active attribute based on the flags.
-
-    if (0U != (t_flags & VertexAttributes::kPositionOnly))
+    if (0U != (t_flags & VertexAttributes::kWithPosition))
     {
         VkVertexInputAttributeDescription const attr{
             .location = 0U,
@@ -33,6 +32,7 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
             .offset   = offsetof(Vertex, position),
         };
         description.attributes.push_back(attr);
+        LogDebug("Position attribute added at location {}", attr.location);
     }
 
     if (0U != (t_flags & VertexAttributes::kWithNormals))
@@ -44,6 +44,7 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
             .offset   = offsetof(Vertex, normal),
         };
         description.attributes.push_back(attr);
+        LogDebug("Normal attribute added at location {}", attr.location);
     }
 
     if (0U != (t_flags & VertexAttributes::kWithColors))
@@ -55,6 +56,7 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
             .offset   = offsetof(Vertex, color),
         };
         description.attributes.push_back(attr);
+        LogDebug("Color attribute added at location {}", attr.location);
     }
 
     if (0U != (t_flags & VertexAttributes::kWithTexCoords))
@@ -66,6 +68,7 @@ VertexInputDescription CreateVertexDescription(VertexAttributes t_flags)
             .offset   = offsetof(Vertex, tex_coord),
         };
         description.attributes.push_back(attr);
+        LogDebug("TexCoord attribute added at location {}", attr.location);
     }
 
     return description;

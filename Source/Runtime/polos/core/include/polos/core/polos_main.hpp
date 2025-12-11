@@ -11,8 +11,8 @@
 
 namespace polos
 {
-    polos::core::ILiveLayer* CreateApplication(int argc, char** argv);
-}
+auto CreateApplication(int argc, char** argv) -> polos::core::ILiveLayer*;
+}// namespace polos
 
 #ifdef _MSVC_LANG
 #    pragma warning(push)
@@ -21,10 +21,9 @@ namespace polos
 
 int main(int argc, char* argv[])
 {
-    polos::core::Engine engine;
-    std::int32_t        ret_val = engine.Run(polos::CreateApplication(argc, argv));
-    return ret_val;
+    return polos::core::Engine::Run(polos::CreateApplication(argc, argv));
 }
+
 #ifdef _MSVC_LANG
 #    pragma warning(pop)
 #endif

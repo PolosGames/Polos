@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-find_package(assimp CONFIG REQUIRED)
+#find_package(assimp CONFIG REQUIRED)
 find_package(ctre CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -8,7 +8,7 @@ find_package(imgui CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
-set(ThirdPartyLibs assimp::assimp ctre::ctre glfw Vulkan::Vulkan glm::glm imgui::imgui GPUOpen::VulkanMemoryAllocator)
+set(ThirdPartyLibs ctre::ctre glfw Vulkan::Vulkan glm::glm imgui::imgui GPUOpen::VulkanMemoryAllocator)
 
 add_subdirectory(Resource)
 add_subdirectory(Runtime)

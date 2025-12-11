@@ -15,6 +15,8 @@
 #include "polos/rendering/rendering_api.hpp"
 #include "polos/utils/time.hpp"
 
+#include <quill/std/Chrono.h>
+
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -52,14 +54,14 @@ void MainLoop::Run() const
     {
         auto const current_time = utils::GetTimeNow();
         delta_time              = current_time - start;
-        start                   = current_time;
 
-        lag += delta_time;
+        LogInfo("Frame Time: {} s", utils::ConvertToSeconds(delta_time));
+
+        start = current_time;
 
         std::float_t const delta_time_in_secs = utils::ConvertToSeconds(delta_time);
 
         communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
-        lag -= kTimestep;
 
         rendering::RenderingApi::BeginFrame();
         communication::DispatchNow<communication::render_update>(delta_time_in_secs);
@@ -72,6 +74,12 @@ void MainLoop::Run() const
 #if defined(HOT_RELOAD)
         rendering::RenderingApi::ReloadIfNeeded();
 #endif// HOT_RELOAD
+
+        auto const amount_time = utils::GetTimeNow() - start;
+        if (amount_time < kTimestep)
+        {
+            std::this_thread::sleep_for(kTimestep - amount_time);
+        }
     }
 
     std::this_thread::sleep_for(std::chrono::seconds(1));

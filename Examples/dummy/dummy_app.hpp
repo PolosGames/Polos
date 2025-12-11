@@ -31,7 +31,7 @@ public:
 private:
     auto onEngineUpdate(polos::communication::engine_update& t_event) -> void;
     auto onRenderUpdate(polos::communication::render_update& t_event) -> void;
-    auto onKeyRelease(polos::communication::key_release t_event) -> void;
+    auto onKeyRelease(std::int32_t t_key) -> void;
 
     bool m_unload_in_progress{false};
 };

@@ -5,8 +5,20 @@ Completion:
     HeaderInsertion: Never
 
 ---
-# Vulkan gives too many errors. Emit them.
+# Vulkan gives too many errors. Suppress them.
 If:
     PathMatch: .*/vulkan/.*
 Diagnostics:
     Suppress: '*'
+
+---
+
+# Suppress diagnostics and clang-tidy for build, vcpkg_installed and ThirdParty directories
+If:
+    PathMatch: [.*vcpkg_installed/.*, .*ThirdParty/.*, .*out/build/.*, .*build/.*, .*/CMakeFiles/.*]
+Diagnostics:
+    Suppress: '*'
+    ClangTidy:
+        Remove: '*'
+
+HeaderFilterRegex: ^(?!.*(ThirdParty|vulkan|vk_mem_alloc|vcpkg_installed)).*$
