@@ -9,6 +9,7 @@
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/i_render_context.hpp"
 #include "polos/rendering/module_macros.hpp"
+#include "polos/rendering/passes/general_pass.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 #include "polos/rendering/texture_description.hpp"
 #include "polos/rendering/vertex.hpp"
@@ -60,14 +61,20 @@ public:
     [[nodiscard]] auto GetShaderCache() const -> ShaderCache&;
     [[nodiscard]] auto GetPipelineCache() const -> PipelineCache&;
 
+    [[nodiscard]] static auto BeginSingleTimeCommands() -> VkCommandBuffer;
+    static auto               EndSingleTimeCommands(VkCommandBuffer t_command_buffer) -> void;
+
     auto GetVkSurface() -> VkSurfaceKHR;
     auto GetGfxQueue() -> VkQueue;
     auto GetSwapchain() -> VulkanSwapchain&;
+    auto GetVulkanDevice() -> VulkanDevice&;
+    auto GetVulkanResourceManager() -> VulkanResourceManager&;
+    auto GetCommandPool() -> VkCommandPool;
 
-    auto CreateRenderPass(render_pass_layout_description const& t_layout) -> Result<VkRenderPass>;
-    auto AddFramebufferToCurrentFrame(VkFramebuffer t_fbuf) -> void;
+    [[nodiscard]] auto GetFramesInFlight() const -> std::uint32_t;
 private:
     friend class platform::PlatformManager;
+    static RenderContext* s_render_context;
 
     void renderFrame();
     void onFramebufferResize();
@@ -88,10 +95,8 @@ private:
     std::uint32_t                m_current_frame_index{0U};
     std::uint32_t                m_swapchain_image_index{0U};
 
-    static constexpr std::size_t const                         kMaxFramesInFlight{3U};
-    std::vector<texture_description>                           m_swapchain_images;
-    std::vector<VkRenderPass>                                  m_vk_render_passes;
-    std::array<std::vector<VkFramebuffer>, kMaxFramesInFlight> m_transient_fbufs;
+    static constexpr std::size_t const kMaxFramesInFlight{3U};
+    std::vector<texture_description>   m_swapchain_images;
 
     enum class ImageAcqusitionResult : std::uint8_t
     {
@@ -109,12 +114,7 @@ private:
     bool m_is_initialized{false};
 
     // RenderPass specific
-
-    VkPipeline                 m_pipeline_basic_color{VK_NULL_HANDLE};
-    allocated_buffer*          m_buf_basic_color_vert{nullptr};
-    allocated_buffer*          m_buf_basic_color_idx{nullptr};
-    std::vector<Vertex>        m_vertices_basic_color;
-    std::vector<std::uint16_t> m_indices_basic_color;
+    std::unique_ptr<GeneralPass> m_general_pass;
 };
 
 }// namespace polos::rendering

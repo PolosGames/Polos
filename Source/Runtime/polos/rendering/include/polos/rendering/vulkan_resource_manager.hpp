@@ -51,33 +51,26 @@ public:
         VkBufferCreateInfo const& t_buffer_info,
         VmaAllocationCreateFlags  t_flags,
         VmaMemoryUsage            t_usage,
-        VkMemoryPropertyFlags     t_memory_property_flags = 0U) -> Result<allocated_buffer*>;
+        VkMemoryPropertyFlags     t_memory_property_flags = 0U) -> Result<std::int32_t>;
     auto DestroyBuffer(std::int32_t t_resource_id) -> void;
 
     auto CreateImage(
         VkImageCreateInfo const& t_image_info,
         VmaAllocationCreateFlags t_flags,
         VmaMemoryUsage           t_usage,
-        VkMemoryPropertyFlags    t_memory_property_flags = 0U) -> Result<allocated_image*>;
+        VkMemoryPropertyFlags    t_memory_property_flags = 0U) -> Result<std::int32_t>;
     auto DestroyImage(std::int32_t t_resource_id) -> void;
 
-    template<typename T>
-    auto GetResource(std::int32_t t_resource_id) -> T
-    {
-        if constexpr (std::is_same_v<T, allocated_image>)
-        {
-            return std::find_if(
-                m_images.begin(),
-                m_images.end(),
-                [t_resource_id](std::unique_ptr<allocated_image> const& img) {
-                    return img->id == t_resource_id;
-                });
-        }
-        else if constexpr (std::is_same_v<T, allocated_buffer>)
-        {
-            return m_buffers;
-        }
-    }
+    auto LoadTextureToImage(
+        char const*          t_texture_path,
+        VkFormat             t_format,
+        VkImageUsageFlags    t_usage,
+        VkImageLayout        t_initial_layout,
+        VkImageLayout        t_final_layout,
+        VkPipelineStageFlags t_final_pipeline_stage) -> Result<std::int32_t>;
+
+    auto GetBuffer(std::int32_t t_resource_id) -> allocated_buffer*;
+    auto GetImage(std::int32_t t_resource_id) -> allocated_image*;
 private:
     static std::int32_t s_resource_id;
 

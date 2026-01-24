@@ -45,6 +45,8 @@ struct graphics_pipeline_info
 
     VkRenderPass  render_pass{VK_NULL_HANDLE};
     std::uint32_t subpass{0U};
+
+    std::vector<VkDescriptorSetLayoutBinding> descriptor_set_layout_binding;
 };
 
 }// namespace polos::rendering

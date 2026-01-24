@@ -12,6 +12,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <csignal>
+
 namespace polos::core
 {
 
@@ -29,6 +31,12 @@ void OnKeyRelease(communication::key_release const& t_event)
 #endif// HOT_RELOAD
 }
 
+void SignalHandler(int t_signal)
+{
+    std::ignore = t_signal;
+    communication::DispatchNow<communication::engine_terminate>();
+}
+
 }// namespace
 
 EngineLayer::EngineLayer()
@@ -36,6 +44,11 @@ EngineLayer::EngineLayer()
     communication::Subscribe<communication::key_release>([](communication::key_release& t_event) {
         OnKeyRelease(t_event);
     });
+
+    // Set up signal handlers for graceful shutdown
+    std::ignore = std::signal(SIGINT, SignalHandler);
+    std::ignore = std::signal(SIGTERM, SignalHandler);
+    std::ignore = std::signal(SIGABRT, SignalHandler);
 }
 
 EngineLayer::~EngineLayer() = default;

@@ -17,8 +17,13 @@
 
 #define VK_SIZE_CAST(Var) static_cast<std::uint32_t>(Var)// NOLINT
 
+namespace polos::rendering::common
+{
+
 constexpr std::float_t const kPolosRed{0.50980395F};
 constexpr std::float_t const kPolosGreen{0.59607846F};
 constexpr std::float_t const kPolosBlue{0.6431373F};
+
+}// namespace polos::rendering::common
 
 #endif// POLOS_RENDERING_COMMON_HPP
