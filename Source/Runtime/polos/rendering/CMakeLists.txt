@@ -15,6 +15,7 @@ project(
 
 set(RENDERING_IMPL_SRC
     "src/dll_main.cpp"
+    "src/general_pass.cpp"
     "src/pipeline_cache.cpp"
     "src/render_context.cpp"
     "src/shader_cache.cpp"
@@ -23,6 +24,7 @@ set(RENDERING_IMPL_SRC
     "src/vulkan_device.cpp"
     "src/vulkan_resource_manager.cpp"
     "src/vulkan_swapchain.cpp"
+    "src/vulkan_util.cpp"
 )
 
 set(RENDERING_THIRD_PARTY_DEPS
@@ -54,6 +56,7 @@ if (HOT_RELOAD)
         PRIVATE_DEPS
             polos::communication
             polos::filesystem
+            stb_image::stb_image
     )
 else()
     set(RENDERING_SRC ${RENDERING_IMPL_SRC})

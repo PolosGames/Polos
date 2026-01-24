@@ -23,7 +23,7 @@ enum class MaterialType : std::uint8_t
 
 struct allocated_image;
 
-struct alignas(128) material// NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+struct alignas(128) material
 {
     std::string name;
 

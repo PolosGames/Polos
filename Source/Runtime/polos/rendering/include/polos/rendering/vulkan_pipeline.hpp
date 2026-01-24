@@ -8,13 +8,16 @@
 
 #include <vulkan/vulkan.h>
 
+#include <vector>
+
 namespace polos::rendering
 {
 
-struct alignas(16) vulkan_pipeline// NOLINT
+struct alignas(16) vulkan_pipeline
 {
-    VkPipeline       pipeline{VK_NULL_HANDLE};
-    VkPipelineLayout layout{VK_NULL_HANDLE};
+    VkPipeline                         pipeline{VK_NULL_HANDLE};
+    VkPipelineLayout                   layout{VK_NULL_HANDLE};
+    std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
 };
 
 }// namespace polos::rendering

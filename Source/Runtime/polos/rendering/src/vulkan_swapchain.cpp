@@ -66,14 +66,15 @@ auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> 
     std::int32_t height{0U};
     glfwGetFramebufferSize(m_window, &width, &height);
 
-    m_extent.width = std::clamp(
+    m_extent.width = m_extent3D.width = std::clamp(
         static_cast<std::uint32_t>(width),
         m_surface_cap.minImageExtent.width,
         m_surface_cap.maxImageExtent.width);
-    m_extent.height = std::clamp(
+    m_extent.height = m_extent3D.height = std::clamp(
         static_cast<std::uint32_t>(height),
         m_surface_cap.minImageExtent.height,
         m_surface_cap.maxImageExtent.height);
+    m_extent3D.depth = 1U;
 
     m_scissor.offset.x = 0;
     m_scissor.offset.y = 0;
@@ -228,6 +229,11 @@ auto VulkanSwapchain::GetSurfaceFormat() const -> VkSurfaceFormatKHR const&
 auto VulkanSwapchain::GetExtent() const -> VkExtent2D const&
 {
     return m_extent;
+}
+
+[[nodiscard]] auto VulkanSwapchain::GetExtent3D() const -> VkExtent3D const&
+{
+    return m_extent3D;
 }
 
 auto VulkanSwapchain::GetScissor() const -> VkRect2D const&

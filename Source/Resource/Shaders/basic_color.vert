@@ -1,12 +1,23 @@
 #version 450
 
+layout(binding = 0) uniform UniformBufferObject
+{
+    mat4 model;
+    mat4 view;
+    mat4 projection;
+}
+ubo;
+
 layout(location = 0) in vec3 i_position;
 layout(location = 2) in vec3 i_color;
+layout(location = 3) in vec2 i_tex_coord;
 
 layout(location = 0) out vec3 o_frag_color;
+layout(location = 1) out vec2 o_frag_tex_coord;
 
 void main()
 {
-    gl_Position  = vec4(i_position, 1.0);
-    o_frag_color = i_color;
+    gl_Position      = ubo.projection * ubo.view * ubo.model * vec4(i_position, 1.0);
+    o_frag_color     = i_color;
+    o_frag_tex_coord = i_tex_coord;
 }

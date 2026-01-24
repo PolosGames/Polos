@@ -25,3 +25,9 @@ foreach(SHADER_SOURCE_FILE ${SHADER_SOURCE_FILES})
     list(APPEND SHADER_BINARY_FILES ${SHADER_BINARY_FILE})
 endforeach()
 add_custom_target(compile_shaders ALL DEPENDS ${SHADER_BINARY_FILES})
+
+set(RESOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Textures/tux.png
+)
+
+install(FILES ${RESOURCE_FILES} DESTINATION ${POLOS_INSTALL_DIR}/Resource/Textures)

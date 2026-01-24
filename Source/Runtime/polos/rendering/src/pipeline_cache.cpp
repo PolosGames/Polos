@@ -28,31 +28,6 @@ auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Re
     return {};
 }
 
-auto PipelineCache::Destroy() -> Result<void>
-{
-    LogInfo("Destroying and invalidating pipeline cache...");
-    for (auto const& [_, pipeline] : m_cache)// NOLINT
-    {
-        if (pipeline.pipeline != VK_NULL_HANDLE)
-        {
-            vkDestroyPipeline(m_device, pipeline.pipeline, nullptr);
-        }
-        if (pipeline.layout != VK_NULL_HANDLE)
-        {
-            vkDestroyPipelineLayout(m_device, pipeline.layout, nullptr);
-        }
-    }
-    m_cache.clear();
-
-    if (m_creation_cache != VK_NULL_HANDLE)
-    {
-        vkDestroyPipelineCache(m_device, m_creation_cache, nullptr);
-        m_creation_cache = VK_NULL_HANDLE;
-    }
-
-    return {};
-}
-
 auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Result<vulkan_pipeline>
 {
     auto const itr = m_cache.find(t_pipeline_name);
@@ -182,7 +157,7 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         .depthBiasConstantFactor = 0.0F,
         .depthBiasClamp          = 0.0F,
         .depthBiasSlopeFactor    = 0.0F,
-        .lineWidth               = 1.0F,
+        .lineWidth               = 5.0F,
     };
 
     VkPipelineMultisampleStateCreateInfo const multisampling{
@@ -231,23 +206,31 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         .pDynamicStates    = t_pipeline_info.dynamic_states.data(),
     };
 
+    VkDescriptorSetLayoutCreateInfo const desc_set_layout_info{
+        .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext        = nullptr,
+        .flags        = 0U,
+        .bindingCount = VK_SIZE_CAST(t_pipeline_info.descriptor_set_layout_binding.size()),
+        .pBindings    = t_pipeline_info.descriptor_set_layout_binding.data(),
+    };
+
+    VkDescriptorSetLayout desc_set_layout{VK_NULL_HANDLE};
+    assert(VK_SUCCESS == vkCreateDescriptorSetLayout(m_device, &desc_set_layout_info, nullptr, &desc_set_layout));
+
+    std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{desc_set_layout};
 
     VkPipelineLayoutCreateInfo const pipeline_layout_info{
         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext                  = nullptr,
         .flags                  = 0U,
-        .setLayoutCount         = 0U,
-        .pSetLayouts            = nullptr,
+        .setLayoutCount         = VK_SIZE_CAST(descriptor_set_layouts.size()),
+        .pSetLayouts            = descriptor_set_layouts.data(),
         .pushConstantRangeCount = 0U,
         .pPushConstantRanges    = nullptr,
     };
 
     VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
-
-    if (VK_SUCCESS != vkCreatePipelineLayout(m_device, &pipeline_layout_info, nullptr, &pipeline_layout))
-    {
-        return ErrorType{RenderingErrc::kFailedCreatePipelineLayout};
-    }
+    assert(VK_SUCCESS == vkCreatePipelineLayout(m_device, &pipeline_layout_info, nullptr, &pipeline_layout));
 
     VkGraphicsPipelineCreateInfo const pipeline_info{
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -277,9 +260,51 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
-    m_cache[pipeline_key] = vulkan_pipeline{.pipeline = pipeline, .layout = pipeline_layout};
+    auto [itr_inserted, was_inserted] = m_cache.insert(
+        std::make_pair(
+            pipeline_key,
+            vulkan_pipeline{
+                .pipeline               = pipeline,
+                .layout                 = pipeline_layout,
+                .descriptor_set_layouts = std::vector(descriptor_set_layouts.begin(), descriptor_set_layouts.end()),
+            }));
 
-    return m_cache[pipeline_key];
+    return itr_inserted->second;
+}
+
+auto PipelineCache::Destroy() -> Result<void>
+{
+    LogInfo("Destroying and invalidating pipeline cache...");
+    for (auto const& [_, pipeline] : m_cache)// NOLINT
+    {
+        if (VK_NULL_HANDLE != pipeline.pipeline)
+        {
+            vkDestroyPipeline(m_device, pipeline.pipeline, nullptr);
+        }
+        if (VK_NULL_HANDLE != pipeline.layout)
+        {
+            vkDestroyPipelineLayout(m_device, pipeline.layout, nullptr);
+        }
+        if (!pipeline.descriptor_set_layouts.empty())
+        {
+            for (auto const& desc_set_layout : pipeline.descriptor_set_layouts)
+            {
+                if (VK_NULL_HANDLE != desc_set_layout)
+                {
+                    vkDestroyDescriptorSetLayout(m_device, desc_set_layout, nullptr);
+                }
+            }
+        }
+    }
+    m_cache.clear();
+
+    if (m_creation_cache != VK_NULL_HANDLE)
+    {
+        vkDestroyPipelineCache(m_device, m_creation_cache, nullptr);
+        m_creation_cache = VK_NULL_HANDLE;
+    }
+
+    return {};
 }
 
 }// namespace polos::rendering

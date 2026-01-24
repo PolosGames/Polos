@@ -57,6 +57,7 @@ public:
 
     [[nodiscard]] auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
     [[nodiscard]] auto GetExtent() const -> VkExtent2D const&;
+    [[nodiscard]] auto GetExtent3D() const -> VkExtent3D const&;
     [[nodiscard]] auto GetScissor() const -> VkRect2D const&;
     [[nodiscard]] auto GetViewport() const -> VkViewport const&;
 
@@ -89,6 +90,7 @@ private:
     VkSurfaceCapabilitiesKHR m_surface_cap{};
     VkPresentModeKHR         m_present_mode{};
     VkExtent2D               m_extent{};
+    VkExtent3D               m_extent3D{};
     VkRect2D                 m_scissor{};
     VkViewport               m_viewport{};
 

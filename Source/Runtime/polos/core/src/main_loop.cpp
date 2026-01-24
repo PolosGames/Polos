@@ -55,7 +55,7 @@ void MainLoop::Run() const
         auto const current_time = utils::GetTimeNow();
         delta_time              = current_time - start;
 
-        LogInfo("Frame Time: {} s", utils::ConvertToSeconds(delta_time));
+        //LogInfo("Frame Time: {} s", utils::ConvertToSeconds(delta_time));
 
         start = current_time;
 
