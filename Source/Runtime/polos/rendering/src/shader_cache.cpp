@@ -18,13 +18,13 @@ namespace polos::rendering
 ShaderCache::ShaderCache()  = default;
 ShaderCache::~ShaderCache() = default;
 
-auto ShaderCache::Create(shader_cache_create_details const& t_details) -> Result<void>
+auto ShaderCache::Create(ShaderCacheCreateDetails const& t_details) -> Result<void>
 {
     m_device = t_details.logi_device;
 
-    for (auto const& shader_file : t_details.shader_files)
+    for (auto const& ShaderFile : t_details.shader_files)
     {
-        auto shader_result = loadShaderFromFile(shader_file);
+        auto shader_result = loadShaderFromFile(ShaderFile);
         if (!shader_result.has_value())
         {
             return ErrorType{shader_result.error()};
@@ -33,9 +33,9 @@ auto ShaderCache::Create(shader_cache_create_details const& t_details) -> Result
         VkShaderModule shader_module = shader_result.value();
 
         // NOLINTNEXTLINE
-        m_shader_cache.emplace_back(new shader{
-            .name   = utils::StrHash64(shader_file.custom_name),
-            .stage  = shader_file.stage,
+        m_shader_cache.emplace_back(new Shader{
+            .name   = utils::StrHash64(ShaderFile.custom_name),
+            .stage  = ShaderFile.stage,
             .module = shader_module,
         });
     }
@@ -45,13 +45,13 @@ auto ShaderCache::Create(shader_cache_create_details const& t_details) -> Result
 
 auto ShaderCache::Destroy() -> Result<void>
 {
-    for (auto const& shader : m_shader_cache) { vkDestroyShaderModule(m_device, shader->module, nullptr); }
+    for (auto const& Shader : m_shader_cache) { vkDestroyShaderModule(m_device, Shader->module, nullptr); }
     return {};
 }
 
-auto ShaderCache::GetShaderModule(utils::string_id const t_name) -> shader const*
+auto ShaderCache::GetShaderModule(utils::string_id const t_name) -> Shader const*
 {
-    auto const itr = std::ranges::find_if(m_shader_cache, [&t_name](std::unique_ptr<shader> const& t_shader) {
+    auto const itr = std::ranges::find_if(m_shader_cache, [&t_name](std::unique_ptr<Shader> const& t_shader) {
         return t_shader->name == t_name;
     });
     assert(itr != m_shader_cache.end() && "Shader module not loaded to engine!");
@@ -59,7 +59,7 @@ auto ShaderCache::GetShaderModule(utils::string_id const t_name) -> shader const
     return itr->get();
 }
 
-auto ShaderCache::loadShaderFromFile(shader_file const& t_shader_file) -> Result<VkShaderModule>
+auto ShaderCache::loadShaderFromFile(ShaderFile const& t_shader_file) -> Result<VkShaderModule>
 {
     auto shader_code = fs::ReadFile(t_shader_file.path);
     if (!shader_code.has_value())
@@ -69,7 +69,7 @@ auto ShaderCache::loadShaderFromFile(shader_file const& t_shader_file) -> Result
 
     if (shader_code->data.size() % 4 != 0)// ensure we can convert to std::uint32_t
     {
-        LogError("The SPIR-V code that has been read cannot be used for shader creation!");
+        LogError("The SPIR-V code that has been read cannot be used for Shader creation!");
         return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
 

@@ -13,7 +13,7 @@
 namespace polos::rendering
 {
 
-struct alignas(16) vulkan_pipeline
+struct alignas(16) VulkanPipeline
 {
     VkPipeline                         pipeline{VK_NULL_HANDLE};
     VkPipelineLayout                   layout{VK_NULL_HANDLE};

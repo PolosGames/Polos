@@ -28,14 +28,15 @@ public:
     Scene& operator=(Scene const&) = delete;
     Scene& operator=(Scene&&)      = delete;
 
-    void                     AddObject(render_object const& t_object);
-    void                     AddObject(glm::mat4 const& t_transform, std::shared_ptr<material> const& t_material);
-    std::span<render_object> GetObjects();
+    std::size_t              AddObject(RenderObject const& t_object);
+    std::size_t              AddObject(glm::mat4 const& t_transform, std::shared_ptr<Material> const& t_material);
+    std::span<RenderObject> GetObjects();
+    RenderObject&           GetObject(std::size_t t_index);
 private:
     glm::mat4 m_view_matrix{0.0F};
     glm::mat4 m_projection_matrix{0.0F};
 
-    std::vector<render_object> m_objects;
+    std::vector<RenderObject> m_objects;
 };
 
 }// namespace polos::rendering

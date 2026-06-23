@@ -15,13 +15,13 @@
 namespace polos::fs
 {
 
-FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const& t_file_path) -> Result<resource>;
+FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>;
 FILESYSTEM_EXPORT auto ReadFile(std::string_view t_custom_name, std::filesystem::path const& t_file_path)
-    -> Result<resource>;
+    -> Result<Resource>;
 
-auto ReadFile(std::string t_file_pathe) -> Result<resource>     = delete;
-auto ReadFile(char const* t_file_pathe) -> Result<resource>     = delete;
-auto ReadFile(std::string_view t_file_path) -> Result<resource> = delete;
+auto ReadFile(std::string t_file_pathe) -> Result<Resource>     = delete;
+auto ReadFile(char const* t_file_pathe) -> Result<Resource>     = delete;
+auto ReadFile(std::string_view t_file_path) -> Result<Resource> = delete;
 
 }// namespace polos::fs
 

@@ -11,11 +11,11 @@
 namespace polos::communication
 {
 
-struct key_release final : base_event// NOLINT
+struct KeyRelease final : BaseEvent// NOLINT
 {
-    DECLARE_POLOS_EVENT(key_release);
+    DECLARE_POLOS_EVENT(KeyRelease);
 
-    explicit key_release(std::int32_t t_key)
+    explicit KeyRelease(std::int32_t t_key)
         : key{t_key}
     {}
 
@@ -24,6 +24,6 @@ struct key_release final : base_event// NOLINT
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::key_release, "Released Key: {}", event.key);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::KeyRelease, "Released Key: {}", event.key);
 
 #endif// POLOS_COMMUNICATION_KEY_RELEASE_HPP

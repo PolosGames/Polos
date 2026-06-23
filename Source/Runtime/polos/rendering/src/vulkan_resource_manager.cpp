@@ -26,13 +26,13 @@ VulkanResourceManager::~VulkanResourceManager()
     for (std::int32_t i{0}; i < s_resource_id; ++i)
     {
         // Which one is it? Image or buffer? We don't know, so we try both. Good enough for now.
-        // The destroy functions will check if the resource exists before trying to destroy it.
+        // The destroy functions will check if the Resource exists before trying to destroy it.
         DestroyImage(i);
         DestroyBuffer(i);
     }
 }
 
-auto VulkanResourceManager::Create(resource_manager_create_details const& t_details) -> Result<void>
+auto VulkanResourceManager::Create(ResourceManagerCreateDetails const& t_details) -> Result<void>
 {
     m_device    = t_details.device;
     m_allocator = t_details.allocator;
@@ -50,7 +50,7 @@ auto VulkanResourceManager::CreateImage(
     VmaMemoryUsage           t_usage,
     VkMemoryPropertyFlags    t_memory_property_flags) -> Result<std::int32_t>
 {
-    m_images.push_back(std::make_unique<allocated_image>());
+    m_images.push_back(std::make_unique<AllocatedImage>());
 
     auto& image    = m_images.back();
     image->id      = s_resource_id++;
@@ -95,7 +95,7 @@ auto VulkanResourceManager::CreateBuffer(
     VmaMemoryUsage            t_usage,
     VkMemoryPropertyFlags     t_memory_property_flags) -> Result<std::int32_t>
 {
-    m_buffers.push_back(std::make_unique<allocated_buffer>());
+    m_buffers.push_back(std::make_unique<AllocatedBuffer>());
 
     auto& buffer   = m_buffers.back();
     buffer->id     = s_resource_id++;
@@ -236,7 +236,7 @@ auto VulkanResourceManager::LoadTextureToImage(
         RenderContext::EndSingleTimeCommands(command_buffer);
     }
 
-    // Transition image layout to be optimal for shader read access
+    // Transition image layout to be optimal for Shader read access
     {
         VkCommandBuffer command_buffer = RenderContext::BeginSingleTimeCommands();
 
@@ -256,7 +256,7 @@ auto VulkanResourceManager::LoadTextureToImage(
     return image_for_texture_index;
 }
 
-auto VulkanResourceManager::GetBuffer(std::int32_t t_resource_id) -> allocated_buffer*
+auto VulkanResourceManager::GetBuffer(std::int32_t t_resource_id) -> AllocatedBuffer*
 {
     for (std::size_t i{0U}; i < m_buffers.size(); ++i)
     {
@@ -269,7 +269,7 @@ auto VulkanResourceManager::GetBuffer(std::int32_t t_resource_id) -> allocated_b
     return nullptr;
 }
 
-auto VulkanResourceManager::GetImage(std::int32_t t_resource_id) -> allocated_image*
+auto VulkanResourceManager::GetImage(std::int32_t t_resource_id) -> AllocatedImage*
 {
     for (std::size_t i{0U}; i < m_images.size(); ++i)
     {

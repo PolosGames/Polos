@@ -11,11 +11,11 @@
 namespace polos::communication
 {
 
-struct window_close final : base_event
+struct WindowClose final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(window_close);
+    DECLARE_POLOS_EVENT(WindowClose);
 
-    explicit window_close(void* t_handle)
+    explicit WindowClose(void* t_handle)
         : window_handle{t_handle}
     {}
 

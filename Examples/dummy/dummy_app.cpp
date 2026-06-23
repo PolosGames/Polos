@@ -10,6 +10,8 @@
 
 #include "dummy_app.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <polos/communication/engine_terminate.hpp>
 #include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
@@ -31,39 +33,54 @@ DummyApp::~DummyApp() = default;
 
 void DummyApp::Create()
 {
-    polos::communication::Subscribe<polos::communication::engine_update>(
-        [this](polos::communication::engine_update& t_event) {
+    polos::communication::Subscribe<polos::communication::EngineUpdate>(
+        [this](polos::communication::EngineUpdate& t_event) {
             onEngineUpdate(t_event);
         });
 
-    polos::communication::Subscribe<polos::communication::render_update>(
-        [this](polos::communication::render_update& t_event) {
+    polos::communication::Subscribe<polos::communication::RenderUpdate>(
+        [this](polos::communication::RenderUpdate& t_event) {
             onRenderUpdate(t_event);
         });
 
-    polos::communication::Subscribe<polos::communication::key_release>(
-        [this](polos::communication::key_release& t_event) {
+    polos::communication::Subscribe<polos::communication::KeyRelease>(
+        [this](polos::communication::KeyRelease& t_event) {
             onKeyRelease(t_event.key);
         });
 
-    polos::rendering::RenderingApi::GetMainScene()->AddObject(
-        glm::mat4{1.0F},
-        std::make_shared<polos::rendering::material>());
+    m_obj1 = polos::rendering::RenderingApi::GetMainScene()->AddObject(glm::mat4{1.0F},
+                                                                       std::make_shared<polos::rendering::Material>());
+
+    m_obj2 = polos::rendering::RenderingApi::GetMainScene()->AddObject(glm::mat4{1.0F},
+                                                                       std::make_shared<polos::rendering::Material>());
 }
 
 void DummyApp::Destroy() {}
 
 char const* DummyApp::Name() const
-{
-    return "DummyApp";
-}
+{ return "DummyApp"; }
 
-auto DummyApp::onEngineUpdate(polos::communication::engine_update& /**/) -> void
+auto DummyApp::onEngineUpdate(polos::communication::EngineUpdate& /**/) -> void
 {
     //LogInfo("Engine Thread Update");
+
+    // static auto start_time = std::chrono::high_resolution_clock::now();
+
+    // auto  current_time = std::chrono::high_resolution_clock::now();
+    // float time         = std::chrono::duration<float, std::chrono::seconds ::period>(current_time - start_time).count();
+
+    glm::mat4 model_matrix{1.0F};
+    // model_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    polos::rendering::RenderingApi::GetMainScene()->GetObject(m_obj1).transform = model_matrix;
+
+    model_matrix = glm::translate(glm::mat4{1.0F}, glm::vec3{0.0F, 0.0F, 0.5F});
+    // model_matrix = glm::rotate(model_matrix, time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+
+    polos::rendering::RenderingApi::GetMainScene()->GetObject(m_obj2).transform = model_matrix;
 }
 
-auto DummyApp::onRenderUpdate(polos::communication::render_update& /**/) -> void
+auto DummyApp::onRenderUpdate(polos::communication::RenderUpdate& /**/) -> void
 {
     //LogInfo("Render Thread Update");
 }

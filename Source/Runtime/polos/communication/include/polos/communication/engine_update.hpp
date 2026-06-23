@@ -11,11 +11,11 @@
 namespace polos::communication
 {
 
-struct engine_update final : base_event
+struct EngineUpdate final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(engine_update)
+    DECLARE_POLOS_EVENT(EngineUpdate)
 
-    explicit engine_update(float t_delta_time)
+    explicit EngineUpdate(float t_delta_time)
         : delta_time{t_delta_time}
     {}
 
@@ -24,6 +24,6 @@ struct engine_update final : base_event
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::engine_update, "Delta Time: {:.4f}", event.delta_time);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::EngineUpdate, "Delta Time: {:.4f}", event.delta_time);
 
 #endif// POLOS_COMMUNICATION_ENGINE_UPDATE_HPP

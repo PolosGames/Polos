@@ -20,7 +20,7 @@ namespace polos::rendering
 PipelineCache::PipelineCache()  = default;
 PipelineCache::~PipelineCache() = default;
 
-auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Result<void>
+auto PipelineCache::Create(PipelineCacheCreateDetails const& t_details) -> Result<void>
 {
     m_device    = t_details.logi_device;
     m_swapchain = t_details.swapchain;
@@ -28,7 +28,7 @@ auto PipelineCache::Create(pipeline_cache_create_details const& t_details) -> Re
     return {};
 }
 
-auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Result<vulkan_pipeline>
+auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Result<VulkanPipeline>
 {
     auto const itr = m_cache.find(t_pipeline_name);
     if (itr == m_cache.end())
@@ -39,12 +39,10 @@ auto PipelineCache::GetPipeline(utils::string_id t_pipeline_name) const -> Resul
     return itr->second;
 }
 
-auto PipelineCache::GetPipeline(std::string_view const t_pipeline_name) const -> Result<vulkan_pipeline>
-{
-    return GetPipeline(utils::StrHash64(t_pipeline_name));
-}
+auto PipelineCache::GetPipeline(std::string_view const t_pipeline_name) const -> Result<VulkanPipeline>
+{ return GetPipeline(utils::StrHash64(t_pipeline_name)); }
 
-auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_info) -> Result<vulkan_pipeline>
+auto PipelineCache::ConstructPipeline(GraphicsPipelineInfo const& t_pipeline_info) -> Result<VulkanPipeline>
 {
     // // --- Pipeline cache gathering stage (OPTIONAL, no errors emitted) ---
     // {// START pipeline cache create
@@ -95,13 +93,13 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
     std::vector<VkPipelineShaderStageCreateInfo> shader_stages(t_pipeline_info.shaders.size());
     for (std::size_t i{0U}; i < t_pipeline_info.shaders.size(); ++i)
     {
-        shader const*                   shader = t_pipeline_info.shaders[i];
+        Shader const*                   Shader = t_pipeline_info.shaders[i];
         VkPipelineShaderStageCreateInfo shader_stage_info{
             .sType               = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext               = nullptr,
             .flags               = 0U,
-            .stage               = static_cast<VkShaderStageFlagBits>(shader->stage),
-            .module              = shader->module,
+            .stage               = static_cast<VkShaderStageFlagBits>(Shader->stage),
+            .module              = Shader->module,
             .pName               = "main",
             .pSpecializationInfo = nullptr,
         };
@@ -260,14 +258,13 @@ auto PipelineCache::ConstructPipeline(graphics_pipeline_info const& t_pipeline_i
         return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
-    auto [itr_inserted, was_inserted] = m_cache.insert(
-        std::make_pair(
-            pipeline_key,
-            vulkan_pipeline{
-                .pipeline               = pipeline,
-                .layout                 = pipeline_layout,
-                .descriptor_set_layouts = std::vector(descriptor_set_layouts.begin(), descriptor_set_layouts.end()),
-            }));
+    auto [itr_inserted, was_inserted] = m_cache.insert(std::make_pair(
+        pipeline_key,
+        VulkanPipeline{
+            .pipeline               = pipeline,
+            .layout                 = pipeline_layout,
+            .descriptor_set_layouts = std::vector(descriptor_set_layouts.begin(), descriptor_set_layouts.end()),
+        }));
 
     return itr_inserted->second;
 }

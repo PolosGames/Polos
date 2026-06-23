@@ -24,9 +24,9 @@ namespace polos::rendering
 class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
-struct allocated_image;
+struct AllocatedImage;
 
-struct alignas(64) resource_manager_create_details// NOLINT
+struct alignas(64) ResourceManagerCreateDetails// NOLINT
 {
     VkDevice         device;
     VmaAllocator     allocator;
@@ -44,7 +44,7 @@ public:
     VulkanResourceManager& operator=(VulkanResourceManager const&) = delete;
     VulkanResourceManager& operator=(VulkanResourceManager&&)      = delete;
 
-    auto Create(resource_manager_create_details const& t_details) -> Result<void>;
+    auto Create(ResourceManagerCreateDetails const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
     auto CreateBuffer(
@@ -69,8 +69,8 @@ public:
         VkImageLayout        t_final_layout,
         VkPipelineStageFlags t_final_pipeline_stage) -> Result<std::int32_t>;
 
-    auto GetBuffer(std::int32_t t_resource_id) -> allocated_buffer*;
-    auto GetImage(std::int32_t t_resource_id) -> allocated_image*;
+    auto GetBuffer(std::int32_t t_resource_id) -> AllocatedBuffer*;
+    auto GetImage(std::int32_t t_resource_id) -> AllocatedImage*;
 private:
     static std::int32_t s_resource_id;
 
@@ -78,8 +78,8 @@ private:
     VmaAllocator     m_allocator{VK_NULL_HANDLE};
     VulkanSwapchain* m_swapchain{nullptr};
 
-    std::vector<std::unique_ptr<allocated_image>>  m_images;
-    std::vector<std::unique_ptr<allocated_buffer>> m_buffers;
+    std::vector<std::unique_ptr<AllocatedImage>>  m_images;
+    std::vector<std::unique_ptr<AllocatedBuffer>> m_buffers;
 };
 
 }// namespace polos::rendering

@@ -18,12 +18,12 @@
 namespace polos::fs
 {
 
-auto ReadFile(std::filesystem::path const& t_file_path) -> Result<resource>
+auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>
 {
     return ReadFile(t_file_path.filename().string(), t_file_path);
 }
 
-auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const& t_file_path) -> Result<resource>
+auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const& t_file_path) -> Result<Resource>
 {
     std::string const file_name = t_file_path.filename().string();
     LogDebug("Reading file: {}", file_name);
@@ -51,7 +51,7 @@ auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const&
     file.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(size));// NOLINT
     LogDebug("Expected file read was {} bytes, got {} bytes", size, file.gcount());
 
-    return resource{
+    return Resource{
         .uncompressed_size = size,
         .size              = size,
         .stem_name         = t_file_path.stem().string(),

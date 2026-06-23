@@ -18,17 +18,17 @@
 namespace polos::rendering
 {
 
-struct shader_file
+struct ShaderFile
 {
     std::string           custom_name;
     ShaderStage           stage;
     std::filesystem::path path;
 };
 
-struct shader_cache_create_details
+struct ShaderCacheCreateDetails
 {
     VkDevice                 logi_device{VK_NULL_HANDLE};
-    std::vector<shader_file> shader_files;
+    std::vector<ShaderFile> shader_files;
 };
 
 class ShaderCache
@@ -37,15 +37,15 @@ public:
     ShaderCache();
     ~ShaderCache();
 
-    auto Create(shader_cache_create_details const& t_details) -> Result<void>;
+    auto Create(ShaderCacheCreateDetails const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
-    auto GetShaderModule(utils::string_id t_name) -> shader const*;
+    auto GetShaderModule(utils::string_id t_name) -> Shader const*;
 private:
-    auto loadShaderFromFile(shader_file const& t_shader_file) -> Result<VkShaderModule>;
+    auto loadShaderFromFile(ShaderFile const& t_shader_file) -> Result<VkShaderModule>;
 
     VkDevice                             m_device{VK_NULL_HANDLE};
-    std::vector<std::unique_ptr<shader>> m_shader_cache;
+    std::vector<std::unique_ptr<Shader>> m_shader_cache;
 };
 
 }// namespace polos::rendering

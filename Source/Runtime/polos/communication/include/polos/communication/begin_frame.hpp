@@ -11,9 +11,9 @@
 namespace polos::communication
 {
 
-struct begin_frame final : base_event
+struct BeginFrame final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(begin_frame)
+    DECLARE_POLOS_EVENT(BeginFrame)
 };
 
 }// namespace polos::communication

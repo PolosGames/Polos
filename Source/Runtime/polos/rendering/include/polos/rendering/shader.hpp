@@ -26,7 +26,7 @@ enum class ShaderStage : std::uint8_t
     kTessEval    = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
 };
 
-struct shader
+struct Shader
 {
     utils::string_id name;
     ShaderStage      stage;

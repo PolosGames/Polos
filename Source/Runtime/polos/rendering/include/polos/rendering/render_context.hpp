@@ -11,8 +11,6 @@
 #include "polos/rendering/module_macros.hpp"
 #include "polos/rendering/passes/general_pass.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
-#include "polos/rendering/texture_description.hpp"
-#include "polos/rendering/vertex.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -25,7 +23,7 @@ class PlatformManager;
 
 namespace polos::communication
 {
-struct window_framebuffer_resize;
+struct WindowFramebufferResize;
 }// namespace polos::communication
 
 namespace polos::rendering
@@ -37,9 +35,6 @@ class VulkanSwapchain;
 class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
-struct render_pass_layout_description;
-struct allocated_image;
-struct allocated_buffer;
 
 class RENDERING_EXPORT RenderContext : public IRenderContext
 {
@@ -96,7 +91,6 @@ private:
     std::uint32_t                m_swapchain_image_index{0U};
 
     static constexpr std::size_t const kMaxFramesInFlight{3U};
-    std::vector<texture_description>   m_swapchain_images;
 
     enum class ImageAcqusitionResult : std::uint8_t
     {
@@ -107,7 +101,7 @@ private:
 
     VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
     VkQueue              m_gfx_queue{VK_NULL_HANDLE};
-    queue_family_indices m_queue_family_indices;
+    QueueFamilyIndices m_queue_family_indices;
 
     bool m_framebuffer_resized{false};
 

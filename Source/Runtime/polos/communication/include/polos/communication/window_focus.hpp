@@ -11,11 +11,11 @@
 namespace polos::communication
 {
 
-struct window_focus final : base_event
+struct WindowFocus final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(window_focus);
+    DECLARE_POLOS_EVENT(WindowFocus);
 
-    explicit window_focus(std::int32_t t_is_focused)
+    explicit WindowFocus(std::int32_t t_is_focused)
         : is_focused{t_is_focused}
     {}
 
@@ -24,6 +24,6 @@ struct window_focus final : base_event
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::window_focus, "Is Window Focused: {}", event.is_focused);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::WindowFocus, "Is Window Focused: {}", event.is_focused);
 
 #endif// POLOS_COMMUNICATION_WINDOW_FOCUS_HPP

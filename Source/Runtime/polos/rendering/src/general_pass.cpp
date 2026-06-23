@@ -7,6 +7,7 @@
 
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/pipeline_cache.hpp"
+#include "polos/rendering/quad_instance.hpp"
 #include "polos/rendering/render_context.hpp"
 #include "polos/rendering/render_object.hpp"
 #include "polos/rendering/render_pass_layout_description.hpp"
@@ -21,11 +22,16 @@
 #include "polos/rendering/vulkan_util.hpp"
 #include "polos/utils/string_id.hpp"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 
 namespace polos::rendering
 {
+
+static constexpr std::uint64_t kMaxQuadInstances = 10000U;
 
 GeneralPass::GeneralPass(RenderContext& t_context)
     : m_context(t_context),
@@ -35,6 +41,7 @@ GeneralPass::GeneralPass(RenderContext& t_context)
       m_pipeline_cache(&m_context.GetPipelineCache()),
       m_device(m_context.GetVulkanDevice().logi_device)
 {
+    createDepthResources();
     m_render_pass     = createRenderPass();
     m_draw_image_view = createDrawImageView();
 
@@ -84,6 +91,8 @@ GeneralPass::GeneralPass(RenderContext& t_context)
     m_sampler_tux_texture    = createTextureSampler();
 
     m_buffer_indices_ubos.resize(frames_in_flight);
+    m_buffer_instancing_indices.resize(frames_in_flight);
+    m_instance_mappings.resize(frames_in_flight);
     m_ubo_mappings.resize(frames_in_flight);
     createUboMapping();
 
@@ -97,41 +106,76 @@ GeneralPass::~GeneralPass()
     for (std::size_t i{0}; i < m_buffer_indices_ubos.size(); ++i)
     {
         vmaUnmapMemory(m_context.GetVulkanDevice().allocator, m_vrm->GetBuffer(m_buffer_indices_ubos[i])->allocation);
+        m_vrm->DestroyBuffer(m_buffer_indices_ubos[i]);
+    }
+    for (std::size_t i{0}; i < m_buffer_instancing_indices.size(); ++i)
+    {
+        vmaUnmapMemory(m_context.GetVulkanDevice().allocator,
+                       m_vrm->GetBuffer(m_buffer_instancing_indices[i])->allocation);
+        m_vrm->DestroyBuffer(m_buffer_instancing_indices[i]);
     }
     for (auto& fbuf : m_pass_fb) { vkDestroyFramebuffer(m_device, fbuf, nullptr); }
 
     vkDestroyDescriptorPool(m_device, m_descriptor_pool, nullptr);
     vkDestroyImageView(m_device, m_draw_image_view, nullptr);
+    m_vrm->DestroyImage(m_draw_image_index);
+
+    vkDestroyImageView(m_device, m_depth_image_view, nullptr);
+    m_vrm->DestroyImage(m_depth_image_index);
 
     vkDestroySampler(m_device, m_sampler_tux_texture, nullptr);
     vkDestroyImageView(m_device, m_image_view_tux_texture, nullptr);
+    m_vrm->DestroyImage(m_texture_image_index);
+
+    m_vrm->DestroyBuffer(m_buffer_vertices_index);
+    m_vrm->DestroyBuffer(m_buffer_indices_index);
 
     vkDestroyRenderPass(m_device, m_render_pass, nullptr);
 }
 
 auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_frame) -> void
 {
-    std::span<render_object> const render_objects = RenderingApi::GetMainScene()->GetObjects();
+    m_command_buffer = t_cmd_buf;
 
-    VkClearValue const clear_color{
-        .color = {.float32 = {common::kPolosRed, common::kPolosGreen, common::kPolosBlue, 1.0F}},
+    std::span<RenderObject> const render_objects = RenderingApi::GetMainScene()->GetObjects();
+
+    std::array<VkClearValue, 2U> clear_color{
+        VkClearValue{
+            .color = {.float32 = {common::kPolosRed, common::kPolosGreen, common::kPolosBlue, 1.0F}},
+        },
+        VkClearValue{
+            .depthStencil = {.depth = 1.0F, .stencil = 0U},
+        },
     };
 
-    static auto start_time = std::chrono::high_resolution_clock::now();
-
-    auto  current_time = std::chrono::high_resolution_clock::now();
-    float time         = std::chrono::duration<float, std::chrono::seconds ::period>(current_time - start_time).count();
-
-    uniform_buffer_object ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj  = glm::perspective(
-        glm::radians(45.0f),
-        static_cast<float>(m_swapchain->GetExtent().width) / static_cast<float>(m_swapchain->GetExtent().height),
-        0.1f,
-        10.0f);
+    UniformBufferObject ubo{};
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.proj = glm::perspective(glm::radians(60.0f),
+                                static_cast<float>(m_swapchain->GetExtent().width) /
+                                    static_cast<float>(m_swapchain->GetExtent().height),
+                                0.1f,
+                                10.0f);
     ubo.proj[1][1] *= -1;
 
+    std::size_t current_instance_count = std::min(render_objects.size(), kMaxQuadInstances);
+
+    if (current_instance_count < render_objects.size())
+    {
+        // TODO(sorbatdev): Log once
+        LogWarn(
+            "Number of render objects ({}) exceeds maximum quad instances ({}). Only rendering the first {} objects.",
+            render_objects.size(),
+            kMaxQuadInstances,
+            current_instance_count);
+    }
+
+    //NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+    std::vector<QuadInstance> instance_data(current_instance_count);
+    for (std::size_t i{0U}; i < current_instance_count; ++i) { instance_data[i].model = render_objects[i].transform; }
+
+    std::memcpy(m_instance_mappings[t_current_frame],
+                instance_data.data(),
+                sizeof(QuadInstance) * current_instance_count);
     std::memcpy(m_ubo_mappings[t_current_frame], &ubo, sizeof(ubo));
 
     VkRenderPassBeginInfo const pass_begin_info{
@@ -141,12 +185,19 @@ auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_fra
         .framebuffer = m_pass_fb[t_current_frame],
         .renderArea =
             {
-                .offset = {0, 0},
+                .offset = VkOffset2D{.x = 0, .y = 0},
                 .extent = m_swapchain->GetExtent(),
             },
-        .clearValueCount = 1U,
-        .pClearValues    = &clear_color,
+        .clearValueCount = VK_SIZE_CAST(clear_color.size()),
+        .pClearValues    = clear_color.data(),
     };
+
+    util::TransitionImageLayout(t_cmd_buf,
+                                m_vrm->GetImage(m_depth_image_index)->image,
+                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 
     // clang-format off
         // No transition needed as render pass implicitly transitions from:
@@ -162,37 +213,35 @@ auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_fra
             VkDeviceSize const offset{0U};
             vkCmdBindVertexBuffers(t_cmd_buf, 0U, 1U, &m_buffer_vertices, &offset);
             vkCmdBindIndexBuffer(t_cmd_buf, m_buffer_indices, offset, VK_INDEX_TYPE_UINT16);
-
-            for (auto objects : render_objects) {
-                vkCmdBindDescriptorSets(t_cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_cache->GetPipeline("pl_basiccolor"_sid)->layout, 0U, 1U, m_descriptor_sets.data(), 0U, nullptr);
-                vkCmdDrawIndexed(t_cmd_buf, VK_SIZE_CAST(m_indices.size()), 1U, 0U, 0U, 0U);
-            }
+            vkCmdBindDescriptorSets(
+                t_cmd_buf,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                m_pipeline_cache->GetPipeline("pl_basiccolor"_sid)->layout,
+                0U, 1U, &m_descriptor_sets[t_current_frame], 0U, nullptr);
+            vkCmdDrawIndexed(t_cmd_buf, VK_SIZE_CAST(m_indices.size()), VK_SIZE_CAST(current_instance_count), 0U, 0U, 0U);
         vkCmdEndRenderPass(t_cmd_buf);
 
     // clang-format on
 
-    util::TransitionImageLayout(
-        t_cmd_buf,
-        m_swapchain->GetCurrentImage(),
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT);
+    util::TransitionImageLayout(t_cmd_buf,
+                                m_swapchain->GetCurrentImage(),
+                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-    util::CopyImageToImage(
-        t_cmd_buf,
-        m_draw_image,
-        m_swapchain->GetCurrentImage(),
-        m_vrm->GetImage(m_draw_image_index)->extent,
-        m_swapchain->GetExtent3D());
+    util::CopyImageToImage(t_cmd_buf,
+                           m_draw_image,
+                           m_swapchain->GetCurrentImage(),
+                           m_vrm->GetImage(m_draw_image_index)->extent,
+                           m_swapchain->GetExtent3D());
 
-    util::TransitionImageLayout(
-        t_cmd_buf,
-        m_swapchain->GetCurrentImage(),
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+    util::TransitionImageLayout(t_cmd_buf,
+                                m_swapchain->GetCurrentImage(),
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 }
 
 void GeneralPass::OnResize()
@@ -209,6 +258,11 @@ void GeneralPass::OnResize()
     // Recreate draw image and framebuffers with new swapchain extent
     m_draw_image_view = createDrawImageView();
 
+    // Recreate depth resources with new swapchain extent
+    vkDestroyImageView(m_device, m_depth_image_view, nullptr);
+    m_vrm->DestroyImage(m_depth_image_index);
+    createDepthResources();
+
     std::size_t const frames_in_flight = m_swapchain->GetImageCount();
     m_pass_fb.resize(frames_in_flight);
     for (std::uint32_t i{0U}; i < frames_in_flight; ++i) { m_pass_fb[i] = createFramebuffer(); }
@@ -224,6 +278,14 @@ VkRenderPass GeneralPass::createRenderPass()
         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
     };
 
+    static constexpr VkAttachmentReference2 const kDepthAttachmentRef{
+        .sType      = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
+        .pNext      = nullptr,
+        .attachment = 1U,
+        .layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+    };
+
     constexpr VkSubpassDescription2 const kSubpassDesc{
         .sType                   = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
         .pNext                   = nullptr,
@@ -235,7 +297,7 @@ VkRenderPass GeneralPass::createRenderPass()
         .colorAttachmentCount    = 1U,
         .pColorAttachments       = &kColorAttachmentRef,
         .pResolveAttachments     = nullptr,
-        .pDepthStencilAttachment = nullptr,
+        .pDepthStencilAttachment = &kDepthAttachmentRef,
         .preserveAttachmentCount = 0U,
         .pPreserveAttachments    = nullptr,
     };
@@ -245,15 +307,15 @@ VkRenderPass GeneralPass::createRenderPass()
         .pNext           = nullptr,
         .srcSubpass      = VK_SUBPASS_EXTERNAL,
         .dstSubpass      = 0U,
-        .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-        .srcAccessMask   = 0U,
-        .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+        .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+        .srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         .dependencyFlags = 0U,
         .viewOffset      = 0U,
     };
 
-    render_pass_layout_description layout{
+    RenderPassLayoutDescription layout{
         .attachments =
             {
                 VkAttachmentDescription2{
@@ -268,6 +330,19 @@ VkRenderPass GeneralPass::createRenderPass()
                     .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                     .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
                     .finalLayout    = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                },
+                VkAttachmentDescription2{
+                    .sType          = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
+                    .pNext          = nullptr,
+                    .flags          = 0U,
+                    .format         = VK_FORMAT_D32_SFLOAT,
+                    .samples        = VK_SAMPLE_COUNT_1_BIT,
+                    .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                    .storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                    .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                    .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                    .initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED,
+                    .finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                 },
             },
         .subpasses    = {kSubpassDesc},
@@ -340,8 +415,9 @@ VkImageView GeneralPass::createDrawImageView()
 
 VkFramebuffer GeneralPass::createFramebuffer()
 {
-    std::array<VkImageView, 1U> const attachment_views{
+    std::array<VkImageView, 2U> const attachment_views{
         m_draw_image_view,
+        m_depth_image_view,
     };
 
     VkFramebufferCreateInfo const fb_info{
@@ -349,7 +425,7 @@ VkFramebuffer GeneralPass::createFramebuffer()
         .pNext           = nullptr,
         .flags           = 0U,
         .renderPass      = m_render_pass,
-        .attachmentCount = 1U,
+        .attachmentCount = VK_SIZE_CAST(attachment_views.size()),
         .pAttachments    = attachment_views.data(),
         .width           = m_swapchain->GetExtent().width,
         .height          = m_swapchain->GetExtent().height,
@@ -366,7 +442,7 @@ VkPipeline GeneralPass::createPipeline()
 {
     std::array<VkDynamicState, 2> dynamic_states{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
-    std::array<shader const*, 2> shaders{
+    std::array<Shader const*, 2> shaders{
         m_shader_cache->GetShaderModule("s_basiccolor_vt"_sid),
         m_shader_cache->GetShaderModule("s_basiccolor_fm"_sid),
     };
@@ -381,47 +457,53 @@ VkPipeline GeneralPass::createPipeline()
             .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
             .alphaBlendOp        = VK_BLEND_OP_ADD,
             .colorWriteMask      = static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_R_BIT) |
-                              static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_G_BIT) |
-                              static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_B_BIT) |
-                              static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_A_BIT),
+                                   static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_G_BIT) |
+                                   static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_B_BIT) |
+                                   static_cast<VkColorComponentFlags>(VK_COLOR_COMPONENT_A_BIT),
         },
     };
 
-    auto result = m_pipeline_cache->ConstructPipeline(
-        graphics_pipeline_info{
-            .name         = "pl_basiccolor"_sid,
-            .shaders      = shaders,
-            .topology     = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-            .vertex_input = CreateVertexDescription(
-                VertexAttributes::kWithPosition | VertexAttributes::kWithColors | VertexAttributes::kWithTexCoords),
-            .polygon_mode                  = VK_POLYGON_MODE_FILL,
-            .cull_mode                     = VK_CULL_MODE_BACK_BIT,
-            .front_face                    = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-            .depth_bias_enable             = VK_FALSE,
-            .multisampling                 = VK_SAMPLE_COUNT_1_BIT,
-            .depth_test_enable             = VK_TRUE,
-            .depth_write_enable            = VK_TRUE,
-            .depth_compare_op              = VK_COMPARE_OP_GREATER,
-            .color_blend_attachments       = color_blend_attachments,
-            .dynamic_states                = dynamic_states,
-            .render_pass                   = m_render_pass,
-            .subpass                       = 0U,
-            .descriptor_set_layout_binding = {{
-                VkDescriptorSetLayoutBinding{
-                    .binding            = 0U,
-                    .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    .descriptorCount    = 1U,
-                    .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
-                    .pImmutableSamplers = nullptr,
-                },
-                VkDescriptorSetLayoutBinding{
-                    .binding            = 1U,
-                    .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    .descriptorCount    = 1U,
-                    .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
-                    .pImmutableSamplers = nullptr,
-                },
-            }}});
+    auto result = m_pipeline_cache->ConstructPipeline(GraphicsPipelineInfo{
+        .name               = "pl_basiccolor"_sid,
+        .shaders            = shaders,
+        .topology           = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        .vertex_input       = CreateVertexDescription(VertexAttributes::kWithPosition | VertexAttributes::kWithColors |
+                                                      VertexAttributes::kWithTexCoords),
+        .polygon_mode       = VK_POLYGON_MODE_FILL,
+        .cull_mode          = VK_CULL_MODE_BACK_BIT,
+        .front_face         = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+        .depth_bias_enable  = VK_FALSE,
+        .multisampling      = VK_SAMPLE_COUNT_1_BIT,
+        .depth_test_enable  = VK_TRUE,
+        .depth_write_enable = VK_TRUE,
+        .depth_compare_op   = VK_COMPARE_OP_LESS,
+        .color_blend_attachments       = color_blend_attachments,
+        .dynamic_states                = dynamic_states,
+        .render_pass                   = m_render_pass,
+        .subpass                       = 0U,
+        .descriptor_set_layout_binding = {{
+            VkDescriptorSetLayoutBinding{
+                .binding            = 0U,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount    = 1U,
+                .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = nullptr,
+            },
+            VkDescriptorSetLayoutBinding{
+                .binding            = 1U,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount    = 1U,
+                .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .pImmutableSamplers = nullptr,
+            },
+            VkDescriptorSetLayoutBinding{
+                .binding            = 2U,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount    = 1U,
+                .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                .pImmutableSamplers = nullptr,
+            },
+        }}});
 
     assert(result.has_value() && "Failed to create basic color pipeline!");
 
@@ -448,16 +530,15 @@ VkBuffer GeneralPass::createVertexBuffer()
 
     assert(buf.has_value());
 
-    std::int32_t index = *buf;
+    m_buffer_vertices_index = *buf;
 
-    vmaCopyMemoryToAllocation(
-        m_context.GetVulkanDevice().allocator,
-        m_vertices.data(),
-        m_vrm->GetBuffer(index)->allocation,
-        0U,
-        buffer_size);
+    vmaCopyMemoryToAllocation(m_context.GetVulkanDevice().allocator,
+                              m_vertices.data(),
+                              m_vrm->GetBuffer(m_buffer_vertices_index)->allocation,
+                              0U,
+                              buffer_size);
 
-    return m_vrm->GetBuffer(index)->buffer;
+    return m_vrm->GetBuffer(m_buffer_vertices_index)->buffer;
 }
 
 VkBuffer GeneralPass::createIndexBuffer()
@@ -480,53 +561,84 @@ VkBuffer GeneralPass::createIndexBuffer()
 
     assert(buf.has_value());
 
-    std::int32_t index = *buf;
+    m_buffer_indices_index = *buf;
 
-    vmaCopyMemoryToAllocation(
-        m_context.GetVulkanDevice().allocator,
-        m_indices.data(),
-        m_vrm->GetBuffer(index)->allocation,
-        0U,
-        buffer_size);
+    vmaCopyMemoryToAllocation(m_context.GetVulkanDevice().allocator,
+                              m_indices.data(),
+                              m_vrm->GetBuffer(m_buffer_indices_index)->allocation,
+                              0U,
+                              buffer_size);
 
-    return m_vrm->GetBuffer(index)->buffer;
+    return m_vrm->GetBuffer(m_buffer_indices_index)->buffer;
 }
 
 void GeneralPass::createUboMapping()
 {
     for (std::size_t i{0U}; i < m_context.GetFramesInFlight(); ++i)
     {
-        auto buf = m_vrm->CreateBuffer(
-            VkBufferCreateInfo{
-                .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                .pNext                 = nullptr,
-                .flags                 = 0U,
-                .size                  = sizeof(uniform_buffer_object),
-                .usage                 = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
-                .queueFamilyIndexCount = 0U,
-                .pQueueFamilyIndices   = nullptr,
-            },
-            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-            VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
+        // UBO
+        {
+            auto buf = m_vrm->CreateBuffer(
+                VkBufferCreateInfo{
+                    .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    .pNext                 = nullptr,
+                    .flags                 = 0U,
+                    .size                  = sizeof(UniformBufferObject),
+                    .usage                 = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                    .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+                    .queueFamilyIndexCount = 0U,
+                    .pQueueFamilyIndices   = nullptr,
+                },
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
 
-        assert(buf.has_value());
+            assert(buf.has_value());
 
-        m_buffer_indices_ubos[i] = *buf;
+            m_buffer_indices_ubos[i] = *buf;
 
-        vmaMapMemory(
-            m_context.GetVulkanDevice().allocator,
-            m_vrm->GetBuffer(m_buffer_indices_ubos[i])->allocation,
-            &m_ubo_mappings[i]);
+            vmaMapMemory(m_context.GetVulkanDevice().allocator,
+                         m_vrm->GetBuffer(m_buffer_indices_ubos[i])->allocation,
+                         &m_ubo_mappings[i]);
+        }
+
+        // SSBO
+        {
+            VkDeviceSize const buffer_size = sizeof(QuadInstance) * kMaxQuadInstances;
+            auto               buf         = m_vrm->CreateBuffer(
+                VkBufferCreateInfo{
+                    .sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                    .pNext                 = nullptr,
+                    .flags                 = 0U,
+                    .size                  = buffer_size,
+                    .usage                 = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                    .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+                    .queueFamilyIndexCount = 0U,
+                    .pQueueFamilyIndices   = nullptr,
+                },
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
+
+            assert(buf.has_value());
+
+            m_buffer_instancing_indices[i] = *buf;
+
+            vmaMapMemory(m_context.GetVulkanDevice().allocator,
+                         m_vrm->GetBuffer(m_buffer_instancing_indices[i])->allocation,
+                         &m_instance_mappings[i]);
+        }
     }
 }
 
 VkDescriptorPool GeneralPass::createDescriptorPool()
 {
     std::size_t const                   frames_in_flight = m_context.GetFramesInFlight();
-    std::array<VkDescriptorPoolSize, 2> pool_sizes{
+    std::array<VkDescriptorPoolSize, 3> pool_sizes{
         VkDescriptorPoolSize{
             .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = VK_SIZE_CAST(frames_in_flight),
+        },
+        VkDescriptorPoolSize{
+            .type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .descriptorCount = VK_SIZE_CAST(frames_in_flight),
         },
         VkDescriptorPoolSize{
@@ -576,13 +688,19 @@ void GeneralPass::createDescriptorSets()
             .range  = VK_WHOLE_SIZE,
         };
 
+        VkDescriptorBufferInfo ssbo_info{
+            .buffer = m_vrm->GetBuffer(m_buffer_instancing_indices[i])->buffer,
+            .offset = 0U,
+            .range  = VK_WHOLE_SIZE,
+        };
+
         VkDescriptorImageInfo image_info{
             .sampler     = m_sampler_tux_texture,
             .imageView   = m_image_view_tux_texture,
             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         };
 
-        std::array<VkWriteDescriptorSet, 2> descriptor_writes{
+        std::array<VkWriteDescriptorSet, 3> descriptor_writes{
             VkWriteDescriptorSet{
                 .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .pNext            = nullptr,
@@ -607,6 +725,18 @@ void GeneralPass::createDescriptorSets()
                 .pBufferInfo      = nullptr,
                 .pTexelBufferView = nullptr,
             },
+            VkWriteDescriptorSet{
+                .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .pNext            = nullptr,
+                .dstSet           = m_descriptor_sets[i],
+                .dstBinding       = 2U,
+                .dstArrayElement  = 0U,
+                .descriptorCount  = 1U,
+                .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .pImageInfo       = nullptr,
+                .pBufferInfo      = &ssbo_info,
+                .pTexelBufferView = nullptr,
+            },
         };
 
         vkUpdateDescriptorSets(m_device, VK_SIZE_CAST(descriptor_writes.size()), descriptor_writes.data(), 0U, nullptr);
@@ -615,21 +745,19 @@ void GeneralPass::createDescriptorSets()
 
 VkImageView GeneralPass::createTexture()
 {
-    auto img_res = m_vrm->LoadTextureToImage(
-        "Resource/Textures/tux.png",
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_USAGE_SAMPLED_BIT,
-        VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+    auto img_res = m_vrm->LoadTextureToImage("Resource/Textures/tux.png",
+                                             VK_FORMAT_R8G8B8A8_SRGB,
+                                             VK_IMAGE_USAGE_SAMPLED_BIT,
+                                             VK_IMAGE_LAYOUT_UNDEFINED,
+                                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                             VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    std::int32_t image_for_texture_index = *img_res;
+    m_texture_image_index = *img_res;
 
-    return util::CreateImageView(
-        m_device,
-        m_vrm->GetImage(image_for_texture_index)->image,
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_ASPECT_COLOR_BIT);
+    return util::CreateImageView(m_device,
+                                 m_vrm->GetImage(m_texture_image_index)->image,
+                                 VK_FORMAT_R8G8B8A8_SRGB,
+                                 VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 VkSampler GeneralPass::createTextureSampler()
@@ -662,6 +790,46 @@ VkSampler GeneralPass::createTextureSampler()
     assert(VK_SUCCESS == vkCreateSampler(m_device, &sampler_info, nullptr, &sampler));
 
     return sampler;
+}
+
+void GeneralPass::createDepthResources()
+{
+    auto depth_image_res = m_vrm->CreateImage(
+        VkImageCreateInfo{
+            .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            .pNext     = nullptr,
+            .flags     = 0U,
+            .imageType = VK_IMAGE_TYPE_2D,
+            .format    = VK_FORMAT_D32_SFLOAT,
+            .extent =
+                {
+                    .width  = m_swapchain->GetExtent().width,
+                    .height = m_swapchain->GetExtent().height,
+                    .depth  = 1U,
+                },
+            .mipLevels             = 1U,
+            .arrayLayers           = 1U,
+            .samples               = VK_SAMPLE_COUNT_1_BIT,
+            .tiling                = VK_IMAGE_TILING_OPTIMAL,
+            .usage                 = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+            .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0U,
+            .pQueueFamilyIndices   = nullptr,
+            .initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED,
+        },
+        0U,
+        VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    assert(depth_image_res.has_value());
+
+    m_depth_image_index = *depth_image_res;
+    m_vrm->GetImage(m_depth_image_index);
+
+    m_depth_image_view = util::CreateImageView(m_device,
+                                               m_vrm->GetImage(m_depth_image_index)->image,
+                                               VK_FORMAT_D32_SFLOAT,
+                                               VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 }// namespace polos::rendering

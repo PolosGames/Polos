@@ -42,6 +42,7 @@ private:
     void             createDescriptorSets();
     VkImageView      createTexture();
     VkSampler        createTextureSampler();
+    void             createDepthResources();
 
     RenderContext&         m_context;
     VulkanSwapchain*       m_swapchain{nullptr};
@@ -57,14 +58,22 @@ private:
     VkImageView                m_draw_image_view{VK_NULL_HANDLE};
     VkDevice                   m_device{VK_NULL_HANDLE};
     std::vector<VkFramebuffer> m_pass_fb;
+    std::int32_t               m_buffer_vertices_index{0};
     VkBuffer                   m_buffer_vertices{VK_NULL_HANDLE};
+    std::int32_t               m_buffer_indices_index{0};
     VkBuffer                   m_buffer_indices{VK_NULL_HANDLE};
+    std::vector<std::int32_t>  m_buffer_instancing_indices;
+    std::vector<void*>         m_instance_mappings;
     std::vector<Vertex>        m_vertices;
     std::vector<std::uint16_t> m_indices;
     std::vector<std::int32_t>  m_buffer_indices_ubos;
     std::vector<void*>         m_ubo_mappings;
+    std::int32_t               m_texture_image_index{0};
     VkImageView                m_image_view_tux_texture{VK_NULL_HANDLE};
     VkSampler                  m_sampler_tux_texture{VK_NULL_HANDLE};
+    VkImage                    m_depth_image{VK_NULL_HANDLE};
+    VkImageView                m_depth_image_view{VK_NULL_HANDLE};
+    std::int32_t               m_depth_image_index{0};
 
     VkDescriptorPool                   m_descriptor_pool{VK_NULL_HANDLE};
     std::vector<VkDescriptorSet>       m_descriptor_sets;

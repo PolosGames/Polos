@@ -11,17 +11,17 @@
 namespace polos::communication
 {
 
-struct key_press final : base_event
+struct KeyPress final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(key_press);
+    DECLARE_POLOS_EVENT(KeyPress);
 
-    explicit key_press(std::int32_t const t_key);
+    explicit KeyPress(std::int32_t const t_key);
 
     std::int32_t key{0};
 };
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::key_press, "Pressed Key: {}", event.key);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::KeyPress, "Pressed Key: {}", event.key);
 
 #endif// POLOS_COMMUNICATION_KEY_PRESS_HPP

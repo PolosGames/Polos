@@ -25,7 +25,7 @@ class Engine;
 
 namespace polos::communication
 {
-struct rendering_module_reload;
+struct RenderingModuleReload;
 }// namespace polos::communication
 
 namespace polos::rendering

@@ -7,29 +7,20 @@
 
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
-#include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/allocated_image.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/pipeline_cache.hpp"
-#include "polos/rendering/render_pass_layout_description.hpp"
-#include "polos/rendering/rendering_api.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/shader_cache.hpp"
-#include "polos/rendering/uniform_buffer_object.hpp"
 #include "polos/rendering/vulkan_context.hpp"
 #include "polos/rendering/vulkan_device.hpp"
 #include "polos/rendering/vulkan_resource_manager.hpp"
 #include "polos/rendering/vulkan_swapchain.hpp"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <stb_image.h>
-
 #include <vulkan/vulkan.h>
 
 #include <GLFW/glfw3.h>
 
-#include <algorithm>
 #include <array>
 
 #define INIT_VULKAN_COMPONENT(SubmodulePtr, ...)         \
@@ -88,48 +79,6 @@ auto FindQueueFamily(VkPhysicalDevice t_device, VkSurfaceKHR t_surface, VkQueueF
     return queue_index;
 }
 
-namespace basic_color_pipeline
-{
-
-constexpr VkAttachmentReference2 const kColorAttachmentRef{
-    .sType      = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2,
-    .pNext      = nullptr,
-    .attachment = 0U,
-    .layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-};
-
-constexpr VkSubpassDescription2 const kSubpassDesc{
-    .sType                   = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
-    .pNext                   = nullptr,
-    .flags                   = 0U,
-    .pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS,
-    .viewMask                = 0U,
-    .inputAttachmentCount    = 0U,
-    .pInputAttachments       = nullptr,
-    .colorAttachmentCount    = 1U,
-    .pColorAttachments       = &kColorAttachmentRef,
-    .pResolveAttachments     = nullptr,
-    .pDepthStencilAttachment = nullptr,
-    .preserveAttachmentCount = 0U,
-    .pPreserveAttachments    = nullptr,
-};
-
-constexpr VkSubpassDependency2 const kSubpassDependency{
-    .sType           = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2,
-    .pNext           = nullptr,
-    .srcSubpass      = VK_SUBPASS_EXTERNAL,
-    .dstSubpass      = 0U,
-    .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-    .srcAccessMask   = 0U,
-    .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    .dependencyFlags = 0U,
-    .viewOffset      = 0U,
-};
-
-}// namespace basic_color_pipeline
-
 }// namespace
 
 RenderContext* RenderContext::s_render_context{nullptr};
@@ -138,8 +87,8 @@ RenderContext::RenderContext()
     : m_image_acq_results{{ImageAcqusitionResult::kSuccess}}
 {
     s_render_context = this;
-    communication::Subscribe<communication::window_framebuffer_resize>(
-        [this](communication::window_framebuffer_resize&) {
+    communication::Subscribe<communication::WindowFramebufferResize>(
+        [this](communication::WindowFramebufferResize&) {
             m_framebuffer_resized = true;
             LogInfo("Framebuffer resize event received in RenderContext.");
         });
@@ -147,7 +96,6 @@ RenderContext::RenderContext()
 
 RenderContext::~RenderContext()
 {
-    vkDeviceWaitIdle(m_device->logi_device);
     s_render_context = nullptr;
 }
 
@@ -212,7 +160,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 
     // --- Device creation ---
     {
-        device_create_details const info{
+        DeviceCreateDetails const info{
             .instance           = m_context->instance,
             .surface            = m_surface,
             .phys_device        = phys_device,
@@ -227,7 +175,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
 
     // --- Swapchain creation ---
     {
-        swapchain_create_details const details{
+        SwapchainCreateDetails const details{
             .device      = m_device.get(),
             .phys_device = phys_device,
             .surface     = m_surface,
@@ -252,23 +200,10 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         };
 
         INIT_VULKAN_COMPONENT(m_swapchain, details);
-
-
-        VkFormat const      sc_img_fmt = m_swapchain->GetSurfaceFormat().format;
-        std::uint32_t const img_count  = m_swapchain->GetImageCount();
-        m_swapchain_images.resize(img_count);
-
-        for (std::uint32_t i{0U}; i < img_count; ++i)
-        {
-            m_swapchain_images[i].image      = m_swapchain->GetImage(i);
-            m_swapchain_images[i].image_view = m_swapchain->GetImageView(i);
-            m_swapchain_images[i].format     = sc_img_fmt;
-            m_swapchain_images[i].samples    = VK_SAMPLE_COUNT_1_BIT;
-        }
     }
 
     {
-        resource_manager_create_details const details{
+        ResourceManagerCreateDetails const details{
             .device    = m_device->logi_device,
             .allocator = m_device->allocator,
             .swapchain = m_swapchain.get(),
@@ -278,7 +213,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     }
 
     {
-        pipeline_cache_create_details const details{
+        PipelineCacheCreateDetails const details{
             .logi_device = m_device->logi_device,
             .swapchain   = m_swapchain.get(),
         };
@@ -287,7 +222,7 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
     }
 
     {
-        shader_cache_create_details const details{
+        ShaderCacheCreateDetails const details{
             .logi_device = m_device->logi_device,
             .shader_files =
                 {
@@ -385,7 +320,7 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         VK_TRUE,
         std::numeric_limits<std::uint64_t>::max());
 
-    acquire_next_image_details const next_img_dets{
+    AcquireNextImageDetails const next_img_dets{
         .semaphore = m_acquire_semaphores[m_current_frame_index],
         .fence     = m_frame_fences[m_current_frame_index],
         .timeout   = std::numeric_limits<std::uint64_t>::max(),
@@ -587,7 +522,7 @@ void RenderContext::onFramebufferResize()
     LogInfo("Recreating swapchain due to framebuffer resize...");
 
     std::ignore = m_swapchain->Destroy();
-    swapchain_create_details const details{
+    SwapchainCreateDetails const details{
         .device      = m_device.get(),
         .phys_device = m_device->phys_device,
         .surface     = m_surface,
@@ -615,16 +550,6 @@ void RenderContext::onFramebufferResize()
     if (auto const res = m_swapchain->Create(details); !res.has_value())
     {
         LogCritical("{}", res.error());
-    }
-
-    VkFormat const      sc_img_fmt = m_swapchain->GetSurfaceFormat().format;
-    std::uint32_t const img_count  = m_swapchain->GetImageCount();
-
-    for (std::uint32_t i{0U}; i < img_count; ++i)
-    {
-        m_swapchain_images[i].image      = m_swapchain->GetImage(i);
-        m_swapchain_images[i].image_view = m_swapchain->GetImageView(i);
-        m_swapchain_images[i].format     = sc_img_fmt;
     }
 
     if (m_general_pass)
@@ -658,7 +583,7 @@ auto RenderContext::Shutdown() -> Result<void>
     }
     vkDestroyCommandPool(m_device->logi_device, m_command_pool, nullptr);
 
-    m_general_pass->~GeneralPass();
+    m_general_pass.reset();
 
     std::ignore = m_pipeline_cache->Destroy();
     std::ignore = m_shader_cache->Destroy();

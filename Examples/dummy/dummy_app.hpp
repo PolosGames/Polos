@@ -11,8 +11,8 @@
 
 namespace polos::communication
 {
-struct engine_update;
-struct render_update;
+struct EngineUpdate;
+struct RenderUpdate;
 }// namespace polos::communication
 
 namespace dummy_app
@@ -29,9 +29,12 @@ public:
 
     [[nodiscard]] auto Name() const -> char const* override;
 private:
-    auto onEngineUpdate(polos::communication::engine_update& t_event) -> void;
-    auto onRenderUpdate(polos::communication::render_update& t_event) -> void;
+    auto onEngineUpdate(polos::communication::EngineUpdate& t_event) -> void;
+    auto onRenderUpdate(polos::communication::RenderUpdate& t_event) -> void;
     auto onKeyRelease(std::int32_t t_key) -> void;
+
+    std::size_t m_obj1{0U};
+    std::size_t m_obj2{0U};
 
     bool m_unload_in_progress{false};
 };

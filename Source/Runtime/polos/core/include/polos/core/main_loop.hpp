@@ -15,8 +15,8 @@ class IRenderSystem;
 
 namespace polos::communication
 {
-struct engine_update;
-struct window_close;
+struct EngineUpdate;
+struct WindowClose;
 }// namespace polos::communication
 
 namespace polos::core

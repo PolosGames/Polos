@@ -53,9 +53,7 @@ auto RenderingApi::EndFrame() -> void
 }
 
 auto RenderingApi::GetMainScene() -> std::shared_ptr<Scene>
-{
-    return s_instance->m_main_scene;
-}
+{ return s_instance->m_main_scene; }
 
 #if defined(HOT_RELOAD)
 auto RenderingApi::ReloadIfNeeded() -> bool
@@ -74,9 +72,7 @@ auto RenderingApi::ReloadIfNeeded() -> bool
 }
 
 auto RenderingApi::DispatchReload() -> void
-{
-    s_instance->m_should_reload = true;
-}
+{ s_instance->m_should_reload = true; }
 
 auto RenderingApi::loadRenderingImplModule() -> bool
 {
@@ -85,7 +81,7 @@ auto RenderingApi::loadRenderingImplModule() -> bool
     UnloadRenderingModule(m_rendering_module);
     if (!LoadRenderingModule(m_rendering_module))
     {
-        communication::DispatchNow<communication::engine_terminate>();
+        communication::DispatchNow<communication::EngineTerminate>();
         return false;
     }
 
@@ -112,7 +108,7 @@ void RenderingApi::createRenderContext()
     if (!result.has_value())
     {
         LogCritical("RenderContext could not be initialized! {}", result.error().Message());
-        communication::DispatchNow<communication::engine_terminate>();
+        communication::DispatchNow<communication::EngineTerminate>();
         return;
     }
 }

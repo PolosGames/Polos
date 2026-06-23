@@ -21,7 +21,7 @@ namespace polos::rendering
 
 class VulkanDevice;
 
-struct alignas(128) swapchain_create_details// NOLINT
+struct alignas(128) SwapchainCreateDetails// NOLINT
 {
     VulkanDevice const* device;
     VkPhysicalDevice    phys_device{VK_NULL_HANDLE};
@@ -34,7 +34,7 @@ struct alignas(128) swapchain_create_details// NOLINT
     VkSurfaceTransformFlagsKHR transform_flags{0U};
 };
 
-struct alignas(32) acquire_next_image_details// NOLINT
+struct alignas(32) AcquireNextImageDetails// NOLINT
 {
     VkSemaphore   semaphore{VK_NULL_HANDLE};
     VkFence       fence{VK_NULL_HANDLE};
@@ -52,7 +52,7 @@ public:
     VulkanSwapchain& operator=(VulkanSwapchain const&) = delete;
     VulkanSwapchain& operator=(VulkanSwapchain&&)      = delete;
 
-    auto Create(swapchain_create_details const& t_details) -> Result<void>;
+    auto Create(SwapchainCreateDetails const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
     [[nodiscard]] auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
@@ -61,7 +61,7 @@ public:
     [[nodiscard]] auto GetScissor() const -> VkRect2D const&;
     [[nodiscard]] auto GetViewport() const -> VkViewport const&;
 
-    auto AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>;
+    auto AcquireNextImage(AcquireNextImageDetails const& t_details) -> Result<std::uint32_t>;
     auto QueuePresent(VkSemaphore t_wait_semaphore) const -> Result<void>;
 
     [[nodiscard]] auto GetCurrentImage() const -> VkImage;

@@ -24,7 +24,7 @@ using LibHandle = HMODULE;// this is also void* under the hood, but whatever, i 
 namespace polos::utils
 {
 
-struct base_shared_lib_out
+struct BaseSharedLibOut
 {
     utils::LibHandle handle;
 
@@ -62,7 +62,7 @@ inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string&
 }
 
 
-inline void UnloadSharedLib(base_shared_lib_out& t_dll_out)
+inline void UnloadSharedLib(BaseSharedLibOut& t_dll_out)
 {
     if (t_dll_out.handle)
     {
@@ -79,7 +79,7 @@ inline void UnloadSharedLib(base_shared_lib_out& t_dll_out)
 }
 
 // Copy and Load
-inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_original_dll_path_str)
+inline bool LoadSharedLib(BaseSharedLibOut& t_dll_out, const std::string& t_original_dll_path_str)
 {
     if (nullptr != t_dll_out.handle)
     {
@@ -132,7 +132,7 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
 }
 
 template<typename F>
-inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
+inline bool GetFuncFromSharedLib(BaseSharedLibOut& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
 {
     // Get the address of the exported function
     t_func_ptr = reinterpret_cast<F>(GetProcAddress(t_dll_out.handle, t_func_name.data()));

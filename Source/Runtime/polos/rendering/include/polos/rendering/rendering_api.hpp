@@ -60,7 +60,7 @@ public:
 private:
     bool loadRenderingImplModule();
 
-    rendering::rendering_shared_lib_out m_rendering_module;
+    rendering::RenderingSharedLibOut m_rendering_module;
     bool                                m_should_reload{false};
 #endif// HOT_RELOAD
 };
