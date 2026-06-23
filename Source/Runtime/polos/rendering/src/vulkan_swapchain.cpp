@@ -28,7 +28,7 @@ VulkanSwapchain::VulkanSwapchain(GLFWwindow* t_window)
 
 VulkanSwapchain::~VulkanSwapchain() = default;
 
-auto VulkanSwapchain::Create(swapchain_create_details const& t_details) -> Result<void>
+auto VulkanSwapchain::Create(SwapchainCreateDetails const& t_details) -> Result<void>
 {
     m_surface   = t_details.surface;
     m_gfx_queue = t_details.gfx_queue;
@@ -246,7 +246,7 @@ auto VulkanSwapchain::GetViewport() const -> VkViewport const&
     return m_viewport;
 }
 
-auto VulkanSwapchain::AcquireNextImage(acquire_next_image_details const& t_details) -> Result<std::uint32_t>
+auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& t_details) -> Result<std::uint32_t>
 {
     VkResult const res = vkAcquireNextImageKHR(
         m_device,

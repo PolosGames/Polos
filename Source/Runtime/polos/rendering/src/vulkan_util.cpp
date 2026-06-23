@@ -56,7 +56,8 @@ auto AccessMaskForLayout(VkImageLayout t_layout) -> VkAccessFlags
         case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL: return VK_ACCESS_TRANSFER_WRITE_BIT;
         case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL: return VK_ACCESS_TRANSFER_READ_BIT;
         case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL: return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL: return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL: return VK_ACCESS_SHADER_READ_BIT;
         default: return 0U;
     }
@@ -64,43 +65,45 @@ auto AccessMaskForLayout(VkImageLayout t_layout) -> VkAccessFlags
 
 }// namespace
 
-void TransitionImageLayout(
-    VkCommandBuffer      t_command_buffer,
-    VkImage              t_image,
-    VkImageLayout        t_old_layout,
-    VkImageLayout        t_new_layout,
-    VkPipelineStageFlags t_src_stage_mask,
-    VkPipelineStageFlags t_dst_stage_mask)
+void TransitionImageLayout(VkCommandBuffer      t_command_buffer,
+                           VkImage              t_image,
+                           VkImageLayout        t_old_layout,
+                           VkImageLayout        t_new_layout,
+                           VkPipelineStageFlags t_src_stage_mask,
+                           VkPipelineStageFlags t_dst_stage_mask)
 {
-    VkImageMemoryBarrier const img_mem_barrier{
-        .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-        .pNext               = nullptr,
-        .srcAccessMask       = AccessMaskForLayout(t_old_layout),
-        .dstAccessMask       = AccessMaskForLayout(t_new_layout),
-        .oldLayout           = t_old_layout,
-        .newLayout           = t_new_layout,
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image               = t_image,
-        .subresourceRange    = {
-               .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-               .baseMipLevel   = 0U,
-               .levelCount     = 1U,
-               .baseArrayLayer = 0U,
-               .layerCount     = 1U,
-        }};
+    VkImageMemoryBarrier img_mem_barrier{.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                                         .pNext               = nullptr,
+                                         .srcAccessMask       = AccessMaskForLayout(t_old_layout),
+                                         .dstAccessMask       = AccessMaskForLayout(t_new_layout),
+                                         .oldLayout           = t_old_layout,
+                                         .newLayout           = t_new_layout,
+                                         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                                         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                                         .image               = t_image,
+                                         .subresourceRange    = {
+                                             .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                                             .baseMipLevel   = 0U,
+                                             .levelCount     = 1U,
+                                             .baseArrayLayer = 0U,
+                                             .layerCount     = 1U,
+                                         }};
 
-    vkCmdPipelineBarrier(
-        t_command_buffer,
-        t_src_stage_mask,
-        t_dst_stage_mask,
-        0U,
-        0U,
-        nullptr,
-        0U,
-        nullptr,
-        1U,
-        &img_mem_barrier);
+    if (t_new_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+    {
+        img_mem_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+
+    vkCmdPipelineBarrier(t_command_buffer,
+                         t_src_stage_mask,
+                         t_dst_stage_mask,
+                         0U,
+                         0U,
+                         nullptr,
+                         0U,
+                         nullptr,
+                         1U,
+                         &img_mem_barrier);
 }
 
 void CopyBufferToImage(VkCommandBuffer t_command_buffer, VkBuffer t_buffer, VkImage t_image, VkExtent3D t_extent)
@@ -123,12 +126,11 @@ void CopyBufferToImage(VkCommandBuffer t_command_buffer, VkBuffer t_buffer, VkIm
     vkCmdCopyBufferToImage(t_command_buffer, t_buffer, t_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1U, &copy_region);
 }
 
-void CopyImageToImage(
-    VkCommandBuffer t_command_buffer,
-    VkImage         t_src_image,
-    VkImage         t_dst_image,
-    VkExtent3D      t_src_extent,
-    VkExtent3D      t_dst_extent)
+void CopyImageToImage(VkCommandBuffer t_command_buffer,
+                      VkImage         t_src_image,
+                      VkImage         t_dst_image,
+                      VkExtent3D      t_src_extent,
+                      VkExtent3D      t_dst_extent)
 {
     // TODO(sorbatdev): Check VK_FORMAT_FEATURE_BLIT_SRC_BIT and VK_FORMAT_FEATURE_BLIT_DST_BIT support
     VkImageBlit2 blit_region{

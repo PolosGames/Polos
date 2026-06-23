@@ -28,13 +28,13 @@ constexpr char const* kRenderingLibName{"polos_rendering.dll"};
 constexpr char const* kRenderingLibName{"libpolos_rendering_impl.so"};
 #endif
 
-struct rendering_shared_lib_out : utils::base_shared_lib_out// NOLINT
+struct RenderingSharedLibOut : utils::BaseSharedLibOut// NOLINT
 {
     using CreateRenderContextFuncT = IRenderContext* (*)();
     CreateRenderContextFuncT CreateRenderContext{nullptr};
 };
 
-inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
+inline bool LoadRenderingModule(RenderingSharedLibOut& t_dll_out)
 {
     auto lib_path = std::filesystem::current_path() / kRenderingLibName;
     
@@ -68,7 +68,7 @@ inline bool LoadRenderingModule(rendering_shared_lib_out& t_dll_out)
     return true;
 }
 
-inline void UnloadRenderingModule(rendering_shared_lib_out& t_dll_out)
+inline void UnloadRenderingModule(RenderingSharedLibOut& t_dll_out)
 {
     polos::utils::UnloadSharedLib(t_dll_out);
 

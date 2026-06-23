@@ -20,7 +20,7 @@
 namespace polos::communication
 {
 template<class T>
-concept PolosEvent = std::derived_from<std::remove_cvref_t<T>, base_event>;
+concept PolosEvent = std::derived_from<std::remove_cvref_t<T>, BaseEvent>;
 
 /// Simple event bus for triggering subscriber functors for a specific event.
 ///
@@ -31,7 +31,7 @@ concept PolosEvent = std::derived_from<std::remove_cvref_t<T>, base_event>;
 /// instead of using EventBus verbosely.
 class COMMUNICATION_EXPORT EventBus
 {
-    using BaseEventDelegate = std::function<void(base_event&)>;
+    using BaseEventDelegate = std::function<void(BaseEvent&)>;
 public:
     ~EventBus();
 
@@ -74,7 +74,7 @@ private:
 
     std::int64_t                             m_next_id{0};
     CallbackMap                              m_callbacks;
-    std::vector<std::unique_ptr<base_event>> m_deferred_events;
+    std::vector<std::unique_ptr<BaseEvent>> m_deferred_events;
 };
 
 template<PolosEvent EventType>

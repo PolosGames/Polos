@@ -13,12 +13,12 @@
 namespace polos::rendering
 {
 
-struct material;
+struct Material;
 
-struct render_object
+struct RenderObject
 {
     glm::mat4                 transform;
-    std::shared_ptr<material> render_material;
+    std::shared_ptr<Material> render_material;
 };
 }// namespace polos::rendering
 

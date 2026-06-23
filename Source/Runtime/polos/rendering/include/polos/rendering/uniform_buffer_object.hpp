@@ -11,9 +11,8 @@
 namespace polos::rendering
 {
 
-struct alignas(64) uniform_buffer_object
+struct alignas(64) UniformBufferObject
 {
-    glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 };

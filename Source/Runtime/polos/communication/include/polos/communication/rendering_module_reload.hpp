@@ -12,9 +12,9 @@
 namespace polos::communication
 {
 
-struct rendering_module_reload final : base_event
+struct RenderingModuleReload final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(rendering_module_reload);
+    DECLARE_POLOS_EVENT(RenderingModuleReload);
 };
 
 }// namespace polos::communication

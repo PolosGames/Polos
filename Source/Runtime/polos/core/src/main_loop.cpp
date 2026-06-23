@@ -31,11 +31,11 @@ MainLoop::MainLoop()
 
     using namespace polos::communication;
 
-    Subscribe<window_close>([this](window_close&) {
+    Subscribe<WindowClose>([this](WindowClose&) {
         on_window_close();
     });
 
-    Subscribe<engine_terminate>([this](engine_terminate&) {
+    Subscribe<EngineTerminate>([this](EngineTerminate&) {
         on_engine_terminate();
     });
 }
@@ -47,7 +47,7 @@ void MainLoop::Run() const
     Duration                     delta_time{Duration::zero()};
     TimePoint                    start = utils::GetTimeNow();
     Duration                     lag{Duration::zero()};
-    constexpr std::int32_t const target_frames{60};
+    constexpr std::int32_t const target_frames{120};
     constexpr Duration const     kTimestep{1_sec / target_frames};
 
     while (m_is_running)
@@ -61,13 +61,13 @@ void MainLoop::Run() const
 
         std::float_t const delta_time_in_secs = utils::ConvertToSeconds(delta_time);
 
-        communication::DispatchNow<communication::engine_update>(delta_time_in_secs);
+        communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
 
         rendering::RenderingApi::BeginFrame();
-        communication::DispatchNow<communication::render_update>(delta_time_in_secs);
+        communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
 
         rendering::RenderingApi::EndFrame();
-        communication::DispatchNow<communication::end_frame>();
+        communication::DispatchNow<communication::EndFrame>();
 
         communication::DispatchDeferredEvents();
 
@@ -86,13 +86,9 @@ void MainLoop::Run() const
 }
 
 void MainLoop::on_window_close()
-{
-    m_is_running = false;
-}
+{ m_is_running = false; }
 
 void MainLoop::on_engine_terminate()
-{
-    m_is_running = false;
-}
+{ m_is_running = false; }
 
 }// namespace polos::core

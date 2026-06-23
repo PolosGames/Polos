@@ -19,11 +19,11 @@
 namespace polos::rendering
 {
 
-struct graphics_pipeline_info
+struct GraphicsPipelineInfo
 {
     utils::string_id name;
 
-    std::span<shader const*> shaders;
+    std::span<Shader const*> shaders;
 
     VkPrimitiveTopology                   topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
     std::optional<VertexInputDescription> vertex_input;

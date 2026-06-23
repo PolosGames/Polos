@@ -11,9 +11,9 @@
 namespace polos::communication
 {
 
-struct engine_terminate final : base_event
+struct EngineTerminate final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(engine_terminate)
+    DECLARE_POLOS_EVENT(EngineTerminate)
 };
 
 }// namespace polos::communication

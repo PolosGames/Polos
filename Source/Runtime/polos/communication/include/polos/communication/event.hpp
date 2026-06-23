@@ -22,9 +22,9 @@ namespace polos::communication
 ///
 /// Every event should inherit this struct and override the Name function.
 
-struct base_event
+struct BaseEvent
 {
-    virtual ~base_event() = default;
+    virtual ~BaseEvent() = default;
 public:
     [[nodiscard]] virtual auto Hash() const -> utils::string_id = 0;
 };

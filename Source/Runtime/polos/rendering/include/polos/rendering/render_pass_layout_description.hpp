@@ -13,7 +13,7 @@
 namespace polos::rendering
 {
 
-struct alignas(128) render_pass_layout_description// NOLINT
+struct alignas(128) RenderPassLayoutDescription// NOLINT
 {
     std::vector<VkAttachmentDescription2> attachments;
     std::vector<VkSubpassDescription2>    subpasses;

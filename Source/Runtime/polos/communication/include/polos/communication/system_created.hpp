@@ -28,11 +28,11 @@ constexpr std::string_view SystemTypeToString(SystemType t_type)
     }
 }
 
-struct system_created final : base_event
+struct SystemCreated final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(system_created)
+    DECLARE_POLOS_EVENT(SystemCreated)
 
-    explicit system_created(SystemType t_system_type)
+    explicit SystemCreated(SystemType t_system_type)
         : system_type{t_system_type}
     {}
 
@@ -42,7 +42,7 @@ struct system_created final : base_event
 }// namespace polos::communication
 
 DEFINE_EVENT_LOG_FORMAT(
-    ::polos::communication::system_created,
+    ::polos::communication::SystemCreated,
     "System Created: {}",
     ::polos::communication::SystemTypeToString(event.system_type));
 

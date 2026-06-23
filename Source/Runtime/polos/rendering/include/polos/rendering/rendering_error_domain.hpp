@@ -62,7 +62,7 @@ public:
               "Failed to create the swapchain! Exiting...",
               "No adequate surface found! Exiting...",
               "Failed to create image views for the swap chain images! Exiting...",
-              "Failed to create shader module! Exiting...",
+              "Failed to create Shader module! Exiting...",
               "Failed to create a pipeline layout! Exiting...",
               "Failed to create pipeline object! Exiting...",
               "Failed to present the image to the presentation queue!",

@@ -15,7 +15,7 @@
 namespace polos::rendering
 {
 
-struct alignas(16) allocated_buffer// NOLINT
+struct alignas(16) AllocatedBuffer// NOLINT
 {
     std::int32_t       id{0U};
     VmaAllocation      allocation{VK_NULL_HANDLE};

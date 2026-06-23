@@ -13,7 +13,7 @@
 namespace polos::fs
 {
 
-struct alignas(128) resource// NOLINT
+struct alignas(128) Resource// NOLINT
 {
     std::size_t            uncompressed_size;
     std::size_t            size;

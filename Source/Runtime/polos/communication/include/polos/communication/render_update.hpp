@@ -13,11 +13,11 @@
 namespace polos::communication
 {
 
-struct render_update final : base_event
+struct RenderUpdate final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(render_update)
+    DECLARE_POLOS_EVENT(RenderUpdate)
 
-    explicit render_update(std::float_t t_delta_time)
+    explicit RenderUpdate(std::float_t t_delta_time)
         : delta_time{t_delta_time}
     {}
 
@@ -26,6 +26,6 @@ struct render_update final : base_event
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::render_update, "Delta Time: {:.4f}", event.delta_time);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::RenderUpdate, "Delta Time: {:.4f}", event.delta_time);
 
 #endif// POLOS_COMMUNICATION_RENDER_UPDATE_HPP

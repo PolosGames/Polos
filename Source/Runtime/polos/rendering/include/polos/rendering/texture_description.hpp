@@ -11,7 +11,7 @@
 namespace polos::rendering
 {
 
-struct texture_description
+struct TextureDescription
 {
     VkImage               image{VK_NULL_HANDLE};
     VkImageView           image_view{VK_NULL_HANDLE};

@@ -11,11 +11,11 @@
 namespace polos::communication
 {
 
-struct window_framebuffer_resize final : base_event
+struct WindowFramebufferResize final : BaseEvent
 {
-    DECLARE_POLOS_EVENT(window_framebuffer_resize);
+    DECLARE_POLOS_EVENT(WindowFramebufferResize);
 
-    explicit window_framebuffer_resize(std::int32_t t_width, std::int32_t t_height)
+    explicit WindowFramebufferResize(std::int32_t t_width, std::int32_t t_height)
         : width{t_width},
           height{t_height}
     {}
@@ -27,7 +27,7 @@ struct window_framebuffer_resize final : base_event
 }// namespace polos::communication
 
 DEFINE_EVENT_LOG_FORMAT(
-    ::polos::communication::window_framebuffer_resize,
+    ::polos::communication::WindowFramebufferResize,
     "New Framebuffer dimensions: {}, {}",
     event.width,
     event.height);

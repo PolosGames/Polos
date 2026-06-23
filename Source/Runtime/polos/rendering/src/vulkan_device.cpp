@@ -60,7 +60,7 @@ auto DecodeDriverVersion(std::uint32_t t_vendor_id, std::uint32_t t_driver_versi
 VulkanDevice::VulkanDevice()  = default;
 VulkanDevice::~VulkanDevice() = default;
 
-auto VulkanDevice::Create(device_create_details const& t_info) -> Result<void>
+auto VulkanDevice::Create(DeviceCreateDetails const& t_info) -> Result<void>
 {
     m_instance  = t_info.instance;
     m_surface   = t_info.surface;

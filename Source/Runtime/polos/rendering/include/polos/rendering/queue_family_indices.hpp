@@ -12,7 +12,7 @@
 namespace polos::rendering
 {
 
-struct alignas(16) queue_family_indices// NOLINT
+struct alignas(16) QueueFamilyIndices// NOLINT
 {
     std::uint32_t gfx_q_index{std::numeric_limits<std::uint32_t>::max()};
     std::uint32_t transfer_q_index{std::numeric_limits<std::uint32_t>::max()};

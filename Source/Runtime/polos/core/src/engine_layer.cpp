@@ -20,7 +20,7 @@ namespace polos::core
 namespace
 {
 
-void OnKeyRelease(communication::key_release const& t_event)
+void OnKeyRelease(communication::KeyRelease const& t_event)
 {
     std::ignore = t_event;
 #if defined(HOT_RELOAD)
@@ -34,14 +34,14 @@ void OnKeyRelease(communication::key_release const& t_event)
 void SignalHandler(int t_signal)
 {
     std::ignore = t_signal;
-    communication::DispatchNow<communication::engine_terminate>();
+    communication::DispatchNow<communication::EngineTerminate>();
 }
 
 }// namespace
 
 EngineLayer::EngineLayer()
 {
-    communication::Subscribe<communication::key_release>([](communication::key_release& t_event) {
+    communication::Subscribe<communication::KeyRelease>([](communication::KeyRelease& t_event) {
         OnKeyRelease(t_event);
     });
 

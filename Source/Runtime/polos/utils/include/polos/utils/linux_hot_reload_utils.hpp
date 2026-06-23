@@ -25,7 +25,7 @@ namespace polos::utils
 
 using LibHandle = void*;
 
-struct alignas(64) base_shared_lib_out// NOLINT
+struct alignas(64) BaseSharedLibOut// NOLINT
 {
     utils::LibHandle handle{nullptr};
 
@@ -61,7 +61,7 @@ inline void RemoveTempFile(std::filesystem::path const& t_temp_path)
     }
 }
 
-inline void UnloadSharedLib(base_shared_lib_out& t_dll_out)
+inline void UnloadSharedLib(BaseSharedLibOut& t_dll_out)
 {
     CloseLibHandle(t_dll_out.handle);
 
@@ -131,7 +131,7 @@ inline auto LoadSharedLibHandle(std::filesystem::path const& t_temp_path) -> Lib
     return handle;
 }
 
-inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_original_dll_path_str)
+inline bool LoadSharedLib(BaseSharedLibOut& t_dll_out, const std::string& t_original_dll_path_str)
 {
     if (nullptr != t_dll_out.handle)
     {
@@ -161,7 +161,7 @@ inline bool LoadSharedLib(base_shared_lib_out& t_dll_out, const std::string& t_o
 }
 
 template<typename F>
-inline bool GetFuncFromSharedLib(base_shared_lib_out& t_dll_out, F& t_func_ptr, char const* t_func_name)
+inline bool GetFuncFromSharedLib(BaseSharedLibOut& t_dll_out, F& t_func_ptr, char const* t_func_name)
 {
     t_func_ptr = reinterpret_cast<F>(dlsym(t_dll_out.handle, t_func_name));// NOLINT
     if (nullptr == t_func_ptr)

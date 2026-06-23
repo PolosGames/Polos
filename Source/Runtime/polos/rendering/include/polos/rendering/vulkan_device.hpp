@@ -19,13 +19,13 @@ struct GLFWwindow;
 namespace polos::rendering
 {
 
-struct alignas(64) device_create_details// NOLINT
+struct alignas(64) DeviceCreateDetails// NOLINT
 {
     VkInstance       instance;
     VkSurfaceKHR     surface;
     VkPhysicalDevice phys_device;
 
-    queue_family_indices     q_indices;
+    QueueFamilyIndices     q_indices;
     std::vector<char const*> enabled_extensions;
 };
 
@@ -40,7 +40,7 @@ public:
     VulkanDevice& operator=(VulkanDevice&&) = delete;
     VulkanDevice& operator=(VulkanDevice&)  = delete;
 
-    auto Create(device_create_details const& t_info) -> Result<void>;
+    auto Create(DeviceCreateDetails const& t_info) -> Result<void>;
     auto Destroy() -> Result<void>;
 
     [[nodiscard]] auto GetLogicalDevice() const -> VkDevice override;

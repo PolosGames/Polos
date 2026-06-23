@@ -21,14 +21,14 @@ enum class MaterialType : std::uint8_t
     kTransparent,
 };
 
-struct allocated_image;
+struct AllocatedImage;
 
-struct alignas(128) material
+struct alignas(128) Material
 {
     std::string name;
 
-    shader                           mat_shader;
-    std::shared_ptr<allocated_image> albedo_texture;
+    Shader                           mat_shader;
+    std::shared_ptr<AllocatedImage> albedo_texture;
 
     MaterialType mat_type;
 
