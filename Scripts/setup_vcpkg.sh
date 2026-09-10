@@ -41,4 +41,3 @@ echo "=== vcpkg installation complete! ==="
 echo ""
 echo "vcpkg installed at: $VCPKG_DIR"
 echo ""
-
