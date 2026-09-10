@@ -3,6 +3,9 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
+#include "polos/polos_config.hpp"
+
+#if defined(POLOS_WIN)
 #define NOMINMAX
 #include <windows.h>
 
@@ -28,3 +31,4 @@ BOOL APIENTRY DllMain(HMODULE, DWORD ul_reason_for_call, LPVOID)
     }
     return TRUE;// Successfully processed
 }
+#endif// POLOS_WIN
