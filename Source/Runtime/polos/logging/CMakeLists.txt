@@ -17,7 +17,7 @@ define_polos_module(
     NAME
         logging
     TYPE
-        SHARED
+        OBJECT
     SOURCES
         "src/logger.cpp"
     PUBLIC_DEPS

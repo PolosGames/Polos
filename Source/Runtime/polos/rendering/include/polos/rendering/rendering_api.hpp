@@ -6,7 +6,7 @@
 #ifndef POLOS_RENDERING_RENDERING_API_HPP
 #define POLOS_RENDERING_RENDERING_API_HPP
 
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/rendering/scene.hpp"
 #include "polos/rendering/shared_lib_out.hpp"
 
@@ -24,7 +24,7 @@ namespace polos::rendering
 
 class IRenderContext;
 
-class RENDERING_EXPORT RenderingApi
+class POLOS_API RenderingApi
 {
 public:
     explicit RenderingApi(GLFWwindow* t_window);

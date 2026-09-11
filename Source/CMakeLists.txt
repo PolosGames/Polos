@@ -14,10 +14,12 @@ add_subdirectory(Resource)
 add_subdirectory(Runtime)
 add_subdirectory(ThirdParty)
 
-add_library(polos INTERFACE)
+# every module must be listed -- OBJECT libs don't propagate objects
+# transitively, so depending on each other isn't enough to pull them in
+add_library(polos SHARED)
 target_link_libraries(
     polos
-        INTERFACE
+        PUBLIC
             polos::communication
             polos::core
             polos::filesystem
@@ -27,7 +29,37 @@ target_link_libraries(
             polos::utils
             ${ThirdPartyLibs}
 )
+set_target_properties(polos
+    PROPERTIES
+        CXX_STANDARD              ${POLOS_CXX_STANDARD}
+        CXX_STANDARD_REQUIRED     True
+        POSITION_INDEPENDENT_CODE True
+        OUTPUT_NAME               "polos"
+        CXX_VISIBILITY_PRESET     hidden
+        VISIBILITY_INLINES_HIDDEN True
+        LINKER_LANGUAGE           CXX
+)
+if (LINUX)
+    set_target_properties(polos
+        PROPERTIES
+            INSTALL_RPATH ${POLOS_INSTALL_DIR}
+            BUILD_WITH_INSTALL_RPATH 1
+    )
+endif()
 add_library(polos::polos ALIAS polos)
+
+install(
+    TARGETS polos
+    LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+    ARCHIVE DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+    RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+    PERMISSIONS OWNER_READ OWNER_WRITE
+)
+
+# linked here rather than in its own CMakeLists, where `polos` doesn't exist yet
+if (HOT_RELOAD)
+    target_link_libraries(rendering_impl PRIVATE polos)
+endif()
 
 foreach(LIB ${ThirdPartyLibs})
     if (CMAKE_BUILD_TYPE STREQUAL "Release")

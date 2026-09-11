@@ -7,7 +7,7 @@
 #define POLOS_RENDERING_VULKAN_SWAPCHAIN_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #include <vulkan/vulkan.h>
 

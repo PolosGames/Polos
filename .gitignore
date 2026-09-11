@@ -50,5 +50,6 @@ ptp.cpp
 **/polos_config.h
 **.code-workspace
 Source/Config/include/polos/polos_config.hpp
+Source/Config/include/polos/polos_api.hpp
 
 internal/

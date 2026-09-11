@@ -54,6 +54,9 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
     rendering_api->Shutdown();
 
     LogInfo("Polos exiting! Bye!");
+
+    logging::FlushLogger(LOG_CTX_APP);
+    logging::FlushLogger(LOG_CTX_POLLY);
     logging::FlushLogger(LOG_CTX_POLOS);
 
     return 0;

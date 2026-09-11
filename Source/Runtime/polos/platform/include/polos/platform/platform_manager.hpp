@@ -6,7 +6,7 @@
 #ifndef POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 #define POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 
-#include "polos/platform/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/rendering/i_render_context.hpp"
 #if defined(HOT_RELOAD)
 #    include "polos/rendering/shared_lib_out.hpp"
@@ -36,7 +36,7 @@ class RenderContext;
 namespace polos::platform
 {
 
-class PLATFORM_EXPORT PlatformManager
+class POLOS_API PlatformManager
 {
 public:
     PlatformManager();

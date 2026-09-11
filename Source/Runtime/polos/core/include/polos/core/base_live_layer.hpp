@@ -7,12 +7,12 @@
 #define POLOS_CORE_BASE_LIVE_LAYER_HPP
 
 #include "polos/core/i_live_layer.hpp"
-#include "polos/core/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 namespace polos::core
 {
 
-class CORE_EXPORT BaseLiveLayer : public ILiveLayer
+class POLOS_API BaseLiveLayer : public ILiveLayer
 {
 public:
     BaseLiveLayer();

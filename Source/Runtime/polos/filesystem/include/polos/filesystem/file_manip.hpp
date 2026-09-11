@@ -7,7 +7,7 @@
 #define POLOS_FILESYSTEM_FILE_MANIP_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/filesystem/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/filesystem/resource.hpp"
 
 #include <filesystem>
@@ -15,8 +15,8 @@
 namespace polos::fs
 {
 
-FILESYSTEM_EXPORT auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>;
-FILESYSTEM_EXPORT auto ReadFile(std::string_view t_custom_name, std::filesystem::path const& t_file_path)
+POLOS_API auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>;
+POLOS_API auto ReadFile(std::string_view t_custom_name, std::filesystem::path const& t_file_path)
     -> Result<Resource>;
 
 auto ReadFile(std::string t_file_pathe) -> Result<Resource>     = delete;

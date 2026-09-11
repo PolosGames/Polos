@@ -15,7 +15,7 @@
 #endif
 
 #include "polos/rendering/i_render_context.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 struct GLFWwindow;
 

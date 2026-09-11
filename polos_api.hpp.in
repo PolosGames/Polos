@@ -1,0 +1,41 @@
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
+
+#ifndef POLOS_POLOS_API_HPP
+#define POLOS_POLOS_API_HPP
+
+#include "polos/polos_config.hpp"
+
+/// Marks a symbol as part of the engine library's ABI.
+/// POLOS_ENGINE_EXPORTS is set for every engine module and nothing else.
+#if defined(POLOS_WIN)
+#    if defined(POLOS_ENGINE_EXPORTS)
+#        define POLOS_API __declspec(dllexport)
+#    else
+#        define POLOS_API __declspec(dllimport)
+#    endif
+#    define POLOS_NO_API
+#else
+#    define POLOS_API    __attribute__((visibility("default")))
+#    define POLOS_NO_API __attribute__((visibility("hidden")))
+#endif
+
+/// Marks the renderer entry point, which needs its own pair only while it lives
+/// in a separate dlopen'd library; without HOT_RELOAD it is an engine symbol.
+#if defined(HOT_RELOAD)
+#    if defined(POLOS_WIN)
+#        if defined(POLOS_RENDERING_IMPL_EXPORTS)
+#            define POLOS_RENDERING_IMPL_API __declspec(dllexport)
+#        else
+#            define POLOS_RENDERING_IMPL_API __declspec(dllimport)
+#        endif
+#    else
+#        define POLOS_RENDERING_IMPL_API __attribute__((visibility("default")))
+#    endif
+#else
+#    define POLOS_RENDERING_IMPL_API POLOS_API
+#endif
+
+#endif// POLOS_POLOS_API_HPP

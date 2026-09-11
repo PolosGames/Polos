@@ -7,7 +7,7 @@
 #define POLOS_RENDERING_COMMON_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #define CHECK_VK_SUCCESS_OR_ERR(Result, Errc) \
     if (VK_SUCCESS != (Result))               \

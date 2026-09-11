@@ -8,7 +8,7 @@
 
 #include "polos/communication/event.hpp"
 #include "polos/communication/event_defer_options.hpp"
-#include "polos/communication/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/logging/log_macros.hpp"
 
 #include <concepts>
@@ -29,7 +29,7 @@ concept PolosEvent = std::derived_from<std::remove_cvref_t<T>, BaseEvent>;
 /// Helper functions for not manually triggering Instance of this class is created. When subscribing, unsubscribing, or
 /// dispatching, the functions communication::Subscribe, communication::Unsubscribe, communication::Dispatch can be used
 /// instead of using EventBus verbosely.
-class COMMUNICATION_EXPORT EventBus
+class POLOS_API EventBus
 {
     using BaseEventDelegate = std::function<void(BaseEvent&)>;
 public:
@@ -139,7 +139,7 @@ auto DispatchDefer(Args&&... args) -> std::size_t
     return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(args)...);
 }
 
-COMMUNICATION_EXPORT auto DispatchDeferredEvents() -> void;
+POLOS_API auto DispatchDeferredEvents() -> void;
 
 }// namespace polos::communication
 

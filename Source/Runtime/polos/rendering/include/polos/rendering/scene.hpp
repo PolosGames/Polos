@@ -6,7 +6,7 @@
 #ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SCENE_HPP
 #define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SCENE_HPP
 
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/rendering/render_object.hpp"
 
 #include <glm/glm.hpp>
@@ -17,7 +17,7 @@
 namespace polos::rendering
 {
 
-class RENDERING_EXPORT Scene
+class POLOS_API Scene
 {
 public:
     Scene();

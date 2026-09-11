@@ -6,12 +6,12 @@
 #ifndef POLOS_CORE_I_LIVE_LAYER_HPP
 #define POLOS_CORE_I_LIVE_LAYER_HPP
 
-#include "polos/core/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 namespace polos::core
 {
 
-class CORE_EXPORT ILiveLayer
+class POLOS_API ILiveLayer
 {
 public:
     virtual ~ILiveLayer() = default;
