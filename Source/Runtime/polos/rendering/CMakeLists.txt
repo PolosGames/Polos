@@ -79,6 +79,7 @@ define_polos_module(
     PUBLIC_DEPS
         ${RENDERING_THIRD_PARTY_DEPS}
         polos::logging
+        polos::utils
 
     PRIVATE_DEPS
         polos::communication
