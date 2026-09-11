@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_OBJECT_HPP
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_OBJECT_HPP
+#ifndef POLOS_RENDERING_RENDER_OBJECT_HPP
+#define POLOS_RENDERING_RENDER_OBJECT_HPP
 
 #include <glm/glm.hpp>
 
@@ -22,4 +22,4 @@ struct RenderObject
 };
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_RENDER_OBJECT_HPP
+#endif// POLOS_RENDERING_RENDER_OBJECT_HPP

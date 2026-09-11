@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_RENDERING_DESCRIPTOR_SET_HPP
-#define POLOS_RENDERING_DESCRIPTOR_SET_HPP
+#ifndef POLOS_RENDERING_UNIFORM_BUFFER_OBJECT_HPP
+#define POLOS_RENDERING_UNIFORM_BUFFER_OBJECT_HPP
 
 #include <glm/glm.hpp>
 
@@ -19,4 +19,4 @@ struct alignas(64) UniformBufferObject
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_DESCRIPTOR_SET_HPP
+#endif// POLOS_RENDERING_UNIFORM_BUFFER_OBJECT_HPP
