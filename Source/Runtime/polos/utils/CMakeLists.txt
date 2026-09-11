@@ -18,6 +18,6 @@ define_polos_module(
         utils
     TYPE
         INTERFACE
-    PUBLIC
+    INTERFACE_DEPS
         polos::logging
 )

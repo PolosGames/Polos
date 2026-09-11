@@ -23,7 +23,7 @@ namespace polos::rendering
 {
 
 #if defined(POLOS_WIN)
-constexpr char const* kRenderingLibName{"polos_rendering.dll"};
+constexpr char const* kRenderingLibName{"polos_rendering_impl.dll"};
 #elif defined(POLOS_LINUX)
 constexpr char const* kRenderingLibName{"libpolos_rendering_impl.so"};
 #endif
