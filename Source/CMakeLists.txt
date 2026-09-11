@@ -61,19 +61,24 @@ if (HOT_RELOAD)
     target_link_libraries(rendering_impl PRIVATE polos)
 endif()
 
-foreach(LIB ${ThirdPartyLibs})
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION_RELEASE)
-    elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION_DEBUG)
-    elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        CheckConfigurationExist(Release DOES_EXIST)
-        if (NOT ${DOES_EXIST})
-            message(FATAL_ERROR "Release preset needs to be configured in order to build with RelWithDebInfo")
-        endif()
-        get_target_property(LIB_SHARED_LIBRARIES ${LIB} IMPORTED_LOCATION_RELEASE)
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    CheckConfigurationExist(Release DOES_EXIST)
+    if (NOT ${DOES_EXIST})
+        message(FATAL_ERROR "Release preset needs to be configured in order to build with RelWithDebInfo")
     endif()
-    if(LIB_SHARED_LIBRARIES)
-        install(FILES ${LIB_SHARED_LIBRARIES} DESTINATION ${POLOS_INSTALL_DIR})
+endif()
+
+# IMPORTED_RUNTIME_ARTIFACTS picks the right config itself and installs the whole
+# SONAME symlink chain. Copying IMPORTED_LOCATION as a plain file dropped
+# libglfw.so.3.4 without libglfw.so.3, and the loader then fell through to
+# whatever glfw the system had.
+foreach(LIB ${ThirdPartyLibs})
+    get_target_property(LIB_TYPE ${LIB} TYPE)
+    if (LIB_TYPE STREQUAL "SHARED_LIBRARY")
+        install(
+            IMPORTED_RUNTIME_ARTIFACTS ${LIB}
+            LIBRARY DESTINATION ${POLOS_INSTALL_DIR}
+            RUNTIME DESTINATION ${POLOS_INSTALL_DIR}
+        )
     endif()
 endforeach()
