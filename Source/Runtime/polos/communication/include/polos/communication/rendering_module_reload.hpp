@@ -7,7 +7,6 @@
 #define POLOS_COMMUNICATION_RENDERING_MODULE_RELOAD_HPP
 
 #include "polos/communication/event.hpp"
-#include "polos/rendering/shared_lib_out.hpp"
 
 namespace polos::communication
 {
