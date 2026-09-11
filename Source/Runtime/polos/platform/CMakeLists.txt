@@ -19,6 +19,7 @@ define_polos_module(
     TYPE
         OBJECT
     SOURCES
+        "src/glfw_window_surface.cpp"
         "src/platform_manager.cpp"
     PUBLIC_DEPS
         glfw

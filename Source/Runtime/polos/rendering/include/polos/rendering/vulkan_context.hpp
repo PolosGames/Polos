@@ -10,8 +10,15 @@
 
 #include <vulkan/vulkan.h>
 
+#include <vector>
+
 namespace polos::rendering
 {
+
+struct alignas(32) ContextCreateDetails// NOLINT
+{
+    std::vector<char const*> required_extensions;
+};
 
 class VulkanContext
 {
@@ -24,7 +31,7 @@ public:
     VulkanContext& operator=(VulkanContext const&) = delete;
     VulkanContext& operator=(VulkanContext&&)      = delete;
 
-    auto Create() -> Result<void>;
+    auto Create(ContextCreateDetails const& t_details) -> Result<void>;
     auto Destroy() -> Result<void>;
 
     VkInstance instance{VK_NULL_HANDLE};

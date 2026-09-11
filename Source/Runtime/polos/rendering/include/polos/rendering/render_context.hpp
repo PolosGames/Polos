@@ -46,7 +46,7 @@ public:
     RenderContext& operator=(RenderContext&&) = delete;
     RenderContext& operator=(RenderContext&)  = delete;
 
-    auto Initialize(GLFWwindow* t_window) -> Result<void> override;
+    auto Initialize(IWindowSurface& t_surface) -> Result<void> override;
     auto Shutdown() -> Result<void> override;
 
     auto BeginFrame() -> VkCommandBuffer override;
@@ -74,7 +74,7 @@ private:
     void renderFrame();
     void onFramebufferResize();
 
-    GLFWwindow*                            m_window{nullptr};
+    IWindowSurface*                        m_window_surface{nullptr};
     std::unique_ptr<VulkanContext>         m_context;
     std::unique_ptr<VulkanDevice>          m_device;
     std::unique_ptr<VulkanSwapchain>       m_swapchain;

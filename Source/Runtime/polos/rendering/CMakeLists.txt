@@ -27,7 +27,6 @@ set(RENDERING_IMPL_SRC
 )
 
 set(RENDERING_THIRD_PARTY_DEPS
-    glfw
     glm::glm
     GPUOpen::VulkanMemoryAllocator
     Vulkan::Vulkan

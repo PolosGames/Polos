@@ -9,7 +9,6 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 
-#include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <string>
@@ -93,7 +92,7 @@ bool IsValidationLayersAvailable()
 VulkanContext::VulkanContext()  = default;
 VulkanContext::~VulkanContext() = default;
 
-auto VulkanContext::Create() -> Result<void>
+auto VulkanContext::Create(ContextCreateDetails const& t_details) -> Result<void>
 {
     VkApplicationInfo const app{
         .sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -105,10 +104,7 @@ auto VulkanContext::Create() -> Result<void>
         .apiVersion         = VK_API_VERSION_1_3,
     };
 
-    std::uint32_t glfw_extension_count{0};
-    char const**  glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
-
-    m_extensions.assign(glfw_extensions, std::next(glfw_extensions, static_cast<std::ptrdiff_t>(glfw_extension_count)));
+    m_extensions = t_details.required_extensions;
 
 #ifndef NDEBUG
     LogDebug("Creating Vulkan Instance with Debug Messenger");

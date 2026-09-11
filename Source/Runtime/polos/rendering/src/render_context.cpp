@@ -19,7 +19,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <GLFW/glfw3.h>
 
 #include <array>
 
@@ -99,23 +98,29 @@ RenderContext::~RenderContext()
     s_render_context = nullptr;
 }
 
-auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
+auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
 {
-    m_window         = t_window;
+    m_window_surface = &t_surface;
     m_context        = std::make_unique<VulkanContext>();
     m_device         = std::make_unique<VulkanDevice>();
-    m_swapchain      = std::make_unique<VulkanSwapchain>(m_window);
+    m_swapchain      = std::make_unique<VulkanSwapchain>();
     m_vrm            = std::make_unique<VulkanResourceManager>();
     m_shader_cache   = std::make_unique<ShaderCache>();
     m_pipeline_cache = std::make_unique<PipelineCache>();
 
     // --- Initialize Vulkan context ---
-    INIT_VULKAN_COMPONENT(m_context);
+    ContextCreateDetails const context_details{
+        .required_extensions = t_surface.RequiredInstanceExtensions(),
+    };
+    INIT_VULKAN_COMPONENT(m_context, context_details);
 
     // --- Surface Creation ---
-    CHECK_VK_SUCCESS_OR_ERR(
-        glfwCreateWindowSurface(m_context->instance, m_window, nullptr, &m_surface),
-        RenderingErrc::kFailedCreateSurface);
+    auto surface = t_surface.CreateSurface(m_context->instance);
+    if (!surface.has_value())
+    {
+        return ErrorType{surface.error()};
+    }
+    m_surface = *surface;
 
     // --- Physical device selection ---
     std::uint32_t device_count{0U};
@@ -178,7 +183,8 @@ auto RenderContext::Initialize(GLFWwindow* t_window) -> Result<void>
         SwapchainCreateDetails const details{
             .device      = m_device.get(),
             .phys_device = phys_device,
-            .surface     = m_surface,
+            .surface        = m_surface,
+            .window_surface = m_window_surface,
             .preferred_surface_formats =
                 {
                     {
@@ -525,7 +531,8 @@ void RenderContext::onFramebufferResize()
     SwapchainCreateDetails const details{
         .device      = m_device.get(),
         .phys_device = m_device->phys_device,
-        .surface     = m_surface,
+        .surface        = m_surface,
+        .window_surface = m_window_surface,
         .preferred_surface_formats =
             {
                 {

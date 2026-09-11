@@ -8,10 +8,9 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/i_window_surface.hpp"
 
 #include <vulkan/vulkan.h>
-
-struct GLFWwindow;
 
 namespace polos::rendering
 {
@@ -22,8 +21,8 @@ class IRenderContext
 public:
     virtual ~IRenderContext() = default;
 
-    virtual auto Initialize(GLFWwindow* t_window) -> Result<void> = 0;
-    virtual auto Shutdown() -> Result<void>                       = 0;
+    virtual auto Initialize(IWindowSurface& t_surface) -> Result<void> = 0;
+    virtual auto Shutdown() -> Result<void>                            = 0;
 
     virtual auto               BeginFrame() -> VkCommandBuffer = 0;
     virtual auto               EndFrame() -> void              = 0;
