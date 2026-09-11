@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_CACHE_HPP
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_CACHE_HPP
+#ifndef POLOS_RENDERING_SHADER_CACHE_HPP
+#define POLOS_RENDERING_SHADER_CACHE_HPP
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/shader.hpp"
@@ -50,4 +50,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SHADER_CACHE_HPP
+#endif// POLOS_RENDERING_SHADER_CACHE_HPP

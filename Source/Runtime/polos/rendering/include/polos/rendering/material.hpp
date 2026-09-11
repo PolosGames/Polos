@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_MATERIAL_HPP
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_MATERIAL_HPP
+#ifndef POLOS_RENDERING_MATERIAL_HPP
+#define POLOS_RENDERING_MATERIAL_HPP
 
 #include "polos/rendering/shader.hpp"
 
@@ -38,4 +38,4 @@ struct alignas(128) Material
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_MATERIAL_HPP
+#endif// POLOS_RENDERING_MATERIAL_HPP

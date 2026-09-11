@@ -3,8 +3,8 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#ifndef POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SCENE_HPP
-#define POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SCENE_HPP
+#ifndef POLOS_RENDERING_SCENE_HPP
+#define POLOS_RENDERING_SCENE_HPP
 
 #include "polos/polos_api.hpp"
 #include "polos/rendering/render_object.hpp"
@@ -41,4 +41,4 @@ private:
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_INCLUDE_POLOS_RENDERING_SCENE_HPP
+#endif// POLOS_RENDERING_SCENE_HPP
