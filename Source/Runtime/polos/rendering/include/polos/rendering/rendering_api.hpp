@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_RENDERING_API_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/rendering/i_window_surface.hpp"
 #include "polos/rendering/scene.hpp"
 #include "polos/rendering/shared_lib_out.hpp"
 
@@ -17,8 +18,6 @@ namespace polos::core
 class Engine;
 };// namespace polos::core
 
-struct GLFWwindow;
-
 namespace polos::rendering
 {
 
@@ -27,7 +26,7 @@ class IRenderContext;
 class POLOS_API RenderingApi
 {
 public:
-    explicit RenderingApi(GLFWwindow* t_window);
+    explicit RenderingApi(IWindowSurface& t_surface);
     ~RenderingApi();
 
     RenderingApi(RenderingApi const&)            = delete;
@@ -48,7 +47,7 @@ private:
     void createRenderContext();
     void initVulkan();
 
-    GLFWwindow* m_window{nullptr};
+    IWindowSurface* m_window_surface{nullptr};
 
     std::shared_ptr<IRenderContext> m_render_context;
     std::shared_ptr<Scene>          m_main_scene;

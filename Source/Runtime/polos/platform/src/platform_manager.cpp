@@ -149,6 +149,8 @@ bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_heigh
         return false;
     }
 
+    m_window_surface = std::make_unique<GlfwWindowSurface>(m_window);
+
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
         communication::DispatchDefer<communication::WindowClose>(t_handle);
     });
@@ -184,6 +186,9 @@ void PlatformManager::ChangeWindowTitle(std::string_view const t_title)
 
 GLFWwindow* PlatformManager::GetMainWindow() const
 { return m_window; }
+
+auto PlatformManager::GetWindowSurface() const -> rendering::IWindowSurface&
+{ return *m_window_surface; }
 
 void PlatformManager::on_engine_terminate()
 {

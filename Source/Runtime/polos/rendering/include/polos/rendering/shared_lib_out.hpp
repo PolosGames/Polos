@@ -17,8 +17,6 @@
 #include "polos/rendering/i_render_context.hpp"
 #include "polos/polos_api.hpp"
 
-struct GLFWwindow;
-
 namespace polos::rendering
 {
 

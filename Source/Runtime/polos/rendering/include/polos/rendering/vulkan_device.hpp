@@ -14,8 +14,6 @@
 
 #include <vulkan/vulkan.h>
 
-struct GLFWwindow;
-
 namespace polos::rendering
 {
 

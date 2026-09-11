@@ -7,6 +7,7 @@
 #define POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/platform/glfw_window_surface.hpp"
 #include "polos/rendering/i_render_context.hpp"
 #if defined(HOT_RELOAD)
 #    include "polos/rendering/shared_lib_out.hpp"
@@ -53,6 +54,7 @@ public:
     auto               CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title) -> bool;
     auto               ChangeWindowTitle(std::string_view t_title) -> void;
     [[nodiscard]] auto GetMainWindow() const -> GLFWwindow*;
+    [[nodiscard]] auto GetWindowSurface() const -> rendering::IWindowSurface&;
 private:
     friend class core::Engine;
 
@@ -61,7 +63,8 @@ private:
     void on_end_frame() const;
     void on_engine_terminate();
 
-    GLFWwindow* m_window{nullptr};
+    GLFWwindow*                        m_window{nullptr};
+    std::unique_ptr<GlfwWindowSurface> m_window_surface;
 };
 
 }// namespace polos::platform

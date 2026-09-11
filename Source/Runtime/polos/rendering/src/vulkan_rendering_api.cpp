@@ -9,15 +9,13 @@
 #include "polos/rendering/i_render_context.hpp"
 #include "polos/rendering/rendering_api.hpp"
 
-#include <GLFW/glfw3.h>
-
 namespace polos::rendering
 {
 
 RenderingApi* RenderingApi::s_instance{nullptr};
 
-RenderingApi::RenderingApi(GLFWwindow* t_window)
-    : m_window{t_window}
+RenderingApi::RenderingApi(IWindowSurface& t_surface)
+    : m_window_surface{&t_surface}
 {
     createRenderContext();
 
@@ -104,7 +102,7 @@ void RenderingApi::createRenderContext()
     m_render_context = std::unique_ptr<IRenderContext>(CreateRenderContext());
 #endif// HOT_RELOAD
 
-    auto result = m_render_context->Initialize(m_window);
+    auto result = m_render_context->Initialize(*m_window_surface);
     if (!result.has_value())
     {
         LogCritical("RenderContext could not be initialized! {}", result.error().Message());

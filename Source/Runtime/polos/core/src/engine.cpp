@@ -37,7 +37,7 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
     }
 
     std::unique_ptr<rendering::RenderingApi> rendering_api =
-        std::make_unique<rendering::RenderingApi>(platform_manager->GetMainWindow());
+        std::make_unique<rendering::RenderingApi>(platform_manager->GetWindowSurface());
     rendering::RenderingApi::s_instance = rendering_api.get();
 
     std::unique_ptr<ILiveLayer> engine_layer{new EngineLayer{}};

@@ -8,13 +8,12 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/i_window_surface.hpp"
 
 #include <vulkan/vulkan.h>
 
 #include <limits>
 #include <vector>
-
-struct GLFWwindow;
 
 namespace polos::rendering
 {
@@ -23,9 +22,10 @@ class VulkanDevice;
 
 struct alignas(128) SwapchainCreateDetails// NOLINT
 {
-    VulkanDevice const* device;
-    VkPhysicalDevice    phys_device{VK_NULL_HANDLE};
-    VkSurfaceKHR        surface{VK_NULL_HANDLE};
+    VulkanDevice const*   device;
+    VkPhysicalDevice      phys_device{VK_NULL_HANDLE};
+    VkSurfaceKHR          surface{VK_NULL_HANDLE};
+    IWindowSurface const* window_surface{nullptr};
 
     std::vector<VkSurfaceFormatKHR> preferred_surface_formats;
     std::vector<VkPresentModeKHR>   preferred_present_modes;
@@ -44,7 +44,7 @@ struct alignas(32) AcquireNextImageDetails// NOLINT
 class VulkanSwapchain
 {
 public:
-    explicit VulkanSwapchain(GLFWwindow* t_window);
+    VulkanSwapchain();
     ~VulkanSwapchain();
 
     VulkanSwapchain(VulkanSwapchain const&)            = delete;
@@ -99,7 +99,7 @@ private:
     std::vector<VkImage>     m_images;
     std::vector<VkImageView> m_image_views;
 
-    GLFWwindow* m_window{nullptr};
+    IWindowSurface const* m_window_surface{nullptr};
 };
 
 }// namespace polos::rendering

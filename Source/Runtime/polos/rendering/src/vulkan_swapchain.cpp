@@ -14,7 +14,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -22,17 +21,16 @@
 namespace polos::rendering
 {
 
-VulkanSwapchain::VulkanSwapchain(GLFWwindow* t_window)
-    : m_window{t_window}
-{}
+VulkanSwapchain::VulkanSwapchain() = default;
 
 VulkanSwapchain::~VulkanSwapchain() = default;
 
 auto VulkanSwapchain::Create(SwapchainCreateDetails const& t_details) -> Result<void>
 {
-    m_surface   = t_details.surface;
-    m_gfx_queue = t_details.gfx_queue;
-    m_device    = t_details.device->logi_device;
+    m_surface        = t_details.surface;
+    m_gfx_queue      = t_details.gfx_queue;
+    m_device         = t_details.device->logi_device;
+    m_window_surface = t_details.window_surface;
 
     setupExtentAndViewport(t_details.phys_device);
 
@@ -62,16 +60,14 @@ auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice t_phys_device) -> 
 {
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(t_phys_device, m_surface, &m_surface_cap);
 
-    std::int32_t width{0U};
-    std::int32_t height{0U};
-    glfwGetFramebufferSize(m_window, &width, &height);
+    FramebufferSize const framebuffer = m_window_surface->GetFramebufferSize();
 
     m_extent.width = m_extent3D.width = std::clamp(
-        static_cast<std::uint32_t>(width),
+        framebuffer.width,
         m_surface_cap.minImageExtent.width,
         m_surface_cap.maxImageExtent.width);
     m_extent.height = m_extent3D.height = std::clamp(
-        static_cast<std::uint32_t>(height),
+        framebuffer.height,
         m_surface_cap.minImageExtent.height,
         m_surface_cap.maxImageExtent.height);
     m_extent3D.depth = 1U;
