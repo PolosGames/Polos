@@ -14,7 +14,6 @@ project(
 )
 
 set(RENDERING_IMPL_SRC
-    "src/dll_main.cpp"
     "src/general_pass.cpp"
     "src/pipeline_cache.cpp"
     "src/render_context.cpp"
@@ -34,8 +33,13 @@ set(RENDERING_THIRD_PARTY_DEPS
     Vulkan::Vulkan
 )
 
+set(RENDERING_IMPL_DEPS
+    stb_image::stb_image
+)
+
 if (HOT_RELOAD)
     set(RENDERING_SRC "")
+    set(RENDERING_SRC_DEPS "")
 
     define_polos_module(
         NAME
@@ -51,15 +55,13 @@ if (HOT_RELOAD)
 
         PUBLIC_DEPS
             ${RENDERING_THIRD_PARTY_DEPS}
-            polos::logging
 
         PRIVATE_DEPS
-            polos::communication
-            polos::filesystem
-            stb_image::stb_image
+            ${RENDERING_IMPL_DEPS}
     )
 else()
     set(RENDERING_SRC ${RENDERING_IMPL_SRC})
+    set(RENDERING_SRC_DEPS ${RENDERING_IMPL_DEPS})
 endif()
 
 define_polos_module(
@@ -67,7 +69,7 @@ define_polos_module(
         rendering
 
     TYPE
-        SHARED
+        OBJECT
 
     SOURCES
         "src/scene.cpp"
@@ -81,8 +83,5 @@ define_polos_module(
     PRIVATE_DEPS
         polos::communication
         polos::filesystem
-
-    TEST_SOURCES
-        "test/mock/mock_vulkan_device.hpp"
-        "test/pipeline_cache_test.cpp"
+        ${RENDERING_SRC_DEPS}
 )

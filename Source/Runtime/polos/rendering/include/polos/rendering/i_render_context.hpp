@@ -7,7 +7,7 @@
 #define POLOS_RENDERING_I_RENDER_CONTEXT_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -34,7 +34,7 @@ public:
 
 extern "C"
 {
-    [[nodiscard]] RENDERING_EXPORT polos::rendering::IRenderContext* CreateRenderContext();
+    [[nodiscard]] POLOS_RENDERING_IMPL_API polos::rendering::IRenderContext* CreateRenderContext();
 }
 
 #endif// POLOS_RENDERING_I_RENDER_CONTEXT_HPP

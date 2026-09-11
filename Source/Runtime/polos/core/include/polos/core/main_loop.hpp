@@ -6,7 +6,7 @@
 #ifndef POLOS_CORE_MAIN_LOOP_HPP
 #define POLOS_CORE_MAIN_LOOP_HPP
 
-#include "polos/core/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 namespace polos::rendering
 {
@@ -21,7 +21,7 @@ struct WindowClose;
 
 namespace polos::core
 {
-class CORE_EXPORT MainLoop
+class POLOS_API MainLoop
 {
 public:
     MainLoop();

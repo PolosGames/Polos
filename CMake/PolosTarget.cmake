@@ -18,6 +18,121 @@ endmacro()
 
 include(GenerateExportHeader)
 
+# these two are macros, not functions, so they keep reading define_polos_module's
+# MODULE_* vars
+macro(define_polos_module_install)
+    if (MSVC AND MODULE_TYPE STREQUAL "SHARED")
+        set(PDB_FILE "$<TARGET_PDB_FILE:${MODULE_NAME}>")
+        set(PDB_FILE_LOCKED "${PDB_FILE}.locked")
+
+        add_custom_command(
+            TARGET ${MODULE_NAME} PRE_BUILD
+            COMMAND cmd /c "echo [DEBUG] PDB file path is ${PDB_FILE}"
+            COMMAND cmd /c "if exist \"${PDB_FILE}\" move /Y \"${PDB_FILE}\" \"${PDB_FILE_LOCKED}\""
+            COMMENT "Moving locked PDB for hot-reload (if it exists)"
+            VERBATIM
+        )
+
+        add_custom_command(
+            TARGET ${MODULE_NAME} PRE_BUILD
+            COMMAND cmd /c "if exist \"${PDB_FILE_LOCKED}\" copy /Y \"${PDB_FILE_LOCKED}\" \"${PDB_FILE}\""
+            COMMENT "Copying PDB back to prevent unnecessary relink (if it exists)"
+            VERBATIM
+        )
+    endif()
+
+    # OBJECT modules ship inside `polos`, which installs itself
+    if (NOT MODULE_TYPE STREQUAL "OBJECT")
+        install(
+            TARGETS ${MODULE_NAME}
+            LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
+            PERMISSIONS OWNER_READ OWNER_WRITE
+        )
+    endif()
+
+    if (WIN32 AND MODULE_TYPE STREQUAL "SHARED")
+        install(
+            TARGETS ${MODULE_NAME}
+            ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            PERMISSIONS   OWNER_READ OWNER_WRITE
+        )
+    endif()
+endmacro()
+
+macro(define_polos_module_tests)
+    message(STATUS "[POLOS] Building tests for: ${MODULE_TARGET}")
+
+    set(MODULE_TEST_TARGET ut-${MODULE_NAME})
+
+    add_executable(${MODULE_TEST_TARGET} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA} "${CMAKE_BINARY_DIR}/test_main.cpp")
+
+    set_target_properties(
+        ${MODULE_TEST_TARGET} PROPERTIES
+        CXX_STANDARD              ${POLOS_CXX_STANDARD}
+        CXX_STANDARD_REQUIRED     True
+        POSITION_INDEPENDENT_CODE True
+        OUTPUT_NAME               "${MODULE_TEST_TARGET}"
+        LINKER_LANGUAGE           CXX
+        CXX_VISIBILITY_PRESET     hidden
+        VISIBILITY_INLINES_HIDDEN True
+    )
+
+    if (LINUX)
+        set_target_properties(${MODULE_TEST_TARGET}
+            PROPERTIES
+            INSTALL_RPATH ${POLOS_INSTALL_DIR}
+            BUILD_WITH_INSTALL_RPATH 1
+        )
+    endif()
+
+    target_include_directories(${MODULE_TEST_TARGET} PRIVATE src)
+
+    # an OBJECT lib's objects don't carry its deps, so link the whole engine
+    if (MODULE_TYPE STREQUAL "OBJECT")
+        target_link_libraries(${MODULE_TEST_TARGET} PRIVATE GTest::gtest polos)
+    else()
+        target_link_libraries(${MODULE_TEST_TARGET}
+            PRIVATE
+                GTest::gtest
+                ${MODULE_TARGET}
+                ${MODULE_PRIVATE_DEPS}
+        )
+    endif()
+
+    if (MODULE_TEST_DEPS)
+        target_link_libraries(${MODULE_TEST_TARGET} PRIVATE ${MODULE_TEST_DEPS})
+    endif ()
+
+    target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE PL_LOGGER_TYPE=App)
+    target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE QUILL_DLL_IMPORT BUILD_TESTS)
+
+    gtest_add_tests(
+        TARGET ${MODULE_TEST_TARGET}
+        TEST_LIST MODULE_TEST_LIST
+        EXTRA_ARGS ${MODULE_TEST_EXTRA_ARGS}
+    )
+
+    set_tests_properties(${MODULE_TEST_LIST}
+        PROPERTIES
+            RUN_SERIAL ON
+            TIMEOUT 60
+            LABELS ut
+    )
+
+    # TODO: Not cross platform. Only for Windows for now.
+    add_custom_command(TARGET ${MODULE_TEST_TARGET} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_TARGET}>
+        COMMAND_EXPAND_LISTS
+    )
+
+    install(
+        FILES ${MODULE_TEST_DATA}
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    )
+endmacro()
+
 macro(define_polos_module)
     set(options ENABLE_HOT_RELOAD)
     set(oneValueArgs NAME TYPE)
@@ -34,6 +149,9 @@ macro(define_polos_module)
         add_library(${MODULE_NAME} SHARED)
     elseif (MODULE_TYPE STREQUAL "STATIC")
         add_library(${MODULE_NAME} STATIC)
+    elseif (MODULE_TYPE STREQUAL "OBJECT")
+        # include isolation comes from the dep graph, not the library type
+        add_library(${MODULE_NAME} OBJECT)
     elseif (MODULE_TYPE STREQUAL "INTERFACE")
         add_library(${MODULE_NAME} INTERFACE)
         if (MODULE_SOURCES)
@@ -74,18 +192,15 @@ macro(define_polos_module)
 
     if (NOT MODULE_TYPE STREQUAL "INTERFACE")
         build_options(${MODULE_NAME} true)
-        generate_export_header(${MODULE_NAME}
-            BASE_NAME ${MODULE_NAME}
-            EXPORT_FILE_NAME ${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}/module_macros.hpp
-            INCLUDE_GUARD_NAME "POLOS_${MODULE_NAME_UPPERCASE}_MODULE_MACROS_HPP"
-        )
+
+        # one export macro for the whole engine, from polos/polos_api.hpp
+        if (MODULE_TYPE STREQUAL "OBJECT")
+            target_compile_definitions(${MODULE_NAME} PRIVATE POLOS_ENGINE_EXPORTS)
+        elseif (MODULE_ENABLE_HOT_RELOAD)
+            target_compile_definitions(${MODULE_NAME} PRIVATE POLOS_RENDERING_IMPL_EXPORTS)
+        endif()
 
         file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
-
-        # Remove dll_main from linux build
-        if (LINUX)
-            list(REMOVE_ITEM MODULE_SOURCES "src/dll_main.cpp")
-        endif()
 
         target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
 
@@ -148,106 +263,10 @@ macro(define_polos_module)
     set(MODULE_TARGET polos::${MODULE_NAME})
 
     if (${BUILD_TESTS} AND MODULE_TEST_SOURCES AND NOT HOT_RELOAD)
-        message(STATUS "[POLOS] Building tests for: ${MODULE_TARGET}")
-
-        set(MODULE_TEST_TARGET ut-${MODULE_NAME})
-
-        add_executable(${MODULE_TEST_TARGET} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA} "${CMAKE_BINARY_DIR}/test_main.cpp")
-
-        set_target_properties(
-            ${MODULE_TEST_TARGET} PROPERTIES
-            CXX_STANDARD              ${POLOS_CXX_STANDARD}
-            CXX_STANDARD_REQUIRED     True
-            POSITION_INDEPENDENT_CODE True
-            OUTPUT_NAME               "${MODULE_TEST_TARGET}"
-            LINKER_LANGUAGE           CXX
-            CXX_VISIBILITY_PRESET     hidden
-            VISIBILITY_INLINES_HIDDEN True
-        )
-
-        if (LINUX)
-            set_target_properties(${MODULE_TEST_TARGET}
-                PROPERTIES
-                INSTALL_RPATH ${POLOS_INSTALL_DIR}
-                BUILD_WITH_INSTALL_RPATH 1
-            )
-        endif()
-
-        target_include_directories(${MODULE_TEST_TARGET} PRIVATE src)
-        target_link_libraries(${MODULE_TEST_TARGET}
-            PRIVATE
-                GTest::gtest
-                ${MODULE_TARGET}
-                ${MODULE_PRIVATE_DEPS}
-        )
-
-        if (MODULE_TEST_DEPS)
-            target_link_libraries(${MODULE_TEST_TARGET} PRIVATE ${MODULE_TEST_DEPS})
-        endif ()
-
-        target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE PL_LOGGER_TYPE=App)
-        target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE QUILL_DLL_IMPORT BUILD_TESTS)
-
-        gtest_add_tests(
-            TARGET ${MODULE_TEST_TARGET}
-            TEST_LIST MODULE_TEST_LIST
-            EXTRA_ARGS ${MODULE_TEST_EXTRA_ARGS}
-        )
-
-        set_tests_properties(${MODULE_TEST_LIST}
-            PROPERTIES
-                RUN_SERIAL ON
-                TIMEOUT 60
-                LABELS ut
-        )
-
-        # TODO: Not cross platform. Only for Windows for now.
-        add_custom_command(TARGET ${MODULE_TEST_TARGET} PRE_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_TARGET}>
-            COMMAND_EXPAND_LISTS
-        )
-
-        install(
-            FILES ${MODULE_TEST_DATA}
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
-        )
+        define_polos_module_tests()
     endif()
 
-    if (MSVC AND NOT MODULE_TYPE STREQUAL "INTERFACE" AND NOT MODULE_TYPE STREQUAL "STATIC")
-        set(PDB_FILE "$<TARGET_PDB_FILE:${MODULE_NAME}>")
-        set(PDB_FILE_LOCKED "${PDB_FILE}.locked")
-
-        add_custom_command(
-            TARGET ${MODULE_NAME} PRE_BUILD
-            COMMAND cmd /c "echo [DEBUG] PDB file path is ${PDB_FILE}"
-            COMMAND cmd /c "if exist \"${PDB_FILE}\" move /Y \"${PDB_FILE}\" \"${PDB_FILE_LOCKED}\""
-            COMMENT "Moving locked PDB for hot-reload (if it exists)"
-            VERBATIM
-        )
-
-        add_custom_command(
-            TARGET ${MODULE_NAME} PRE_BUILD
-            COMMAND cmd /c "if exist \"${PDB_FILE_LOCKED}\" copy /Y \"${PDB_FILE_LOCKED}\" \"${PDB_FILE}\""
-            COMMENT "Copying PDB back to prevent unnecessary relink (if it exists)"
-            VERBATIM
-        )
-    endif()
-
-    install(
-        TARGETS ${MODULE_NAME}
-        LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-        PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
-        PERMISSIONS OWNER_READ OWNER_WRITE
-    )
-
-    if (WIN32 AND MODULE_TYPE STREQUAL "SHARED")
-        install(
-            TARGETS ${MODULE_NAME}
-            ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            PERMISSIONS   OWNER_READ OWNER_WRITE
-        )
-    endif()
+    define_polos_module_install()
 endmacro()
 
 # NAME: Should be the same as the folder name where this macro is called as well.

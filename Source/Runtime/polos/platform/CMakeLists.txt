@@ -17,9 +17,8 @@ define_polos_module(
     NAME
         platform
     TYPE
-        SHARED
+        OBJECT
     SOURCES
-        "src/dll_main.cpp"
         "src/platform_manager.cpp"
     PUBLIC_DEPS
         glfw

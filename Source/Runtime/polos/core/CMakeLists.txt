@@ -18,11 +18,10 @@ define_polos_module(
         core
 
     TYPE
-        SHARED
+        OBJECT
 
     SOURCES
         "src/base_live_layer.cpp"
-        "src/dll_main.cpp"
         "src/engine_layer.cpp"
         "src/engine.cpp"
         "src/main_loop.cpp"

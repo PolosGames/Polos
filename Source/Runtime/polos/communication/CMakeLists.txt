@@ -18,10 +18,9 @@ define_polos_module(
         communication
 
     TYPE
-        SHARED
+        OBJECT
 
     SOURCES
-        "src/dll_main.cpp"
         "src/event_bus.cpp"
 
     PUBLIC_DEPS

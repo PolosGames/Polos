@@ -6,7 +6,7 @@
 #ifndef POLOS_LOGGING_LOGGER_HPP
 #define POLOS_LOGGING_LOGGER_HPP
 
-#include "polos/logging/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #include <quill/Logger.h>
 
@@ -15,13 +15,13 @@ namespace polos::logging
 
 /// Get the sink name for the console logger
 /// @return a string view to the name of the sink
-[[nodiscard]] LOGGING_EXPORT std::string_view GetConsoleSinkName();
+[[nodiscard]] POLOS_API std::string_view GetConsoleSinkName();
 
 /// Flush the designated logger immediately while blocking the calling thread.
 /// @param t_logger The logger whose sink that needs flushing
-LOGGING_EXPORT void FlushLogger(quill::Logger* t_logger);
+POLOS_API void FlushLogger(quill::Logger* t_logger);
 
-class LOGGING_EXPORT Logger
+class POLOS_API Logger
 {
 public:
     ~Logger() = default;

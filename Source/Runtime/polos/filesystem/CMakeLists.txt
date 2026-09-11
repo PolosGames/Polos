@@ -17,10 +17,9 @@ define_polos_module(
     NAME
         filesystem
     TYPE
-        SHARED
+        OBJECT
     SOURCES
         "src/file_manip.cpp"
-        "src/dll_main.cpp"
     PUBLIC_DEPS
         polos::communication
     PRIVATE_DEPS

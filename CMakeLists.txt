@@ -21,6 +21,7 @@ endif()
 string(REPLACE "\\" "/" POLOS_INSTALL_DIR ${POLOS_INSTALL_DIR})
 
 configure_file(polos_config.hpp.in ${POLOS_DIR}/Config/include/polos/polos_config.hpp USE_SOURCE_PERMISSIONS)
+configure_file(polos_api.hpp.in ${POLOS_DIR}/Config/include/polos/polos_api.hpp USE_SOURCE_PERMISSIONS COPYONLY)
 
 option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)

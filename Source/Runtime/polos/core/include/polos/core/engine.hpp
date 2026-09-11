@@ -7,13 +7,13 @@
 #define POLOS_CORE_ENGINE_HPP
 
 #include "polos/core/i_live_layer.hpp"
-#include "polos/core/module_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #include <cstdint>
 
 namespace polos::core
 {
-class CORE_EXPORT Engine
+class POLOS_API Engine
 {
 public:
     static std::int32_t Run(ILiveLayer* t_app_layer);

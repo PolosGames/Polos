@@ -6,7 +6,7 @@
 #ifndef POLOS_COMMUNICATION_EVENT_HPP
 #define POLOS_COMMUNICATION_EVENT_HPP
 
-#include "polos/communication/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <quill/DeferredFormatCodec.h>

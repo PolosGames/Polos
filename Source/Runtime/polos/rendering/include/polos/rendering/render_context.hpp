@@ -8,7 +8,7 @@
 
 #include "polos/communication/error_code.hpp"
 #include "polos/rendering/i_render_context.hpp"
-#include "polos/rendering/module_macros.hpp"
+#include "polos/polos_api.hpp"
 #include "polos/rendering/passes/general_pass.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 
@@ -36,7 +36,7 @@ class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
 
-class RENDERING_EXPORT RenderContext : public IRenderContext
+class POLOS_API RenderContext : public IRenderContext
 {
 public:
     RenderContext();
