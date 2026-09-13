@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_SCENE_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/rendering/camera3d.hpp"
 #include "polos/rendering/render_object.hpp"
 
 #include <glm/glm.hpp>
@@ -28,15 +29,33 @@ public:
     Scene& operator=(Scene const&) = delete;
     Scene& operator=(Scene&&)      = delete;
 
-    std::size_t              AddObject(RenderObject const& t_object);
-    std::size_t              AddObject(glm::mat4 const& t_transform, std::shared_ptr<Material> const& t_material);
-    std::span<RenderObject> GetObjects();
-    RenderObject&           GetObject(std::size_t t_index);
+    /// @brief Adds object, returns a handle stable until RemoveObject is called with it.
+    [[nodiscard]] auto AddObject(RenderObject const& t_object) -> std::size_t;
+
+    /// @brief Adds object, returns a handle stable until RemoveObject is called with it.
+    [[nodiscard]] auto AddObject(glm::mat4 t_transform, glm::vec4 t_color) -> std::size_t;
+
+    /// @brief Frees t_handle's slot for reuse by a later AddObject call.
+    auto RemoveObject(std::size_t t_handle) -> void;
+
+    /// @brief Returns all objects in scene
+    [[nodiscard]] auto GetObjects() const -> std::span<RenderObject const>;
+
+    /// @brief Returns single object in scene at t_handle
+    [[nodiscard]] auto GetObject(std::size_t t_handle) -> RenderObject&;
+
+    /// @brief Returns the camera in scene at t_index
+    [[nodiscard]] auto GetCamera(std::size_t t_index) -> Camera3D*;
 private:
-    glm::mat4 m_view_matrix{0.0F};
-    glm::mat4 m_projection_matrix{0.0F};
+    static constexpr std::size_t kInvalidHandle = static_cast<std::size_t>(-1);
+
+    std::vector<std::unique_ptr<Camera3D>> m_cameras;
 
     std::vector<RenderObject> m_objects;
+    std::vector<std::size_t>  m_slot_to_handle;
+    std::vector<std::size_t>  m_handle_to_slot;
+    std::size_t               m_free_handle_head{kInvalidHandle};
+    std::size_t               m_objects_current_size{0U};
 };
 
 }// namespace polos::rendering

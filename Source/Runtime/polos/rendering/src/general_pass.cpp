@@ -5,6 +5,7 @@
 
 #include "polos/rendering/passes/general_pass.hpp"
 
+#include "polos/rendering/camera3d.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/pipeline_cache.hpp"
 #include "polos/rendering/quad_instance.hpp"
@@ -22,10 +23,6 @@
 #include "polos/rendering/vulkan_util.hpp"
 #include "polos/utils/string_id.hpp"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 
 namespace polos::rendering
@@ -133,11 +130,9 @@ GeneralPass::~GeneralPass()
     vkDestroyRenderPass(m_device, m_render_pass, nullptr);
 }
 
-auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_frame) -> void
+auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_frame, RenderView const& t_view) -> void
 {
     m_command_buffer = t_cmd_buf;
-
-    std::span<RenderObject> const render_objects = RenderingApi::GetMainScene()->GetObjects();
 
     std::array<VkClearValue, 2U> clear_color{
         VkClearValue{
@@ -148,30 +143,28 @@ auto GeneralPass::Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_fra
         },
     };
 
-    UniformBufferObject ubo{};
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(60.0f),
-                                static_cast<float>(m_swapchain->GetExtent().width) /
-                                    static_cast<float>(m_swapchain->GetExtent().height),
-                                0.1f,
-                                10.0f);
-    ubo.proj[1][1] *= -1;
+    UniformBufferObject ubo =
+        GetCameraUbo(t_view.camera, m_swapchain->GetExtent().width, m_swapchain->GetExtent().height);
 
-    std::size_t current_instance_count = std::min(render_objects.size(), kMaxQuadInstances);
+    std::size_t current_instance_count = std::min(t_view.objects.size(), kMaxQuadInstances);
 
-    if (current_instance_count < render_objects.size())
+    if (current_instance_count < t_view.objects.size())
     {
         // TODO(sorbatdev): Log once
         LogWarn(
             "Number of render objects ({}) exceeds maximum quad instances ({}). Only rendering the first {} objects.",
-            render_objects.size(),
+            t_view.objects.size(),
             kMaxQuadInstances,
             current_instance_count);
     }
 
     //NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     std::vector<QuadInstance> instance_data(current_instance_count);
-    for (std::size_t i{0U}; i < current_instance_count; ++i) { instance_data[i].model = render_objects[i].transform; }
+    for (std::size_t i{0U}; i < current_instance_count; ++i)
+    {
+        instance_data[i].model = t_view.objects[i].transform;
+        instance_data[i].color = t_view.objects[i].color;
+    }
 
     std::memcpy(m_instance_mappings[t_current_frame],
                 instance_data.data(),
@@ -470,7 +463,7 @@ VkPipeline GeneralPass::createPipeline()
         .vertex_input       = CreateVertexDescription(VertexAttributes::kWithPosition | VertexAttributes::kWithColors |
                                                       VertexAttributes::kWithTexCoords),
         .polygon_mode       = VK_POLYGON_MODE_FILL,
-        .cull_mode          = VK_CULL_MODE_BACK_BIT,
+        .cull_mode          = VK_CULL_MODE_NONE,
         .front_face         = VK_FRONT_FACE_COUNTER_CLOCKWISE,
         .depth_bias_enable  = VK_FALSE,
         .multisampling      = VK_SAMPLE_COUNT_1_BIT,
@@ -503,7 +496,8 @@ VkPipeline GeneralPass::createPipeline()
                 .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
                 .pImmutableSamplers = nullptr,
             },
-        }}});
+        }}
+    });
 
     assert(result.has_value() && "Failed to create basic color pipeline!");
 

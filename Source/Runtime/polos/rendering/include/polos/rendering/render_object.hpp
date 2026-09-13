@@ -17,8 +17,8 @@ struct Material;
 
 struct RenderObject
 {
-    glm::mat4                 transform;
-    std::shared_ptr<Material> render_material;
+    glm::mat4 transform{0.0F};
+    glm::vec4 color{.0F, .0F, .0F, 1.0F};
 };
 }// namespace polos::rendering
 

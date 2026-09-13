@@ -8,7 +8,10 @@
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/key_press.hpp"
 #include "polos/communication/key_release.hpp"
+#include "polos/communication/mouse_input.hpp"
+#include "polos/communication/mouse_move.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/communication/window_focus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
@@ -44,17 +47,25 @@ GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t t_error_code)
     switch (t_error_code)
     {
         case GLFW_INVALID_ENUM:
-            return {.level   = GlfwLogLevel::Warn,
-                    .message = "GLFW received an invalid enum to it's function! Desc: {0}"};
+            return {
+                .level   = GlfwLogLevel::Warn,
+                .message = "GLFW received an invalid enum to it's function! Desc: {0}"
+            };
         case GLFW_INVALID_VALUE:
-            return {.level   = GlfwLogLevel::Warn,
-                    .message = "GLFW received an invalid value to it's function! Desc: {0}"};
+            return {
+                .level   = GlfwLogLevel::Warn,
+                .message = "GLFW received an invalid value to it's function! Desc: {0}"
+            };
         case GLFW_OUT_OF_MEMORY:
-            return {.level   = GlfwLogLevel::Critical,
-                    .message = "A memory allocation failed within GLFW or the operating system! Desc: {0}"};
+            return {
+                .level   = GlfwLogLevel::Critical,
+                .message = "A memory allocation failed within GLFW or the operating system! Desc: {0}"
+            };
         case GLFW_API_UNAVAILABLE:
-            return {.level   = GlfwLogLevel::Error,
-                    .message = "GLFW could not find support for the requested API on the system! Desc: {0}"};
+            return {
+                .level   = GlfwLogLevel::Error,
+                .message = "GLFW could not find support for the requested API on the system! Desc: {0}"
+            };
         case GLFW_FORMAT_UNAVAILABLE:
             return {.level = GlfwLogLevel::Error, .message = "The requested pixel format is not supported! Desc: {0}"};
         default: return {.level = GlfwLogLevel::Error, .message = ""};
@@ -151,29 +162,49 @@ bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_heigh
 
     m_window_surface = std::make_unique<GlfwWindowSurface>(m_window);
 
-    glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
-        communication::DispatchDefer<communication::WindowClose>(t_handle);
-    });
+    glfwFocusWindow(m_window);
+    glfwSetCursorPos(m_window, static_cast<std::double_t>(t_width) / 2.0, static_cast<std::double_t>(t_height) / 2.0);
 
-    glfwSetWindowFocusCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_is_focused) {
-        communication::DispatchDefer<communication::WindowFocus>(t_is_focused);
-    });
+    {
+        using namespace polos::communication;
 
-    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_new_width, std::int32_t t_new_height) {
-        communication::DispatchDefer<communication::WindowFramebufferResize>(t_new_width, t_new_height);
-    });
+        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
+            DispatchDefer<WindowClose>(t_handle);
+        });
 
-    glfwSetKeyCallback(m_window,
-                       [](GLFWwindow* /*t_window*/,
-                          std::int32_t t_key,
-                          std::int32_t /*t_scancode*/,
-                          std::int32_t t_action,
-                          std::int32_t /*t_mods*/) {
-                           if (t_action == GLFW_RELEASE)
-                           {
-                               polos::communication::DispatchDefer<communication::KeyRelease>(t_key);
-                           }
-                       });
+        glfwSetWindowFocusCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_is_focused) {
+            DispatchDefer<WindowFocus>(t_is_focused);
+        });
+
+        glfwSetFramebufferSizeCallback(m_window,
+                                       [](GLFWwindow* /**/, std::int32_t t_new_width, std::int32_t t_new_height) {
+                                           DispatchDefer<WindowFramebufferResize>(t_new_width, t_new_height);
+                                       });
+
+        glfwSetKeyCallback(m_window,
+                           [](GLFWwindow* /*t_window*/,
+                              std::int32_t t_key,
+                              std::int32_t /*t_scancode*/,
+                              std::int32_t t_action,
+                              std::int32_t /*t_mods*/) {
+                               switch (t_action)
+                               {
+                                   case GLFW_RELEASE: DispatchDefer<KeyRelease>(t_key); break;
+                                   case GLFW_PRESS: DispatchDefer<KeyPress>(t_key);
+                                   default: break;
+                               }
+                           });
+
+        glfwSetCursorPosCallback(m_window, [](GLFWwindow* /*t_window*/, double t_xpos, double t_ypos) {
+            DispatchDefer<MouseMove>(t_xpos, t_ypos);
+        });
+
+        glfwSetMouseButtonCallback(
+            m_window,
+            [](GLFWwindow* t_window, std::int32_t t_button, std::int32_t t_action, std::int32_t t_mods) {
+                DispatchDefer<MouseInput>(t_button, t_action);
+            });
+    }
 
     return true;
 }
