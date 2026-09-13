@@ -91,3 +91,6 @@ IncludeCategories:
     Priority: 4
   - Regex: '^<.*>$'
     Priority: 2
+BinPackLongBracedList: false
+BreakAfterOpenBracketBracedList: true
+BreakBeforeCloseBracketBracedList: true

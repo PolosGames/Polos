@@ -8,12 +8,18 @@
 
 #include <polos/communication/key_release.hpp>
 #include <polos/core/base_live_layer.hpp>
+#include <polos/rendering/camera3d.hpp>
 
 namespace polos::communication
 {
 struct EngineUpdate;
 struct RenderUpdate;
 }// namespace polos::communication
+
+namespace polos::rendering
+{
+struct FramebufferSize;
+}// namespace polos::rendering
 
 namespace dummy_app
 {
@@ -29,9 +35,11 @@ public:
 
     [[nodiscard]] auto Name() const -> char const* override;
 private:
+    [[nodiscard]] static auto getWindowSize() -> polos::rendering::FramebufferSize;
+
     auto onEngineUpdate(polos::communication::EngineUpdate& t_event) -> void;
     auto onRenderUpdate(polos::communication::RenderUpdate& t_event) -> void;
-    auto onKeyRelease(std::int32_t t_key) -> void;
+    auto moveCamera(polos::rendering::Camera3D* t_cam, std::float_t t_delta_time) -> void;
 
     std::size_t m_obj1{0U};
     std::size_t m_obj2{0U};

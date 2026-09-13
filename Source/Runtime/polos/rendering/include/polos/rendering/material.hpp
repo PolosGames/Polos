@@ -27,7 +27,7 @@ struct alignas(128) Material
 {
     std::string name;
 
-    Shader                           mat_shader;
+    Shader                          mat_shader;
     std::shared_ptr<AllocatedImage> albedo_texture;
 
     MaterialType mat_type;

@@ -7,6 +7,7 @@
 #include "polos/communication/event_bus.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/i_render_context.hpp"
+#include "polos/rendering/render_view.hpp"
 #include "polos/rendering/rendering_api.hpp"
 
 namespace polos::rendering
@@ -46,7 +47,12 @@ auto RenderingApi::EndFrame() -> void
 {
     if (nullptr != s_instance->m_render_context)
     {
-        s_instance->m_render_context->EndFrame();
+        RenderView const view{
+            .camera  = polos::rendering::RenderingApi::GetMainScene()->GetCamera(0U),
+            .objects = polos::rendering::RenderingApi::GetMainScene()->GetObjects()
+        };
+
+        s_instance->m_render_context->EndFrame(view);
     }
 }
 

@@ -19,7 +19,6 @@
 
 #include <vulkan/vulkan.h>
 
-
 #include <array>
 
 #define INIT_VULKAN_COMPONENT(SubmodulePtr, ...)         \
@@ -85,18 +84,16 @@ RenderContext* RenderContext::s_render_context{nullptr};
 RenderContext::RenderContext()
     : m_image_acq_results{{ImageAcqusitionResult::kSuccess}}
 {
+    using communication::WindowFramebufferResize;
     s_render_context = this;
-    communication::Subscribe<communication::WindowFramebufferResize>(
-        [this](communication::WindowFramebufferResize&) {
-            m_framebuffer_resized = true;
-            LogInfo("Framebuffer resize event received in RenderContext.");
-        });
+    communication::Subscribe<WindowFramebufferResize>([this](WindowFramebufferResize&) {
+        m_framebuffer_resized = true;
+        LogInfo("Framebuffer resize event received in RenderContext.");
+    });
 };
 
 RenderContext::~RenderContext()
-{
-    s_render_context = nullptr;
-}
+{ s_render_context = nullptr; }
 
 auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
 {
@@ -181,8 +178,8 @@ auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
     // --- Swapchain creation ---
     {
         SwapchainCreateDetails const details{
-            .device      = m_device.get(),
-            .phys_device = phys_device,
+            .device         = m_device.get(),
+            .phys_device    = phys_device,
             .surface        = m_surface,
             .window_surface = m_window_surface,
             .preferred_surface_formats =
@@ -229,20 +226,19 @@ auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
 
     {
         ShaderCacheCreateDetails const details{
-            .logi_device = m_device->logi_device,
-            .shader_files =
+            .logi_device  = m_device->logi_device,
+            .shader_files = {
                 {
-                    {
-                        .custom_name = "s_basiccolor_vt",
-                        .stage       = ShaderStage::kVertex,
-                        .path        = "Resource/Shaders/basic_color.vert.spv",
-                    },
-                    {
-                        .custom_name = "s_basiccolor_fm",
-                        .stage       = ShaderStage::kFragment,
-                        .path        = "Resource/Shaders/basic_color.frag.spv",
-                    },
+                    .custom_name = "s_basiccolor_vt",
+                    .stage       = ShaderStage::kVertex,
+                    .path        = "Resource/Shaders/basic_color.vert.spv",
                 },
+                {
+                    .custom_name = "s_basiccolor_fm",
+                    .stage       = ShaderStage::kFragment,
+                    .path        = "Resource/Shaders/basic_color.frag.spv",
+                },
+            },
         };
 
         INIT_VULKAN_COMPONENT(m_shader_cache, details);
@@ -256,9 +252,8 @@ auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
         .queueFamilyIndex = m_queue_family_indices.gfx_q_index,
     };
 
-    CHECK_VK_SUCCESS_OR_ERR(
-        vkCreateCommandPool(m_device->logi_device, &pool_info, nullptr, &m_command_pool),
-        RenderingErrc::kFailedCreateCmdPool);
+    CHECK_VK_SUCCESS_OR_ERR(vkCreateCommandPool(m_device->logi_device, &pool_info, nullptr, &m_command_pool),
+                            RenderingErrc::kFailedCreateCmdPool);
 
     m_frame_command_buffers.resize(kMaxFramesInFlight);
     m_acquire_semaphores.resize(kMaxFramesInFlight);
@@ -305,9 +300,8 @@ auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateSemaphore(m_device->logi_device, &semaphore_info, nullptr, &m_acquire_semaphores[i]),
             RenderingErrc::kFailedCreateSemaphore);
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateFence(m_device->logi_device, &fence_info, nullptr, &m_frame_fences[i]),
-            RenderingErrc::kFailedCreateFence);
+        CHECK_VK_SUCCESS_OR_ERR(vkCreateFence(m_device->logi_device, &fence_info, nullptr, &m_frame_fences[i]),
+                                RenderingErrc::kFailedCreateFence);
     }
 
     m_general_pass = std::make_unique<GeneralPass>(*this);
@@ -319,12 +313,11 @@ auto RenderContext::Initialize(IWindowSurface& t_surface) -> Result<void>
 
 auto RenderContext::BeginFrame() -> VkCommandBuffer
 {
-    vkWaitForFences(
-        m_device->logi_device,
-        1U,
-        &m_frame_fences[m_current_frame_index],
-        VK_TRUE,
-        std::numeric_limits<std::uint64_t>::max());
+    vkWaitForFences(m_device->logi_device,
+                    1U,
+                    &m_frame_fences[m_current_frame_index],
+                    VK_TRUE,
+                    std::numeric_limits<std::uint64_t>::max());
 
     AcquireNextImageDetails const next_img_dets{
         .semaphore = m_acquire_semaphores[m_current_frame_index],
@@ -363,14 +356,12 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     return cur_cmd_buf;
 }
 
-auto RenderContext::renderFrame() -> void
-{
-    m_general_pass->Execute(m_frame_command_buffers[m_current_frame_index], m_current_frame_index);
-}
+auto RenderContext::renderFrame(RenderView const& t_view) -> void
+{ m_general_pass->Execute(m_frame_command_buffers[m_current_frame_index], m_current_frame_index, t_view); }
 
-auto RenderContext::EndFrame() -> void
+auto RenderContext::EndFrame(RenderView const& t_view) -> void
 {
-    renderFrame();
+    renderFrame(t_view);
 
     // If image acquisition failed, skip rendering and presentation for this frame
     if (m_image_acq_results[m_current_frame_index] == ImageAcqusitionResult::kError)
@@ -427,14 +418,10 @@ auto RenderContext::EndFrame() -> void
 }
 
 auto RenderContext::GetShaderCache() const -> ShaderCache&
-{
-    return *m_shader_cache;
-}
+{ return *m_shader_cache; }
 
 auto RenderContext::GetPipelineCache() const -> PipelineCache&
-{
-    return *m_pipeline_cache;
-}
+{ return *m_pipeline_cache; }
 
 VkCommandBuffer RenderContext::BeginSingleTimeCommands()
 {
@@ -447,8 +434,8 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
     };
 
     VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    assert(
-        VK_SUCCESS == vkAllocateCommandBuffers(s_render_context->m_device->logi_device, &alloc_info, &command_buffer));
+    assert(VK_SUCCESS ==
+           vkAllocateCommandBuffers(s_render_context->m_device->logi_device, &alloc_info, &command_buffer));
 
     VkCommandBufferBeginInfo const begin_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -481,46 +468,31 @@ void RenderContext::EndSingleTimeCommands(VkCommandBuffer t_command_buffer)
     assert(VK_SUCCESS == vkQueueSubmit(s_render_context->m_gfx_queue, 1U, &submit_info, VK_NULL_HANDLE));
     vkQueueWaitIdle(s_render_context->m_gfx_queue);
 
-    vkFreeCommandBuffers(
-        s_render_context->m_device->logi_device,
-        s_render_context->m_command_pool,
-        1U,
-        &t_command_buffer);
+    vkFreeCommandBuffers(s_render_context->m_device->logi_device,
+                         s_render_context->m_command_pool,
+                         1U,
+                         &t_command_buffer);
 }
 
 auto RenderContext::IsInitialized() const -> bool
-{
-    return m_is_initialized;
-}
+{ return m_is_initialized; }
 
 auto RenderContext::GetVkSurface() -> VkSurfaceKHR
-{
-    return m_surface;
-}
+{ return m_surface; }
 
 auto RenderContext::GetGfxQueue() -> VkQueue
-{
-    return m_gfx_queue;
-}
+{ return m_gfx_queue; }
 
 auto RenderContext::GetSwapchain() -> VulkanSwapchain&
-{
-    return *m_swapchain;
-}
+{ return *m_swapchain; }
 
 auto RenderContext::GetVulkanDevice() -> VulkanDevice&
-{
-    return *m_device;
-}
+{ return *m_device; }
 auto RenderContext::GetVulkanResourceManager() -> VulkanResourceManager&
-{
-    return *m_vrm;
-}
+{ return *m_vrm; }
 
 auto RenderContext::GetCommandPool() -> VkCommandPool
-{
-    return m_command_pool;
-}
+{ return m_command_pool; }
 
 void RenderContext::onFramebufferResize()
 {
@@ -529,8 +501,8 @@ void RenderContext::onFramebufferResize()
 
     std::ignore = m_swapchain->Destroy();
     SwapchainCreateDetails const details{
-        .device      = m_device.get(),
-        .phys_device = m_device->phys_device,
+        .device         = m_device.get(),
+        .phys_device    = m_device->phys_device,
         .surface        = m_surface,
         .window_surface = m_window_surface,
         .preferred_surface_formats =
@@ -606,9 +578,7 @@ auto RenderContext::Shutdown() -> Result<void>
 }
 
 auto RenderContext::GetFramesInFlight() const -> std::uint32_t
-{
-    return kMaxFramesInFlight;
-}
+{ return kMaxFramesInFlight; }
 
 }// namespace polos::rendering
 

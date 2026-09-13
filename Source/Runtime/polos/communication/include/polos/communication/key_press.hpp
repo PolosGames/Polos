@@ -15,7 +15,9 @@ struct KeyPress final : BaseEvent
 {
     DECLARE_POLOS_EVENT(KeyPress);
 
-    explicit KeyPress(std::int32_t const t_key);
+    explicit KeyPress(std::int32_t const t_key)
+        : key{t_key}
+    {}
 
     std::int32_t key{0};
 };

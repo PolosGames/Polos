@@ -6,6 +6,7 @@
 #include "polos/core/engine.hpp"
 
 #include "polos/core/engine_layer.hpp"
+#include "polos/core/input_state.hpp"
 #include "polos/core/main_loop.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"

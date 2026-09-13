@@ -9,24 +9,26 @@
 #include "polos/communication/error_code.hpp"
 #include "polos/polos_api.hpp"
 #include "polos/rendering/i_window_surface.hpp"
+#include "polos/rendering/render_view.hpp"
 
 #include <vulkan/vulkan.h>
 
 namespace polos::rendering
 {
 
+struct RenderView;
 
 class IRenderContext
 {
 public:
     virtual ~IRenderContext() = default;
 
-    virtual auto Initialize(IWindowSurface& t_surface) -> Result<void> = 0;
-    virtual auto Shutdown() -> Result<void>                            = 0;
+    virtual auto Initialize(IWindowSurface&) -> Result<void> = 0;
+    virtual auto Shutdown() -> Result<void>                  = 0;
 
-    virtual auto               BeginFrame() -> VkCommandBuffer = 0;
-    virtual auto               EndFrame() -> void              = 0;
-    [[nodiscard]] virtual auto IsInitialized() const -> bool   = 0;
+    virtual auto               BeginFrame() -> VkCommandBuffer     = 0;
+    virtual auto               EndFrame(RenderView const&) -> void = 0;
+    [[nodiscard]] virtual auto IsInitialized() const -> bool       = 0;
 };
 
 }// namespace polos::rendering

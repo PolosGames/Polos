@@ -7,8 +7,8 @@
 #define POLOS_RENDERING_RENDER_CONTEXT_HPP
 
 #include "polos/communication/error_code.hpp"
-#include "polos/rendering/i_render_context.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/i_render_context.hpp"
 #include "polos/rendering/passes/general_pass.hpp"
 #include "polos/rendering/queue_family_indices.hpp"
 
@@ -35,6 +35,7 @@ class VulkanSwapchain;
 class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
+struct RenderView;
 
 class POLOS_API RenderContext : public IRenderContext
 {
@@ -50,7 +51,7 @@ public:
     auto Shutdown() -> Result<void> override;
 
     auto BeginFrame() -> VkCommandBuffer override;
-    auto EndFrame() -> void override;
+    auto EndFrame(RenderView const& t_view) -> void override;
 
     [[nodiscard]] auto IsInitialized() const -> bool override;
     [[nodiscard]] auto GetShaderCache() const -> ShaderCache&;
@@ -71,7 +72,7 @@ private:
     friend class platform::PlatformManager;
     static RenderContext* s_render_context;
 
-    void renderFrame();
+    void renderFrame(RenderView const& t_view);
     void onFramebufferResize();
 
     IWindowSurface*                        m_window_surface{nullptr};
@@ -99,8 +100,8 @@ private:
     };
     std::array<ImageAcqusitionResult, kMaxFramesInFlight> m_image_acq_results;
 
-    VkSurfaceKHR         m_surface{VK_NULL_HANDLE};
-    VkQueue              m_gfx_queue{VK_NULL_HANDLE};
+    VkSurfaceKHR       m_surface{VK_NULL_HANDLE};
+    VkQueue            m_gfx_queue{VK_NULL_HANDLE};
     QueueFamilyIndices m_queue_family_indices;
 
     bool m_framebuffer_resized{false};

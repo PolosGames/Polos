@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_PASSES_GENERAL_PASS_HPP
 #define POLOS_RENDERING_PASSES_GENERAL_PASS_HPP
 
+#include "polos/rendering/render_view.hpp"
 #include "polos/rendering/vertex.hpp"
 
 #include <vulkan/vulkan.h>
@@ -28,7 +29,7 @@ public:
     explicit GeneralPass(RenderContext& t_context);
     ~GeneralPass();
 
-    auto Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_frame) -> void;
+    auto Execute(VkCommandBuffer t_cmd_buf, std::uint32_t t_current_frame, RenderView const& t_view) -> void;
     void OnResize();
 private:
     VkRenderPass     createRenderPass();

@@ -24,6 +24,7 @@ define_polos_module(
         "src/base_live_layer.cpp"
         "src/engine_layer.cpp"
         "src/engine.cpp"
+        "src/input_state.cpp"
         "src/main_loop.cpp"
 
     PUBLIC_DEPS

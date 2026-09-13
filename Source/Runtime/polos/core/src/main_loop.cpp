@@ -9,6 +9,7 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/process_input.hpp"
 #include "polos/communication/render_update.hpp"
 #include "polos/communication/window_close.hpp"
 #include "polos/logging/log_macros.hpp"
@@ -70,6 +71,7 @@ void MainLoop::Run() const
         communication::DispatchNow<communication::EndFrame>();
 
         communication::DispatchDeferredEvents();
+        communication::DispatchNow<communication::ProcessInput>();
 
 #if defined(HOT_RELOAD)
         rendering::RenderingApi::ReloadIfNeeded();

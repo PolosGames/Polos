@@ -14,6 +14,7 @@ project(
 )
 
 set(RENDERING_IMPL_SRC
+    "src/camera3d.cpp"
     "src/general_pass.cpp"
     "src/pipeline_cache.cpp"
     "src/render_context.cpp"
