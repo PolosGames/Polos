@@ -17,9 +17,9 @@ struct MouseInput final : BaseEvent
 {
     DECLARE_POLOS_EVENT(MouseInput)
 
-    explicit MouseInput(std::int32_t t_button, std::int32_t t_action)
-        : button{t_button},
-          action{t_action}
+    explicit MouseInput(std::int32_t tButton, std::int32_t tAction)
+        : button{tButton},
+          action{tAction}
     {}
 
     std::int32_t button{0};

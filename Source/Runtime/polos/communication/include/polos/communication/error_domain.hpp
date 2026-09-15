@@ -45,35 +45,29 @@ public:
     /// @brief Determines and returns the message that is corresponding to the error-code given.
     /// @return Name of error domain in a null-terminated string.
     ///
-    [[nodiscard]] virtual auto Message(CodeType t_code) const -> std::string_view = 0;
+    [[nodiscard]] virtual auto Message(CodeType tCode) const -> std::string_view = 0;
 
     ///
     /// @brief Returns the pre-determined id for this domain
     /// @return Id for this domain
     ///
     [[nodiscard]] constexpr IdType Id() const
-    {
-        return m_id;
-    }
+    { return mId; }
 protected:
-    constexpr explicit ErrorDomain(IdType t_id)
-        : m_id{t_id}
+    constexpr explicit ErrorDomain(IdType tId)
+        : mId{tId}
     {}
 
     ~ErrorDomain() = default;
 private:
-    IdType const m_id;
+    IdType const mId;
 };
 
-constexpr auto operator==(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs) -> bool
-{
-    return t_lhs.Id() == t_rhs.Id();
-}
+constexpr auto operator==(ErrorDomain const& tLhs, ErrorDomain const& tRhs) -> bool
+{ return tLhs.Id() == tRhs.Id(); }
 
-constexpr auto operator!=(ErrorDomain const& t_lhs, ErrorDomain const& t_rhs) -> bool
-{
-    return !operator==(t_lhs, t_rhs);
-}
+constexpr auto operator!=(ErrorDomain const& tLhs, ErrorDomain const& tRhs) -> bool
+{ return !operator==(tLhs, tRhs); }
 
 }// namespace polos::communication
 

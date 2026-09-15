@@ -51,17 +51,17 @@ public:
     ///
     /// @todo make return type std::expected
     /// @tparam EventType Type of event to subscribe to (should be deduced)
-    /// @param t_callback Functor that will receive the event
+    /// @param tCallback Functor that will receive the event
     /// @return Specific EventBus subscriber id.
     template<PolosEvent EventType>
-    auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t;
+    auto Subscribe(std::function<void(EventType&)> tCallback) -> std::int64_t;
 
     /// @brief Trigger an event dispatch to all subscribers of the specific event.
     /// @tparam EventType
     /// @tparam Args
-    /// @param args
+    /// @param tArgs
     template<PolosEvent EventType, typename... Args>
-    auto Dispatch(EventDeferOptions t_defer, Args&&... t_args) -> std::size_t;
+    auto Dispatch(EventDeferOptions tDefer, Args&&... tArgs) -> std::size_t;
 
     /// @brief Dispatches all deferred events that were queued with EventDeferOptions::NextFrame.
     /// This should be called at the beginning of each frame.
@@ -72,13 +72,13 @@ private:
     // TODO(sorbatdev): Make a freelist so we can unsubscribe
     using CallbackMap = std::unordered_map<std::int64_t, std::vector<BaseEventDelegate>>;
 
-    std::int64_t                             m_next_id{0};
-    CallbackMap                              m_callbacks;
-    std::vector<std::unique_ptr<BaseEvent>> m_deferred_events;
+    std::int64_t                            mNextId{0};
+    CallbackMap                             mCallbacks;
+    std::vector<std::unique_ptr<BaseEvent>> mDeferredEvents;
 };
 
 template<PolosEvent EventType>
-auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
+auto EventBus::Subscribe(std::function<void(EventType&)> tCallback) -> std::int64_t
 {
     LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Subscribe]");
 
@@ -86,20 +86,20 @@ auto EventBus::Subscribe(std::function<void(EventType&)> t_callback) -> std::int
     LogDebugCtx(LOG_CTX_POLOS, "Subscribing to: EventHash: {}, Name: {}", event_hash, EventType::Name());
 
     // Give each subscriber of any event a unique id.
-    auto const subscriber_id = m_next_id++;
+    auto const subscriber_id = mNextId++;
 
-    m_callbacks.insert({event_hash, std::vector<BaseEventDelegate>()});
-    auto& event_queue = m_callbacks[event_hash];
-    event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&t_callback)));// NOLINT
+    mCallbacks.insert({event_hash, std::vector<BaseEventDelegate>()});
+    auto& event_queue = mCallbacks[event_hash];
+    event_queue.push_back(*std::launder(reinterpret_cast<BaseEventDelegate*>(&tCallback)));// NOLINT
 
     return subscriber_id;
 }
 
 template<PolosEvent EventType, typename... Args>
-auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> std::size_t
+auto EventBus::Dispatch(EventDeferOptions const tDefer, Args&&... tArgs) -> std::size_t
 {
-    auto const itr = m_callbacks.find(EventHash<EventType>());
-    if (itr == m_callbacks.end())
+    auto const itr = mCallbacks.find(EventHash<EventType>());
+    if (itr == mCallbacks.end())
     {
         LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());
         return 0U;
@@ -107,37 +107,31 @@ auto EventBus::Dispatch(EventDeferOptions const t_defer, Args&&... t_args) -> st
 
     auto& subcribers_callbacks = itr->second;
 
-    if (t_defer == EventDeferOptions::kImmediate)
+    if (tDefer == EventDeferOptions::kImmediate)
     {
-        EventType event{std::forward<Args>(t_args)...};
+        EventType event{std::forward<Args>(tArgs)...};
 
         for (auto& callback : subcribers_callbacks) { callback(event); }
     }
-    else if (t_defer == EventDeferOptions::kNextFrame)
+    else if (tDefer == EventDeferOptions::kNextFrame)
     {
-        m_deferred_events.push_back(std::make_unique<EventType>(std::forward<Args>(t_args)...));
+        mDeferredEvents.push_back(std::make_unique<EventType>(std::forward<Args>(tArgs)...));
     }
 
     return subcribers_callbacks.size();
 }
 
 template<PolosEvent EventType>
-auto Subscribe(std::function<void(EventType&)> t_callback) -> std::int64_t
-{
-    return EventBus::Instance().Subscribe(std::move(t_callback));
-}
+auto Subscribe(std::function<void(EventType&)> tCallback) -> std::int64_t
+{ return EventBus::Instance().Subscribe(std::move(tCallback)); }
 
 template<PolosEvent EventType, typename... Args>
-auto DispatchNow(Args&&... args) -> std::size_t
-{
-    return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(args)...);
-}
+auto DispatchNow(Args&&... tArgs) -> std::size_t
+{ return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(tArgs)...); }
 
 template<PolosEvent EventType, typename... Args>
-auto DispatchDefer(Args&&... args) -> std::size_t
-{
-    return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(args)...);
-}
+auto DispatchDefer(Args&&... tArgs) -> std::size_t
+{ return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(tArgs)...); }
 
 POLOS_API auto DispatchDeferredEvents() -> void;
 

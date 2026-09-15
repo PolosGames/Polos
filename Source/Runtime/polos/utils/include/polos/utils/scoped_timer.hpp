@@ -29,17 +29,15 @@ namespace polos::utils
 class ScopedTimer
 {
 public:
-    explicit ScopedTimer(std::string t_name)
-        : m_name{t_name},
-          m_start{GetTimeNow()}
-    {
-        LogInfo("Starting timer for scope: \"{}\"", m_name);
-    }
+    explicit ScopedTimer(std::string tName)
+        : mName{tName},
+          mStart{GetTimeNow()}
+    { LogInfo("Starting timer for scope: \"{}\"", mName); }
     ~ScopedTimer()
     {
-        auto const passed_time = GetTimeNow() - m_start;
+        auto const passed_time = GetTimeNow() - mStart;
 
-        LogInfo("Scope: \"{}\", took: {}s", m_name, (static_cast<float>(passed_time.count()) * 0.001f * 0.001f));
+        LogInfo("Scope: \"{}\", took: {}s", mName, (static_cast<float>(passed_time.count()) * 0.001f * 0.001f));
     }
 
     ScopedTimer(ScopedTimer const&)            = delete;
@@ -47,8 +45,8 @@ public:
     ScopedTimer& operator=(ScopedTimer&&)      = delete;
     ScopedTimer& operator=(ScopedTimer const&) = delete;
 private:
-    std::string m_name;
-    TimePoint   m_start;
+    std::string mName;
+    TimePoint   mStart;
 };
 }// namespace polos::utils
 

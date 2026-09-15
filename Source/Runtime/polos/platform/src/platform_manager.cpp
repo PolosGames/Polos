@@ -5,6 +5,7 @@
 
 #include "polos/platform/platform_manager.hpp"
 
+#include "glfw_window_surface.hpp"
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
@@ -42,9 +43,9 @@ struct GlfwErrorBehavior
     char const*  message;
 };
 
-GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t t_error_code)
+GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t tErrorCode)
 {
-    switch (t_error_code)
+    switch (tErrorCode)
     {
         case GLFW_INVALID_ENUM:
             return {
@@ -73,9 +74,9 @@ GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t t_error_code)
 }
 
 
-void GlfwErrorCallback(std::int32_t t_error_code, const char* t_description)
+void GlfwErrorCallback(std::int32_t tErrorCode, const char* tDescription)
 {
-    auto const behavior = GetGlfwErrorBehavior(t_error_code);
+    auto const behavior = GetGlfwErrorBehavior(tErrorCode);
     if (behavior.message == nullptr)
     {
         LogError("Unknown GLFW error code");
@@ -84,9 +85,9 @@ void GlfwErrorCallback(std::int32_t t_error_code, const char* t_description)
 
     switch (behavior.level)
     {
-        case GlfwLogLevel::Warn: LogWarn("{} {}", behavior.message, t_description); break;
-        case GlfwLogLevel::Error: LogError("{} {}", behavior.message, t_description); break;
-        case GlfwLogLevel::Critical: LogCritical("{} {}", behavior.message, t_description); break;
+        case GlfwLogLevel::Warn: LogWarn("{} {}", behavior.message, tDescription); break;
+        case GlfwLogLevel::Error: LogError("{} {}", behavior.message, tDescription); break;
+        case GlfwLogLevel::Critical: LogCritical("{} {}", behavior.message, tDescription); break;
     }
 }
 #endif
@@ -99,7 +100,16 @@ void OnEndFrame()
 
 }// namespace
 
-PlatformManager* PlatformManager::s_instance{nullptr};
+PlatformManager* PlatformManager::sInstance{nullptr};
+
+PlatformManager::~PlatformManager()
+{
+    mWindowSurface.reset();
+    if (mGlfwInitialized)
+    {
+        glfwTerminate();
+    }
+}
 
 PlatformManager::PlatformManager()
 {
@@ -111,10 +121,6 @@ PlatformManager::PlatformManager()
 
     Subscribe<WindowClose>([](WindowClose&) {
         OnWindowClose();
-    });
-
-    Subscribe<EngineTerminate>([this](EngineTerminate&) {
-        on_engine_terminate();
     });
 
 #if defined(__linux__)
@@ -139,6 +145,7 @@ PlatformManager::PlatformManager()
         LogCritical("Could not initialize GLFW!");
         return;
     }
+    mGlfwInitialized = true;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
@@ -148,90 +155,76 @@ PlatformManager::PlatformManager()
 }
 
 PlatformManager& PlatformManager::Instance()
-{ return *s_instance; }
+{ return *sInstance; }
 
-bool PlatformManager::CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title)
+bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight, std::string_view tTitle)
 {
-    std::string const title(t_title);
-    m_window = glfwCreateWindow(t_width, t_height, title.c_str(), nullptr, nullptr);
-    if (nullptr == m_window)
+    std::string const title(tTitle);
+    mWindow = glfwCreateWindow(tWidth, tHeight, title.c_str(), nullptr, nullptr);
+    if (nullptr == mWindow)
     {
         LogCritical("Could not create window!");
         return false;
     }
 
-    m_window_surface = std::make_unique<GlfwWindowSurface>(m_window);
+    mWindowSurface = std::make_unique<GlfwWindowSurface>(mWindow);
 
-    glfwFocusWindow(m_window);
-    glfwSetCursorPos(m_window, static_cast<std::double_t>(t_width) / 2.0, static_cast<std::double_t>(t_height) / 2.0);
+    glfwFocusWindow(mWindow);
+    glfwSetCursorPos(mWindow, static_cast<std::double_t>(tWidth) / 2.0, static_cast<std::double_t>(tHeight) / 2.0);
 
     {
         using namespace polos::communication;
 
-        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* t_handle) {
-            DispatchDefer<WindowClose>(t_handle);
+        glfwSetWindowCloseCallback(mWindow, [](GLFWwindow* tHandle) {
+            DispatchDefer<WindowClose>(tHandle);
         });
 
-        glfwSetWindowFocusCallback(m_window, [](GLFWwindow* /**/, std::int32_t t_is_focused) {
-            DispatchDefer<WindowFocus>(t_is_focused);
+        glfwSetWindowFocusCallback(mWindow, [](GLFWwindow* /**/, std::int32_t tIsFocused) {
+            DispatchDefer<WindowFocus>(tIsFocused);
         });
 
-        glfwSetFramebufferSizeCallback(m_window,
-                                       [](GLFWwindow* /**/, std::int32_t t_new_width, std::int32_t t_new_height) {
-                                           DispatchDefer<WindowFramebufferResize>(t_new_width, t_new_height);
-                                       });
+        glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* /**/, std::int32_t tNewWidth, std::int32_t tNewHeight) {
+            DispatchDefer<WindowFramebufferResize>(tNewWidth, tNewHeight);
+        });
 
-        glfwSetKeyCallback(m_window,
-                           [](GLFWwindow* /*t_window*/,
-                              std::int32_t t_key,
-                              std::int32_t /*t_scancode*/,
-                              std::int32_t t_action,
-                              std::int32_t /*t_mods*/) {
-                               switch (t_action)
+        glfwSetKeyCallback(mWindow,
+                           [](GLFWwindow* /*tWindow*/,
+                              std::int32_t tKey,
+                              std::int32_t /*tScancode*/,
+                              std::int32_t tAction,
+                              std::int32_t /*tMods*/) {
+                               switch (tAction)
                                {
-                                   case GLFW_RELEASE: DispatchDefer<KeyRelease>(t_key); break;
-                                   case GLFW_PRESS: DispatchDefer<KeyPress>(t_key);
+                                   case GLFW_RELEASE: DispatchDefer<KeyRelease>(tKey); break;
+                                   case GLFW_PRESS: DispatchDefer<KeyPress>(tKey);
                                    default: break;
                                }
                            });
 
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow* /*t_window*/, double t_xpos, double t_ypos) {
-            DispatchDefer<MouseMove>(t_xpos, t_ypos);
+        glfwSetCursorPosCallback(mWindow, [](GLFWwindow* /*tWindow*/, double tXpos, double tYpos) {
+            DispatchDefer<MouseMove>(tXpos, tYpos);
         });
 
         glfwSetMouseButtonCallback(
-            m_window,
-            [](GLFWwindow* t_window, std::int32_t t_button, std::int32_t t_action, std::int32_t t_mods) {
-                DispatchDefer<MouseInput>(t_button, t_action);
+            mWindow,
+            [](GLFWwindow* tWindow, std::int32_t tButton, std::int32_t tAction, std::int32_t tMods) {
+                DispatchDefer<MouseInput>(tButton, tAction);
             });
     }
 
     return true;
 }
 
-void PlatformManager::ChangeWindowTitle(std::string_view const t_title)
+void PlatformManager::ChangeWindowTitle(std::string_view const tTitle)
 {
-    std::string const title(t_title);
-    glfwSetWindowTitle(m_window, title.c_str());
+    std::string const title(tTitle);
+    glfwSetWindowTitle(mWindow, title.c_str());
 }
 
 GLFWwindow* PlatformManager::GetMainWindow() const
-{ return m_window; }
+{ return mWindow; }
 
 auto PlatformManager::GetWindowSurface() const -> rendering::IWindowSurface&
-{ return *m_window_surface; }
-
-void PlatformManager::on_engine_terminate()
-{
-    if (nullptr == m_window)
-    {
-        return;
-    }
-
-    m_window = nullptr;
-    LogInfo("Terminating PlatformManager...");
-
-    glfwTerminate();
-}
+{ return *mWindowSurface; }
 
 }// namespace polos::platform

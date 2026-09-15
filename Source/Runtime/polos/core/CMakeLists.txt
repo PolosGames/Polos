@@ -20,6 +20,8 @@ define_polos_module(
     TYPE
         OBJECT
 
+    WITH_BUILD_INFO
+
     SOURCES
         "src/base_live_layer.cpp"
         "src/engine_layer.cpp"

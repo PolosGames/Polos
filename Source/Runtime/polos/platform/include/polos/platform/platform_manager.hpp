@@ -7,11 +7,7 @@
 #define POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 
 #include "polos/polos_api.hpp"
-#include "polos/platform/glfw_window_surface.hpp"
-#include "polos/rendering/i_render_context.hpp"
-#if defined(HOT_RELOAD)
-#    include "polos/rendering/shared_lib_out.hpp"
-#endif// HOT_RELOAD
+#include "polos/rendering/interface/i_window_surface.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -29,19 +25,16 @@ namespace polos::communication
 struct RenderingModuleReload;
 }// namespace polos::communication
 
-namespace polos::rendering
-{
-class RenderContext;
-}// namespace polos::rendering
-
 namespace polos::platform
 {
+
+class GlfwWindowSurface;
 
 class POLOS_API PlatformManager
 {
 public:
     PlatformManager();
-    ~PlatformManager() = default;
+    ~PlatformManager();
 
     PlatformManager(PlatformManager const&) = delete;
     PlatformManager(PlatformManager&&)      = delete;
@@ -51,20 +44,19 @@ public:
 
     static auto Instance() -> PlatformManager&;
 
-    auto               CreateNewWindow(std::int32_t t_width, std::int32_t t_height, std::string_view t_title) -> bool;
-    auto               ChangeWindowTitle(std::string_view t_title) -> void;
+    auto               CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight, std::string_view tTitle) -> bool;
+    auto               ChangeWindowTitle(std::string_view tTitle) -> void;
     [[nodiscard]] auto GetMainWindow() const -> GLFWwindow*;
     [[nodiscard]] auto GetWindowSurface() const -> rendering::IWindowSurface&;
 private:
     friend class core::Engine;
 
-    static PlatformManager* s_instance;
+    static PlatformManager* sInstance;
 
     void on_end_frame() const;
-    void on_engine_terminate();
-
-    GLFWwindow*                        m_window{nullptr};
-    std::unique_ptr<GlfwWindowSurface> m_window_surface;
+    GLFWwindow*                        mWindow{nullptr};
+    std::unique_ptr<GlfwWindowSurface> mWindowSurface;
+    bool                               mGlfwInitialized{false};
 };
 
 }// namespace polos::platform

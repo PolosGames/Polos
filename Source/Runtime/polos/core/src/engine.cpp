@@ -5,15 +5,18 @@
 
 #include "polos/core/engine.hpp"
 
-#include "polos/core/engine_layer.hpp"
+#include "engine_layer.hpp"
+#include "main_loop.hpp"
 #include "polos/core/input_state.hpp"
-#include "polos/core/main_loop.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/rendering_api.hpp"
+#include "polos/utils/build_info.hpp"
 
+#include <format>
 #include <memory>
+#include <string>
 
 namespace polos::core
 {
@@ -26,12 +29,15 @@ constexpr std::int32_t const kHeight{720};
 
 }// namespace
 
-std::int32_t Engine::Run(ILiveLayer* t_app_layer)
+std::int32_t Engine::Run(ILiveLayer* tAppLayer)
 {
-    std::unique_ptr<platform::PlatformManager> platform_manager = std::make_unique<platform::PlatformManager>();
-    platform::PlatformManager::s_instance                       = platform_manager.get();
+    std::string const build = utils::FormatBuildInfo(utils::GetBuildInfo());
+    LogInfo("Polos build {}", build);
 
-    if (!platform_manager->CreateNewWindow(kWidth, kHeight, "PolosEngine"))
+    std::unique_ptr<platform::PlatformManager> platform_manager = std::make_unique<platform::PlatformManager>();
+    platform::PlatformManager::sInstance                        = platform_manager.get();
+
+    if (!platform_manager->CreateNewWindow(kWidth, kHeight, std::format("PolosEngine - {}", build)))
     {
         LogCritical("Could not create engine window. Terminating!");
         return 2;
@@ -39,10 +45,10 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 
     std::unique_ptr<rendering::RenderingApi> rendering_api =
         std::make_unique<rendering::RenderingApi>(platform_manager->GetWindowSurface());
-    rendering::RenderingApi::s_instance = rendering_api.get();
+    rendering::RenderingApi::sInstance = rendering_api.get();
 
     std::unique_ptr<ILiveLayer> engine_layer{new EngineLayer{}};
-    std::unique_ptr<ILiveLayer> app_layer{t_app_layer};
+    std::unique_ptr<ILiveLayer> app_layer{tAppLayer};
     engine_layer->Create();
     app_layer->Create();
 
@@ -54,11 +60,11 @@ std::int32_t Engine::Run(ILiveLayer* t_app_layer)
 
     rendering_api->Shutdown();
 
-    LogInfo("Polos exiting! Bye!");
-
     logging::FlushLogger(LOG_CTX_APP);
     logging::FlushLogger(LOG_CTX_POLLY);
     logging::FlushLogger(LOG_CTX_POLOS);
+
+    LogInfo("Polos exiting! Bye!");
 
     return 0;
 }

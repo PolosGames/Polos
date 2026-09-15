@@ -8,7 +8,7 @@
 
 #include <polos/communication/key_release.hpp>
 #include <polos/core/base_live_layer.hpp>
-#include <polos/rendering/camera3d.hpp>
+#include <polos/rendering/scene/camera3d.hpp>
 
 namespace polos::communication
 {

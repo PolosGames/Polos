@@ -17,18 +17,18 @@ namespace polos::core::input
 
 struct InputState
 {
-    std::bitset<512> keys_down;
-    std::bitset<512> keys_down_prev;
+    std::bitset<512> keysDown;
+    std::bitset<512> keysDownPrev;
 
-    glm::vec2 mouse_pos;
-    glm::vec2 mouse_delta;
+    glm::vec2 mousePos;
+    glm::vec2 mouseDelta;
 };
 
 extern POLOS_API InputState g_input_state;
 
-[[nodiscard]] auto POLOS_API IsKeyDown(std::int32_t t_key) -> bool;
-[[nodiscard]] auto POLOS_API IsKeyPressed(std::int32_t t_key) -> bool;
-[[nodiscard]] auto POLOS_API IsKeyReleased(std::int32_t t_key) -> bool;
+[[nodiscard]] auto POLOS_API IsKeyDown(std::int32_t tKey) -> bool;
+[[nodiscard]] auto POLOS_API IsKeyPressed(std::int32_t tKey) -> bool;
+[[nodiscard]] auto POLOS_API IsKeyReleased(std::int32_t tKey) -> bool;
 
 }// namespace polos::core::input
 

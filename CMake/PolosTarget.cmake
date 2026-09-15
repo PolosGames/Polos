@@ -18,6 +18,40 @@ endmacro()
 
 include(GenerateExportHeader)
 
+# Stamps a generated TU into one target, carrying a build counter, the git revision and a
+# timestamp. The counter is per module and per build directory, so a hot-reloaded module and
+# the host that loaded it report different numbers - which is the point.
+# The command re-runs only when the module's own sources change, so a no-op build stays one.
+function(polos_attach_build_info TARGET_NAME MODULE_SRC MODULE_INC)
+    set(GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/build_info_${TARGET_NAME}.generated.cpp")
+    set(TEMPLATE_FILE "${POLOS_DIR}/Config/build_info.cpp.in")
+
+    # the stamp records the git sha, so it has to re-run when HEAD or the index moves, not only
+    # when a source changes. absent in a tarball export - listing a file nothing produces is an error
+    set(GIT_STATE_DEPS "")
+    foreach (GIT_FILE "${CMAKE_SOURCE_DIR}/.git/HEAD" "${CMAKE_SOURCE_DIR}/.git/index")
+        if (EXISTS "${GIT_FILE}")
+            list(APPEND GIT_STATE_DEPS "${GIT_FILE}")
+        endif()
+    endforeach()
+
+    add_custom_command(
+        OUTPUT  "${GEN_FILE}"
+        COMMAND ${CMAKE_COMMAND}
+                "-DBUILD_NUMBER_FILE=${POLOS_BINARY_DIR}/build_number_${TARGET_NAME}.txt"
+                "-DTEMPLATE_FILE=${TEMPLATE_FILE}"
+                "-DOUTPUT_FILE=${GEN_FILE}"
+                "-DMODULE_LABEL=${TARGET_NAME}"
+                "-DSOURCE_DIR=${CMAKE_SOURCE_DIR}"
+                -P "${CMAKE_SOURCE_DIR}/CMake/GenerateBuildInfo.cmake"
+        DEPENDS ${MODULE_SRC} ${MODULE_INC} ${GIT_STATE_DEPS} "${TEMPLATE_FILE}"
+        COMMENT "Stamping build info into ${TARGET_NAME}"
+        VERBATIM
+    )
+
+    target_sources(${TARGET_NAME} PRIVATE "${GEN_FILE}")
+endfunction()
+
 # these two are macros, not functions, so they keep reading define_polos_module's
 # MODULE_* vars
 macro(define_polos_module_install)
@@ -134,7 +168,7 @@ macro(define_polos_module_tests)
 endmacro()
 
 macro(define_polos_module)
-    set(options ENABLE_HOT_RELOAD)
+    set(options ENABLE_HOT_RELOAD WITH_BUILD_INFO)
     set(oneValueArgs NAME TYPE)
     set(multiValueArgs SOURCES
                        PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS
@@ -200,14 +234,24 @@ macro(define_polos_module)
             target_compile_definitions(${MODULE_NAME} PRIVATE POLOS_RENDERING_IMPL_EXPORTS)
         endif()
 
-        file(GLOB_RECURSE ${MODULE_NAME}_INC "${CMAKE_CURRENT_LIST_DIR}/include/polos/${MODULE_NAME}/*.hpp")
+        # A module may build more than one target (rendering/rendering_impl).
+        # Discover headers from its directories rather than from the target name.
+        file(GLOB_RECURSE ${MODULE_NAME}_INC CONFIGURE_DEPENDS
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+        )
 
         target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
 
-        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_INSTALL_INC_DIR})
+        if (MODULE_WITH_BUILD_INFO)
+            polos_attach_build_info(${MODULE_NAME} "${MODULE_SOURCES}" "${${MODULE_NAME}_INC}")
+        endif()
+
         target_include_directories(${MODULE_NAME}
             PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/src"
         )
         target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_DIR}/Config/include)
 

@@ -3,7 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/core/engine_layer.hpp"
+#include "engine_layer.hpp"
 
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
@@ -31,9 +31,9 @@ InputState g_input_state{};
 namespace
 {
 
-void SignalHandler(int t_signal)
+void SignalHandler(int tSignal)
 {
-    std::ignore = t_signal;
+    std::ignore = tSignal;
     communication::DispatchNow<communication::EngineTerminate>();
 }
 
@@ -43,38 +43,38 @@ EngineLayer::EngineLayer()
 {
     using namespace polos::communication;
 
-    Subscribe<KeyPress>([](KeyPress& t_event) {
-        input::g_input_state.keys_down[static_cast<std::size_t>(t_event.key)] = true;
+    Subscribe<KeyPress>([](KeyPress& tEvent) {
+        input::g_input_state.keysDown[static_cast<std::size_t>(tEvent.key)] = true;
     });
 
-    Subscribe<KeyRelease>([](KeyRelease& t_event) {
+    Subscribe<KeyRelease>([](KeyRelease& tEvent) {
 #if defined(HOT_RELOAD)
-        if (t_event.key == GLFW_KEY_R)
+        if (tEvent.key == GLFW_KEY_R)
         {
             rendering::RenderingApi::DispatchReload();
         }
 #endif// HOT_RELOAD
 
-        input::g_input_state.keys_down[static_cast<std::size_t>(t_event.key)] = false;
+        input::g_input_state.keysDown[static_cast<std::size_t>(tEvent.key)] = false;
     });
 
-    Subscribe<MouseMove>([](MouseMove& t_event) {
-        glm::vec2 new_pos                = {t_event.mouse_x, t_event.mouse_y};
-        input::g_input_state.mouse_delta = new_pos - input::g_input_state.mouse_pos;
-        input::g_input_state.mouse_pos   = new_pos;
+    Subscribe<MouseMove>([](MouseMove& tEvent) {
+        glm::vec2 new_pos               = {tEvent.mouseX, tEvent.mouseY};
+        input::g_input_state.mouseDelta = new_pos - input::g_input_state.mousePos;
+        input::g_input_state.mousePos   = new_pos;
     });
 
-    Subscribe<MouseInput>([](MouseInput& t_event) {
-        input::g_input_state.keys_down[static_cast<std::size_t>(t_event.button)] = t_event.action == GLFW_PRESS;
+    Subscribe<MouseInput>([](MouseInput& tEvent) {
+        input::g_input_state.keysDown[static_cast<std::size_t>(tEvent.button)] = tEvent.action == GLFW_PRESS;
     });
 
-    Subscribe<ProcessInput>([](ProcessInput& t_event) {
-        std::ignore                         = t_event;
-        input::g_input_state.keys_down_prev = input::g_input_state.keys_down;
+    Subscribe<ProcessInput>([](ProcessInput& tEvent) {
+        std::ignore                       = tEvent;
+        input::g_input_state.keysDownPrev = input::g_input_state.keysDown;
     });
 
     Subscribe<EndFrame>([](EndFrame&) {
-        input::g_input_state.mouse_delta = glm::vec2(0.0F);
+        input::g_input_state.mouseDelta = glm::vec2(0.0F);
     });
 
     // Set up signal handlers for graceful shutdown

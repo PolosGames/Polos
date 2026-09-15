@@ -41,6 +41,7 @@ enum class RenderingErrc : communication::ErrorDomain::CodeType
     kFailedAcquireNextImage,
     kFailedCreateImage,
     kFailedCreateBuffer,
+    kFailedLoadImage,
 
     kRenderingErrcCount,
 };
@@ -52,7 +53,7 @@ public:
 
     constexpr RenderingErrorDomain()
         : polos::communication::ErrorDomain(polos::communication::kRenderingErrorDomainId),
-          m_messages({
+          mMessages({
               "Failed to create Vulkan instance! Exiting...",
               "Failed to create surface! Where are we going to draw? Exiting...",
               "Failed to find a physical device! Exiting...",
@@ -76,22 +77,19 @@ public:
               "Failed to acquire next image from the swapchain! Recreating swapchain...",
               "Failed to create VMA image allocation!",
               "Failed to create VMA buffer allocation!",
+              "Failed to load image!",
           })
     {}
 
     virtual ~RenderingErrorDomain() = default;
 
     [[nodiscard]] constexpr auto Name() const -> std::string_view override
-    {
-        return "Rendering";
-    }
+    { return "Rendering"; }
 
-    [[nodiscard]] constexpr auto Message(CodeType t_code) const -> std::string_view override
-    {
-        return m_messages[static_cast<std::size_t>(t_code)];
-    }
+    [[nodiscard]] constexpr auto Message(CodeType tCode) const -> std::string_view override
+    { return mMessages[static_cast<std::size_t>(tCode)]; }
 private:
-    std::array<std::string_view const, static_cast<std::size_t>(RenderingErrc::kRenderingErrcCount)> const m_messages;
+    std::array<std::string_view const, static_cast<std::size_t>(RenderingErrc::kRenderingErrcCount)> const mMessages;
 };
 
 namespace internal
@@ -101,10 +99,8 @@ constexpr RenderingErrorDomain g_error_domain;
 
 }// namespace internal
 
-constexpr communication::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc t_err)
-{
-    return communication::ErrorCode{static_cast<communication::ErrorDomain::CodeType>(t_err), internal::g_error_domain};
-}
+constexpr communication::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc tErr)
+{ return communication::ErrorCode{static_cast<communication::ErrorDomain::CodeType>(tErr), internal::g_error_domain}; }
 
 }// namespace polos::rendering
 

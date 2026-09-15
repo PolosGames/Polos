@@ -28,7 +28,16 @@
             "name": "linux-base",
             "inherits": "base",
             "environment": {
-                "VCPKG_ROOT": "~/vcpkg"
+                "VCPKG_ROOT": "$env{HOME}/vcpkg",
+                "VULKAN_SDK": "$env{HOME}/VulkanSDK/1.4.363.0/x86_64",
+                "PATH": "${sourceDir}/out/build/${presetName}/Source/Editor${pathListSep}$env{VULKAN_SDK}/bin${pathListSep}$penv{PATH}",
+                "LD_LIBRARY_PATH": "$env{VULKAN_SDK}/lib/VulkanLoader/lib${pathListSep}$penv{LD_LIBRARY_PATH}",
+                "VK_ADD_LAYER_PATH": "$env{VULKAN_SDK}/share/vulkan/explicit_layer.d${pathListSep}$penv{VK_ADD_LAYER_PATH}"
+            },
+            "cacheVariables": {
+                "Vulkan_INCLUDE_DIR": "$env{VULKAN_SDK}/include",
+                "Vulkan_LIBRARY": "$env{VULKAN_SDK}/lib/VulkanLoader/lib/libvulkan.so",
+                "GLSLANG_EXECUTABLE": "$env{VULKAN_SDK}/bin/glslang"
             },
             "condition": {
                 "type": "equals",

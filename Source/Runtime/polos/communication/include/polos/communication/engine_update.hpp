@@ -15,15 +15,15 @@ struct EngineUpdate final : BaseEvent
 {
     DECLARE_POLOS_EVENT(EngineUpdate)
 
-    explicit EngineUpdate(float t_delta_time)
-        : delta_time{t_delta_time}
+    explicit EngineUpdate(float tDeltaTime)
+        : deltaTime{tDeltaTime}
     {}
 
-    float delta_time{0.0F};
+    float deltaTime{0.0F};
 };
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(::polos::communication::EngineUpdate, "Delta Time: {:.4f}", event.delta_time);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::EngineUpdate, "Delta Time: {:.4f}", tEvent.deltaTime);
 
 #endif// POLOS_COMMUNICATION_ENGINE_UPDATE_HPP

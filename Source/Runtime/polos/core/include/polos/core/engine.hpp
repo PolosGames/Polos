@@ -16,7 +16,7 @@ namespace polos::core
 class POLOS_API Engine
 {
 public:
-    static std::int32_t Run(ILiveLayer* t_app_layer);
+    static std::int32_t Run(ILiveLayer* tAppLayer);
 };
 }// namespace polos::core
 

@@ -8,6 +8,12 @@ find_package(imgui CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
+# vcpkg also installs Vulkan headers as a transitive dependency of VMA/ImGui.
+# Keep the headers paired with the SDK loader selected by FindVulkan.
+if (UNIX AND NOT APPLE AND DEFINED ENV{VULKAN_SDK})
+    include_directories(BEFORE "${Vulkan_INCLUDE_DIR}")
+endif()
+
 set(ThirdPartyLibs ctre::ctre glfw Vulkan::Vulkan glm::glm imgui::imgui GPUOpen::VulkanMemoryAllocator)
 
 add_subdirectory(Resource)
@@ -40,9 +46,10 @@ set_target_properties(polos
         LINKER_LANGUAGE           CXX
 )
 if (LINUX)
+    get_filename_component(POLOS_VULKAN_LIBRARY_DIR "${Vulkan_LIBRARY}" DIRECTORY)
     set_target_properties(polos
         PROPERTIES
-            INSTALL_RPATH ${POLOS_INSTALL_DIR}
+            INSTALL_RPATH "${POLOS_INSTALL_DIR};${POLOS_VULKAN_LIBRARY_DIR}"
             BUILD_WITH_INSTALL_RPATH 1
     )
 endif()
@@ -59,6 +66,11 @@ install(
 # linked here rather than in its own CMakeLists, where `polos` doesn't exist yet
 if (HOT_RELOAD)
     target_link_libraries(rendering_impl PRIVATE polos)
+    if (LINUX)
+        set_target_properties(rendering_impl PROPERTIES
+            INSTALL_RPATH "${POLOS_INSTALL_DIR};${POLOS_VULKAN_LIBRARY_DIR}"
+        )
+    endif()
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")

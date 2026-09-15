@@ -3,7 +3,7 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/platform/glfw_window_surface.hpp"
+#include "glfw_window_surface.hpp"
 
 #include "polos/rendering/rendering_error_domain.hpp"
 
@@ -14,8 +14,8 @@
 namespace polos::platform
 {
 
-GlfwWindowSurface::GlfwWindowSurface(GLFWwindow* t_window)
-    : m_window{t_window}
+GlfwWindowSurface::GlfwWindowSurface(GLFWwindow* tWindow)
+    : mWindow{tWindow}
 {}
 
 auto GlfwWindowSurface::RequiredInstanceExtensions() const -> std::vector<char const*>
@@ -31,11 +31,11 @@ auto GlfwWindowSurface::RequiredInstanceExtensions() const -> std::vector<char c
     return {extensions, std::next(extensions, static_cast<std::ptrdiff_t>(count))};
 }
 
-auto GlfwWindowSurface::CreateSurface(VkInstance t_instance) const -> Result<VkSurfaceKHR>
+auto GlfwWindowSurface::CreateSurface(VkInstance tInstance) const -> Result<VkSurfaceKHR>
 {
     VkSurfaceKHR surface{VK_NULL_HANDLE};
 
-    if (VK_SUCCESS != glfwCreateWindowSurface(t_instance, m_window, nullptr, &surface))
+    if (VK_SUCCESS != glfwCreateWindowSurface(tInstance, mWindow, nullptr, &surface))
     {
         return ErrorType{rendering::RenderingErrc::kFailedCreateSurface};
     }
@@ -47,7 +47,7 @@ auto GlfwWindowSurface::GetFramebufferSize() const -> rendering::FramebufferSize
 {
     std::int32_t width{0};
     std::int32_t height{0};
-    glfwGetFramebufferSize(m_window, &width, &height);
+    glfwGetFramebufferSize(mWindow, &width, &height);
 
     return {.width = static_cast<std::uint32_t>(width), .height = static_cast<std::uint32_t>(height)};
 }

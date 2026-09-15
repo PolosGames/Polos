@@ -20,40 +20,34 @@ Logger::Logger()
 {
     setup_quill();
 
-    m_polos_logger = get_logger("POLOS");
-    m_polly_logger = get_logger("POLLY");
-    m_app_logger   = get_logger("APP");
+    mPolosLogger = get_logger("POLOS");
+    mPollyLogger = get_logger("POLLY");
+    mAppLogger   = get_logger("APP");
 }
 
 Logger& Logger::Instance()
 {
-    static Logger instance;
-    return instance;
+    static Logger sInstance;
+    return sInstance;
 }
 
 quill::Logger* Logger::GetPolosLogger() const
-{
-    return m_polos_logger;
-}
+{ return mPolosLogger; }
 
 quill::Logger* Logger::GetPollyLogger() const
-{
-    return m_polly_logger;
-}
+{ return mPollyLogger; }
 
 quill::Logger* Logger::GetAppLogger() const
-{
-    return m_app_logger;
-}
+{ return mAppLogger; }
 
-void FlushLogger(quill::Logger* t_logger)
+void FlushLogger(quill::Logger* tLogger)
 {
-    if (nullptr == t_logger)
+    if (nullptr == tLogger)
     {
         QUILL_LOG_ERROR(Logger::Instance().GetPolosLogger(), "Cannot flush a null logger!");
         return;
     }
-    t_logger->flush_log();
+    tLogger->flush_log();
 }
 
 }// namespace polos::logging
