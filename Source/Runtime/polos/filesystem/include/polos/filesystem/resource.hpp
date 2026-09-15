@@ -15,10 +15,10 @@ namespace polos::fs
 
 struct alignas(128) Resource// NOLINT
 {
-    std::size_t            uncompressed_size;
+    std::size_t            uncompressedSize;
     std::size_t            size;
-    std::string            stem_name;
-    std::string            custom_name;
+    std::string            stemName;
+    std::string            customName;
     std::filesystem::path  path;
     std::vector<std::byte> data;
 };

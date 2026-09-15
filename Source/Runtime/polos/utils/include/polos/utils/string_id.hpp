@@ -14,7 +14,7 @@ namespace polos::utils
 
 using string_id = std::int64_t;
 
-constexpr auto StrHash64(std::string_view const t_str) -> string_id
+constexpr auto StrHash64(std::string_view const tStr) -> string_id
 {
     // FNV-1a 64-bit hash
     // This algorithm provides good distribution and fast updates for string data
@@ -26,7 +26,7 @@ constexpr auto StrHash64(std::string_view const t_str) -> string_id
 
     unsigned char cur_chr{0U};
 
-    for (char const chr : t_str)
+    for (char const chr : tStr)
     {
         cur_chr = static_cast<unsigned char>(chr);
         hash ^= cur_chr;  // XOR the low 8 bits
@@ -39,9 +39,7 @@ constexpr auto StrHash64(std::string_view const t_str) -> string_id
 
 }// namespace polos::utils
 
-consteval auto operator""_sid(char const* t_str, std::size_t t_size) -> polos::utils::string_id
-{
-    return polos::utils::StrHash64(std::string_view{t_str, t_size});
-}
+consteval auto operator""_sid(char const* tStr, std::size_t tSize) -> polos::utils::string_id
+{ return polos::utils::StrHash64(std::string_view{tStr, tSize}); }
 
 #endif// POLOS_UTILS_STRING_ID_HPP

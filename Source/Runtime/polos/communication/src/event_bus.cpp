@@ -14,25 +14,25 @@ EventBus::EventBus() = default;
 
 auto EventBus::Instance() -> EventBus&
 {
-    static EventBus instance;
-    return instance;
+    static EventBus sInstance;
+    return sInstance;
 }
 
 EventBus::~EventBus() = default;
 
 auto EventBus::DispatchDeferredEvents() -> void
 {
-    for (auto& event_ptr : m_deferred_events)
+    for (auto& event_ptr : mDeferredEvents)
     {
         std::int64_t const event_hash = event_ptr->Hash();
-        auto const         iter       = m_callbacks.find(event_hash);
-        if (iter != m_callbacks.end())
+        auto const         iter       = mCallbacks.find(event_hash);
+        if (iter != mCallbacks.end())
         {
             auto& subscribers_callbacks = iter->second;
             for (auto& callback : subscribers_callbacks) { callback(*event_ptr); }
         }
     }
-    m_deferred_events.clear();
+    mDeferredEvents.clear();
 }
 
 auto DispatchDeferredEvents() -> void

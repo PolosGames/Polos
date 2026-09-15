@@ -11,7 +11,7 @@
 
 namespace polos
 {
-auto CreateApplication(int argc, char** argv) -> polos::core::ILiveLayer*;
+auto CreateApplication(int tArgc, char** tArgv) -> polos::core::ILiveLayer*;
 }// namespace polos
 
 #ifdef _MSVC_LANG
@@ -19,10 +19,8 @@ auto CreateApplication(int argc, char** argv) -> polos::core::ILiveLayer*;
 #    pragma warning(disable : 4008)
 #endif
 
-int main(int argc, char* argv[])
-{
-    return polos::core::Engine::Run(polos::CreateApplication(argc, argv));
-}
+int main(int tArgc, char* tArgv[])
+{ return polos::core::Engine::Run(polos::CreateApplication(tArgc, tArgv)); }
 
 #ifdef _MSVC_LANG
 #    pragma warning(pop)

@@ -28,18 +28,18 @@ struct BaseSharedLibOut
 {
     utils::LibHandle handle;
 
-    std::filesystem::file_time_type last_write_time;
-    std::string                     temp_dll_path;
+    std::filesystem::file_time_type lastWriteTime;
+    std::string                     tempDllPath;
 };
 
-inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string& base_name)
+inline void CleanupOldFiles(const std::filesystem::path& tDir, const std::string& tBaseName)
 {
     LogTrace("Cleaning up old DLL and PDB files...");
-    for (const auto& entry : std::filesystem::directory_iterator(dir))
+    for (const auto& entry : std::filesystem::directory_iterator(tDir))
     {
         std::string filename = entry.path().filename().string();
         // Check for temporary DLLs: polos_rendering_*.dll
-        if (filename.rfind(base_name + "_", 0) == 0 && entry.path().extension() == ".dll")
+        if (filename.rfind(tBaseName + "_", 0) == 0 && entry.path().extension() == ".dll")
         {
             std::error_code ec;
             std::filesystem::remove(entry.path(), ec);
@@ -49,7 +49,7 @@ inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string&
             }
         }
         // Check for locked PDBs: polos_rendering.pdb.locked
-        if (filename.rfind(base_name, 0) == 0 && filename.ends_with(".pdb.locked"))
+        if (filename.rfind(tBaseName, 0) == 0 && filename.ends_with(".pdb.locked"))
         {
             std::error_code ec;
             std::filesystem::remove(entry.path(), ec);
@@ -62,43 +62,43 @@ inline void CleanupOldFiles(const std::filesystem::path& dir, const std::string&
 }
 
 
-inline void UnloadSharedLib(BaseSharedLibOut& t_dll_out)
+inline void UnloadSharedLib(BaseSharedLibOut& tDllOut)
 {
-    if (t_dll_out.handle)
+    if (tDllOut.handle)
     {
-        FreeLibrary(t_dll_out.handle);
-        t_dll_out.handle = nullptr;
+        FreeLibrary(tDllOut.handle);
+        tDllOut.handle = nullptr;
     }
     // Clean up the temporary DLL copy
-    if (!t_dll_out.temp_dll_path.empty())
+    if (!tDllOut.tempDllPath.empty())
     {
         std::error_code ec;
-        std::filesystem::remove(t_dll_out.temp_dll_path, ec);
-        t_dll_out.temp_dll_path.clear();
+        std::filesystem::remove(tDllOut.tempDllPath, ec);
+        tDllOut.tempDllPath.clear();
     }
 }
 
 // Copy and Load
-inline bool LoadSharedLib(BaseSharedLibOut& t_dll_out, const std::string& t_original_dll_path_str)
+inline bool LoadSharedLib(BaseSharedLibOut& tDllOut, const std::string& tOriginalDllPathStr)
 {
-    if (nullptr != t_dll_out.handle)
+    if (nullptr != tDllOut.handle)
     {
         LogError("DLL Already loaded");
         return false;
     }
 
-    std::filesystem::path original_dll_path(t_original_dll_path_str);
+    std::filesystem::path original_dll_path(tOriginalDllPathStr);
     if (!std::filesystem::exists(original_dll_path))
     {
         LogWarn("Original DLL not found.");
         return false;
     }
 
-    t_dll_out.last_write_time = std::filesystem::last_write_time(original_dll_path);
+    tDllOut.lastWriteTime = std::filesystem::last_write_time(original_dll_path);
 
     // Check if a temporary dll already exists
 
-    if (t_dll_out.temp_dll_path.empty())
+    if (tDllOut.tempDllPath.empty())
     {
         // Create a unique name for the temporary DLL
         std::string           timestamp = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
@@ -117,14 +117,14 @@ inline bool LoadSharedLib(BaseSharedLibOut& t_dll_out, const std::string& t_orig
             LogError("Error copying DLL to temp. {}", ec.message());
             return false;
         }
-        t_dll_out.temp_dll_path = temp_dll_path.string();
+        tDllOut.tempDllPath = temp_dll_path.string();
     }
 
     // Load the copied DLL
-    t_dll_out.handle = LoadLibraryA(t_dll_out.temp_dll_path.c_str());
-    if (!t_dll_out.handle)
+    tDllOut.handle = LoadLibraryA(tDllOut.tempDllPath.c_str());
+    if (!tDllOut.handle)
     {
-        LogError("Failed to load DLL from {}", t_dll_out.temp_dll_path);
+        LogError("Failed to load DLL from {}", tDllOut.tempDllPath);
         return false;
     }
 
@@ -132,14 +132,14 @@ inline bool LoadSharedLib(BaseSharedLibOut& t_dll_out, const std::string& t_orig
 }
 
 template<typename F>
-inline bool GetFuncFromSharedLib(BaseSharedLibOut& t_dll_out, F& t_func_ptr, std::string_view t_func_name)
+inline bool GetFuncFromSharedLib(BaseSharedLibOut& tDllOut, F& tFuncPtr, std::string_view tFuncName)
 {
     // Get the address of the exported function
-    t_func_ptr = reinterpret_cast<F>(GetProcAddress(t_dll_out.handle, t_func_name.data()));
-    if (nullptr == t_func_ptr)
+    tFuncPtr = reinterpret_cast<F>(GetProcAddress(tDllOut.handle, tFuncName.data()));
+    if (nullptr == tFuncPtr)
     {
-        LogError("Failed to get function {} from Shared lib.", std::string(t_func_name));
-        FreeLibrary(t_dll_out.handle);
+        LogError("Failed to get function {} from Shared lib.", std::string(tFuncName));
+        FreeLibrary(tDllOut.handle);
         return false;
     }
     return true;

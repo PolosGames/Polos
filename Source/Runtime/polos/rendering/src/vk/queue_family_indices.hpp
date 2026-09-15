@@ -1,0 +1,24 @@
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
+
+#ifndef POLOS_RENDERING_SRC_VK_QUEUE_FAMILY_INDICES_HPP
+#define POLOS_RENDERING_SRC_VK_QUEUE_FAMILY_INDICES_HPP
+
+#include <cstdint>
+#include <limits>
+
+namespace polos::rendering
+{
+
+struct alignas(16) QueueFamilyIndices// NOLINT
+{
+    std::uint32_t gfxQIndex{std::numeric_limits<std::uint32_t>::max()};
+    std::uint32_t transferQIndex{std::numeric_limits<std::uint32_t>::max()};
+    std::uint32_t computeQIndex{std::numeric_limits<std::uint32_t>::max()};
+};
+
+}// namespace polos::rendering
+
+#endif// POLOS_RENDERING_SRC_VK_QUEUE_FAMILY_INDICES_HPP

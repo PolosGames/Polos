@@ -15,9 +15,9 @@ struct WindowFramebufferResize final : BaseEvent
 {
     DECLARE_POLOS_EVENT(WindowFramebufferResize);
 
-    explicit WindowFramebufferResize(std::int32_t t_width, std::int32_t t_height)
-        : width{t_width},
-          height{t_height}
+    explicit WindowFramebufferResize(std::int32_t tWidth, std::int32_t tHeight)
+        : width{tWidth},
+          height{tHeight}
     {}
 
     std::int32_t width{0U};
@@ -26,10 +26,9 @@ struct WindowFramebufferResize final : BaseEvent
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(
-    ::polos::communication::WindowFramebufferResize,
-    "New Framebuffer dimensions: {}, {}",
-    event.width,
-    event.height);
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::WindowFramebufferResize,
+                        "New Framebuffer dimensions: {}, {}",
+                        tEvent.width,
+                        tEvent.height);
 
 #endif// POLOS_COMMUNICATION_WINDOW_FRAMEBUFFER_RESIZE_HPP

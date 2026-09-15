@@ -18,17 +18,15 @@
 namespace polos::fs
 {
 
-auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>
-{
-    return ReadFile(t_file_path.filename().string(), t_file_path);
-}
+auto ReadFile(std::filesystem::path const& tFilePath) -> Result<Resource>
+{ return ReadFile(tFilePath.filename().string(), tFilePath); }
 
-auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const& t_file_path) -> Result<Resource>
+auto ReadFile(std::string_view const tCustomName, std::filesystem::path const& tFilePath) -> Result<Resource>
 {
-    std::string const file_name = t_file_path.filename().string();
+    std::string const file_name = tFilePath.filename().string();
     LogDebug("Reading file: {}", file_name);
 
-    std::ifstream file{t_file_path, std::ios::ate | std::ios::binary};
+    std::ifstream file{tFilePath, std::ios::ate | std::ios::binary};
 
     if (!file.is_open())
     {
@@ -52,12 +50,12 @@ auto ReadFile(std::string_view const t_custom_name, std::filesystem::path const&
     LogDebug("Expected file read was {} bytes, got {} bytes", size, file.gcount());
 
     return Resource{
-        .uncompressed_size = size,
-        .size              = size,
-        .stem_name         = t_file_path.stem().string(),
-        .custom_name       = std::string(t_custom_name),
-        .path              = t_file_path,
-        .data              = data,
+        .uncompressedSize = size,
+        .size             = size,
+        .stemName         = tFilePath.stem().string(),
+        .customName       = std::string(tCustomName),
+        .path             = tFilePath,
+        .data             = data,
     };
 }
 

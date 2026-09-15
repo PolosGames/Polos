@@ -3,7 +3,7 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/core/main_loop.hpp"
+#include "main_loop.hpp"
 
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
@@ -48,10 +48,10 @@ void MainLoop::Run() const
     Duration                     delta_time{Duration::zero()};
     TimePoint                    start = utils::GetTimeNow();
     Duration                     lag{Duration::zero()};
-    constexpr std::int32_t const target_frames{120};
-    constexpr Duration const     kTimestep{1_sec / target_frames};
+    constexpr std::int32_t const kTargetFrames{120};
+    constexpr Duration const     kTimestep{1_sec / kTargetFrames};
 
-    while (m_is_running)
+    while (mIsRunning)
     {
         auto const current_time = utils::GetTimeNow();
         delta_time              = current_time - start;
@@ -64,11 +64,13 @@ void MainLoop::Run() const
 
         communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
 
-        rendering::RenderingApi::BeginFrame();
-        communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
+        if (VK_NULL_HANDLE != rendering::RenderingApi::BeginFrame())
+        {
+            communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
 
-        rendering::RenderingApi::EndFrame();
-        communication::DispatchNow<communication::EndFrame>();
+            rendering::RenderingApi::EndFrame();
+            communication::DispatchNow<communication::EndFrame>();
+        }
 
         communication::DispatchDeferredEvents();
         communication::DispatchNow<communication::ProcessInput>();
@@ -88,9 +90,9 @@ void MainLoop::Run() const
 }
 
 void MainLoop::on_window_close()
-{ m_is_running = false; }
+{ mIsRunning = false; }
 
 void MainLoop::on_engine_terminate()
-{ m_is_running = false; }
+{ mIsRunning = false; }
 
 }// namespace polos::core

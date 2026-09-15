@@ -22,10 +22,9 @@
 #include <polos/core/polos_main.hpp>
 #include <polos/logging/log_macros.hpp>
 #include <polos/platform/platform_manager.hpp>
-#include <polos/rendering/i_window_surface.hpp>
-#include <polos/rendering/material.hpp>
+#include <polos/rendering/interface/i_window_surface.hpp>
 #include <polos/rendering/rendering_api.hpp>
-#include <polos/rendering/scene.hpp>
+#include <polos/rendering/scene/scene.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -49,11 +48,13 @@ void DummyApp::Create()
         onRenderUpdate(t_event);
     });
 
-    m_obj1 =
-        polos::rendering::RenderingApi::GetMainScene()->AddObject(glm::mat4{1.0F}, glm::vec4{1.0F, 0.0F, 0.0F, 1.0F});
+    glm::mat4 model_matrix{1.0F};
 
-    m_obj2 =
-        polos::rendering::RenderingApi::GetMainScene()->AddObject(glm::mat4{1.0F}, glm::vec4{0.0F, 0.0F, 1.0F, 1.0F});
+    m_obj1 = polos::rendering::RenderingApi::GetMainScene()->AddObject(model_matrix, glm::vec4{1.0F, 0.0F, 0.0F, 1.0F});
+
+    model_matrix = glm::translate(glm::mat4{1.0F}, glm::vec3{0.0F, 0.0F, 1.0F});
+
+    m_obj2 = polos::rendering::RenderingApi::GetMainScene()->AddObject(model_matrix, glm::vec4{0.0F, 0.0F, 1.0F, 1.0F});
 }
 
 void DummyApp::Destroy() {}
@@ -64,20 +65,8 @@ char const* DummyApp::Name() const
 auto DummyApp::getWindowSize() -> polos::rendering::FramebufferSize
 { return polos::platform::PlatformManager::Instance().GetWindowSurface().GetFramebufferSize(); }
 
-auto DummyApp::onEngineUpdate(polos::communication::EngineUpdate& t_update) -> void
-{
-    moveCamera(polos::rendering::RenderingApi::GetMainScene()->GetCamera(0U), t_update.delta_time);
-
-    glm::mat4 model_matrix{1.0F};
-    model_matrix = glm::rotate(glm::mat4(1.0f), glm::radians(180.0F), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    polos::rendering::RenderingApi::GetMainScene()->GetObject(m_obj1).transform = model_matrix;
-
-    model_matrix = glm::translate(glm::mat4{1.0F}, glm::vec3{0.0F, 0.0F, 1.0F});
-    model_matrix = glm::rotate(model_matrix, glm::radians(180.0F), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    polos::rendering::RenderingApi::GetMainScene()->GetObject(m_obj2).transform = model_matrix;
-}
+auto DummyApp::onEngineUpdate(polos::communication::EngineUpdate& t_event) -> void
+{ moveCamera(polos::rendering::RenderingApi::GetMainScene()->GetCamera(0U), t_event.deltaTime); }
 
 auto DummyApp::onRenderUpdate(polos::communication::RenderUpdate& /**/) -> void
 {
@@ -151,15 +140,12 @@ auto DummyApp::moveCamera(polos::rendering::Camera3D* t_cam, std::float_t t_delt
         std::float_t const screen_w = static_cast<std::float_t>(getWindowSize().width);
 
         std::float_t const mouse_delta_y =
-            std::clamp(polos::core::input::g_input_state.mouse_delta.y, -screen_h, screen_h);
+            std::clamp(polos::core::input::g_input_state.mouseDelta.y, -screen_h, screen_h);
         std::float_t const mouse_delta_x =
-            std::clamp(polos::core::input::g_input_state.mouse_delta.x, -screen_w, screen_w);
+            std::clamp(polos::core::input::g_input_state.mouseDelta.x, -screen_w, screen_w);
 
         t_cam->rotation.x = ComputeSmoothedPitch(t_cam->rotation.x, mouse_delta_y, interpolation);
         t_cam->rotation.y = ComputeSmoothedYaw(t_cam->rotation.y, mouse_delta_x, interpolation);
-
-        LogDebug("rot_x: {}", t_cam->rotation.x);
-        LogDebug("rot_y: {}", t_cam->rotation.y);
 
         // Compute forward vector from pitch and yaw
         glm::quat const pitch_quat = glm::angleAxis(glm::radians(t_cam->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));

@@ -18,8 +18,8 @@ namespace polos::logging
 [[nodiscard]] POLOS_API std::string_view GetConsoleSinkName();
 
 /// Flush the designated logger immediately while blocking the calling thread.
-/// @param t_logger The logger whose sink that needs flushing
-POLOS_API void FlushLogger(quill::Logger* t_logger);
+/// @param tLogger The logger whose sink that needs flushing
+POLOS_API void FlushLogger(quill::Logger* tLogger);
 
 class POLOS_API Logger
 {
@@ -47,9 +47,9 @@ public:
 private:
     Logger();
 
-    quill::Logger* m_polos_logger;
-    quill::Logger* m_polly_logger;
-    quill::Logger* m_app_logger;
+    quill::Logger* mPolosLogger;
+    quill::Logger* mPollyLogger;
+    quill::Logger* mAppLogger;
 };
 
 }// namespace polos::logging

@@ -36,16 +36,16 @@ public:
     ///
     /// @tparam EnumT A raw enum-type value that contains the error code value
     ///         Requires MakeErrorCode to be present
-    /// @param t_code An enum-typed error code that belongs to a specific domain.
+    /// @param tCode An enum-typed error code that belongs to a specific domain.
     template<typename EnumT>
         requires(HasMakeErrorCode<EnumT> && !std::is_same_v<EnumT, ErrorCode>)
-    constexpr explicit ErrorCode(EnumT t_code)
-        : ErrorCode(MakeErrorCode(t_code))
+    constexpr explicit ErrorCode(EnumT tCode)
+        : ErrorCode(MakeErrorCode(tCode))
     {}
 
-    constexpr explicit ErrorCode(CodeType t_code, ErrorDomain const& t_domain)
-        : m_code{t_code},
-          m_domain{t_domain}
+    constexpr explicit ErrorCode(CodeType tCode, ErrorDomain const& tDomain)
+        : mCode{tCode},
+          mDomain{tDomain}
     {}
 
     ///
@@ -53,18 +53,14 @@ public:
     /// @return Raw error code value
     ///
     [[nodiscard]] constexpr auto Code() const -> CodeType
-    {
-        return m_code;
-    }
+    { return mCode; }
 
     ///
     /// @brief Return the domain that this ErrorCode object belongs to.
     /// @return ErrorDomain.
     ///
     [[nodiscard]] constexpr auto Domain() const -> ErrorDomain const&
-    {
-        return m_domain.get();
-    }
+    { return mDomain.get(); }
 
     ///
     /// @brief Return the message for this error code, that is determined by the ErrorDomain
@@ -86,33 +82,25 @@ public:
 private:
     friend struct quill::DeferredFormatCodec<ErrorCode>;
 
-    CodeType                                  m_code;
-    std::reference_wrapper<ErrorDomain const> m_domain;
+    CodeType                                  mCode;
+    std::reference_wrapper<ErrorDomain const> mDomain;
 };
 
-constexpr bool operator==(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
-{
-    return (t_lhs.Domain() == t_rhs.Domain()) && (t_lhs.Code() == t_rhs.Code());
-}
+constexpr bool operator==(ErrorCode const& tLhs, ErrorCode const& tRhs)
+{ return (tLhs.Domain() == tRhs.Domain()) && (tLhs.Code() == tRhs.Code()); }
 
-constexpr bool operator!=(ErrorCode const& t_lhs, ErrorCode const& t_rhs)
-{
-    return !operator==(t_lhs, t_rhs);
-}
+constexpr bool operator!=(ErrorCode const& tLhs, ErrorCode const& tRhs)
+{ return !operator==(tLhs, tRhs); }
 
 }// namespace polos::communication
 
 template<>
 struct fmtquill::formatter<polos::communication::ErrorCode>
 {
-    constexpr auto parse(format_parse_context& ctx)// NOLINT
-    {
-        return ctx.begin();
-    }
-    constexpr auto format(polos::communication::ErrorCode const& event, format_context& ctx) const// NOLINT
-    {
-        return fmtquill::format_to(ctx.out(), "{}", event.Message());
-    }
+    constexpr auto parse(format_parse_context& tCtx)// NOLINT
+    { return tCtx.begin(); }
+    constexpr auto format(polos::communication::ErrorCode const& tEvent, format_context& tCtx) const// NOLINT
+    { return fmtquill::format_to(tCtx.out(), "{}", tEvent.Message()); }
 };
 
 template<>

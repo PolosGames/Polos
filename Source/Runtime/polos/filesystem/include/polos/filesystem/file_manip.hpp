@@ -15,19 +15,16 @@
 namespace polos::fs
 {
 
-POLOS_API auto ReadFile(std::filesystem::path const& t_file_path) -> Result<Resource>;
-POLOS_API auto ReadFile(std::string_view t_custom_name, std::filesystem::path const& t_file_path)
-    -> Result<Resource>;
+POLOS_API auto ReadFile(std::filesystem::path const& tFilePath) -> Result<Resource>;
+POLOS_API auto ReadFile(std::string_view tCustomName, std::filesystem::path const& tFilePath) -> Result<Resource>;
 
-auto ReadFile(std::string t_file_pathe) -> Result<Resource>     = delete;
-auto ReadFile(char const* t_file_pathe) -> Result<Resource>     = delete;
-auto ReadFile(std::string_view t_file_path) -> Result<Resource> = delete;
+auto ReadFile(std::string tFilePathe) -> Result<Resource>     = delete;
+auto ReadFile(char const* tFilePathe) -> Result<Resource>     = delete;
+auto ReadFile(std::string_view tFilePath) -> Result<Resource> = delete;
 
 }// namespace polos::fs
 
-constexpr auto operator""_path(char const* t_path_str, std::size_t /*t_size*/) -> std::filesystem::path
-{
-    return {t_path_str};
-}
+constexpr auto operator""_path(char const* tPathStr, std::size_t /*tSize*/) -> std::filesystem::path
+{ return {tPathStr}; }
 
 #endif// POLOS_FILESYSTEM_FILE_MANIP_HPP

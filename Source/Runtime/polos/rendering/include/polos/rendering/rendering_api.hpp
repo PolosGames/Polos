@@ -7,9 +7,8 @@
 #define POLOS_RENDERING_RENDERING_API_HPP
 
 #include "polos/polos_api.hpp"
-#include "polos/rendering/i_window_surface.hpp"
-#include "polos/rendering/scene.hpp"
-#include "polos/rendering/shared_lib_out.hpp"
+#include "polos/rendering/interface/i_window_surface.hpp"
+#include "polos/rendering/scene/scene.hpp"
 
 #include <memory>
 
@@ -22,11 +21,12 @@ namespace polos::rendering
 {
 
 class IRenderContext;
+struct RenderingSharedLibOut;
 
 class POLOS_API RenderingApi
 {
 public:
-    explicit RenderingApi(IWindowSurface& t_surface);
+    explicit RenderingApi(IWindowSurface& tSurface);
     ~RenderingApi();
 
     RenderingApi(RenderingApi const&)            = delete;
@@ -42,15 +42,15 @@ public:
 private:
     friend class core::Engine;
 
-    static RenderingApi* s_instance;
+    static RenderingApi* sInstance;
 
     void createRenderContext();
     void initVulkan();
 
-    IWindowSurface* m_window_surface{nullptr};
+    IWindowSurface* mWindowSurface{nullptr};
 
-    std::shared_ptr<IRenderContext> m_render_context;
-    std::shared_ptr<Scene>          m_main_scene;
+    std::shared_ptr<IRenderContext> mRenderContext;
+    std::shared_ptr<Scene>          mMainScene;
 
 #if defined(HOT_RELOAD)
 public:
@@ -59,8 +59,8 @@ public:
 private:
     bool loadRenderingImplModule();
 
-    rendering::RenderingSharedLibOut m_rendering_module;
-    bool                                m_should_reload{false};
+    std::unique_ptr<RenderingSharedLibOut> mRenderingModule;
+    bool                                   mShouldReload{false};
 #endif// HOT_RELOAD
 };
 

@@ -6,69 +6,78 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/i_render_context.hpp"
-#include "polos/rendering/render_view.hpp"
 #include "polos/rendering/rendering_api.hpp"
+#include "scene/scene_data.hpp"
+#include "vk/i_render_context.hpp"
+
+#if defined(HOT_RELOAD)
+#    include "vk/shared_lib_out.hpp"
+#endif
 
 namespace polos::rendering
 {
 
-RenderingApi* RenderingApi::s_instance{nullptr};
+RenderingApi* RenderingApi::sInstance{nullptr};
 
-RenderingApi::RenderingApi(IWindowSurface& t_surface)
-    : m_window_surface{&t_surface}
+RenderingApi::RenderingApi(IWindowSurface& tSurface)
+    : mWindowSurface{&tSurface}
 {
+#if defined(HOT_RELOAD)
+    mRenderingModule = std::make_unique<RenderingSharedLibOut>();
+#endif
     createRenderContext();
 
-    m_main_scene = std::make_shared<Scene>();
+    mMainScene = std::make_shared<Scene>();
 }
 
 RenderingApi::~RenderingApi() = default;
 
 auto RenderingApi::Shutdown() -> void
 {
-    std::ignore = m_render_context->Shutdown();
-
+    if (auto const result = sInstance->mRenderContext->Shutdown(); !result.has_value())
+    {
+        LogWarn("{}", result.error());
+    }
 #if defined(HOT_RELOAD)
-    UnloadRenderingModule(m_rendering_module);
+    UnloadRenderingModule(*mRenderingModule);
 #endif// HOT_RELOAD
 }
 
 auto RenderingApi::BeginFrame() -> VkCommandBuffer
 {
-    if (nullptr == s_instance->m_render_context)
+    if (nullptr == sInstance->mRenderContext)
     {
         return VK_NULL_HANDLE;
     }
-    return s_instance->m_render_context->BeginFrame();
+    return sInstance->mRenderContext->BeginFrame();
 }
 
 auto RenderingApi::EndFrame() -> void
 {
-    if (nullptr != s_instance->m_render_context)
+    if (nullptr != sInstance->mRenderContext)
     {
-        RenderView const view{
+        SceneData const sceneData{
             .camera  = polos::rendering::RenderingApi::GetMainScene()->GetCamera(0U),
             .objects = polos::rendering::RenderingApi::GetMainScene()->GetObjects()
         };
 
-        s_instance->m_render_context->EndFrame(view);
+        sInstance->mRenderContext->EndFrame(sceneData);
     }
 }
 
 auto RenderingApi::GetMainScene() -> std::shared_ptr<Scene>
-{ return s_instance->m_main_scene; }
+{ return sInstance->mMainScene; }
 
 #if defined(HOT_RELOAD)
 auto RenderingApi::ReloadIfNeeded() -> bool
 {
-    if (!s_instance->m_should_reload)
+    if (!sInstance->mShouldReload)
     {
         return false;
     }
 
-    s_instance->m_should_reload = false;
-    s_instance->createRenderContext();
+    sInstance->mShouldReload = false;
+    sInstance->createRenderContext();
 
     LogInfo("Reloaded Render module.");
 
@@ -76,14 +85,14 @@ auto RenderingApi::ReloadIfNeeded() -> bool
 }
 
 auto RenderingApi::DispatchReload() -> void
-{ s_instance->m_should_reload = true; }
+{ sInstance->mShouldReload = true; }
 
 auto RenderingApi::loadRenderingImplModule() -> bool
 {
     LogInfo("Loading Rendering Module");
 
-    UnloadRenderingModule(m_rendering_module);
-    if (!LoadRenderingModule(m_rendering_module))
+    UnloadRenderingModule(*mRenderingModule);
+    if (!LoadRenderingModule(*mRenderingModule))
     {
         communication::DispatchNow<communication::EngineTerminate>();
         return false;
@@ -95,20 +104,20 @@ auto RenderingApi::loadRenderingImplModule() -> bool
 
 void RenderingApi::createRenderContext()
 {
-    if (nullptr != m_render_context)
+    if (nullptr != mRenderContext)
     {
-        std::ignore = m_render_context->Shutdown();
-        m_render_context.reset();
+        std::ignore = mRenderContext->Shutdown();
+        mRenderContext.reset();
     }
 
 #if defined(HOT_RELOAD)
     loadRenderingImplModule();
-    m_render_context = std::unique_ptr<IRenderContext>(m_rendering_module.CreateRenderContext());
+    mRenderContext = std::unique_ptr<IRenderContext>(mRenderingModule->createRenderContext());
 #else
-    m_render_context = std::unique_ptr<IRenderContext>(CreateRenderContext());
+    mRenderContext = std::unique_ptr<IRenderContext>(CreateRenderContext());
 #endif// HOT_RELOAD
 
-    auto result = m_render_context->Initialize(*m_window_surface);
+    auto result = mRenderContext->Initialize(*mWindowSurface);
     if (!result.has_value())
     {
         LogCritical("RenderContext could not be initialized! {}", result.error().Message());

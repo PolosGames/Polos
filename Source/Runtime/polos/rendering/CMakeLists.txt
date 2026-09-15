@@ -14,26 +14,27 @@ project(
 )
 
 set(RENDERING_IMPL_SRC
-    "src/camera3d.cpp"
-    "src/general_pass.cpp"
-    "src/pipeline_cache.cpp"
-    "src/render_context.cpp"
-    "src/shader_cache.cpp"
-    "src/vertex.cpp"
-    "src/vulkan_context.cpp"
-    "src/vulkan_device.cpp"
-    "src/vulkan_resource_manager.cpp"
-    "src/vulkan_swapchain.cpp"
-    "src/vulkan_util.cpp"
+    "src/cache/pipeline_cache.cpp"
+    "src/cache/shader_cache.cpp"
+    "src/compositor/render_compositor.cpp"
+    "src/passes/general_pass.cpp"
+    "src/resources/vertex.cpp"
+    "src/scene/camera3d.cpp"
+    "src/vk/render_context.cpp"
+    "src/vk/vulkan_context.cpp"
+    "src/vk/vulkan_device.cpp"
+    "src/vk/vulkan_resource_manager.cpp"
+    "src/vk/vulkan_swapchain.cpp"
+    "src/vk/vulkan_util.cpp"
 )
 
 set(RENDERING_THIRD_PARTY_DEPS
     glm::glm
-    GPUOpen::VulkanMemoryAllocator
     Vulkan::Vulkan
 )
 
 set(RENDERING_IMPL_DEPS
+    GPUOpen::VulkanMemoryAllocator
     stb_image::stb_image
 )
 
@@ -47,16 +48,16 @@ if (HOT_RELOAD)
 
         ENABLE_HOT_RELOAD
 
+        WITH_BUILD_INFO
+
         TYPE
             SHARED
 
         SOURCES
             ${RENDERING_IMPL_SRC}
 
-        PUBLIC_DEPS
-            ${RENDERING_THIRD_PARTY_DEPS}
-
         PRIVATE_DEPS
+            ${RENDERING_THIRD_PARTY_DEPS}
             ${RENDERING_IMPL_DEPS}
     )
 else()
@@ -72,17 +73,17 @@ define_polos_module(
         OBJECT
 
     SOURCES
-        "src/scene.cpp"
+        "src/scene/scene.cpp"
         "src/vulkan_rendering_api.cpp"
         ${RENDERING_SRC}
 
     PUBLIC_DEPS
         ${RENDERING_THIRD_PARTY_DEPS}
-        polos::logging
-        polos::utils
+        polos::communication
 
     PRIVATE_DEPS
-        polos::communication
+        polos::logging
+        polos::utils
         polos::filesystem
         ${RENDERING_SRC_DEPS}
 )

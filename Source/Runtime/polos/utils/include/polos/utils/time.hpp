@@ -24,40 +24,32 @@ inline auto GetTimeNow() -> TimePoint
     return std::chrono::time_point_cast<Duration>(Clock::now());
 }
 
-constexpr auto ConvertToSeconds(std::chrono::microseconds const t_usecs) -> float
+constexpr auto ConvertToSeconds(std::chrono::microseconds const tUsecs) -> float
 {
-    return static_cast<float>(t_usecs.count()) * 0.001F * 0.001F;// NOLINT
+    return static_cast<float>(tUsecs.count()) * 0.001F * 0.001F;// NOLINT
 }
 
-constexpr auto ConvertToMicroseconds(std::chrono::milliseconds const t_msecs) -> Duration
+constexpr auto ConvertToMicroseconds(std::chrono::milliseconds const tMsecs) -> Duration
+{ return std::chrono::duration_cast<Duration>(tMsecs); }
+
+constexpr auto ConvertToMicroseconds(std::chrono::seconds const tSecs) -> Duration
 {
-    return std::chrono::duration_cast<Duration>(t_msecs);
+    return ConvertToMicroseconds(std::chrono::milliseconds{tSecs.count() * 1000});// NOLINT
 }
 
-constexpr auto ConvertToMicroseconds(std::chrono::seconds const t_secs) -> Duration
+constexpr auto ConvertToMicroseconds(std::chrono::minutes const tMins) -> Duration
 {
-    return ConvertToMicroseconds(std::chrono::milliseconds{t_secs.count() * 1000});// NOLINT
-}
-
-constexpr auto ConvertToMicroseconds(std::chrono::minutes const t_mins) -> Duration
-{
-    return ConvertToMicroseconds(std::chrono::seconds{t_mins * 60});// NOLINT
+    return ConvertToMicroseconds(std::chrono::seconds{tMins * 60});// NOLINT
 }
 
 }// namespace utils
 }// namespace polos
 
-constexpr polos::Duration operator""_min(unsigned long long t_time)
-{
-    return polos::utils::ConvertToMicroseconds(std::chrono::minutes(t_time));
-}
-constexpr polos::Duration operator""_sec(unsigned long long t_time)
-{
-    return polos::utils::ConvertToMicroseconds(std::chrono::seconds(t_time));
-}
-constexpr polos::Duration operator""_ms(unsigned long long t_time)
-{
-    return polos::utils::ConvertToMicroseconds(std::chrono::milliseconds(t_time));
-}
+constexpr polos::Duration operator""_min(unsigned long long tTime)
+{ return polos::utils::ConvertToMicroseconds(std::chrono::minutes(tTime)); }
+constexpr polos::Duration operator""_sec(unsigned long long tTime)
+{ return polos::utils::ConvertToMicroseconds(std::chrono::seconds(tTime)); }
+constexpr polos::Duration operator""_ms(unsigned long long tTime)
+{ return polos::utils::ConvertToMicroseconds(std::chrono::milliseconds(tTime)); }
 
 #endif// POLOS_UTILS_TIME_HPP

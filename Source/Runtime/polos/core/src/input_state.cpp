@@ -8,19 +8,19 @@
 namespace polos::core::input
 {
 
-auto IsKeyDown(std::int32_t t_key) -> bool
-{ return g_input_state.keys_down[static_cast<std::size_t>(t_key)]; }
+auto IsKeyDown(std::int32_t tKey) -> bool
+{ return g_input_state.keysDown[static_cast<std::size_t>(tKey)]; }
 
-auto IsKeyPressed(std::int32_t t_key) -> bool
+auto IsKeyPressed(std::int32_t tKey) -> bool
 {
-    auto key_loc = static_cast<std::size_t>(t_key);
-    return g_input_state.keys_down[key_loc] && !g_input_state.keys_down_prev[key_loc];
+    auto key_loc = static_cast<std::size_t>(tKey);
+    return g_input_state.keysDown[key_loc] && !g_input_state.keysDownPrev[key_loc];
 }
 
-auto IsKeyReleased(std::int32_t t_key) -> bool
+auto IsKeyReleased(std::int32_t tKey) -> bool
 {
-    auto key_loc = static_cast<std::size_t>(t_key);
-    return !g_input_state.keys_down[key_loc] && g_input_state.keys_down_prev[key_loc];
+    auto key_loc = static_cast<std::size_t>(tKey);
+    return !g_input_state.keysDown[key_loc] && g_input_state.keysDownPrev[key_loc];
 }
 
 

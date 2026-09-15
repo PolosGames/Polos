@@ -18,9 +18,9 @@ enum class SystemType : std::uint8_t
     kSystemTypeMax,
 };
 
-constexpr std::string_view SystemTypeToString(SystemType t_type)
+constexpr std::string_view SystemTypeToString(SystemType tType)
 {
-    switch (t_type)
+    switch (tType)
     {
         case SystemType::kWindowing: return "Windowing";
         case SystemType::kRendering: return "Rendering";
@@ -32,18 +32,17 @@ struct SystemCreated final : BaseEvent
 {
     DECLARE_POLOS_EVENT(SystemCreated)
 
-    explicit SystemCreated(SystemType t_system_type)
-        : system_type{t_system_type}
+    explicit SystemCreated(SystemType tSystemType)
+        : systemType{tSystemType}
     {}
 
-    SystemType system_type;
+    SystemType systemType;
 };
 
 }// namespace polos::communication
 
-DEFINE_EVENT_LOG_FORMAT(
-    ::polos::communication::SystemCreated,
-    "System Created: {}",
-    ::polos::communication::SystemTypeToString(event.system_type));
+DEFINE_EVENT_LOG_FORMAT(::polos::communication::SystemCreated,
+                        "System Created: {}",
+                        ::polos::communication::SystemTypeToString(tEvent.systemType));
 
 #endif// POLOS_COMMUNICATION_SYSTEM_CREATED_HPP

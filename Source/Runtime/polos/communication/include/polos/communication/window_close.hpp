@@ -15,11 +15,11 @@ struct WindowClose final : BaseEvent
 {
     DECLARE_POLOS_EVENT(WindowClose);
 
-    explicit WindowClose(void* t_handle)
-        : window_handle{t_handle}
+    explicit WindowClose(void* tHandle)
+        : windowHandle{tHandle}
     {}
 
-    void* window_handle{nullptr};
+    void* windowHandle{nullptr};
 };
 
 }// namespace polos::communication
