@@ -11,6 +11,7 @@
 #include "vk/frame_data.hpp"
 #include "vk/i_render_context.hpp"
 #include "vk/queue_family_indices.hpp"
+#include "vk/settings.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -32,7 +33,6 @@ namespace polos::rendering
 class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
-class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
 class RenderCompositor;
@@ -65,10 +65,7 @@ public:
     auto GetGfxQueue() -> VkQueue;
     auto GetSwapchain() -> VulkanSwapchain&;
     auto GetVulkanDevice() -> VulkanDevice&;
-    auto GetVulkanResourceManager() -> VulkanResourceManager&;
     auto GetCommandPool() -> VkCommandPool;
-
-    [[nodiscard]] auto GetFramesInFlight() const -> std::uint32_t;
 private:
     friend class platform::PlatformManager;
     static RenderContext* sRenderContext;
@@ -76,25 +73,22 @@ private:
     void renderFrame(SceneData const& tView);
     void onFramebufferResize();
 
-    IWindowSurface*                        mWindowSurface{nullptr};
-    std::unique_ptr<VulkanContext>         mContext;
-    std::unique_ptr<VulkanDevice>          mDevice;
-    std::unique_ptr<VulkanSwapchain>       mSwapchain;
-    std::unique_ptr<VulkanResourceManager> mVrm;
-    std::unique_ptr<ShaderCache>           mShaderCache;
-    std::unique_ptr<PipelineCache>         mPipelineCache;
+    IWindowSurface*                  mWindowSurface{nullptr};
+    std::unique_ptr<VulkanContext>   mContext;
+    std::unique_ptr<VulkanDevice>    mDevice;
+    std::unique_ptr<VulkanSwapchain> mSwapchain;
+    std::unique_ptr<ShaderCache>     mShaderCache;
+    std::unique_ptr<PipelineCache>   mPipelineCache;
 
-    VkCommandPool                mCommandPool{VK_NULL_HANDLE};
-    std::vector<VkFence>         mFrameFences;
-    std::vector<VkSemaphore>     mAcqSemaphores;
-    std::vector<VkSemaphore>     mSubmitSemaphores;
-    std::vector<VkCommandBuffer> mFrameCommandBuffers;
-    std::uint32_t                mCurrentFrameIndex{0U};
-    std::uint32_t                mSwapchainImageIndex{0U};
+    VkCommandPool                                             mCommandPool{VK_NULL_HANDLE};
+    std::array<VkFence, Settings::kMaxFramesInFlight>         mFrameFences;
+    std::array<VkSemaphore, Settings::kMaxFramesInFlight>     mAcqSemaphores;
+    std::vector<VkSemaphore>                                  mSubmitSemaphores;
+    std::array<VkCommandBuffer, Settings::kMaxFramesInFlight> mFrameCommandBuffers;
+    std::uint32_t                                             mCurrentFrameIndex{0U};
+    std::uint32_t                                             mSwapchainImageIndex{0U};
 
-    static constexpr std::size_t const kMaxFramesInFlight{3U};
-
-    std::array<FrameData, kMaxFramesInFlight> mFrameData;
+    std::array<FrameData, Settings::kMaxFramesInFlight> mFrameData;
 
     VkSurfaceKHR       mSurface{VK_NULL_HANDLE};
     VkQueue            mGfxQueue{VK_NULL_HANDLE};

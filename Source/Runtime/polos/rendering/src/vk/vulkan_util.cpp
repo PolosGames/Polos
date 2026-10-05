@@ -5,7 +5,14 @@
 
 #include "vk/vulkan_util.hpp"
 
+#include "polos/logging/log_macros.hpp"
+#include "polos/rendering/rendering_error_domain.hpp"
+#include "resources/buffer_description.hpp"
+#include "resources/gpu_buffer.hpp"
 #include "vk/common.hpp"
+#include "vk/render_context.hpp"
+
+#include <stb_image.h>
 
 #include <cassert>
 #include <cstdint>
@@ -65,12 +72,13 @@ auto AccessMaskForLayout(VkImageLayout tLayout) -> VkAccessFlags
 
 }// namespace
 
-void TransitionImageLayout(VkCommandBuffer      tCommandBuffer,
-                           VkImage              tImage,
-                           VkImageLayout        tOldLayout,
-                           VkImageLayout        tNewLayout,
-                           VkPipelineStageFlags tSrcStageMask,
-                           VkPipelineStageFlags tDstStageMask)
+void TransitionImageLayout(
+    VkCommandBuffer      tCommandBuffer,
+    VkImage              tImage,
+    VkImageLayout        tOldLayout,
+    VkImageLayout        tNewLayout,
+    VkPipelineStageFlags tSrcStageMask,
+    VkPipelineStageFlags tDstStageMask)
 {
     VkImageMemoryBarrier img_mem_barrier{
         .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -96,16 +104,17 @@ void TransitionImageLayout(VkCommandBuffer      tCommandBuffer,
         img_mem_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     }
 
-    vkCmdPipelineBarrier(tCommandBuffer,
-                         tSrcStageMask,
-                         tDstStageMask,
-                         0U,
-                         0U,
-                         nullptr,
-                         0U,
-                         nullptr,
-                         1U,
-                         &img_mem_barrier);
+    vkCmdPipelineBarrier(
+        tCommandBuffer,
+        tSrcStageMask,
+        tDstStageMask,
+        0U,
+        0U,
+        nullptr,
+        0U,
+        nullptr,
+        1U,
+        &img_mem_barrier);
 }
 
 void CopyBufferToImage(VkCommandBuffer tCommandBuffer, VkBuffer tBuffer, VkImage tImage, VkExtent3D tExtent)
@@ -128,11 +137,12 @@ void CopyBufferToImage(VkCommandBuffer tCommandBuffer, VkBuffer tBuffer, VkImage
     vkCmdCopyBufferToImage(tCommandBuffer, tBuffer, tImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1U, &copy_region);
 }
 
-void CopyImageToImage(VkCommandBuffer tCommandBuffer,
-                      VkImage         tSrcImage,
-                      VkImage         tDstImage,
-                      VkExtent3D      tSrcExtent,
-                      VkExtent3D      tDstExtent)
+void CopyImageToImage(
+    VkCommandBuffer tCommandBuffer,
+    VkImage         tSrcImage,
+    VkImage         tDstImage,
+    VkExtent3D      tSrcExtent,
+    VkExtent3D      tDstExtent)
 {
     // TODO(sorbatdev): Check VK_FORMAT_FEATURE_BLIT_SRC_BIT and VK_FORMAT_FEATURE_BLIT_DST_BIT support
     VkImageBlit2 blit_region{
@@ -194,10 +204,11 @@ void CopyImageToImage(VkCommandBuffer tCommandBuffer,
     vkCmdBlitImage2(tCommandBuffer, &blit_info);
 }
 
-auto CreateFramebuffer(VkDevice               tDevice,
-                       VkRenderPass           tRPass,
-                       std::span<VkImageView> tAttachments,
-                       VkExtent2D const&      tExtent) -> VkFramebuffer
+auto CreateFramebuffer(
+    VkDevice               tDevice,
+    VkRenderPass           tRPass,
+    std::span<VkImageView> tAttachments,
+    VkExtent2D const&      tExtent) -> VkFramebuffer
 {
     VkFramebufferCreateInfo const fb_info{
         .sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -215,6 +226,96 @@ auto CreateFramebuffer(VkDevice               tDevice,
     assert(vkCreateFramebuffer(tDevice, &fb_info, nullptr, &framebuffer) == VK_SUCCESS);
 
     return framebuffer;
+}
+
+auto LoadImageResourceToGpuImage(
+    const char*          tResourcePath,
+    VkFormat             tFormat,
+    VkImageUsageFlags    tUsage,
+    VkImageLayout        tFinalLayout,
+    VkPipelineStageFlags tFinalPipelineStage) -> Result<std::unique_ptr<GpuImage>>
+{
+    std::int32_t width{0};
+    std::int32_t height{0};
+
+    std::uint8_t* pixels = stbi_load(tResourcePath, &width, &height, nullptr, STBI_rgb_alpha);
+    if (nullptr == pixels)
+    {
+        return ErrorType{RenderingErrc::kFailedLoadImage};
+    }
+
+    VkDeviceSize const image_size = static_cast<VkDeviceSize>(width) * static_cast<VkDeviceSize>(height) * 4U;
+
+    auto img_buf = GpuBuffer::Create(
+        BufferDescription{
+            .size       = image_size,
+            .usage      = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            .residence  = MemoryResidence::kDevice,
+            .hostAccess = HostAccessFlags::kSeqWrite,
+        });
+
+    std::unique_ptr<GpuBuffer> textureBuf = std::move(*img_buf);
+    textureBuf->Write(pixels, image_size);
+
+    stbi_image_free(pixels);
+
+    auto image_create_res = GpuImage::Create(
+        ImageDescription{
+            .extent = {.width = VK_SIZE_CAST(width), .height = VK_SIZE_CAST(height), .depth = 1U},
+            .format = tFormat,
+            .usage  = tUsage | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        });
+
+    std::unique_ptr<GpuImage> textureImg = std::move(*image_create_res);
+
+    // Transition image layout to be optimal for receiving data transfer from staging buffer
+    {
+        VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+
+        util::TransitionImageLayout(
+            cmdBuf,
+            textureImg->img,
+            VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+        RenderContext::EndSingleTimeCommands(cmdBuf);
+    }
+
+    // Copy data from staging buffer to texture image
+    {
+        VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+
+        util::CopyBufferToImage(
+            cmdBuf,
+            textureBuf->buffer,
+            textureImg->img,
+            VkExtent3D{
+                .width  = VK_SIZE_CAST(width),
+                .height = VK_SIZE_CAST(height),
+                .depth  = 1U,
+            });
+
+        RenderContext::EndSingleTimeCommands(cmdBuf);
+    }
+
+    // Transition image layout to be optimal for Shader read access
+    {
+        VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+
+        util::TransitionImageLayout(
+            cmdBuf,
+            textureImg->img,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            tFinalLayout,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            tFinalPipelineStage);
+
+        RenderContext::EndSingleTimeCommands(cmdBuf);
+    }
+
+    return textureImg;
 }
 
 }// namespace polos::rendering::util

@@ -19,11 +19,12 @@ set(RENDERING_IMPL_SRC
     "src/compositor/render_compositor.cpp"
     "src/passes/general_pass.cpp"
     "src/resources/vertex.cpp"
+    "src/resources/gpu_buffer.cpp"
+    "src/resources/gpu_image.cpp"
     "src/scene/camera3d.cpp"
     "src/vk/render_context.cpp"
     "src/vk/vulkan_context.cpp"
     "src/vk/vulkan_device.cpp"
-    "src/vk/vulkan_resource_manager.cpp"
     "src/vk/vulkan_swapchain.cpp"
     "src/vk/vulkan_util.cpp"
 )

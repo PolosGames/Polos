@@ -12,7 +12,6 @@
 #include "vk/frame_data.hpp"
 #include "vk/render_context.hpp"
 #include "vk/vulkan_device.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 #include "vk/vulkan_swapchain.hpp"
 #include "vk/vulkan_util.hpp"
 
@@ -63,7 +62,7 @@ auto RenderCompositor::Record(FrameData const& tFrameData, SceneData const& tSce
 
     util::CopyImageToImage(
         tFrameData.currentCmdBuf,
-        mFrameTargets.colorImg,
+        mFrameTargets.colorImg->img,
         tFrameData.scImage,
         util::To3DExtent(mLastExtent),
         util::To3DExtent(tFrameData.scExtent));
@@ -79,19 +78,8 @@ auto RenderCompositor::Record(FrameData const& tFrameData, SceneData const& tSce
 
 auto RenderCompositor::createTargets() -> void
 {
-    {
-        auto [img, view] = createColorTarget();
-
-        mFrameTargets.colorImg     = img;
-        mFrameTargets.colorImgView = view;
-    }
-
-    {
-        auto [img, view] = createDepthTarget();
-
-        mFrameTargets.depthImg     = img;
-        mFrameTargets.depthImgView = view;
-    }
+    createColorTarget();
+    createDepthTarget();
 }
 
 auto RenderCompositor::releaseTargets() -> void
@@ -104,20 +92,11 @@ auto RenderCompositor::releaseTargets() -> void
     {
         vkDestroyImageView(mDevice, mFrameTargets.depthImgView, nullptr);
     }
-    if (mColorImgIdx >= 0)
-    {
-        VulkanResourceManager::Instance()->DestroyImage(mColorImgIdx);
-    }
-    if (mDepthImgIdx >= 0)
-    {
-        VulkanResourceManager::Instance()->DestroyImage(mDepthImgIdx);
-    }
-    mFrameTargets = {};
-    mColorImgIdx  = -1;
-    mDepthImgIdx  = -1;
+    mFrameTargets.colorImg.reset();
+    mFrameTargets.depthImg.reset();
 }
 
-auto RenderCompositor::createColorTarget() -> std::pair<VkImage, VkImageView>
+auto RenderCompositor::createColorTarget() -> void
 {
     VkImageUsageFlags usage{0U};
     usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -136,21 +115,21 @@ auto RenderCompositor::createColorTarget() -> std::pair<VkImage, VkImageView>
         .usage  = usage,
     };
 
-    auto idxRes = VulkanResourceManager::Instance()->CreateImage(colorDesc);
+    auto idxRes = GpuImage::Create(colorDesc);
     if (!idxRes.has_value())
     {
         LogError("{}, [Color Image was not created.]", idxRes.error());
-        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
+        return;
     }
-
-    mColorImgIdx     = *idxRes;
-    VkImage     img  = VulkanResourceManager::Instance()->GetImage(*idxRes);
-    VkImageView view = util::CreateImageView(mDevice, img, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
-
-    return {img, view};
+    mFrameTargets.colorImg     = std::move(*idxRes);
+    mFrameTargets.colorImgView = util::CreateImageView(
+        mDevice,
+        mFrameTargets.colorImg->img,
+        VK_FORMAT_R16G16B16A16_SFLOAT,
+        VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-auto RenderCompositor::createDepthTarget() -> std::pair<VkImage, VkImageView>
+auto RenderCompositor::createDepthTarget() -> void
 {
     ImageDescription depthDesc{
         .extent =
@@ -163,18 +142,16 @@ auto RenderCompositor::createDepthTarget() -> std::pair<VkImage, VkImageView>
         .usage  = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     };
 
-    auto idxRes = VulkanResourceManager::Instance()->CreateImage(depthDesc);
+    auto idxRes = GpuImage::Create(depthDesc);
     if (!idxRes.has_value())
     {
         LogError("{}, [Depth Image was not created.]", idxRes.error());
-        return {VK_NULL_HANDLE, VK_NULL_HANDLE};
+        return;
     }
 
-    mDepthImgIdx     = *idxRes;
-    VkImage     img  = VulkanResourceManager::Instance()->GetImage(*idxRes);
-    VkImageView view = util::CreateImageView(mDevice, img, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-    return {img, view};
+    mFrameTargets.depthImg = std::move(*idxRes);
+    mFrameTargets.depthImgView =
+        util::CreateImageView(mDevice, mFrameTargets.depthImg->img, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 }// namespace polos::rendering

@@ -11,7 +11,6 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "vk/common.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 #include "vk/vulkan_swapchain.hpp"
 
 namespace polos::rendering
@@ -257,13 +256,14 @@ auto PipelineCache::ConstructPipeline(GraphicsPipelineInfo const& tPipelineInfo)
         return ErrorType{RenderingErrc::kFailedCreatePipeline};
     }
 
-    auto [itr_inserted, was_inserted] = mCache.insert(std::make_pair(
-        pipeline_key,
-        VulkanPipeline{
-            .pipeline             = pipeline,
-            .layout               = pipeline_layout,
-            .descriptorSetLayouts = std::vector(descriptor_set_layouts.begin(), descriptor_set_layouts.end()),
-        }));
+    auto [itr_inserted, was_inserted] = mCache.insert(
+        std::make_pair(
+            pipeline_key,
+            VulkanPipeline{
+                .pipeline             = pipeline,
+                .layout               = pipeline_layout,
+                .descriptorSetLayouts = std::vector(descriptor_set_layouts.begin(), descriptor_set_layouts.end()),
+            }));
 
     return itr_inserted->second;
 }

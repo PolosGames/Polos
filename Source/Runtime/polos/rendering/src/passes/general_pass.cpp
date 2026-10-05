@@ -14,6 +14,8 @@
 #include "polos/rendering/scene/scene.hpp"
 #include "polos/utils/string_id.hpp"
 #include "resources/buffer_description.hpp"
+#include "resources/gpu_buffer.hpp"
+#include "resources/gpu_image.hpp"
 #include "resources/image_description.hpp"
 #include "resources/quad_instance.hpp"
 #include "resources/uniform_buffer_object.hpp"
@@ -23,7 +25,6 @@
 #include "vk/render_context.hpp"
 #include "vk/render_pass_layout_description.hpp"
 #include "vk/vulkan_device.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 #include "vk/vulkan_swapchain.hpp"
 #include "vk/vulkan_util.hpp"
 
@@ -37,7 +38,6 @@ static constexpr std::uint64_t kMaxQuadInstances = 10000U;
 GeneralPass::GeneralPass(RenderContext& tContext)
     : mContext(tContext),
       mSwapchain(&mContext.GetSwapchain()),
-      mVrm(&mContext.GetVulkanResourceManager()),
       mShaderCache(&mContext.GetShaderCache()),
       mPipelineCache(&mContext.GetPipelineCache()),
       mDevice(mContext.GetVulkanDevice().mLogiDevice)
@@ -78,20 +78,14 @@ GeneralPass::GeneralPass(RenderContext& tContext)
         2U,
     };
 
-    mBufferVertices = createVertexBuffer();
-    mBufferIndices  = createIndexBuffer();
+    createVertexBuffer();
+    createIndexBuffer();
 
     mImageViewTuxTexture = createTexture();
     mSamplerTuxTexture   = createTextureSampler();
 
-    std::uint32_t const framesInFlight = mContext.GetFramesInFlight();
-    mBufferIndicesUbos.resize(framesInFlight);
-    mBufferInstancingIndices.resize(framesInFlight);
-    mInstanceMappings.resize(framesInFlight);
-    mUboMappings.resize(framesInFlight);
     createUboMapping();
 
-    mDescriptorSets.resize(framesInFlight);
     mDescriptorPool = createDescriptorPool();
     createDescriptorSets();
 
@@ -103,20 +97,6 @@ GeneralPass::GeneralPass(RenderContext& tContext)
 
 GeneralPass::~GeneralPass()
 {
-    for (std::size_t i{0}; i < mBufferIndicesUbos.size(); ++i)
-    {
-        vmaUnmapMemory(
-            mContext.GetVulkanDevice().mAllocator,
-            mVrm->GetAllocatedBuffer(mBufferIndicesUbos[i])->allocation);
-        mVrm->DestroyBuffer(mBufferIndicesUbos[i]);
-    }
-    for (std::size_t i{0}; i < mBufferInstancingIndices.size(); ++i)
-    {
-        vmaUnmapMemory(
-            mContext.GetVulkanDevice().mAllocator,
-            mVrm->GetAllocatedBuffer(mBufferInstancingIndices[i])->allocation);
-        mVrm->DestroyBuffer(mBufferInstancingIndices[i]);
-    }
     if (mPassFb != VK_NULL_HANDLE)
     {
         vkDestroyFramebuffer(mDevice, mPassFb, nullptr);
@@ -126,10 +106,6 @@ GeneralPass::~GeneralPass()
 
     vkDestroySampler(mDevice, mSamplerTuxTexture, nullptr);
     vkDestroyImageView(mDevice, mImageViewTuxTexture, nullptr);
-    mVrm->DestroyImage(mTextureImageIndex);
-
-    mVrm->DestroyBuffer(mBufferVerticesIndex);
-    mVrm->DestroyBuffer(mBufferIndicesIndex);
 
     vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
 }
@@ -208,8 +184,10 @@ auto GeneralPass::Record(FrameData const& tFrameData, SceneData const& tSceneDat
 
             // Bind vertex buffer
             VkDeviceSize const offset{0U};
-            vkCmdBindVertexBuffers(tFrameData.currentCmdBuf, 0U, 1U, &mBufferVertices, &offset);
-            vkCmdBindIndexBuffer(tFrameData.currentCmdBuf, mBufferIndices, offset, VK_INDEX_TYPE_UINT16);
+            VkBuffer vertexBuf = mVerticesBuffer->buffer;
+            VkBuffer indexBuf = mIndicesBuffer->buffer;
+            vkCmdBindVertexBuffers(tFrameData.currentCmdBuf, 0U, 1U, &vertexBuf, &offset);
+            vkCmdBindIndexBuffer(tFrameData.currentCmdBuf, indexBuf, offset, VK_INDEX_TYPE_UINT16);
             vkCmdBindDescriptorSets(
                 tFrameData.currentCmdBuf,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -396,122 +374,95 @@ VkPipeline GeneralPass::createPipeline()
     return result->pipeline;
 }
 
-VkBuffer GeneralPass::createVertexBuffer()
+auto GeneralPass::createVertexBuffer() -> void
 {
-    VkDeviceSize const buffer_size = sizeof(Vertex) * mVertices.size();
+    VkDeviceSize const bufferSize = sizeof(Vertex) * mVertices.size();
 
     // TODO(sorbatdev): W6 D27 - stage into kDevice, this is written once and never again
-    auto buf = mVrm->CreateBuffer(
+    auto buf = GpuBuffer::Create(
         BufferDescription{
-            .size       = buffer_size,
+            .size       = bufferSize,
             .usage      = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            .residence  = MemoryResidence::kHost,
+            .residence  = MemoryResidence::kDevice,
             .hostAccess = HostAccessFlags::kSeqWrite,
         });
 
     assert(buf.has_value());
 
-    mBufferVerticesIndex = *buf;
-
-    vmaCopyMemoryToAllocation(
-        mContext.GetVulkanDevice().mAllocator,
-        mVertices.data(),
-        mVrm->GetAllocatedBuffer(mBufferVerticesIndex)->allocation,
-        0U,
-        buffer_size);
-
-    return mVrm->GetBuffer(mBufferVerticesIndex);
+    mVerticesBuffer = std::move(*buf);
+    mVerticesBuffer->Write(mVertices);
 }
 
-VkBuffer GeneralPass::createIndexBuffer()
+auto GeneralPass::createIndexBuffer() -> void
 {
-    VkDeviceSize const buffer_size = sizeof(std::uint16_t) * mIndices.size();
+    VkDeviceSize const bufferSize = sizeof(std::uint16_t) * mIndices.size();
 
     // TODO(sorbatdev): W6 D27 - stage into kDevice, this is written once and never again
-    auto buf = mVrm->CreateBuffer(
+    auto buf = GpuBuffer::Create(
         BufferDescription{
-            .size       = buffer_size,
+            .size       = bufferSize,
             .usage      = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            .residence  = MemoryResidence::kHost,
+            .residence  = MemoryResidence::kDevice,
             .hostAccess = HostAccessFlags::kSeqWrite,
         });
 
     assert(buf.has_value());
 
-    mBufferIndicesIndex = *buf;
-
-    vmaCopyMemoryToAllocation(
-        mContext.GetVulkanDevice().mAllocator,
-        mIndices.data(),
-        mVrm->GetAllocatedBuffer(mBufferIndicesIndex)->allocation,
-        0U,
-        buffer_size);
-
-    return mVrm->GetBuffer(mBufferIndicesIndex);
+    mIndicesBuffer = std::move(*buf);
+    mIndicesBuffer->Write(mIndices);
 }
 
 void GeneralPass::createUboMapping()
 {
-    for (std::size_t i{0U}; i < mContext.GetFramesInFlight(); ++i)
+    for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
         // UBO
         {
-            auto buf = mVrm->CreateBuffer(
+            auto buf = GpuBuffer::Create(
                 BufferDescription{
                     .size       = sizeof(UniformBufferObject),
                     .usage      = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                     .residence  = MemoryResidence::kHost,
                     .hostAccess = HostAccessFlags::kSeqWrite,
                 });
-
             assert(buf.has_value());
 
-            mBufferIndicesUbos[i] = *buf;
-
-            vmaMapMemory(
-                mContext.GetVulkanDevice().mAllocator,
-                mVrm->GetAllocatedBuffer(mBufferIndicesUbos[i])->allocation,
-                &mUboMappings[i]);
+            mUboBuffers[i]  = std::move(*buf);
+            mUboMappings[i] = mUboBuffers[i]->mapping;
         }
 
         // SSBO
         {
-            VkDeviceSize const buffer_size = sizeof(QuadInstance) * kMaxQuadInstances;
-            auto               buf         = mVrm->CreateBuffer(
+            VkDeviceSize const bufferSize = sizeof(QuadInstance) * kMaxQuadInstances;
+            auto               buf        = GpuBuffer::Create(
                 BufferDescription{
-                    .size       = buffer_size,
+                    .size       = bufferSize,
                     .usage      = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                     .residence  = MemoryResidence::kHost,
                     .hostAccess = HostAccessFlags::kSeqWrite,
                 });
-
             assert(buf.has_value());
 
-            mBufferInstancingIndices[i] = *buf;
-
-            vmaMapMemory(
-                mContext.GetVulkanDevice().mAllocator,
-                mVrm->GetAllocatedBuffer(mBufferInstancingIndices[i])->allocation,
-                &mInstanceMappings[i]);
+            mInstanceBuffers[i]  = std::move(*buf);
+            mInstanceMappings[i] = mInstanceBuffers[i]->mapping;
         }
     }
 }
 
 VkDescriptorPool GeneralPass::createDescriptorPool()
 {
-    std::size_t const                   frames_in_flight = mContext.GetFramesInFlight();
     std::array<VkDescriptorPoolSize, 3> pool_sizes{
         VkDescriptorPoolSize{
             .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .descriptorCount = VK_SIZE_CAST(frames_in_flight),
+            .descriptorCount = VK_SIZE_CAST(Settings::kMaxFramesInFlight),
         },
         VkDescriptorPoolSize{
             .type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .descriptorCount = VK_SIZE_CAST(frames_in_flight),
+            .descriptorCount = VK_SIZE_CAST(Settings::kMaxFramesInFlight),
         },
         VkDescriptorPoolSize{
             .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .descriptorCount = VK_SIZE_CAST(frames_in_flight),
+            .descriptorCount = VK_SIZE_CAST(Settings::kMaxFramesInFlight),
         },
     };
 
@@ -519,7 +470,7 @@ VkDescriptorPool GeneralPass::createDescriptorPool()
         .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext         = nullptr,
         .flags         = 0U,
-        .maxSets       = VK_SIZE_CAST(frames_in_flight),
+        .maxSets       = VK_SIZE_CAST(Settings::kMaxFramesInFlight),
         .poolSizeCount = VK_SIZE_CAST(pool_sizes.size()),
         .pPoolSizes    = pool_sizes.data(),
     };
@@ -532,32 +483,30 @@ VkDescriptorPool GeneralPass::createDescriptorPool()
 
 void GeneralPass::createDescriptorSets()
 {
-    std::size_t const frames_in_flight = mContext.GetFramesInFlight();
-
     std::vector<VkDescriptorSetLayout> layouts(
-        frames_in_flight,
+        Settings::kMaxFramesInFlight,
         mPipelineCache->GetPipeline("pl_basiccolor"_sid)->descriptorSetLayouts[0U]);
 
     VkDescriptorSetAllocateInfo const alloc_info{
         .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .pNext              = nullptr,
         .descriptorPool     = mDescriptorPool,
-        .descriptorSetCount = VK_SIZE_CAST(frames_in_flight),
+        .descriptorSetCount = VK_SIZE_CAST(Settings::kMaxFramesInFlight),
         .pSetLayouts        = layouts.data(),
     };
 
     assert(vkAllocateDescriptorSets(mDevice, &alloc_info, mDescriptorSets.data()) == VK_SUCCESS);
 
-    for (size_t i = 0; i < frames_in_flight; i++)
+    for (size_t i = 0; i < Settings::kMaxFramesInFlight; i++)
     {
         VkDescriptorBufferInfo buffer_info{
-            .buffer = mVrm->GetBuffer(mBufferIndicesUbos[i]),
+            .buffer = mUboBuffers[i]->buffer,
             .offset = 0U,
             .range  = VK_WHOLE_SIZE,
         };
 
         VkDescriptorBufferInfo ssbo_info{
-            .buffer = mVrm->GetBuffer(mBufferInstancingIndices[i]),
+            .buffer = mInstanceBuffers[i]->buffer,
             .offset = 0U,
             .range  = VK_WHOLE_SIZE,
         };
@@ -613,20 +562,16 @@ void GeneralPass::createDescriptorSets()
 
 VkImageView GeneralPass::createTexture()
 {
-    auto img_res = mVrm->LoadImageResourceToVkImage(
+    auto img_res = util::LoadImageResourceToGpuImage(
         "Resource/Textures/tux.png",
         VK_FORMAT_R8G8B8A8_SRGB,
         VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
-    mTextureImageIndex = *img_res;
+    mTuxImage = std::move(*img_res);
 
-    return util::CreateImageView(
-        mDevice,
-        mVrm->GetImage(mTextureImageIndex),
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_ASPECT_COLOR_BIT);
+    return util::CreateImageView(mDevice, mTuxImage->img, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 VkSampler GeneralPass::createTextureSampler()

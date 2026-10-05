@@ -28,6 +28,18 @@ enum class HostAccessFlags : std::uint16_t
     kRandom   = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
 };
 
+constexpr std::uint16_t operator&(HostAccessFlags tLhs, HostAccessFlags tRhs)
+{ return static_cast<std::uint16_t>(tLhs) & static_cast<std::uint16_t>(tRhs); }
+
+constexpr HostAccessFlags operator|(HostAccessFlags tLhs, HostAccessFlags tRhs)
+{ return static_cast<HostAccessFlags>(static_cast<std::uint16_t>(tLhs) | static_cast<std::uint16_t>(tRhs)); }
+
+constexpr HostAccessFlags& operator|=(HostAccessFlags& tLhs, HostAccessFlags tRhs)
+{
+    tLhs = tLhs | tRhs;
+    return tLhs;
+}
+
 }// namespace polos::rendering
 
 #endif// POLOS_RENDERING_SRC_RESOURCES_ALLOCATION_PARAMS_HPP

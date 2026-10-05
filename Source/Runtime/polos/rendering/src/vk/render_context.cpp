@@ -14,10 +14,11 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/utils/build_info.hpp"
+#include "resources/gpu_buffer.hpp"
+#include "resources/gpu_image.hpp"
 #include "vk/common.hpp"
 #include "vk/vulkan_context.hpp"
 #include "vk/vulkan_device.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 #include "vk/vulkan_swapchain.hpp"
 
 #include <vulkan/vulkan.h>
@@ -90,7 +91,6 @@ RenderContext::RenderContext()
     sRenderContext = this;
     communication::Subscribe<WindowFramebufferResize>([this](WindowFramebufferResize&) {
         mHasFramebufferResized = true;
-        LogDebug("Framebuffer resize event received in RenderContext.");
     });
 };
 
@@ -103,7 +103,6 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
     mContext       = std::make_unique<VulkanContext>();
     mDevice        = std::make_unique<VulkanDevice>();
     mSwapchain     = std::make_unique<VulkanSwapchain>();
-    mVrm           = std::make_unique<VulkanResourceManager>();
     mShaderCache   = std::make_unique<ShaderCache>();
     mPipelineCache = std::make_unique<PipelineCache>();
 
@@ -174,6 +173,9 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
         INIT_VULKAN_COMPONENT(mDevice, info);
     }
 
+    GpuImage::sAllocator  = mDevice->GetAllocator();
+    GpuBuffer::sAllocator = mDevice->GetAllocator();
+
     // Get the graphics queue for now
     vkGetDeviceQueue(mDevice->mLogiDevice, mQueueFamilyIndices.gfxQIndex, 0U, &mGfxQueue);
 
@@ -205,16 +207,6 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
         };
 
         INIT_VULKAN_COMPONENT(mSwapchain, details);
-    }
-
-    {
-        ResourceManagerCreateDetails const details{
-            .device    = mDevice->mLogiDevice,
-            .allocator = mDevice->mAllocator,
-            .swapchain = mSwapchain.get(),
-        };
-
-        INIT_VULKAN_COMPONENT(mVrm, details);
     }
 
     {
@@ -258,13 +250,9 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
         vkCreateCommandPool(mDevice->mLogiDevice, &pool_info, nullptr, &mCommandPool),
         RenderingErrc::kFailedCreateCmdPool);
 
-    mFrameCommandBuffers.resize(kMaxFramesInFlight);
-    mAcqSemaphores.resize(kMaxFramesInFlight);
-
     // Create submission semaphores with number of images in swapchain
     // https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html#_discussion_of_solution
     mSubmitSemaphores.resize(mSwapchain->GetImageCount());
-    mFrameFences.resize(kMaxFramesInFlight);
 
     // --- Command buffer allocations ---
     VkCommandBufferAllocateInfo const alloc_info{
@@ -272,7 +260,7 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
         .pNext              = nullptr,
         .commandPool        = mCommandPool,
         .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = kMaxFramesInFlight,
+        .commandBufferCount = Settings::kMaxFramesInFlight,
     };
 
     CHECK_VK_SUCCESS_OR_ERR(
@@ -298,7 +286,7 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
             RenderingErrc::kFailedCreateSemaphore);
     }
 
-    for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
+    for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
         CHECK_VK_SUCCESS_OR_ERR(
             vkCreateSemaphore(mDevice->mLogiDevice, &semaphore_info, nullptr, &mAcqSemaphores[i]),
@@ -410,7 +398,7 @@ auto RenderContext::EndFrame(SceneData const& tView) -> void
         LogInfo("{}", result.error());
     }
 
-    mCurrentFrameIndex = (mCurrentFrameIndex + 1) % kMaxFramesInFlight;
+    mCurrentFrameIndex = (mCurrentFrameIndex + 1) % Settings::kMaxFramesInFlight;
 }
 
 auto RenderContext::GetShaderCache() const -> ShaderCache&
@@ -481,9 +469,6 @@ auto RenderContext::GetSwapchain() -> VulkanSwapchain&
 auto RenderContext::GetVulkanDevice() -> VulkanDevice&
 { return *mDevice; }
 
-auto RenderContext::GetVulkanResourceManager() -> VulkanResourceManager&
-{ return *mVrm; }
-
 auto RenderContext::GetCommandPool() -> VkCommandPool
 { return mCommandPool; }
 
@@ -543,7 +528,7 @@ auto RenderContext::Shutdown() -> Result<void>
         vkDestroySemaphore(mDevice->mLogiDevice, mSubmitSemaphores[i], nullptr);
     }
 
-    for (std::size_t i{0U}; i < kMaxFramesInFlight; ++i)
+    for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
         vkDestroySemaphore(mDevice->mLogiDevice, mAcqSemaphores[i], nullptr);
         vkDestroyFence(mDevice->mLogiDevice, mFrameFences[i], nullptr);
@@ -560,7 +545,6 @@ auto RenderContext::Shutdown() -> Result<void>
     mRenderCompositor->Destroy();
     std::ignore = mPipelineCache->Destroy();
     std::ignore = mShaderCache->Destroy();
-    std::ignore = mVrm->Destroy();
     std::ignore = mSwapchain->Destroy();
     std::ignore = mDevice->Destroy();
     vkDestroySurfaceKHR(mContext->mInstance, mSurface, nullptr);
@@ -570,9 +554,6 @@ auto RenderContext::Shutdown() -> Result<void>
 
     return {};
 }
-
-auto RenderContext::GetFramesInFlight() const -> std::uint32_t
-{ return kMaxFramesInFlight; }
 
 }// namespace polos::rendering
 
