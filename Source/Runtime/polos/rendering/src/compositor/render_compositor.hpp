@@ -40,15 +40,13 @@ private:
     auto createTargets() -> void;
     auto releaseTargets() -> void;
 
-    auto createColorTarget() -> std::pair<VkImage, VkImageView>;
-    auto createDepthTarget() -> std::pair<VkImage, VkImageView>;
+    auto createColorTarget() -> void;
+    auto createDepthTarget() -> void;
 
     VkExtent2D                   mLastExtent;
     std::unique_ptr<GeneralPass> mGeneralPass;
 
     FrameTargets mFrameTargets;
-    std::int32_t mColorImgIdx{-1};
-    std::int32_t mDepthImgIdx{-1};
 
     VkDevice mDevice;
 };

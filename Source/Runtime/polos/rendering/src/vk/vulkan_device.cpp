@@ -11,7 +11,6 @@
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "vk/common.hpp"
 #include "vk/queue_family_indices.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -77,9 +76,10 @@ auto VulkanDevice::Create(DeviceCreateDetails const& tInfo) -> Result<void>
     /// ====================================================================================
     vkGetPhysicalDeviceProperties2(mPhysDevice, &mDeviceProps);
 
-    LogInfo("Selected GPU:\n- Device Name: {}\n- Driver Version: {}",
-            mDeviceProps.properties.deviceName,
-            DecodeDriverVersion(mDeviceProps.properties.vendorID, mDeviceProps.properties.driverVersion));
+    LogInfo(
+        "Selected GPU:\n- Device Name: {}\n- Driver Version: {}",
+        mDeviceProps.properties.deviceName,
+        DecodeDriverVersion(mDeviceProps.properties.vendorID, mDeviceProps.properties.driverVersion));
 
     VkPhysicalDeviceFeatures device_features;
     vkGetPhysicalDeviceFeatures(mPhysDevice, &device_features);
@@ -155,8 +155,9 @@ auto VulkanDevice::Create(DeviceCreateDetails const& tInfo) -> Result<void>
         }
     }
 
-    assert(satisifed_extensions == tInfo.enabledExtensions.size() &&
-           "Needed extensions are not supported on current device!");
+    assert(
+        satisifed_extensions == tInfo.enabledExtensions.size() &&
+        "Needed extensions are not supported on current device!");
 
     VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -171,8 +172,9 @@ auto VulkanDevice::Create(DeviceCreateDetails const& tInfo) -> Result<void>
         .pEnabledFeatures        = &device_features,
     };
 
-    CHECK_VK_SUCCESS_OR_ERR(vkCreateDevice(mPhysDevice, &device_create_info, nullptr, &mLogiDevice),
-                            RenderingErrc::kFailedCreateDevice);
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateDevice(mPhysDevice, &device_create_info, nullptr, &mLogiDevice),
+        RenderingErrc::kFailedCreateDevice);
 
     // Create VMA allocator
     VmaAllocatorCreateInfo allocator_info{};
@@ -183,7 +185,6 @@ auto VulkanDevice::Create(DeviceCreateDetails const& tInfo) -> Result<void>
     allocator_info.vulkanApiVersion = VK_API_VERSION_1_3;
 
     CHECK_VK_SUCCESS_OR_ERR(vmaCreateAllocator(&allocator_info, &mAllocator), RenderingErrc::kFailedCreateDevice);
-
     LogInfo("Created VMA allocator");
 
     return {};

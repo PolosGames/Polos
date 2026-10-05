@@ -1,52 +1,60 @@
 #!/bin/bash
 
-# Determine the project directory
+set -euo pipefail
+
 POLOS_DIR=$(dirname "$(dirname "$(readlink -f "$0")")")
 
-# Function to display usage
 usage() {
-    echo "Usage: $0 <preset-name> <stage-to-stop>"
-    echo "Available presets:"
-    jq -r '.configurePresets[]?.name' "$POLOS_DIR/CMakePresets.json" 2>/dev/null | sort | sed 's/^/  - /'
-    exit 1
+    cat <<USAGE
+Usage:
+  $0 build [preset]       Build a configured preset (default: linux-debug)
+  $0 clean                Remove the out/ directory
+  $0 run [preset]         Run dummy (default: linux-debug)
+  $0 debug [preset]       Run dummy with LLDB (default: linux-debug)
+USAGE
 }
 
-if [ -z "$1" ]; then
-    echo "Error: Preset name not provided."
-    usage
-fi
+cd "$POLOS_DIR"
 
-if ! jq -e ".configurePresets[] | select(.name == \"$1\")" "$POLOS_DIR/CMakePresets.json" >/dev/null 2>&1; then
-    echo "Error: Preset '$1' not found in CMakePresets.json."
-    usage
-fi
-
-cd "$POLOS_DIR" || { echo "Error: Failed to change to directory $POLOS_DIR"; exit 1; }
-
-cmake --preset "$1" -DHOT_RELOAD=ON
-if [ $? -ne 0 ]; then
-    echo "Error: CMake configure step failed for preset '$1'."
-    exit 1
-fi
-
-if [ "$2" = "configure" ]; then
-    exit 0
-fi
-
-cmake --build --preset "$1"
-if [ $? -ne 0 ]; then
-    echo "Error: CMake build step failed for preset '$1'."
-    exit 1
-fi
-
-if [ "$2" = "build" ]; then
-    exit 0
-fi
-
-cd "$POLOS_DIR/out/bin/$1" || { echo "Error: Failed to change to directory $POLOS_DIR/out/bin/$1"; exit 1; }
-
-./dummy
-if [ $? -ne 0 ]; then
-    echo "Error: Execution of './dummy' failed."
-    exit 1
-fi
+case "${1:-}" in
+    build)
+        if [ "$#" -gt 2 ] || { [ "$#" -eq 2 ] && [ -z "$2" ]; }; then
+            usage >&2
+            exit 1
+        fi
+        exec cmake --build --preset "${2:-linux-debug}"
+        ;;
+    clean)
+        if [ "$#" -ne 1 ]; then
+            usage >&2
+            exit 1
+        fi
+        rm -rf -- "$POLOS_DIR/out"
+        ;;
+    run|debug)
+        if [ "$#" -gt 2 ] || { [ "$#" -eq 2 ] && [ -z "$2" ]; }; then
+            usage >&2
+            exit 1
+        fi
+        preset=${2:-linux-debug}
+        cd "$POLOS_DIR/out/bin/$preset" || {
+            echo "Error: Build output not found for preset '$preset'." >&2
+            exit 1
+        }
+        if [ ! -x ./dummy ]; then
+            echo "Error: Executable '$PWD/dummy' not found or not executable." >&2
+            exit 1
+        fi
+        if [ "$1" = debug ]; then
+            exec lldb -o run -- ./dummy
+        fi
+        exec ./dummy
+        ;;
+    -h|--help)
+        usage
+        ;;
+    *)
+        usage >&2
+        exit 1
+        ;;
+esac

@@ -6,17 +6,19 @@
 #ifndef POLOS_RENDERING_SRC_COMPOSITOR_FRAME_TARGETS_HPP
 #define POLOS_RENDERING_SRC_COMPOSITOR_FRAME_TARGETS_HPP
 
+#include "resources/gpu_image.hpp"
+
 #include <vulkan/vulkan.h>
 
-#include <cstdint>
+#include <memory>
 
 namespace polos::rendering
 {
 
 struct FrameTargets
 {
-    VkImage colorImg{VK_NULL_HANDLE};
-    VkImage depthImg{VK_NULL_HANDLE};
+    std::unique_ptr<GpuImage> colorImg;
+    std::unique_ptr<GpuImage> depthImg;
 
     VkImageView colorImgView{VK_NULL_HANDLE};
     VkImageView depthImgView{VK_NULL_HANDLE};

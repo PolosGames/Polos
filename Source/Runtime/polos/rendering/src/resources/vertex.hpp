@@ -24,7 +24,7 @@ enum class VertexAttributes : std::uint32_t// NOLINT
     kWithColors    = 1U << 2U,
     kWithTexCoords = 1U << 3U,
 
-    Full = kWithPosition | kWithNormals | kWithColors | kWithTexCoords
+    Full = kWithPosition | kWithNormals | kWithColors | kWithTexCoords,
 };
 
 constexpr std::uint32_t operator&(VertexAttributes tLhs, VertexAttributes tRhs)

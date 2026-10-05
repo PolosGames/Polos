@@ -8,6 +8,7 @@
 
 #include "resources/vertex.hpp"
 #include "scene/scene_data.hpp"
+#include "vk/settings.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -19,9 +20,10 @@ namespace polos::rendering
 
 struct FrameData;
 struct FrameTargets;
+class GpuBuffer;
+class GpuImage;
 class RenderContext;
 class VulkanSwapchain;
-class VulkanResourceManager;
 class ShaderCache;
 class PipelineCache;
 
@@ -37,44 +39,41 @@ private:
     VkRenderPass     createRenderPass();
     VkFramebuffer    createFramebuffer();
     VkPipeline       createPipeline();
-    VkBuffer         createVertexBuffer();
-    VkBuffer         createIndexBuffer();
+    auto             createVertexBuffer() -> void;
+    auto             createIndexBuffer() -> void;
     void             createUboMapping();
     VkDescriptorPool createDescriptorPool();
     void             createDescriptorSets();
     VkImageView      createTexture();
     VkSampler        createTextureSampler();
 
-    RenderContext&         mContext;
-    VulkanSwapchain*       mSwapchain{nullptr};
-    VulkanResourceManager* mVrm{nullptr};
-    ShaderCache*           mShaderCache{nullptr};
-    PipelineCache*         mPipelineCache{nullptr};
+    RenderContext&   mContext;
+    VulkanSwapchain* mSwapchain{nullptr};
+    ShaderCache*     mShaderCache{nullptr};
+    PipelineCache*   mPipelineCache{nullptr};
 
     VkCommandBuffer mCommandBuffer{VK_NULL_HANDLE};
 
-    VkPipeline                 mPipeline{VK_NULL_HANDLE};
-    VkDevice                   mDevice{VK_NULL_HANDLE};
-    VkFramebuffer              mPassFb{VK_NULL_HANDLE};
-    std::int32_t               mBufferVerticesIndex{0};
-    VkBuffer                   mBufferVertices{VK_NULL_HANDLE};
-    std::int32_t               mBufferIndicesIndex{0};
-    VkBuffer                   mBufferIndices{VK_NULL_HANDLE};
-    std::vector<std::int32_t>  mBufferInstancingIndices;
-    std::vector<void*>         mInstanceMappings;
-    std::vector<Vertex>        mVertices;
-    std::vector<std::uint16_t> mIndices;
-    std::vector<std::int32_t>  mBufferIndicesUbos;
-    std::vector<void*>         mUboMappings;
-    std::int32_t               mTextureImageIndex{0};
-    VkImageView                mImageViewTuxTexture{VK_NULL_HANDLE};
-    VkSampler                  mSamplerTuxTexture{VK_NULL_HANDLE};
+    VkPipeline                                                           mPipeline{VK_NULL_HANDLE};
+    VkDevice                                                             mDevice{VK_NULL_HANDLE};
+    VkFramebuffer                                                        mPassFb{VK_NULL_HANDLE};
+    std::unique_ptr<GpuBuffer>                                           mVerticesBuffer;
+    std::unique_ptr<GpuBuffer>                                           mIndicesBuffer;
+    std::array<std::unique_ptr<GpuBuffer>, Settings::kMaxFramesInFlight> mInstanceBuffers;
+    std::array<void*, Settings::kMaxFramesInFlight>                      mInstanceMappings;
+    std::vector<Vertex>                                                  mVertices;
+    std::vector<std::uint16_t>                                           mIndices;
+    std::array<std::unique_ptr<GpuBuffer>, Settings::kMaxFramesInFlight> mUboBuffers;
+    std::array<void*, Settings::kMaxFramesInFlight>                      mUboMappings;
+    std::unique_ptr<GpuImage>                                            mTuxImage;
+    VkImageView                                                          mImageViewTuxTexture{VK_NULL_HANDLE};
+    VkSampler                                                            mSamplerTuxTexture{VK_NULL_HANDLE};
 
     std::array<VkClearValue, 2U> mClearVals;
 
-    VkDescriptorPool                   mDescriptorPool{VK_NULL_HANDLE};
-    std::vector<VkDescriptorSet>       mDescriptorSets;
-    std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;
+    VkDescriptorPool                                          mDescriptorPool{VK_NULL_HANDLE};
+    std::array<VkDescriptorSet, Settings::kMaxFramesInFlight> mDescriptorSets;
+    std::vector<VkDescriptorSetLayout>                        mDescriptorSetLayouts;
 
     VkRenderPass mRenderPass{VK_NULL_HANDLE};
 };

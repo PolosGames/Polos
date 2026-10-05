@@ -10,7 +10,6 @@
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "vk/common.hpp"
 #include "vk/vulkan_device.hpp"
-#include "vk/vulkan_resource_manager.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -85,9 +84,10 @@ auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice tPhysDevice) -> vo
     }
 }
 
-auto VulkanSwapchain::selectFormatAndMode(VulkanDevice const*                    tDevice,
-                                          std::vector<VkSurfaceFormatKHR> const& tFormats,
-                                          std::vector<VkPresentModeKHR> const&   tModes) -> bool
+auto VulkanSwapchain::selectFormatAndMode(
+    VulkanDevice const*                    tDevice,
+    std::vector<VkSurfaceFormatKHR> const& tFormats,
+    std::vector<VkPresentModeKHR> const&   tModes) -> bool
 {
     bool is_surface_adequate{false};
     for (auto const& format : tFormats)
@@ -143,8 +143,9 @@ auto VulkanSwapchain::createSwapchainHandle(VkSurfaceTransformFlagsKHR tTransfor
         info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     }
 
-    CHECK_VK_SUCCESS_OR_ERR(vkCreateSwapchainKHR(mDevice, &info, nullptr, &mSwapchain),
-                            RenderingErrc::kFailedCreateSwapchain);
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateSwapchainKHR(mDevice, &info, nullptr, &mSwapchain),
+        RenderingErrc::kFailedCreateSwapchain);
 
     return {};
 }
@@ -184,8 +185,9 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
             },
         };
 
-        CHECK_VK_SUCCESS_OR_ERR(vkCreateImageView(mDevice, &create_info, nullptr, &mImageViews[i]),
-                                RenderingErrc::kFailedCreateSwapchainImageViews);
+        CHECK_VK_SUCCESS_OR_ERR(
+            vkCreateImageView(mDevice, &create_info, nullptr, &mImageViews[i]),
+            RenderingErrc::kFailedCreateSwapchainImageViews);
     }
 
     LogInfo("Created {} image views.", mImageViews.size());
@@ -226,12 +228,13 @@ auto VulkanSwapchain::GetViewport() const -> VkViewport const&
 
 auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) -> Result<std::uint32_t>
 {
-    VkResult const res = vkAcquireNextImageKHR(mDevice,
-                                               mSwapchain,
-                                               tDetails.timeout,
-                                               tDetails.semaphore,
-                                               VK_NULL_HANDLE,
-                                               &mCurrentImage);
+    VkResult const res = vkAcquireNextImageKHR(
+        mDevice,
+        mSwapchain,
+        tDetails.timeout,
+        tDetails.semaphore,
+        VK_NULL_HANDLE,
+        &mCurrentImage);
 
     if (VK_ERROR_OUT_OF_DATE_KHR == res)
     {
