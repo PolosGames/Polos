@@ -18,12 +18,14 @@ namespace polos::rendering
 // TODO(sorbatdev): Auto generate error codes and messages from a JSON or XML file
 enum class RenderingErrc : communication::ErrorDomain::CodeType
 {
+    kGenericError,
     kFailedCreateInstance,
     kFailedCreateSurface,
     kFailedFindPhysDevice,
     kNoAdequatePhysDevice,
     kNoAdequateQueueFamily,
     kFailedCreateDevice,
+    kNoAdequateExtension,
     kFailedCreateSwapchain,
     kNoAdequateSurface,
     kFailedCreateSwapchainImageViews,
@@ -42,6 +44,9 @@ enum class RenderingErrc : communication::ErrorDomain::CodeType
     kFailedCreateImage,
     kFailedCreateBuffer,
     kFailedLoadImage,
+    kFailedCreateDescriptorSetLayout,
+    kFailedCreateColorTarget,
+    kFailedCreateDepthTarget,
 
     kRenderingErrcCount,
 };
@@ -54,12 +59,14 @@ public:
     constexpr RenderingErrorDomain()
         : polos::communication::ErrorDomain(polos::communication::kRenderingErrorDomainId),
           mMessages({
+              "An error has occured in the render pipeline!",
               "Failed to create Vulkan instance! Exiting...",
               "Failed to create surface! Where are we going to draw? Exiting...",
               "Failed to find a physical device! Exiting...",
               "No adequate physical device on host! Exiting...",
               "No adequate queue family found! Exiting...",
               "Failed to create device instance! Exiting...",
+              "No adequate extensions found on GPU that are needed for this instance! Exiting...",
               "Failed to create the swapchain! Exiting...",
               "No adequate surface found! Exiting...",
               "Failed to create image views for the swap chain images! Exiting...",
@@ -78,6 +85,9 @@ public:
               "Failed to create VMA image allocation!",
               "Failed to create VMA buffer allocation!",
               "Failed to load image!",
+              "Failed to create descriptor set layout! Exiting...",
+              "Failed to create Color Target for the frame! Exiting...",
+              "Failed to create Depth Target for the frame! Exiting...",
           })
     {}
 

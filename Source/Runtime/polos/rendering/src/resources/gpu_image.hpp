@@ -33,7 +33,7 @@ public:
 
     VmaAllocation allocation{VK_NULL_HANDLE};
     VkImage       img{VK_NULL_HANDLE};
-    VkExtent3D    extent;
+    VkExtent3D    extent{.width = 0U, .height = 0U, .depth = 0U};
     VkFormat      format{VK_FORMAT_UNDEFINED};
 private:
     friend class RenderContext;

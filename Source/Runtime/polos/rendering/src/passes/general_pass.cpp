@@ -8,8 +8,10 @@
 #include "cache/pipeline_cache.hpp"
 #include "cache/shader_cache.hpp"
 #include "compositor/frame_targets.hpp"
+#include "polos/communication/error_code.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_api.hpp"
+#include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/scene/render_object.hpp"
 #include "polos/rendering/scene/scene.hpp"
 #include "polos/utils/string_id.hpp"
@@ -40,60 +42,38 @@ GeneralPass::GeneralPass(RenderContext& tContext)
       mSwapchain(&mContext.GetSwapchain()),
       mShaderCache(&mContext.GetShaderCache()),
       mPipelineCache(&mContext.GetPipelineCache()),
-      mDevice(mContext.GetVulkanDevice().mLogiDevice)
-{
-    mRenderPass = createRenderPass();
-
-    mPipeline = createPipeline();
-
-    mVertices = {
-        Vertex{
-            .position = {-0.5F, 0.5F, 0.0F},
-            .color    = {1.0F, 0.0F, 0.0F},
-            .texCoord = {0.0F, 0.0F},
-        },
-        Vertex{
-            .position = {0.5F, 0.5F, 0.0F},
-            .color    = {0.0F, 1.0F, 0.0F},
-            .texCoord = {1.0F, 0.0F},
-        },
-        Vertex{
-            .position = {0.5F, -0.5F, 0.0F},
-            .color    = {0.0F, 0.0F, 1.0F},
-            .texCoord = {1.0F, 1.0F},
-        },
-        Vertex{
-            .position = {-0.5F, -0.5F, 0.0F},
-            .color    = {1.0F, 1.0F, 1.0F},
-            .texCoord = {0.0F, 1.0F},
-        },
-    };
-
-    mIndices = {
-        2U,
-        1U,
-        0U,
-        0U,
-        3U,
-        2U,
-    };
-
-    createVertexBuffer();
-    createIndexBuffer();
-
-    mImageViewTuxTexture = createTexture();
-    mSamplerTuxTexture   = createTextureSampler();
-
-    createUboMapping();
-
-    mDescriptorPool = createDescriptorPool();
-    createDescriptorSets();
-
-    mClearVals[0] = VkClearValue{
-        .color = {.float32 = {common::kPolosRed, common::kPolosGreen, common::kPolosBlue, 1.0F}},
-    };
-    mClearVals[1] = VkClearValue{.depthStencil = {.depth = 1.0F, .stencil = 0U}};
-}
+      mDevice(mContext.GetVulkanDevice().mLogiDevice),
+      mVertices({
+          Vertex{
+              .position = {-0.5F, 0.5F, 0.0F},
+              .color    = {1.0F, 0.0F, 0.0F},
+              .texCoord = {0.0F, 0.0F},
+          },
+          Vertex{
+              .position = {0.5F, 0.5F, 0.0F},
+              .color    = {0.0F, 1.0F, 0.0F},
+              .texCoord = {1.0F, 0.0F},
+          },
+          Vertex{
+              .position = {0.5F, -0.5F, 0.0F},
+              .color    = {0.0F, 0.0F, 1.0F},
+              .texCoord = {1.0F, 1.0F},
+          },
+          Vertex{
+              .position = {-0.5F, -0.5F, 0.0F},
+              .color    = {1.0F, 1.0F, 1.0F},
+              .texCoord = {0.0F, 1.0F},
+          },
+      }),
+      mIndices({
+          2U,
+          1U,
+          0U,
+          0U,
+          3U,
+          2U,
+      })
+{}
 
 GeneralPass::~GeneralPass()
 {
@@ -108,6 +88,68 @@ GeneralPass::~GeneralPass()
     vkDestroyImageView(mDevice, mImageViewTuxTexture, nullptr);
 
     vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
+}
+
+auto GeneralPass::Initialize() -> Result<void>
+{
+    if (mRenderPass = createRenderPass(); nullptr == mRenderPass)
+    {
+        LogError("Could not create render pass for GeneralPass");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+
+    if (mPipeline = createPipeline(); nullptr == mPipeline)
+    {
+        LogError("Could not create pipeline for GeneralPass");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+
+    if (auto res = createVertexBuffer(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    if (auto res = createIndexBuffer(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    if (mImageViewTuxTexture = createTexture(); nullptr == mImageViewTuxTexture)
+    {
+        LogError("Could not create view for tux texture");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+    if (mSamplerTuxTexture = createTextureSampler(); nullptr == mSamplerTuxTexture)
+    {
+        LogError("Could not create sampler for tux texture");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+
+    if (auto res = createUboMapping(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    mDescriptorPool = createDescriptorPool();
+    if (VK_NULL_HANDLE == mDescriptorPool)
+    {
+        LogError("Could not create descriptor pool");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+
+    createDescriptorSets();
+    if (mDescriptorSets[0] == nullptr || mDescriptorSets[1] == nullptr || mDescriptorSets[2] == nullptr)
+    {
+        LogError("Could not allocate descriptor sets from the pool");
+        return ErrorType{RenderingErrc::kGenericError};
+    }
+
+    mClearVals[0] = VkClearValue{
+        .color = {.float32 = {common::kPolosRed, common::kPolosGreen, common::kPolosBlue, 1.0F}},
+    };
+    mClearVals[1] = VkClearValue{.depthStencil = {.depth = 1.0F, .stencil = 0U}};
+
+    return {};
 }
 
 auto GeneralPass::Prepare() -> void
@@ -155,7 +197,12 @@ auto GeneralPass::Record(FrameData const& tFrameData, SceneData const& tSceneDat
     std::vector<VkImageView> attachments({tTargets.colorImgView, tTargets.depthImgView});
     if (VK_NULL_HANDLE == mPassFb)
     {
-        mPassFb = util::CreateFramebuffer(mDevice, mRenderPass, attachments, tFrameData.scExtent);
+        if (mPassFb = util::CreateFramebuffer(mDevice, mRenderPass, attachments, tFrameData.scExtent);
+            VK_NULL_HANDLE == mPassFb)
+        {
+            LogError("Could not create a framebuffer for GeneralPass");
+            return;
+        }
     }
 
     VkRenderPassBeginInfo const pass_begin_info{
@@ -295,7 +342,10 @@ VkRenderPass GeneralPass::createRenderPass()
     };
 
     VkRenderPass render_pass{VK_NULL_HANDLE};
-    assert(vkCreateRenderPass2(mDevice, &pass_info, nullptr, &render_pass) == VK_SUCCESS);
+    if (VK_SUCCESS != vkCreateRenderPass2(mDevice, &pass_info, nullptr, &render_pass))
+    {
+        return nullptr;
+    }
 
     return render_pass;
 }
@@ -304,9 +354,17 @@ VkPipeline GeneralPass::createPipeline()
 {
     std::array<VkDynamicState, 2> dynamic_states{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
+    Shader const* vert = mShaderCache->GetShaderModule("s_basiccolor_vt"_sid);
+    Shader const* frag = mShaderCache->GetShaderModule("s_basiccolor_fm"_sid);
+
+    if (nullptr == vert || nullptr == frag)
+    {
+        return nullptr;
+    }
+
     std::array<Shader const*, 2> shaders{
-        mShaderCache->GetShaderModule("s_basiccolor_vt"_sid),
-        mShaderCache->GetShaderModule("s_basiccolor_fm"_sid),
+        vert,
+        frag,
     };
 
     std::array<VkPipelineColorBlendAttachmentState, 1> color_blend_attachments{
@@ -344,37 +402,42 @@ VkPipeline GeneralPass::createPipeline()
             .dynamicStates              = dynamic_states,
             .renderPass                 = mRenderPass,
             .subpass                    = 0U,
-            .descriptorSetLayoutBinding = {{
-                VkDescriptorSetLayoutBinding{
-                    .binding            = 0U,
-                    .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                    .descriptorCount    = 1U,
-                    .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
-                    .pImmutableSamplers = nullptr,
+            .descriptorSetLayoutBinding = {
+                {
+                    VkDescriptorSetLayoutBinding{
+                        .binding            = 0U,
+                        .descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                        .descriptorCount    = 1U,
+                        .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                        .pImmutableSamplers = nullptr,
+                    },
+                    VkDescriptorSetLayoutBinding{
+                        .binding            = 1U,
+                        .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                        .descriptorCount    = 1U,
+                        .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+                        .pImmutableSamplers = nullptr,
+                    },
+                    VkDescriptorSetLayoutBinding{
+                        .binding            = 2U,
+                        .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                        .descriptorCount    = 1U,
+                        .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
+                        .pImmutableSamplers = nullptr,
+                    },
                 },
-                VkDescriptorSetLayoutBinding{
-                    .binding            = 1U,
-                    .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                    .descriptorCount    = 1U,
-                    .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
-                    .pImmutableSamplers = nullptr,
-                },
-                VkDescriptorSetLayoutBinding{
-                    .binding            = 2U,
-                    .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                    .descriptorCount    = 1U,
-                    .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT,
-                    .pImmutableSamplers = nullptr,
-                },
-            }}
+            },
         });
 
-    assert(result.has_value() && "Failed to create basic color pipeline!");
+    if (!result.has_value())
+    {
+        return nullptr;
+    }
 
     return result->pipeline;
 }
 
-auto GeneralPass::createVertexBuffer() -> void
+auto GeneralPass::createVertexBuffer() -> Result<void>
 {
     VkDeviceSize const bufferSize = sizeof(Vertex) * mVertices.size();
 
@@ -387,13 +450,18 @@ auto GeneralPass::createVertexBuffer() -> void
             .hostAccess = HostAccessFlags::kSeqWrite,
         });
 
-    assert(buf.has_value());
+    if (!buf.has_value())
+    {
+        return ErrorType{buf.error()};
+    }
 
     mVerticesBuffer = std::move(*buf);
     mVerticesBuffer->Write(mVertices);
+
+    return {};
 }
 
-auto GeneralPass::createIndexBuffer() -> void
+auto GeneralPass::createIndexBuffer() -> Result<void>
 {
     VkDeviceSize const bufferSize = sizeof(std::uint16_t) * mIndices.size();
 
@@ -406,13 +474,18 @@ auto GeneralPass::createIndexBuffer() -> void
             .hostAccess = HostAccessFlags::kSeqWrite,
         });
 
-    assert(buf.has_value());
+    if (!buf.has_value())
+    {
+        return ErrorType{buf.error()};
+    }
 
     mIndicesBuffer = std::move(*buf);
     mIndicesBuffer->Write(mIndices);
+
+    return {};
 }
 
-void GeneralPass::createUboMapping()
+auto GeneralPass::createUboMapping() -> Result<void>
 {
     for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
@@ -425,7 +498,10 @@ void GeneralPass::createUboMapping()
                     .residence  = MemoryResidence::kHost,
                     .hostAccess = HostAccessFlags::kSeqWrite,
                 });
-            assert(buf.has_value());
+            if (!buf.has_value())
+            {
+                return ErrorType{buf.error()};
+            }
 
             mUboBuffers[i]  = std::move(*buf);
             mUboMappings[i] = mUboBuffers[i]->mapping;
@@ -441,12 +517,17 @@ void GeneralPass::createUboMapping()
                     .residence  = MemoryResidence::kHost,
                     .hostAccess = HostAccessFlags::kSeqWrite,
                 });
-            assert(buf.has_value());
+            if (!buf.has_value())
+            {
+                return ErrorType{buf.error()};
+            }
 
             mInstanceBuffers[i]  = std::move(*buf);
             mInstanceMappings[i] = mInstanceBuffers[i]->mapping;
         }
     }
+
+    return {};
 }
 
 VkDescriptorPool GeneralPass::createDescriptorPool()
@@ -476,7 +557,10 @@ VkDescriptorPool GeneralPass::createDescriptorPool()
     };
 
     VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
-    assert(vkCreateDescriptorPool(mDevice, &pool_info, nullptr, &descriptor_pool) == VK_SUCCESS);
+    if (VK_SUCCESS != vkCreateDescriptorPool(mDevice, &pool_info, nullptr, &descriptor_pool))
+    {
+        return nullptr;
+    }
 
     return descriptor_pool;
 }
@@ -495,7 +579,10 @@ void GeneralPass::createDescriptorSets()
         .pSetLayouts        = layouts.data(),
     };
 
-    assert(vkAllocateDescriptorSets(mDevice, &alloc_info, mDescriptorSets.data()) == VK_SUCCESS);
+    if (VK_SUCCESS != vkAllocateDescriptorSets(mDevice, &alloc_info, mDescriptorSets.data()))
+    {
+        return;
+    }
 
     for (size_t i = 0; i < Settings::kMaxFramesInFlight; i++)
     {
@@ -601,7 +688,10 @@ VkSampler GeneralPass::createTextureSampler()
     };
 
     VkSampler sampler{VK_NULL_HANDLE};
-    assert(VK_SUCCESS == vkCreateSampler(mDevice, &sampler_info, nullptr, &sampler));
+    if (VK_SUCCESS != vkCreateSampler(mDevice, &sampler_info, nullptr, &sampler))
+    {
+        return nullptr;
+    }
 
     return sampler;
 }

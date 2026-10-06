@@ -99,12 +99,13 @@ RenderContext::~RenderContext()
 
 auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
 {
-    mWindowSurface = &tSurface;
-    mContext       = std::make_unique<VulkanContext>();
-    mDevice        = std::make_unique<VulkanDevice>();
-    mSwapchain     = std::make_unique<VulkanSwapchain>();
-    mShaderCache   = std::make_unique<ShaderCache>();
-    mPipelineCache = std::make_unique<PipelineCache>();
+    mWindowSurface    = &tSurface;
+    mContext          = std::make_unique<VulkanContext>();
+    mDevice           = std::make_unique<VulkanDevice>();
+    mSwapchain        = std::make_unique<VulkanSwapchain>();
+    mShaderCache      = std::make_unique<ShaderCache>();
+    mPipelineCache    = std::make_unique<PipelineCache>();
+    mRenderCompositor = std::make_unique<RenderCompositor>();
 
     // --- Initialize Vulkan context ---
     ContextCreateDetails const context_details{
@@ -296,7 +297,15 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
             RenderingErrc::kFailedCreateFence);
     }
 
-    mRenderCompositor = std::make_unique<RenderCompositor>(*this);
+    // --- Render Compositor
+    {
+        RenderCompositorCreateDetails const details{
+            .context    = *this,
+            .scExtent   = mSwapchain->GetExtent(),
+            .logiDevice = mDevice->mLogiDevice,
+        };
+        INIT_VULKAN_COMPONENT(mRenderCompositor, details);
+    }
 
     mIsInitialized = true;
 
@@ -342,8 +351,12 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     };
 
     vkResetCommandBuffer(cur_cmd_buf, 0U);
-    assert(
-        (VK_SUCCESS == vkBeginCommandBuffer(cur_cmd_buf, &begin_info)) && "Could not begin recording command buffer!");
+    if (VK_SUCCESS != vkBeginCommandBuffer(cur_cmd_buf, &begin_info))
+    {
+        LogCritical("Could not begin recording command buffer!");
+        return nullptr;
+    }
+
     isRecording = true;
 
     mFrameData[mCurrentFrameIndex] = FrameData{
@@ -367,9 +380,11 @@ auto RenderContext::EndFrame(SceneData const& tView) -> void
 {
     renderFrame(tView);
 
-    assert(
-        (VK_SUCCESS == vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex])) &&
-        "Could not record command buffer.");
+    if (VK_SUCCESS != vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex]))
+    {
+        LogCritical("Could not record command buffer.");
+        return;
+    }
 
     std::array<VkPipelineStageFlags, 1> const wait_stages = {VK_PIPELINE_STAGE_TRANSFER_BIT};
 
@@ -386,9 +401,11 @@ auto RenderContext::EndFrame(SceneData const& tView) -> void
     };
 
     vkResetFences(mDevice->mLogiDevice, 1U, &mFrameFences[mCurrentFrameIndex]);
-    assert(
-        (VK_SUCCESS == vkQueueSubmit(mGfxQueue, 1U, &submit_info, mFrameFences[mCurrentFrameIndex])) &&
-        "Could not submit draw command buffer to the graphics queue!");
+    if (VK_SUCCESS != vkQueueSubmit(mGfxQueue, 1U, &submit_info, mFrameFences[mCurrentFrameIndex]))
+    {
+        LogCritical("Could not submit draw command buffer to the graphics queue!");
+        return;
+    }
     isRecording = false;
 
     auto result = mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]);
@@ -418,7 +435,11 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
     };
 
     VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    assert(VK_SUCCESS == vkAllocateCommandBuffers(sRenderContext->mDevice->mLogiDevice, &alloc_info, &command_buffer));
+    if (VK_SUCCESS != vkAllocateCommandBuffers(sRenderContext->mDevice->mLogiDevice, &alloc_info, &command_buffer))
+    {
+        LogError("Could not allocate command buffer for single time commands!");
+        return VK_NULL_HANDLE;
+    }
 
     VkCommandBufferBeginInfo const begin_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -427,14 +448,23 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
         .pInheritanceInfo = nullptr,
     };
 
-    assert(VK_SUCCESS == vkBeginCommandBuffer(command_buffer, &begin_info));
+    if (VK_SUCCESS != vkBeginCommandBuffer(command_buffer, &begin_info))
+    {
+        LogError("Could not begin command buffer for single time commands!");
+        return VK_NULL_HANDLE;
+    }
 
     return command_buffer;
 }
 
 void RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
 {
-    assert(VK_SUCCESS == vkEndCommandBuffer(tCommandBuffer));
+    if (VK_SUCCESS != vkEndCommandBuffer(tCommandBuffer))
+    {
+        LogError("Could not end single-time command buffer!");
+        vkFreeCommandBuffers(sRenderContext->mDevice->mLogiDevice, sRenderContext->mCommandPool, 1U, &tCommandBuffer);
+        return;
+    }
 
     VkSubmitInfo const submit_info{
         .sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -448,7 +478,12 @@ void RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
         .pSignalSemaphores    = nullptr,
     };
 
-    assert(VK_SUCCESS == vkQueueSubmit(sRenderContext->mGfxQueue, 1U, &submit_info, VK_NULL_HANDLE));
+    if (VK_SUCCESS != vkQueueSubmit(sRenderContext->mGfxQueue, 1U, &submit_info, VK_NULL_HANDLE))
+    {
+        LogError("Could not submit single-time command buffer to queue!");
+        vkFreeCommandBuffers(sRenderContext->mDevice->mLogiDevice, sRenderContext->mCommandPool, 1U, &tCommandBuffer);
+        return;
+    }
     vkQueueWaitIdle(sRenderContext->mGfxQueue);
 
     vkFreeCommandBuffers(sRenderContext->mDevice->mLogiDevice, sRenderContext->mCommandPool, 1U, &tCommandBuffer);

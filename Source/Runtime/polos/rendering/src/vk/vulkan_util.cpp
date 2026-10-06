@@ -46,7 +46,11 @@ auto CreateImageView(VkDevice tDevice, VkImage tImage, VkFormat tFormat, VkImage
     };
 
     VkImageView img_view{VK_NULL_HANDLE};
-    assert(VK_SUCCESS == vkCreateImageView(tDevice, &img_view_info, nullptr, &img_view));
+    if (VK_SUCCESS != vkCreateImageView(tDevice, &img_view_info, nullptr, &img_view))
+    {
+        LogError("Could not create image view");
+        return VK_NULL_HANDLE;
+    }
 
     return img_view;
 }
@@ -223,7 +227,10 @@ auto CreateFramebuffer(
     };
 
     VkFramebuffer framebuffer{VK_NULL_HANDLE};
-    assert(vkCreateFramebuffer(tDevice, &fb_info, nullptr, &framebuffer) == VK_SUCCESS);
+    if (VK_SUCCESS != vkCreateFramebuffer(tDevice, &fb_info, nullptr, &framebuffer))
+    {
+        return VK_NULL_HANDLE;
+    }
 
     return framebuffer;
 }
@@ -271,6 +278,10 @@ auto LoadImageResourceToGpuImage(
     // Transition image layout to be optimal for receiving data transfer from staging buffer
     {
         VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+        if (VK_NULL_HANDLE == cmdBuf)
+        {
+            return ErrorType{RenderingErrc::kGenericError};
+        }
 
         util::TransitionImageLayout(
             cmdBuf,
@@ -283,9 +294,14 @@ auto LoadImageResourceToGpuImage(
         RenderContext::EndSingleTimeCommands(cmdBuf);
     }
 
+
     // Copy data from staging buffer to texture image
     {
         VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+        if (VK_NULL_HANDLE == cmdBuf)
+        {
+            return ErrorType{RenderingErrc::kGenericError};
+        }
 
         util::CopyBufferToImage(
             cmdBuf,
@@ -303,6 +319,10 @@ auto LoadImageResourceToGpuImage(
     // Transition image layout to be optimal for Shader read access
     {
         VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+        if (VK_NULL_HANDLE == cmdBuf)
+        {
+            return ErrorType{RenderingErrc::kGenericError};
+        }
 
         util::TransitionImageLayout(
             cmdBuf,

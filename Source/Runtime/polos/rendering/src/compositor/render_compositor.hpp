@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_SRC_FRAME_PIPELINE_HPP
 
 #include "compositor/frame_targets.hpp"
+#include "passes/general_pass.hpp"
 #include "polos/communication/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -16,15 +17,21 @@
 namespace polos::rendering
 {
 
-class GeneralPass;
 struct FrameData;
-struct RenderContext;
+class RenderContext;
 struct SceneData;
+
+struct RenderCompositorCreateDetails
+{
+    RenderContext& context;
+    VkExtent2D     scExtent;
+    VkDevice       logiDevice;
+};
 
 class RenderCompositor
 {
 public:
-    explicit RenderCompositor(RenderContext& tRenderContext);
+    RenderCompositor() = default;
 
     RenderCompositor(RenderCompositor const&);
     RenderCompositor(RenderCompositor&&);
@@ -32,16 +39,17 @@ public:
     RenderCompositor& operator=(RenderCompositor&&);
     ~RenderCompositor();
 
+    auto Create(RenderCompositorCreateDetails const& tDetails) -> Result<void>;
     auto Destroy() -> void;
 
     auto Prepare(FrameData const& tFrameData) -> Result<void>;
     auto Record(FrameData const& tFrameData, SceneData const& tSceneData) -> void;
 private:
-    auto createTargets() -> void;
+    auto createTargets() -> Result<void>;
     auto releaseTargets() -> void;
 
-    auto createColorTarget() -> void;
-    auto createDepthTarget() -> void;
+    auto createColorTarget() -> bool;
+    auto createDepthTarget() -> bool;
 
     VkExtent2D                   mLastExtent;
     std::unique_ptr<GeneralPass> mGeneralPass;

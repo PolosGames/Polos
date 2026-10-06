@@ -5,6 +5,7 @@
 
 #include "polos/rendering/scene/scene.hpp"
 
+#include "polos/logging/log_macros.hpp"
 #include "polos/rendering/scene/camera3d.hpp"
 
 #include <glm/gtc/quaternion.hpp>
@@ -78,7 +79,10 @@ auto Scene::AddObject(glm::mat4 tTransform, glm::vec4 tColor) -> std::size_t
 
 auto Scene::RemoveObject(std::size_t tHandle) -> void
 {
-    assert(tHandle < mHandleToSlot.size() && "Removing a handle that was never allocated!");
+    if (tHandle < mHandleToSlot.size())
+    {
+        LogError("Removing a handle that was never allocated!");
+    }
 
     std::size_t const slot      = mHandleToSlot[tHandle];
     std::size_t const last_slot = --mObjectsCurrentSize;

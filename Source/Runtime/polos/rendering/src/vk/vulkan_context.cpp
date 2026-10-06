@@ -21,10 +21,11 @@ namespace
 
 constexpr char const* kValidationLayerName = "VK_LAYER_KHRONOS_validation";
 
-VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT      tMessageSeverity,
-                                             VkDebugUtilsMessageTypeFlagsEXT             tMessageType,
-                                             VkDebugUtilsMessengerCallbackDataEXT const* tCallbackData,
-                                             void* /*tUserData*/)
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT      tMessageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT             tMessageType,
+    VkDebugUtilsMessengerCallbackDataEXT const* tCallbackData,
+    void* /*tUserData*/)
 {
     std::string const message_type_str = [&]() {
         switch (tMessageType)
@@ -125,8 +126,9 @@ auto VulkanContext::Create(ContextCreateDetails const& tDetails) -> Result<void>
         .ppEnabledExtensionNames = mExtensions.data(),// provides VK_KHR_swapchain
     };
 
-    CHECK_VK_SUCCESS_OR_ERR(vkCreateInstance(&instance_info, nullptr, &mInstance),
-                            RenderingErrc::kFailedCreateInstance);
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateInstance(&instance_info, nullptr, &mInstance),
+        RenderingErrc::kFailedCreateInstance);
 
     if (Settings::kEnableValidationLayers)
     {
@@ -147,15 +149,16 @@ auto VulkanContext::Create(ContextCreateDetails const& tDetails) -> Result<void>
 
 auto VulkanContext::Destroy() -> Result<void>
 {
-#ifndef NDEBUG
-    auto const func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(// NOLINT
-        vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT"));
-
-    if (func != nullptr && mDbgMessenger != VK_NULL_HANDLE)
+    if (Settings::kEnableValidationLayers)
     {
-        func(mInstance, mDbgMessenger, nullptr);
+        auto const func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(// NOLINT
+            vkGetInstanceProcAddr(mInstance, "vkDestroyDebugUtilsMessengerEXT"));
+
+        if (func != nullptr && mDbgMessenger != VK_NULL_HANDLE)
+        {
+            func(mInstance, mDbgMessenger, nullptr);
+        }
     }
-#endif// !NDEBUG
     vkDestroyInstance(mInstance, nullptr);
 
     LogInfo("Destoyed VulkanContext and DebugMessenger");
