@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_SRC_PASSES_GENERAL_PASS_HPP
 #define POLOS_RENDERING_SRC_PASSES_GENERAL_PASS_HPP
 
+#include "polos/communication/error_code.hpp"
 #include "resources/vertex.hpp"
 #include "scene/scene_data.hpp"
 #include "vk/settings.hpp"
@@ -33,17 +34,18 @@ public:
     explicit GeneralPass(RenderContext& tContext);
     ~GeneralPass();
 
+    auto Initialize() -> Result<void>;
     auto Prepare() -> void;
     auto Record(FrameData const& tFrameData, SceneData const& tSceneData, FrameTargets const& tTargets) -> void;
 private:
     VkRenderPass     createRenderPass();
     VkFramebuffer    createFramebuffer();
     VkPipeline       createPipeline();
-    auto             createVertexBuffer() -> void;
-    auto             createIndexBuffer() -> void;
-    void             createUboMapping();
+    auto             createVertexBuffer() -> Result<void>;
+    auto             createIndexBuffer() -> Result<void>;
+    auto             createUboMapping() -> Result<void>;
     VkDescriptorPool createDescriptorPool();
-    void             createDescriptorSets();
+    auto             createDescriptorSets() -> void;
     VkImageView      createTexture();
     VkSampler        createTextureSampler();
 

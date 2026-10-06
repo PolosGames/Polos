@@ -54,7 +54,11 @@ auto ShaderCache::GetShaderModule(utils::string_id const tName) -> Shader const*
     auto const itr = std::ranges::find_if(mShaderCache, [&tName](std::unique_ptr<Shader> const& tShader) {
         return tShader->name == tName;
     });
-    assert(itr != mShaderCache.end() && "Shader module not loaded to engine!");
+    if (itr == mShaderCache.end())
+    {
+        LogError("Shader module not loaded to engine!");
+        return nullptr;
+    }
 
     return itr->get();
 }

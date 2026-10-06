@@ -5,8 +5,8 @@
 
 #include "compositor/render_compositor.hpp"
 
-#include "passes/general_pass.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/rendering_error_domain.hpp"
 #include "resources/image_description.hpp"
 #include "scene/scene_data.hpp"
 #include "vk/frame_data.hpp"
@@ -20,13 +20,26 @@
 namespace polos::rendering
 {
 
-RenderCompositor::RenderCompositor(RenderContext& tRenderContext)
-    : mLastExtent(tRenderContext.GetSwapchain().GetExtent()),
-      mGeneralPass(std::make_unique<GeneralPass>(tRenderContext)),
-      mDevice(tRenderContext.GetVulkanDevice().mLogiDevice)
-{ createTargets(); }
-
 RenderCompositor::~RenderCompositor() = default;
+
+auto RenderCompositor::Create(RenderCompositorCreateDetails const& tDetails) -> Result<void>
+{
+    mLastExtent  = tDetails.scExtent;
+    mDevice      = tDetails.logiDevice;
+    mGeneralPass = std::make_unique<GeneralPass>(tDetails.context);
+
+    if (auto res = mGeneralPass->Initialize(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    if (auto res = createTargets(); !res.has_value())
+    {
+        return ErrorType{res.error()};
+    }
+
+    return {};
+}
 
 auto RenderCompositor::Destroy() -> void
 {
@@ -42,7 +55,10 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> Result<void>
         mGeneralPass->Prepare();
         mLastExtent = tFrameData.scExtent;
         releaseTargets();
-        createTargets();
+        if (auto res = createTargets(); !res.has_value())
+        {
+            return ErrorType{res.error()};
+        }
     }
 
     return {};
@@ -76,10 +92,18 @@ auto RenderCompositor::Record(FrameData const& tFrameData, SceneData const& tSce
         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 }
 
-auto RenderCompositor::createTargets() -> void
+auto RenderCompositor::createTargets() -> Result<void>
 {
-    createColorTarget();
-    createDepthTarget();
+    if (!createColorTarget())
+    {
+        return ErrorType{RenderingErrc::kFailedCreateColorTarget};
+    }
+    if (!createDepthTarget())
+    {
+        return ErrorType{RenderingErrc::kFailedCreateDepthTarget};
+    }
+
+    return {};
 }
 
 auto RenderCompositor::releaseTargets() -> void
@@ -96,7 +120,7 @@ auto RenderCompositor::releaseTargets() -> void
     mFrameTargets.depthImg.reset();
 }
 
-auto RenderCompositor::createColorTarget() -> void
+auto RenderCompositor::createColorTarget() -> bool
 {
     VkImageUsageFlags usage{0U};
     usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -119,7 +143,7 @@ auto RenderCompositor::createColorTarget() -> void
     if (!idxRes.has_value())
     {
         LogError("{}, [Color Image was not created.]", idxRes.error());
-        return;
+        return false;
     }
     mFrameTargets.colorImg     = std::move(*idxRes);
     mFrameTargets.colorImgView = util::CreateImageView(
@@ -127,9 +151,11 @@ auto RenderCompositor::createColorTarget() -> void
         mFrameTargets.colorImg->img,
         VK_FORMAT_R16G16B16A16_SFLOAT,
         VK_IMAGE_ASPECT_COLOR_BIT);
+
+    return VK_NULL_HANDLE != mFrameTargets.colorImgView;
 }
 
-auto RenderCompositor::createDepthTarget() -> void
+auto RenderCompositor::createDepthTarget() -> bool
 {
     ImageDescription depthDesc{
         .extent =
@@ -146,12 +172,14 @@ auto RenderCompositor::createDepthTarget() -> void
     if (!idxRes.has_value())
     {
         LogError("{}, [Depth Image was not created.]", idxRes.error());
-        return;
+        return false;
     }
 
     mFrameTargets.depthImg = std::move(*idxRes);
     mFrameTargets.depthImgView =
         util::CreateImageView(mDevice, mFrameTargets.depthImg->img, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+    return VK_NULL_HANDLE != mFrameTargets.depthImgView;
 }
 
 }// namespace polos::rendering

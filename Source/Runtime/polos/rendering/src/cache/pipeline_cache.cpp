@@ -211,7 +211,9 @@ auto PipelineCache::ConstructPipeline(GraphicsPipelineInfo const& tPipelineInfo)
     };
 
     VkDescriptorSetLayout desc_set_layout{VK_NULL_HANDLE};
-    assert(VK_SUCCESS == vkCreateDescriptorSetLayout(mDevice, &desc_set_layout_info, nullptr, &desc_set_layout));
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateDescriptorSetLayout(mDevice, &desc_set_layout_info, nullptr, &desc_set_layout),
+        RenderingErrc::kFailedCreateDescriptorSetLayout);
 
     std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{desc_set_layout};
 
@@ -226,7 +228,9 @@ auto PipelineCache::ConstructPipeline(GraphicsPipelineInfo const& tPipelineInfo)
     };
 
     VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
-    assert(VK_SUCCESS == vkCreatePipelineLayout(mDevice, &pipeline_layout_info, nullptr, &pipeline_layout));
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreatePipelineLayout(mDevice, &pipeline_layout_info, nullptr, &pipeline_layout),
+        RenderingErrc::kFailedCreatePipelineLayout);
 
     VkGraphicsPipelineCreateInfo const pipeline_info{
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -251,10 +255,9 @@ auto PipelineCache::ConstructPipeline(GraphicsPipelineInfo const& tPipelineInfo)
     };
 
     VkPipeline pipeline{VK_NULL_HANDLE};
-    if (vkCreateGraphicsPipelines(mDevice, mCreationCache, 1U, &pipeline_info, nullptr, &pipeline) != VK_SUCCESS)
-    {
-        return ErrorType{RenderingErrc::kFailedCreatePipeline};
-    }
+    CHECK_VK_SUCCESS_OR_ERR(
+        vkCreateGraphicsPipelines(mDevice, mCreationCache, 1U, &pipeline_info, nullptr, &pipeline),
+        RenderingErrc::kFailedCreatePipeline);
 
     auto [itr_inserted, was_inserted] = mCache.insert(
         std::make_pair(

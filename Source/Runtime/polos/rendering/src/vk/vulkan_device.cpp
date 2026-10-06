@@ -155,9 +155,10 @@ auto VulkanDevice::Create(DeviceCreateDetails const& tInfo) -> Result<void>
         }
     }
 
-    assert(
-        satisifed_extensions == tInfo.enabledExtensions.size() &&
-        "Needed extensions are not supported on current device!");
+    if (satisifed_extensions != tInfo.enabledExtensions.size())
+    {
+        return ErrorType{RenderingErrc::kNoAdequateExtension};
+    }
 
     VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
