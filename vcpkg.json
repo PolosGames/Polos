@@ -2,7 +2,10 @@
     "name": "polos",
     "version-string": "1.0.0",
     "dependencies": [
-        "assimp",
+        {
+            "name": "tinygltf",
+            "version>=": "3.0.0#1"
+        },
         "ctre",
         {
             "name": "glfw3",

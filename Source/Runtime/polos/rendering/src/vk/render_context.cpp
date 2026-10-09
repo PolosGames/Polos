@@ -301,7 +301,7 @@ auto RenderContext::Initialize(IWindowSurface& tSurface) -> Result<void>
     {
         RenderCompositorCreateDetails const details{
             .context    = *this,
-            .scExtent   = mSwapchain->GetExtent(),
+            .scExtent   = mSwapchain->GetExtent3D(),
             .logiDevice = mDevice->mLogiDevice,
         };
         INIT_VULKAN_COMPONENT(mRenderCompositor, details);
@@ -363,9 +363,8 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         .frameSlot     = mCurrentFrameIndex,
         .scImageIndex  = mSwapchainImageIndex,
         .currentCmdBuf = cur_cmd_buf,
-        .scImage       = mSwapchain->GetCurrentImage(),
+        .scImage       = mSwapchain->GetCurrentImageResource(),
         .scImageView   = mSwapchain->GetCurrentImageView(),
-        .scExtent      = mSwapchain->GetExtent(),
     };
 
     std::ignore = mRenderCompositor->Prepare(mFrameData[mCurrentFrameIndex]);

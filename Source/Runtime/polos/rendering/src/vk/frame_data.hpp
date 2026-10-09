@@ -13,14 +13,15 @@
 namespace polos::rendering
 {
 
+class GpuImage;
+
 struct FrameData
 {
-    std::uint32_t   frameSlot{0U};
-    std::uint32_t   scImageIndex{0U};// To test if we got a sc image
-    VkCommandBuffer currentCmdBuf{VK_NULL_HANDLE};
-    VkImage         scImage{VK_NULL_HANDLE};
-    VkImageView     scImageView{VK_NULL_HANDLE};
-    VkExtent2D      scExtent;
+    std::uint32_t             frameSlot{0U};
+    std::uint32_t             scImageIndex{0U};// To test if we got a sc image
+    VkCommandBuffer           currentCmdBuf{VK_NULL_HANDLE};
+    std::shared_ptr<GpuImage> scImage{nullptr};
+    VkImageView               scImageView{VK_NULL_HANDLE};
 };
 
 }// namespace polos::rendering
