@@ -61,6 +61,8 @@ if (HOT_RELOAD)
             ${RENDERING_THIRD_PARTY_DEPS}
             ${RENDERING_IMPL_DEPS}
     )
+
+    target_include_directories(rendering_impl PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 else()
     set(RENDERING_SRC ${RENDERING_IMPL_SRC})
     set(RENDERING_SRC_DEPS ${RENDERING_IMPL_DEPS})

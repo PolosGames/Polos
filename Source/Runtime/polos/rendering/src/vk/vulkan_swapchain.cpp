@@ -8,6 +8,7 @@
 #include "polos/communication/error_code.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
+#include "resources/gpu_image.hpp"
 #include "vk/common.hpp"
 #include "vk/vulkan_device.hpp"
 
@@ -156,6 +157,7 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
     mImages.resize(static_cast<std::size_t>(mImgCount));
     vkGetSwapchainImagesKHR(mDevice, mSwapchain, &mImgCount, mImages.data());
     mImageViews.resize(static_cast<std::size_t>(mImgCount));
+    mImageResources.resize(static_cast<std::size_t>(mImgCount));
 
     LogInfo("Received {} swapchain images.", mImgCount);
 
@@ -163,6 +165,13 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
 
     for (std::size_t i = 0U; i < img_count; ++i)
     {
+        auto resource =
+            GpuImage::Create(ImageDescription{.extent = mExtent3D, .format = mSurfaceFormat.format}, mImages[i]);
+        if (!resource.has_value())
+        {
+            return ErrorType{resource.error()};
+        }
+        mImageResources[i] = std::move(*resource);
         VkImageViewCreateInfo const create_info{
             .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .pNext    = nullptr,
@@ -203,6 +212,7 @@ auto VulkanSwapchain::Destroy() -> Result<void>
         vkDestroyImageView(mDevice, tView, nullptr);
     });
 
+    mImageResources.clear();
     vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 
     mImageViews.clear();
@@ -243,6 +253,11 @@ auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) 
 
     CHECK_VK_SUCCESS_OR_ERR(res, RenderingErrc::kFailedAcquireNextImage);
 
+    // The submit waits for acquisition at TRANSFER. Put the first image transition
+    // in that scope as well, retaining the layout from the previous presentation.
+    auto& image = *mImageResources[mCurrentImage];
+    image.SetUse({image.GetUse().layout, VK_PIPELINE_STAGE_TRANSFER_BIT, 0U});
+
     return mCurrentImage;
 }
 
@@ -270,6 +285,9 @@ auto VulkanSwapchain::QueuePresent(VkSemaphore tWaitSemaphore) const -> Result<v
 
     return {};
 }
+
+auto VulkanSwapchain::GetCurrentImageResource() const -> std::shared_ptr<GpuImage>
+{ return mImageResources[mCurrentImage]; }
 
 auto VulkanSwapchain::GetCurrentImage() const -> VkImage
 { return GetImage(mCurrentImage); }

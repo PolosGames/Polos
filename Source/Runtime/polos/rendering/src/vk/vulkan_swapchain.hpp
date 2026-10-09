@@ -13,12 +13,14 @@
 #include <vulkan/vulkan.h>
 
 #include <limits>
+#include <memory>
 #include <vector>
 
 namespace polos::rendering
 {
 
 class VulkanDevice;
+class GpuImage;
 
 struct alignas(128) SwapchainCreateDetails// NOLINT
 {
@@ -65,6 +67,7 @@ public:
     auto QueuePresent(VkSemaphore tWaitSemaphore) const -> Result<void>;
 
     [[nodiscard]] auto GetCurrentImage() const -> VkImage;
+    [[nodiscard]] auto GetCurrentImageResource() const -> std::shared_ptr<GpuImage>;
     [[nodiscard]] auto GetCurrentImageIndex() const -> std::uint32_t;
     [[nodiscard]] auto GetCurrentImageView() const -> VkImageView;
 
@@ -73,9 +76,10 @@ public:
     [[nodiscard]] auto GetImageCount() const -> std::uint32_t;
 private:
     auto setupExtentAndViewport(VkPhysicalDevice tPhysDevice) -> void;
-    auto selectFormatAndMode(VulkanDevice const*                    tDevice,
-                             std::vector<VkSurfaceFormatKHR> const& tFormats,
-                             std::vector<VkPresentModeKHR> const&   tModes) -> bool;
+    auto selectFormatAndMode(
+        VulkanDevice const*                    tDevice,
+        std::vector<VkSurfaceFormatKHR> const& tFormats,
+        std::vector<VkPresentModeKHR> const&   tModes) -> bool;
     auto createSwapchainHandle(VkSurfaceTransformFlagsKHR tTransformFlags) -> Result<void>;
     auto createImageViews() -> Result<void>;
 
@@ -93,10 +97,11 @@ private:
     VkRect2D                 mScissor{};
     VkViewport               mViewport{};
 
-    std::uint32_t            mCurrentImage{0U};
-    std::uint32_t            mImgCount{0U};
-    std::vector<VkImage>     mImages;
-    std::vector<VkImageView> mImageViews;
+    std::uint32_t                          mCurrentImage{0U};
+    std::uint32_t                          mImgCount{0U};
+    std::vector<VkImage>                   mImages;
+    std::vector<std::shared_ptr<GpuImage>> mImageResources;
+    std::vector<VkImageView>               mImageViews;
 
     IWindowSurface const* mWindowSurface{nullptr};
 };

@@ -77,10 +77,7 @@ GeneralPass::GeneralPass(RenderContext& tContext)
 
 GeneralPass::~GeneralPass()
 {
-    if (mPassFb != VK_NULL_HANDLE)
-    {
-        vkDestroyFramebuffer(mDevice, mPassFb, nullptr);
-    }
+    for (auto fbuf : mPassFb) { vkDestroyFramebuffer(mDevice, fbuf, nullptr); }
 
     vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
 
@@ -152,12 +149,12 @@ auto GeneralPass::Initialize() -> Result<void>
     return {};
 }
 
-auto GeneralPass::Prepare() -> void
+auto GeneralPass::Prepare(std::uint32_t tFrameSlot) -> void
 {
-    if (mPassFb != VK_NULL_HANDLE)
+    if (VK_NULL_HANDLE != mPassFb[tFrameSlot])
     {
-        vkDestroyFramebuffer(mDevice, mPassFb, nullptr);
-        mPassFb = VK_NULL_HANDLE;
+        vkDestroyFramebuffer(mDevice, mPassFb[tFrameSlot], nullptr);
+        mPassFb[tFrameSlot] = VK_NULL_HANDLE;
     }
 }
 
@@ -194,11 +191,13 @@ auto GeneralPass::Record(FrameData const& tFrameData, SceneData const& tSceneDat
         sizeof(QuadInstance) * current_instance_count);
     std::memcpy(mUboMappings[static_cast<std::size_t>(tFrameData.frameSlot)], &ubo, sizeof(ubo));
 
+    auto&                    framebuffer = mPassFb[tFrameData.frameSlot];
     std::vector<VkImageView> attachments({tTargets.colorImgView, tTargets.depthImgView});
-    if (VK_NULL_HANDLE == mPassFb)
+    if (VK_NULL_HANDLE == framebuffer)
     {
-        if (mPassFb = util::CreateFramebuffer(mDevice, mRenderPass, attachments, tFrameData.scExtent);
-            VK_NULL_HANDLE == mPassFb)
+        if (framebuffer =
+                util::CreateFramebuffer(mDevice, mRenderPass, attachments, ToExtent2D(tFrameData.scImage->extent));
+            VK_NULL_HANDLE == framebuffer)
         {
             LogError("Could not create a framebuffer for GeneralPass");
             return;
@@ -209,7 +208,7 @@ auto GeneralPass::Record(FrameData const& tFrameData, SceneData const& tSceneDat
         .sType       = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .pNext       = nullptr,
         .renderPass  = mRenderPass,
-        .framebuffer = mPassFb,
+        .framebuffer = framebuffer,
         .renderArea =
             {
                 .offset = VkOffset2D{.x = 0, .y = 0},
@@ -243,6 +242,11 @@ auto GeneralPass::Record(FrameData const& tFrameData, SceneData const& tSceneDat
             vkCmdDrawIndexed(tFrameData.currentCmdBuf, VK_SIZE_CAST(mIndices.size()), VK_SIZE_CAST(current_instance_count), 0U, 0U, 0U);
         vkCmdEndRenderPass(tFrameData.currentCmdBuf);
 
+        // The render pass performed implicit transitions; retain the actual producer scopes.
+        tTargets.colorImg->SetUse({VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT});
+        tTargets.depthImg->SetUse(ImageUse::ForLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL));
+
     // clang-format on
 }
 
@@ -264,7 +268,7 @@ VkRenderPass GeneralPass::createRenderPass()
         .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
     };
 
-    constexpr VkSubpassDescription2 const kSubpassDesc{
+    static constexpr VkSubpassDescription2 const kSubpassDesc{
         .sType                   = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2,
         .pNext                   = nullptr,
         .flags                   = 0U,
@@ -280,7 +284,7 @@ VkRenderPass GeneralPass::createRenderPass()
         .pPreserveAttachments    = nullptr,
     };
 
-    constexpr VkSubpassDependency2 const kSubpassDependency{
+    static constexpr VkSubpassDependency2 const kSubpassDependency{
         .sType           = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2,
         .pNext           = nullptr,
         .srcSubpass      = VK_SUBPASS_EXTERNAL,
@@ -289,6 +293,19 @@ VkRenderPass GeneralPass::createRenderPass()
         .dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
         .srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         .dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .dependencyFlags = 0U,
+        .viewOffset      = 0U,
+    };
+
+    static constexpr VkSubpassDependency2 const kColorToBlit{
+        .sType           = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2,
+        .pNext           = nullptr,
+        .srcSubpass      = 0U,
+        .dstSubpass      = VK_SUBPASS_EXTERNAL,
+        .srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .dstStageMask    = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .dstAccessMask   = VK_ACCESS_TRANSFER_READ_BIT,
         .dependencyFlags = 0U,
         .viewOffset      = 0U,
     };
@@ -324,7 +341,7 @@ VkRenderPass GeneralPass::createRenderPass()
                 },
             },
         .subpasses    = {kSubpassDesc},
-        .dependencies = {kSubpassDependency},
+        .dependencies = {kSubpassDependency, kColorToBlit},
     };
 
     VkRenderPassCreateInfo2 const pass_info{

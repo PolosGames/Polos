@@ -20,23 +20,6 @@ namespace polos::rendering::util
 auto CreateImageView(VkDevice tDevice, VkImage tImage, VkFormat tFormat, VkImageAspectFlags tAspectFlags)
     -> VkImageView;
 
-void TransitionImageLayout(
-    VkCommandBuffer      tCommandBuffer,
-    VkImage              tImage,
-    VkImageLayout        tOldLayout,
-    VkImageLayout        tNewLayout,
-    VkPipelineStageFlags tSrcStageMask,
-    VkPipelineStageFlags tDstStageMask);
-
-void CopyBufferToImage(VkCommandBuffer tCommandBuffer, VkBuffer tBuffer, VkImage tImage, VkExtent3D tExtent);
-
-void CopyImageToImage(
-    VkCommandBuffer tCommandBuffer,
-    VkImage         tSrcImage,
-    VkImage         tDstImage,
-    VkExtent3D      tSrcExtent,
-    VkExtent3D      tDstExtent);
-
 auto CreateFramebuffer(
     VkDevice               tDevice,
     VkRenderPass           tRPass,
@@ -55,10 +38,33 @@ inline auto To3DExtent(VkExtent2D const& tExtent) -> VkExtent3D
 
 }// namespace polos::rendering::util
 
-inline constexpr bool operator==(VkExtent2D tLhs, VkExtent2D tRhs)
+constexpr bool operator==(VkExtent2D tLhs, VkExtent2D tRhs)
 { return tLhs.width == tRhs.width && tLhs.height == tRhs.height; }
 
-inline constexpr bool operator!=(VkExtent2D tLhs, VkExtent2D tRhs)
+constexpr bool operator!=(VkExtent2D tLhs, VkExtent2D tRhs)
 { return !operator==(tLhs, tRhs); }
+
+constexpr bool operator==(VkExtent3D tLhs, VkExtent3D tRhs)
+{ return tLhs.width == tRhs.width && tLhs.height == tRhs.height && tLhs.depth == tRhs.depth; }
+
+constexpr bool operator!=(VkExtent3D tLhs, VkExtent3D tRhs)
+{ return !operator==(tLhs, tRhs); }
+
+constexpr VkExtent2D ToExtent2D(VkExtent3D tSrc)
+{
+    return {
+        .width  = tSrc.width,
+        .height = tSrc.height,
+    };
+}
+
+constexpr VkExtent3D ToExtent3D(VkExtent2D tSrc)
+{
+    return {
+        .width  = tSrc.width,
+        .height = tSrc.height,
+        .depth  = 1U,
+    };
+}
 
 #endif// POLOS_RENDERING_SRC_VK_VULKAN_UTIL_HPP

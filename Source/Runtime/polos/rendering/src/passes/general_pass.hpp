@@ -35,7 +35,7 @@ public:
     ~GeneralPass();
 
     auto Initialize() -> Result<void>;
-    auto Prepare() -> void;
+    auto Prepare(std::uint32_t tFrameSlot) -> void;
     auto Record(FrameData const& tFrameData, SceneData const& tSceneData, FrameTargets const& tTargets) -> void;
 private:
     VkRenderPass     createRenderPass();
@@ -58,7 +58,7 @@ private:
 
     VkPipeline                                                           mPipeline{VK_NULL_HANDLE};
     VkDevice                                                             mDevice{VK_NULL_HANDLE};
-    VkFramebuffer                                                        mPassFb{VK_NULL_HANDLE};
+    std::array<VkFramebuffer, Settings::kMaxFramesInFlight>              mPassFb{};
     std::unique_ptr<GpuBuffer>                                           mVerticesBuffer;
     std::unique_ptr<GpuBuffer>                                           mIndicesBuffer;
     std::array<std::unique_ptr<GpuBuffer>, Settings::kMaxFramesInFlight> mInstanceBuffers;

@@ -187,19 +187,20 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
             DispatchDefer<WindowFramebufferResize>(tNewWidth, tNewHeight);
         });
 
-        glfwSetKeyCallback(mWindow,
-                           [](GLFWwindow* /*tWindow*/,
-                              std::int32_t tKey,
-                              std::int32_t /*tScancode*/,
-                              std::int32_t tAction,
-                              std::int32_t /*tMods*/) {
-                               switch (tAction)
-                               {
-                                   case GLFW_RELEASE: DispatchDefer<KeyRelease>(tKey); break;
-                                   case GLFW_PRESS: DispatchDefer<KeyPress>(tKey);
-                                   default: break;
-                               }
-                           });
+        glfwSetKeyCallback(
+            mWindow,
+            [](GLFWwindow* /*tWindow*/,
+               std::int32_t tKey,
+               std::int32_t /*tScancode*/,
+               std::int32_t tAction,
+               std::int32_t /*tMods*/) {
+                switch (tAction)
+                {
+                    case GLFW_RELEASE: DispatchDefer<KeyRelease>(tKey); break;
+                    case GLFW_PRESS: DispatchDefer<KeyPress>(tKey);
+                    default: break;
+                }
+            });
 
         glfwSetCursorPosCallback(mWindow, [](GLFWwindow* /*tWindow*/, double tXpos, double tYpos) {
             DispatchDefer<MouseMove>(tXpos, tYpos);
@@ -207,7 +208,7 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
 
         glfwSetMouseButtonCallback(
             mWindow,
-            [](GLFWwindow* tWindow, std::int32_t tButton, std::int32_t tAction, std::int32_t tMods) {
+            [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
                 DispatchDefer<MouseInput>(tButton, tAction);
             });
     }

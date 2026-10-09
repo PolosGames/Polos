@@ -24,7 +24,7 @@ struct SceneData;
 struct RenderCompositorCreateDetails
 {
     RenderContext& context;
-    VkExtent2D     scExtent;
+    VkExtent3D     scExtent;
     VkDevice       logiDevice;
 };
 
@@ -51,12 +51,12 @@ private:
     auto createColorTarget() -> bool;
     auto createDepthTarget() -> bool;
 
-    VkExtent2D                   mLastExtent;
+    VkExtent3D                   mLastExtent{};
     std::unique_ptr<GeneralPass> mGeneralPass;
 
-    FrameTargets mFrameTargets;
+    std::array<FrameTargets, Settings::kMaxFramesInFlight> mFrameTargets;
 
-    VkDevice mDevice;
+    VkDevice mDevice{VK_NULL_HANDLE};
 };
 
 }// namespace polos::rendering
