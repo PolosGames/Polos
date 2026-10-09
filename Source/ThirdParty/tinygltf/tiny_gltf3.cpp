@@ -1,0 +1,6 @@
+#define TINYGLTF3_ENABLE_FS
+#define TINYGLTF3_ENABLE_STB_IMAGE
+
+#define TINYGLTF3_IMPLEMENTATION
+
+#include <tiny_gltf_v3.h>

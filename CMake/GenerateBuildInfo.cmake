@@ -1,5 +1,7 @@
+cmake_minimum_required(VERSION 3.25)
+
 # Run with -P. Bumps the per-build-dir counter and regenerates one TU.
-# Inputs: BUILD_NUMBER_FILE, TEMPLATE_FILE, OUTPUT_FILE, MODULE_LABEL, SOURCE_DIR
+# Inputs: BUILD_NUMBER_FILE, TEMPLATE_FILE, OUTPUT_FILE, SOURCE_DIR
 
 if (EXISTS "${BUILD_NUMBER_FILE}")
     file(READ "${BUILD_NUMBER_FILE}" POLOS_BUILD_NUMBER)
@@ -54,6 +56,7 @@ if (GIT_FOUND)
 endif()
 
 string(TIMESTAMP POLOS_BUILD_TIMESTAMP "%Y-%m-%d %H:%M" UTC)
-set(POLOS_MODULE_LABEL "${MODULE_LABEL}")
+file(READ "${SOURCE_DIR}/VERSION" POLOS_VERSION)
+string(STRIP "${POLOS_VERSION}" POLOS_VERSION)
 
 configure_file("${TEMPLATE_FILE}" "${OUTPUT_FILE}" @ONLY)

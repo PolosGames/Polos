@@ -1,41 +1,8 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
-generate_versioning_info(
-    NAME core
-    VERSION_MAJOR 1
-    VERSION_MINOR 0
-    VERSION_PATCH 0
-)
-
-project(
-    core
-        LANGUAGES CXX
-        VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
-)
-
-define_polos_module(
-    NAME
-        core
-
-    TYPE
-        OBJECT
-
-    WITH_BUILD_INFO
-
-    SOURCES
-        "src/base_live_layer.cpp"
-        "src/engine_layer.cpp"
-        "src/engine.cpp"
-        "src/input_state.cpp"
-        "src/main_loop.cpp"
-
-    PUBLIC_DEPS
-        polos::rendering
-
-    PRIVATE_DEPS
-        polos::communication
-        polos::filesystem
-        polos::logging
-        polos::platform
-        polos::utils
+polos_sources(
+    base_live_layer.cpp
+    engine_layer.cpp
+    engine.cpp
+    main_loop.cpp
 )

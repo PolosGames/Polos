@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
+#include "polos/filesystem/file.hpp"
 #include "polos/filesystem/file_manip.hpp"
-#include "polos/filesystem/resource.hpp"
 
 #include <gtest/gtest.h>
 
@@ -17,7 +17,7 @@ TEST(FileManipTestFixture, OpenAndReadWhenCorrectFileName)
 
     EXPECT_TRUE(file);
 
-    polos::fs::Resource& test_file = file.value();
+    polos::fs::File& test_file = file.value();
 
     EXPECT_STREQ(test_file.stemName.c_str(), "test_file");
     EXPECT_EQ(test_file.size, 513);

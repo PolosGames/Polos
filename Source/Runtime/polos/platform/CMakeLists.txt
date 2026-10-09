@@ -1,30 +1,9 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
-generate_versioning_info(
-    NAME platform
-    VERSION_MAJOR 1
-    VERSION_MINOR 0
-    VERSION_PATCH 0
+polos_sources(
+    glfw_window_surface.cpp
+    input_state.cpp
+    platform_manager.cpp
 )
 
-project(
-    platform
-    LANGUAGES CXX
-    VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
-)
-
-define_polos_module(
-    NAME
-        platform
-    TYPE
-        OBJECT
-    SOURCES
-        "src/glfw_window_surface.cpp"
-        "src/platform_manager.cpp"
-    PUBLIC_DEPS
-        glfw
-        Vulkan::Vulkan
-        polos::communication
-        polos::logging
-        polos::rendering
-)
+polos_tests(platform SOURCES test/input_state_test.cpp)

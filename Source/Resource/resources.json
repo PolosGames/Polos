@@ -1,0 +1,30 @@
+[
+  {
+    "id": "texture.tux",
+    "path": "Textures/tux.png"
+  },
+  {
+    "id": "texture.polos-icon",
+    "path": "Textures/polos_icon.png"
+  },
+  {
+    "id": "texture.polos-icon-white",
+    "path": "Textures/polos_icon_white.png"
+  },
+  {
+    "id": "shader.quad.vertex",
+    "path": "Shaders/quad.vert.spv"
+  },
+  {
+    "id": "shader.quad.fragment",
+    "path": "Shaders/quad.frag.spv"
+  },
+  {
+    "id": "shader.blinn-phong.vertex",
+    "path": "Shaders/blinn_phong.vert.spv"
+  },
+  {
+    "id": "shader.blinn-phong.fragment",
+    "path": "Shaders/blinn_phong.frag.spv"
+  }
+]

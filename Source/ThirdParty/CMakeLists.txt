@@ -1,25 +1,8 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25)
 
-if(WIN32)
-    set(PLATFORM_NAME "win32")
-elseif(LINUX)
-    set(PLATFORM_NAME "linux")
-endif()
+find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h" REQUIRED)
 
 add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
-
-define_polos_module(
-    NAME
-        third_party
-    TYPE
-        INTERFACE
-    INTERFACE_DEPS
-        Vulkan::Vulkan
-        glfw
-        glm::glm
-        imgui::imgui
-        stb_image::stb_image
-        stb_textedit::stb_textedit
-)
+add_subdirectory(tinygltf)

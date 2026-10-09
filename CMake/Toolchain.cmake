@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.25)
+
 if (LINUX)
     set(CMAKE_C_COMPILER /usr/bin/gcc)
     set(CMAKE_CXX_COMPILER /usr/bin/g++)

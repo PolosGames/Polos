@@ -1,317 +1,70 @@
-cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
-include(GoogleTest)
-
-file(WRITE "${CMAKE_BINARY_DIR}/test_main.cpp" "#include <gtest/gtest.h>\nint main(int argc, char** argv) { ::testing::InitGoogleTest(&argc, argv); return RUN_ALL_TESTS(); }")
-
-macro(generate_versioning_info)
-    set(oneValueArgs
-        NAME
-        VERSION_MAJOR
-        VERSION_MINOR
-        VERSION_PATCH
-        ICON
+# Called from directories
+function(polos_sources)
+    file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
     )
-
-    cmake_parse_arguments(LIB "" "${oneValueArgs}" "" ${ARGN})
-endmacro()
-
-include(GenerateExportHeader)
-
-# Stamps a generated TU into one target, carrying a build counter, the git revision and a
-# timestamp. The counter is per module and per build directory, so a hot-reloaded module and
-# the host that loaded it report different numbers - which is the point.
-# The command re-runs only when the module's own sources change, so a no-op build stays one.
-function(polos_attach_build_info TARGET_NAME MODULE_SRC MODULE_INC)
-    set(GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/build_info_${TARGET_NAME}.generated.cpp")
-    set(TEMPLATE_FILE "${POLOS_DIR}/Config/build_info.cpp.in")
-
-    # the stamp records the git sha, so it has to re-run when HEAD or the index moves, not only
-    # when a source changes. absent in a tarball export - listing a file nothing produces is an error
-    set(GIT_STATE_DEPS "")
-    foreach (GIT_FILE "${CMAKE_SOURCE_DIR}/.git/HEAD" "${CMAKE_SOURCE_DIR}/.git/index")
-        if (EXISTS "${GIT_FILE}")
-            list(APPEND GIT_STATE_DEPS "${GIT_FILE}")
-        endif()
+    set(SOURCES)
+    foreach(SOURCE IN LISTS ARGN)
+        list(APPEND SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}")
     endforeach()
-
-    add_custom_command(
-        OUTPUT  "${GEN_FILE}"
-        COMMAND ${CMAKE_COMMAND}
-                "-DBUILD_NUMBER_FILE=${POLOS_BINARY_DIR}/build_number_${TARGET_NAME}.txt"
-                "-DTEMPLATE_FILE=${TEMPLATE_FILE}"
-                "-DOUTPUT_FILE=${GEN_FILE}"
-                "-DMODULE_LABEL=${TARGET_NAME}"
-                "-DSOURCE_DIR=${CMAKE_SOURCE_DIR}"
-                -P "${CMAKE_SOURCE_DIR}/CMake/GenerateBuildInfo.cmake"
-        DEPENDS ${MODULE_SRC} ${MODULE_INC} ${GIT_STATE_DEPS} "${TEMPLATE_FILE}"
-        COMMENT "Stamping build info into ${TARGET_NAME}"
-        VERBATIM
+    target_sources(polos
+        PRIVATE ${SOURCES}
+        PUBLIC FILE_SET runtime_headers TYPE HEADERS FILES ${HEADERS}
     )
-
-    target_sources(${TARGET_NAME} PRIVATE "${GEN_FILE}")
 endfunction()
 
-# these two are macros, not functions, so they keep reading define_polos_module's
-# MODULE_* vars
-macro(define_polos_module_install)
-    if (MSVC AND MODULE_TYPE STREQUAL "SHARED")
-        set(PDB_FILE "$<TARGET_PDB_FILE:${MODULE_NAME}>")
-        set(PDB_FILE_LOCKED "${PDB_FILE}.locked")
-
-        add_custom_command(
-            TARGET ${MODULE_NAME} PRE_BUILD
-            COMMAND cmd /c "echo [DEBUG] PDB file path is ${PDB_FILE}"
-            COMMAND cmd /c "if exist \"${PDB_FILE}\" move /Y \"${PDB_FILE}\" \"${PDB_FILE_LOCKED}\""
-            COMMENT "Moving locked PDB for hot-reload (if it exists)"
-            VERBATIM
-        )
-
-        add_custom_command(
-            TARGET ${MODULE_NAME} PRE_BUILD
-            COMMAND cmd /c "if exist \"${PDB_FILE_LOCKED}\" copy /Y \"${PDB_FILE_LOCKED}\" \"${PDB_FILE}\""
-            COMMENT "Copying PDB back to prevent unnecessary relink (if it exists)"
-            VERBATIM
-        )
+function(polos_tests NAME)
+    if (NOT BUILD_TESTS)
+        return()
     endif()
+    cmake_parse_arguments(TEST "" "" "SOURCES;DATA" ${ARGN})
+    include(GoogleTest)
+    add_executable(ut-${NAME} ${TEST_SOURCES})
+    target_link_libraries(ut-${NAME} PRIVATE polos::polos GTest::gtest_main)
+    target_compile_definitions(ut-${NAME} PRIVATE PL_LOGGER_TYPE=App QUILL_DLL_IMPORT BUILD_TESTS)
+    foreach(DATA_FILE IN LISTS TEST_DATA)
+        get_filename_component(DATA_NAME "${DATA_FILE}" NAME)
+        configure_file("${DATA_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${DATA_NAME}" COPYONLY)
+    endforeach()
+    gtest_add_tests(TARGET ut-${NAME} TEST_LIST TEST_LIST
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(${TEST_LIST} PROPERTIES RUN_SERIAL ON TIMEOUT 60 LABELS ut)
+endfunction()
 
-    # OBJECT modules ship inside `polos`, which installs itself
-    if (NOT MODULE_TYPE STREQUAL "OBJECT")
-        install(
-            TARGETS ${MODULE_NAME}
-            LIBRARY       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            PUBLIC_HEADER DESTINATION "${POLOS_INSTALL_INC_DIR}/polos/${MODULE_NAME}"
-            PERMISSIONS OWNER_READ OWNER_WRITE
-        )
+# no-op build does not advance the local counter.
+function(polos_attach_build_info TARGET_NAME SOURCES)
+    set(GEN_FILE "${CMAKE_CURRENT_BINARY_DIR}/build_info.generated.cpp")
+    set(GIT_STATE_DEPS "")
+    find_package(Git QUIET)
+    if (GIT_FOUND)
+        foreach(GIT_FILE HEAD index)
+            execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --git-path ${GIT_FILE}
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                OUTPUT_VARIABLE GIT_PATH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+            get_filename_component(GIT_PATH "${GIT_PATH}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+            if (EXISTS "${GIT_PATH}")
+                list(APPEND GIT_STATE_DEPS "${GIT_PATH}")
+            endif()
+        endforeach()
     endif()
-
-    if (WIN32 AND MODULE_TYPE STREQUAL "SHARED")
-        install(
-            TARGETS ${MODULE_NAME}
-            ARCHIVE       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            RUNTIME       DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            PERMISSIONS   OWNER_READ OWNER_WRITE
-        )
-    endif()
-endmacro()
-
-macro(define_polos_module_tests)
-    message(STATUS "[POLOS] Building tests for: ${MODULE_TARGET}")
-
-    set(MODULE_TEST_TARGET ut-${MODULE_NAME})
-
-    add_executable(${MODULE_TEST_TARGET} ${MODULE_TEST_SOURCES} ${MODULE_TEST_DATA} "${CMAKE_BINARY_DIR}/test_main.cpp")
-
-    set_target_properties(
-        ${MODULE_TEST_TARGET} PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     True
-        POSITION_INDEPENDENT_CODE True
-        OUTPUT_NAME               "${MODULE_TEST_TARGET}"
-        LINKER_LANGUAGE           CXX
-        CXX_VISIBILITY_PRESET     hidden
-        VISIBILITY_INLINES_HIDDEN True
+    add_custom_command(OUTPUT "${GEN_FILE}"
+        COMMAND ${CMAKE_COMMAND}
+            "-DBUILD_NUMBER_FILE=${CMAKE_BINARY_DIR}/build_number.txt"
+            "-DTEMPLATE_FILE=${POLOS_DIR}/Config/build_info.cpp.in"
+            "-DOUTPUT_FILE=${GEN_FILE}"
+            "-DSOURCE_DIR=${CMAKE_SOURCE_DIR}"
+            -P "${CMAKE_SOURCE_DIR}/CMake/GenerateBuildInfo.cmake"
+        DEPENDS ${SOURCES} ${GIT_STATE_DEPS}
+            "${CMAKE_SOURCE_DIR}/VERSION"
+            "${POLOS_DIR}/Config/build_info.cpp.in"
+            "${CMAKE_SOURCE_DIR}/CMake/GenerateBuildInfo.cmake"
+        COMMENT "Stamping Polos build info"
+        VERBATIM
     )
-
-    if (LINUX)
-        set_target_properties(${MODULE_TEST_TARGET}
-            PROPERTIES
-            INSTALL_RPATH ${POLOS_INSTALL_DIR}
-            BUILD_WITH_INSTALL_RPATH 1
-        )
-    endif()
-
-    target_include_directories(${MODULE_TEST_TARGET} PRIVATE src)
-
-    # an OBJECT lib's objects don't carry its deps, so link the whole engine
-    if (MODULE_TYPE STREQUAL "OBJECT")
-        target_link_libraries(${MODULE_TEST_TARGET} PRIVATE GTest::gtest polos)
-    else()
-        target_link_libraries(${MODULE_TEST_TARGET}
-            PRIVATE
-                GTest::gtest
-                ${MODULE_TARGET}
-                ${MODULE_PRIVATE_DEPS}
-        )
-    endif()
-
-    if (MODULE_TEST_DEPS)
-        target_link_libraries(${MODULE_TEST_TARGET} PRIVATE ${MODULE_TEST_DEPS})
-    endif ()
-
-    target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE PL_LOGGER_TYPE=App)
-    target_compile_definitions(${MODULE_TEST_TARGET} PRIVATE QUILL_DLL_IMPORT BUILD_TESTS)
-
-    gtest_add_tests(
-        TARGET ${MODULE_TEST_TARGET}
-        TEST_LIST MODULE_TEST_LIST
-        EXTRA_ARGS ${MODULE_TEST_EXTRA_ARGS}
-    )
-
-    set_tests_properties(${MODULE_TEST_LIST}
-        PROPERTIES
-            RUN_SERIAL ON
-            TIMEOUT 60
-            LABELS ut
-    )
-
-    # TODO: Not cross platform. Only for Windows for now.
-    add_custom_command(TARGET ${MODULE_TEST_TARGET} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy -t ${CMAKE_CURRENT_BINARY_DIR} $<TARGET_RUNTIME_DLLS:${MODULE_TEST_TARGET}>
-        COMMAND_EXPAND_LISTS
-    )
-
-    install(
-        FILES ${MODULE_TEST_DATA}
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
-    )
-endmacro()
-
-macro(define_polos_module)
-    set(options ENABLE_HOT_RELOAD WITH_BUILD_INFO)
-    set(oneValueArgs NAME TYPE)
-    set(multiValueArgs SOURCES
-                       PUBLIC_DEPS PRIVATE_DEPS INTERFACE_DEPS
-                       PUBLIC_DEFINES PRIVATE_DEFINES
-                       TEST_SOURCES TEST_DEPS TEST_DEFINES TEST_EXTRA_ARGS TEST_DATA)
-    cmake_parse_arguments(MODULE
-        "${options}" "${oneValueArgs}" "${multiValueArgs}"
-        ${ARGN}
-    )
-
-    if (MODULE_TYPE STREQUAL "SHARED")
-        add_library(${MODULE_NAME} SHARED)
-    elseif (MODULE_TYPE STREQUAL "STATIC")
-        add_library(${MODULE_NAME} STATIC)
-    elseif (MODULE_TYPE STREQUAL "OBJECT")
-        # include isolation comes from the dep graph, not the library type
-        add_library(${MODULE_NAME} OBJECT)
-    elseif (MODULE_TYPE STREQUAL "INTERFACE")
-        add_library(${MODULE_NAME} INTERFACE)
-        if (MODULE_SOURCES)
-            message(FATAL_ERROR "Interface target cannot have source files!")
-        endif()
-    endif ()
-
-    set_target_properties(${MODULE_NAME}
-        PROPERTIES
-            CXX_STANDARD              ${POLOS_CXX_STANDARD}
-            CXX_STANDARD_REQUIRED     True
-            POSITION_INDEPENDENT_CODE True
-            OUTPUT_NAME               "polos_${MODULE_NAME}"
-            CXX_VISIBILITY_PRESET     hidden
-            VISIBILITY_INLINES_HIDDEN True
-            LINKER_LANGUAGE           CXX
-    )
-
-    if (LINUX)
-        set_target_properties(${MODULE_NAME}
-            PROPERTIES
-            INSTALL_RPATH ${POLOS_INSTALL_DIR}
-            BUILD_WITH_INSTALL_RPATH 1
-        )
-    endif()
-
-    if (MODULE_PUBLIC_DEPS)
-        target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEPS})
-    endif ()
-    if (MODULE_PRIVATE_DEPS)
-        target_link_libraries(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEPS})
-    endif ()
-    if (MODULE_INTERFACE_DEPS)
-        target_link_libraries(${MODULE_NAME} INTERFACE ${MODULE_INTERFACE_DEPS})
-    endif ()
-
-    string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPERCASE)
-
-    if (NOT MODULE_TYPE STREQUAL "INTERFACE")
-        build_options(${MODULE_NAME} true)
-
-        # one export macro for the whole engine, from polos/polos_api.hpp
-        if (MODULE_TYPE STREQUAL "OBJECT")
-            target_compile_definitions(${MODULE_NAME} PRIVATE POLOS_ENGINE_EXPORTS)
-        elseif (MODULE_ENABLE_HOT_RELOAD)
-            target_compile_definitions(${MODULE_NAME} PRIVATE POLOS_RENDERING_IMPL_EXPORTS)
-        endif()
-
-        # A module may build more than one target (rendering/rendering_impl).
-        # Discover headers from its directories rather than from the target name.
-        file(GLOB_RECURSE ${MODULE_NAME}_INC CONFIGURE_DEPENDS
-            "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-        )
-
-        target_sources(${MODULE_NAME} PRIVATE ${MODULE_SOURCES} ${${MODULE_NAME}_INC})
-
-        if (MODULE_WITH_BUILD_INFO)
-            polos_attach_build_info(${MODULE_NAME} "${MODULE_SOURCES}" "${${MODULE_NAME}_INC}")
-        endif()
-
-        target_include_directories(${MODULE_NAME}
-            PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            PRIVATE
-                "${CMAKE_CURRENT_SOURCE_DIR}/src"
-        )
-        target_include_directories(${MODULE_NAME} PUBLIC ${POLOS_DIR}/Config/include)
-
-        target_compile_definitions(${MODULE_NAME} PRIVATE QUILL_DLL_IMPORT)
-        target_compile_definitions(${MODULE_NAME} PRIVATE PL_LOGGER_TYPE=Polos)
-        target_compile_definitions(${MODULE_NAME} PRIVATE ${MODULE_PRIVATE_DEFINES})
-        target_compile_definitions(${MODULE_NAME} PUBLIC ${MODULE_PUBLIC_DEFINES})
-
-        # PDB files only for source code
-        if (CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND MODULE_TYPE STREQUAL "SHARED")
-            install(
-                FILES "${CMAKE_CURRENT_BINARY_DIR}/polos_${MODULE_NAME}.pdb"
-                DESTINATION ${POLOS_INSTALL_DIR}
-            )
-        endif ()
-
-        target_compile_features(${MODULE_NAME} PUBLIC cxx_std_23)
-    else ()
-        target_compile_features(${MODULE_NAME} INTERFACE cxx_std_23)
-    endif ()
-
-    target_include_directories(${MODULE_NAME}
-        INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-            $<INSTALL_INTERFACE:include>
-    )
-
-    set(MODULE_NAME_INTERFACE ${MODULE_NAME}_INTERFACE)
-
-    add_library(${MODULE_NAME_INTERFACE} INTERFACE)
-    target_include_directories(${MODULE_NAME_INTERFACE}
-        INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-            $<INSTALL_INTERFACE:include>
-    )
-
-    if (MODULE_ENABLE_HOT_RELOAD)
-        if (HOT_RELOAD)
-            set(HOT_RELOAD_DEFINITION)
-            string(TOUPPER ${MODULE_NAME} HOT_RELOAD_DEFINITION)
-            string(APPEND HOT_RELOAD_DEFINITION "_HOT_RELOAD")
-            target_compile_definitions(${MODULE_NAME} PUBLIC ${HOT_RELOAD_DEFINITION})
-            add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME_INTERFACE})
-        else()
-            add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
-            add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
-        endif()
-    else()
-        add_library(polos::${MODULE_NAME_INTERFACE} ALIAS ${MODULE_NAME_INTERFACE})
-        add_library(polos::${MODULE_NAME} ALIAS ${MODULE_NAME})
-    endif()
-
-    set(MODULE_TARGET polos::${MODULE_NAME})
-
-    if (${BUILD_TESTS} AND MODULE_TEST_SOURCES AND NOT HOT_RELOAD)
-        define_polos_module_tests()
-    endif()
-
-    define_polos_module_install()
-endmacro()
+    target_sources(${TARGET_NAME} PRIVATE "${GEN_FILE}")
+endfunction()
 
 # NAME: Should be the same as the folder name where this macro is called as well.
 # DIRECTORY: Relative to root CMakeLists.txt
@@ -327,6 +80,7 @@ macro (define_polos_app)
     add_executable(${app_NAME} ${app_SOURCES})
 
     target_link_libraries(${app_NAME} PUBLIC polos::polos)
+    polos_stage_resources(${app_NAME})
 
     target_include_directories(${app_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -343,8 +97,7 @@ macro (define_polos_app)
     if (LINUX)
         set_target_properties(${app_NAME}
             PROPERTIES
-                INSTALL_RPATH ${POLOS_INSTALL_DIR}
-                BUILD_WITH_INSTALL_RPATH 1
+                INSTALL_RPATH "$ORIGIN"
         )
     endif()
 
@@ -359,11 +112,9 @@ macro (define_polos_app)
 
     build_options(${app_NAME} true)
 
-    if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-        install(
-            FILES ${CMAKE_CURRENT_BINARY_DIR}/${app_NAME}.pdb
-            DESTINATION ${POLOS_INSTALL_DIR}
-        )
+    if (MSVC)
+        install(FILES "$<TARGET_PDB_FILE:${app_NAME}>"
+            DESTINATION "${POLOS_INSTALL_DIR}" OPTIONAL)
     endif()
 
     install(
