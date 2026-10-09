@@ -25,6 +25,7 @@
 #include <polos/rendering/interface/i_window_surface.hpp>
 #include <polos/rendering/rendering_api.hpp>
 #include <polos/rendering/scene/scene.hpp>
+#include <polos/resource/image_loader.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -38,6 +39,9 @@ DummyApp::~DummyApp() = default;
 
 void DummyApp::Create()
 {
+    {
+        polos::resource::Loader<polos::resource::Image> imgLoader("Hello");
+    }
     using namespace polos::communication;
 
     Subscribe<EngineUpdate>([this](EngineUpdate& t_event) {

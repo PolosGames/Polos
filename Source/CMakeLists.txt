@@ -32,6 +32,7 @@ target_link_libraries(
             polos::logging
             polos::platform
             polos::rendering
+            polos::resource
             polos::utils
             ${ThirdPartyLibs}
 )
