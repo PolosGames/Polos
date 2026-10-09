@@ -12,14 +12,12 @@ namespace polos::utils
 
 auto GetBuildInfo() -> BuildInfo const&
 {
-    // not exported: each shared object carries its own, which is what lets a hot-reloaded
-    // module report a different number from the host that loaded it
     static constexpr BuildInfo kInfo{
         .commitCount = @POLOS_COMMIT_COUNT@U,
         .buildNumber = @POLOS_BUILD_NUMBER@U,
         .commit       = "@POLOS_COMMIT@",
         .timestamp    = "@POLOS_BUILD_TIMESTAMP@",
-        .module       = "@POLOS_MODULE_LABEL@",
+        .version      = "@POLOS_VERSION@",
     };
 
     return kInfo;

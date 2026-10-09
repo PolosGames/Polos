@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25)
 
 add_library(stb_image_interface INTERFACE)
 target_include_directories(stb_image_interface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,23 +1,7 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
-generate_versioning_info(
-    NAME utils
-    VERSION_MAJOR 1
-    VERSION_MINOR 0
-    VERSION_PATCH 0
-)
+polos_sources(assert.cpp string_map.cpp)
 
-project(
-    utils
-    LANGUAGES CXX
-    VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
-)
-
-define_polos_module(
-    NAME
-        utils
-    TYPE
-        INTERFACE
-    INTERFACE_DEPS
-        polos::logging
-)
+if (BUILD_TESTS)
+    add_subdirectory(test)
+endif()

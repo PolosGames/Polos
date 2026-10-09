@@ -9,11 +9,15 @@ Checks: >
   -altera-unroll-loops,
   -altera-struct-pack-align,
   -altera-id-dependent-backward-branch,
+  -cert-dcl03-c,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
   -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-noexcept-move-operations,
   -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-pro-type-member-init,
   -clang-analyzer-optin.performance.Padding,
@@ -25,8 +29,9 @@ Checks: >
   -llvm-prefer-static-over-anonymous-namespace,
   -misc-include-cleaner,
   -misc-non-private-member-variables-in-classes,
+  -misc-static-assert,
   -modernize-use-trailing-return-type,
-  -performance-trivially-destructible
+  -performance-trivially-destructible,
   -readability-use-concise-preprocessor-directives,
 CheckOptions:
   - { key: cppcoreguidelines-avoid-magic-numbers.IgnorePowersOf2IntegerValues, value: true }

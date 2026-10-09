@@ -9,7 +9,7 @@ usage() {
 Usage:
   $0 build [preset]       Build a configured preset (default: linux-debug)
   $0 clean                Remove the out/ directory
-  $0 run [preset]         Run dummy (default: linux-debug)
+  $0 run [preset]         Build the preset, then run dummy (default: linux-debug)
   $0 debug [preset]       Run dummy with LLDB (default: linux-debug)
 USAGE
 }
@@ -37,6 +37,9 @@ case "${1:-}" in
             exit 1
         fi
         preset=${2:-linux-debug}
+        if [ "$1" = run ]; then
+            cmake --build --preset "$preset"
+        fi
         cd "$POLOS_DIR/out/bin/$preset" || {
             echo "Error: Build output not found for preset '$preset'." >&2
             exit 1

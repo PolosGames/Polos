@@ -1,31 +1,10 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
-generate_versioning_info(
-    NAME filesystem
-    VERSION_MAJOR 1
-    VERSION_MINOR 0
-    VERSION_PATCH 0
+polos_sources(
+    file_manip.cpp
 )
 
-project(
-    filesystem
-        LANGUAGES CXX
-        VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}
-)
-
-define_polos_module(
-    NAME
-        filesystem
-    TYPE
-        OBJECT
-    SOURCES
-        "src/file_manip.cpp"
-    PUBLIC_DEPS
-        polos::communication
-    PRIVATE_DEPS
-        polos::logging
-    TEST_SOURCES
-        "test/file_manip_test.cpp"
-    TEST_DATA
-        "test/test_file.test"
+polos_tests(filesystem
+    SOURCES test/file_manip_test.cpp
+    DATA test/test_file.test
 )

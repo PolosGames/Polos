@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.25)
 
 find_package(quill CONFIG REQUIRED)
 
@@ -35,6 +35,7 @@ set_target_properties(
         CXX_VISIBILITY_PRESET     hidden
         VISIBILITY_INLINES_HIDDEN True
         LINKER_LANGUAGE           CXX
+        INSTALL_RPATH             "$ORIGIN"
 )
 
 add_library(quill::quill_shared ALIAS quill_shared)

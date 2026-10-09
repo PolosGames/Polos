@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.25)
+
 function (CheckConfigurationExist CONFIG_TYPE out_DOES_EXIST)
     string(TOLOWER ${CONFIG_TYPE} LOWER_CONFIG_TYPE)
     set(BUILD_DIR "${CMAKE_SOURCE_DIR}/out/build/win-${LOWER_CONFIG_TYPE}")

@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
+
 find_program(CLANG_TIDY_EXE "clang-tidy")
 
 if(CLANG_TIDY_EXE)

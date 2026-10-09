@@ -1,0 +1,76 @@
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
+
+#ifndef POLOS_UTILS_ERROR_DOMAIN_HPP
+#define POLOS_UTILS_ERROR_DOMAIN_HPP
+
+#include <cstdint>
+#include <string_view>
+
+namespace polos::utils
+{
+
+inline constexpr std::uint8_t const kFilesystemErrorDomainId{0x03U};
+inline constexpr std::uint8_t const kRenderingErrorDomainId{0x05U};
+inline constexpr std::uint8_t const kResourceErrorDomainId{0x06U};
+inline constexpr std::uint8_t const kUtilsErrorDomainId{0x07U};
+
+///
+/// @brief A class representing a domain's all error values and their related messages.
+/// This class also controls creation of error-codes that are related to a domain's (Engine component) error enums.
+/// This class also must be inherited for each domain that is intended to be created. Each domain has a pre-defined
+/// domain-id which should be consumed when initializing this base class.
+class ErrorDomain
+{
+public:
+    /// @brief Domain specific id type.
+    using IdType = std::uint8_t;
+
+    /// @brief Underlying type for all error codes belonging to a domain
+    using CodeType = std::uint8_t;
+
+    ErrorDomain(ErrorDomain const&) = delete;
+    ErrorDomain(ErrorDomain&&)      = delete;
+
+    ErrorDomain& operator=(ErrorDomain const&) = delete;
+    ErrorDomain& operator=(ErrorDomain&&)      = delete;
+
+    ///
+    /// @brief Returns the name of the error domain
+    /// @return Name of error domain in a null-terminated string.
+    ///
+    [[nodiscard]] virtual auto Name() const -> std::string_view = 0;
+
+    ///
+    /// @brief Determines and returns the message that is corresponding to the error-code given.
+    /// @return Name of error domain in a null-terminated string.
+    ///
+    [[nodiscard]] virtual auto Message(CodeType tCode) const -> std::string_view = 0;
+
+    ///
+    /// @brief Returns the pre-determined id for this domain
+    /// @return Id for this domain
+    ///
+    [[nodiscard]] constexpr IdType Id() const
+    { return mId; }
+protected:
+    constexpr explicit ErrorDomain(IdType tId)
+        : mId{tId}
+    {}
+
+    ~ErrorDomain() = default;
+private:
+    IdType const mId;
+};
+
+constexpr auto operator==(ErrorDomain const& tLhs, ErrorDomain const& tRhs) -> bool
+{ return tLhs.Id() == tRhs.Id(); }
+
+constexpr auto operator!=(ErrorDomain const& tLhs, ErrorDomain const& tRhs) -> bool
+{ return !operator==(tLhs, tRhs); }
+
+}// namespace polos::utils
+
+#endif// POLOS_UTILS_ERROR_DOMAIN_HPP

@@ -8,7 +8,13 @@
 
 #include <polos/communication/key_release.hpp>
 #include <polos/core/base_live_layer.hpp>
-#include <polos/rendering/scene/camera3d.hpp>
+#include <polos/ecs/scene.hpp>
+
+namespace polos::ecs
+{
+struct TransformComponent;
+struct CameraComponent;
+}// namespace polos::ecs
 
 namespace polos::communication
 {
@@ -16,10 +22,10 @@ struct EngineUpdate;
 struct RenderUpdate;
 }// namespace polos::communication
 
-namespace polos::rendering
+namespace polos::platform
 {
 struct FramebufferSize;
-}// namespace polos::rendering
+}// namespace polos::platform
 
 namespace dummy_app
 {
@@ -35,16 +41,19 @@ public:
 
     [[nodiscard]] auto Name() const -> char const* override;
 private:
-    [[nodiscard]] static auto getWindowSize() -> polos::rendering::FramebufferSize;
+    [[nodiscard]] static auto getWindowSize() -> polos::platform::FramebufferSize;
 
     auto onEngineUpdate(polos::communication::EngineUpdate& t_event) -> void;
     auto onRenderUpdate(polos::communication::RenderUpdate& t_event) -> void;
-    auto moveCamera(polos::rendering::Camera3D* t_cam, std::float_t t_delta_time) -> void;
 
-    std::size_t m_obj1{0U};
-    std::size_t m_obj2{0U};
+    // clang-format off
+    auto moveCamera(polos::ecs::TransformComponent* tTransform,
+                    float tDelta) -> void;
+    // clang-format on
 
-    bool m_unload_in_progress{false};
+    polos::ecs::Scene* mScene;
+
+    bool mUnloadInProgress{false};
 };
 
 }// namespace dummy_app
