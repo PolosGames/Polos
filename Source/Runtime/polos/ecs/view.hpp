@@ -30,9 +30,9 @@ public:
 
     ~View() override = default;
 private:
-    static auto MakeMask() -> std::bitset<Settings::kMaxComponents>
+    static auto MakeMask() -> std::bitset<kMaxComponents>
     {
-        std::bitset<Settings::kMaxComponents> mask;
+        std::bitset<kMaxComponents> mask;
         (mask.set(static_cast<std::size_t>(C::kType)), ...);
         return mask;
     }
