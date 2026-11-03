@@ -42,6 +42,7 @@ public:
         mDestroy = [](void* tPtr) {
             delete[] static_cast<T*>(tPtr);
         };
+        elemSize = sizeof(T);
 
         mInitialized = true;
     }
@@ -50,12 +51,21 @@ public:
 
     template<typename T>
     T* Get(std::size_t tIndex)
-    { return &static_cast<T*>(mData)[tIndex]; }
+    {
+        return &static_cast<T*>(mData)[tIndex];
+    }
 
     [[nodiscard]] auto IsInitialized() const -> bool;
+    [[nodiscard]] auto GetTotalComponents() const -> std::uint32_t;
 
     ComponentType type{ComponentType::kVisibility};
+    std::size_t   elemSize{0U};
 private:
+    friend class Scene;
+    friend class SceneManager;
+
+    std::uint32_t mTotalComponents{0U};
+
     void* mData{nullptr};
     void (*mDestroy)(void*) = nullptr;
     bool mInitialized{false};

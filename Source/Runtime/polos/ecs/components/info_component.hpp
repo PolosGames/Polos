@@ -19,6 +19,7 @@ struct InfoComponent
     utils::string_id debugName{0U};
 
     SceneGraphHandle graphHandle{0U};
+    std::uint32_t    childCount{0U};
 };
 }// namespace polos::ecs
 

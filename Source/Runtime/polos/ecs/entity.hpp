@@ -7,11 +7,14 @@
 #define POLOS_ECS_ENTITY_HPP
 
 #include "polos/ecs/component.hpp"
+#include "polos/ecs/settings.hpp"
 #include "polos/polos_api.hpp"
 
+#include <array>
 #include <bitset>
 #include <cstdint>
 #include <limits>
+#include <vector>
 
 namespace polos::ecs
 {
@@ -32,16 +35,36 @@ inline constexpr EntityHandle kInvalidEntityHandle{
     .version = kInvalidEntityVersion,
 };
 
+auto POLOS_API IsEntityValid(EntityHandle tHandle) -> bool;
+
 struct EntityData
 {
-    EntityHandle                          handle;
-    std::bitset<Settings::kMaxComponents> componentMask;
+    EntityHandle                handle;
+    std::bitset<kMaxComponents> componentMask;
 };
 
 using Entity = EntityData;
 
-auto POLOS_API IsEntityValid(EntityHandle tHandle) -> bool;
+struct SerializedEntity
+{
+    std::uint8_t                              componentCount{0U};
+    std::uint32_t                             componentTypes{0U};
+    std::array<std::uint32_t, kMaxComponents> componentIndices;
+};
 
 }// namespace polos::ecs
+
+auto operator<<(std::vector<polos::ecs::SerializedEntity>& tEntities, polos::ecs::Entity const& tEntity)
+    -> std::vector<polos::ecs::SerializedEntity>&;
+
+inline constexpr auto operator==(polos::ecs::EntityHandle const& tLhs, polos::ecs::EntityHandle const& tRhs) -> bool
+{
+    return tLhs.index == tRhs.index && tLhs.version == tRhs.version;
+}
+
+inline constexpr auto operator!=(polos::ecs::EntityHandle const& tLhs, polos::ecs::EntityHandle const& tRhs) -> bool
+{
+    return !operator==(tLhs, tRhs);
+}
 
 #endif// POLOS_ECS_ENTITY_HPP

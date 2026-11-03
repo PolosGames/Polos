@@ -43,7 +43,7 @@ public:
         return end();
     }
 protected:
-    explicit BaseView(Scene* tScene, std::bitset<Settings::kMaxComponents> tMask)
+    explicit BaseView(Scene* tScene, std::bitset<kMaxComponents> tMask)
         : scene{tScene},
           mask{tMask}
     {}
@@ -57,8 +57,8 @@ private:
                (entity->componentMask & mask) == mask;
     }
 
-    Scene*                                scene;
-    std::bitset<Settings::kMaxComponents> mask;
+    Scene*                      scene;
+    std::bitset<kMaxComponents> mask;
 };
 
 }// namespace polos::ecs

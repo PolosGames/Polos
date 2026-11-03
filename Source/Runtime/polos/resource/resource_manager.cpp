@@ -45,7 +45,7 @@ auto ExecutableResourceRoot() -> std::filesystem::path
 {
 #if defined(_WIN32)
     std::wstring buffer(256, L'\0');
-    for (;;)
+    while (true)
     {
         auto const length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
         if (length == 0)
