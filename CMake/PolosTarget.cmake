@@ -19,7 +19,7 @@ function(polos_tests NAME)
     if (NOT BUILD_TESTS)
         return()
     endif()
-    cmake_parse_arguments(TEST "" "" "SOURCES;DATA" ${ARGN})
+    cmake_parse_arguments(TEST "" "" "SOURCES;DATA;LABELS" ${ARGN})
     include(GoogleTest)
     add_executable(ut-${NAME} ${TEST_SOURCES})
     target_link_libraries(ut-${NAME} PRIVATE polos::polos GTest::gtest_main)
@@ -28,9 +28,12 @@ function(polos_tests NAME)
         get_filename_component(DATA_NAME "${DATA_FILE}" NAME)
         configure_file("${DATA_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${DATA_NAME}" COPYONLY)
     endforeach()
-    gtest_add_tests(TARGET ut-${NAME} TEST_LIST TEST_LIST
+    gtest_add_tests(TARGET ut-${NAME} TEST_LIST REGISTERED_TESTS
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-    set_tests_properties(${TEST_LIST} PROPERTIES RUN_SERIAL ON TIMEOUT 60 LABELS ut)
+    if (NOT TEST_LABELS)
+        set(TEST_LABELS ut)
+    endif()
+    set_tests_properties(${REGISTERED_TESTS} PROPERTIES RUN_SERIAL ON TIMEOUT 60 LABELS "${TEST_LABELS}")
 endfunction()
 
 # no-op build does not advance the local counter.

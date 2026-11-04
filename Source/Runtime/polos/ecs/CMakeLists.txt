@@ -10,7 +10,7 @@ polos_sources(
 
 polos_tests(scene-graph SOURCES test/scene_graph_test.cpp)
 
-polos_tests(scene-serialization SOURCES test/scene_serialization_test.cpp)
+polos_tests(scene-serialization SOURCES test/scene_serialization_test.cpp LABELS ct)
 
 polos_tests(ecs SOURCES
     test/component_pool_test.cpp

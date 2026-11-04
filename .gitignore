@@ -28,6 +28,7 @@ vsbuild/
 !CMakePresets.json
 !vcpkg.json
 !Source/Resource/resources.json
+!Source/Runtime/polos/core/test/integration/resources.json
 
 #nvidia insight folder
 **.ngfx-proj

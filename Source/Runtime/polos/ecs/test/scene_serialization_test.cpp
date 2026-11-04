@@ -6,6 +6,7 @@
 #include "polos/ecs/components/visibility_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
+#include "polos/ecs/view.hpp"
 #include "polos/utils/string_map.hpp"
 
 #include <gtest/gtest.h>
@@ -20,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace polos::ecs
 {
@@ -450,6 +452,122 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInDfsOrder)
         ExpectRestoredComponent<EditorCameraControllerComponent>(*scene, original, *loaded, restored);
         ExpectRestoredComponent<QuadRendererComponent>(*scene, original, *loaded, restored);
     }
+}
+
+TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
+{
+    auto const               branch   = scene->NewEntity(scene->sceneRoot, "Branch"_sid);
+    auto const               camera   = scene->NewEntity(branch, "Camera"_sid);
+    auto const               survivor = scene->NewEntity(scene->sceneRoot, "Survivor"_sid);
+    CameraComponent const    branchCamera{.fov = 75.0F};
+    CameraComponent const    survivorCamera{.fov = 65.0F};
+    TransformComponent const transform{.position = {10.0F, 0.0F, 0.0F}};
+    ASSERT_NE(scene->AddComponent(camera, branchCamera), nullptr);
+    ASSERT_NE(scene->AddComponent(camera, transform), nullptr);
+    ASSERT_NE(scene->AddComponent(survivor, survivorCamera), nullptr);
+    ASSERT_NE(scene->AddComponent(survivor, transform), nullptr);
+    ASSERT_TRUE(scene->SetActiveCamera(camera));
+    auto const path = directory / "view-lifecycle.scene";
+    ASSERT_TRUE(Save(path));
+
+    auto* loaded = SceneManager::LoadScene(path.string());
+    ASSERT_NE(loaded, nullptr);
+    auto const         loadedSurvivor = loaded->GetChild(loaded->sceneRoot);
+    auto const         loadedBranch   = loaded->GetNextSibling(loadedSurvivor);
+    auto const         oldCamera      = loaded->activeCamera;
+    std::vector<float> observedFovs;
+
+    for (auto [cameraComponent, transformComponent] : View<CameraComponent, TransformComponent>{loaded})
+    {
+        observedFovs.push_back(cameraComponent->fov);
+        transformComponent->position.x += cameraComponent->fov;
+    }
+
+    std::vector<float> const expectedBeforeRemoval{65.0F, 75.0F};
+    EXPECT_EQ(observedFovs, expectedBeforeRemoval);
+    EXPECT_FLOAT_EQ(loaded->GetComponent<TransformComponent>(loadedSurvivor)->position.x, 75.0F);
+    EXPECT_FLOAT_EQ(loaded->GetComponent<TransformComponent>(oldCamera)->position.x, 85.0F);
+
+    ASSERT_TRUE(loaded->RetireEntity(loadedBranch));
+    observedFovs.clear();
+    for (auto [cameraComponent, transformComponent] : View<CameraComponent, TransformComponent>{loaded})
+    {
+        observedFovs.push_back(cameraComponent->fov);
+        EXPECT_FLOAT_EQ(transformComponent->position.x, 75.0F);
+    }
+
+    std::vector<float> const expectedAfterRemoval{65.0F};
+    EXPECT_EQ(observedFovs, expectedAfterRemoval);
+    EXPECT_TRUE(loaded->activeCamera == kInvalidEntityHandle);
+    EXPECT_EQ(loaded->GetComponent<CameraComponent>(oldCamera), nullptr);
+
+    auto const replacement = loaded->NewEntity(loadedSurvivor, "Replacement"_sid);
+    ASSERT_EQ(replacement.index, oldCamera.index);
+    ASSERT_NE(replacement.version, oldCamera.version);
+    EXPECT_FALSE(loaded->HasComponent(replacement, ComponentType::kCamera));
+    ASSERT_NE(loaded->AddComponent(replacement, CameraComponent{.fov = 95.0F}), nullptr);
+    ASSERT_NE(loaded->AddComponent(replacement, transform), nullptr);
+
+    observedFovs.clear();
+    for (auto [cameraComponent] : View<CameraComponent>{loaded})
+    {
+        observedFovs.push_back(cameraComponent->fov);
+    }
+
+    std::vector<float> const expectedAfterReuse{65.0F, 95.0F};
+    EXPECT_EQ(observedFovs, expectedAfterReuse);
+    EXPECT_EQ(loaded->GetComponent<CameraComponent>(oldCamera), nullptr);
+}
+
+TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
+{
+    auto const               camera = scene->NewEntity(scene->sceneRoot, "Camera"_sid);
+    CameraComponent const    originalCamera{.fov = 31.0F};
+    TransformComponent const originalTransform{.position = {3.0F, 0.0F, 0.0F}};
+    ASSERT_NE(scene->AddComponent(camera, originalCamera), nullptr);
+    ASSERT_NE(scene->AddComponent(camera, originalTransform), nullptr);
+    ASSERT_TRUE(scene->SetActiveCamera(camera));
+    auto const firstPath = directory / "original.scene";
+    ASSERT_TRUE(Save(firstPath));
+    auto* loaded = SceneManager::LoadScene(firstPath.string());
+    ASSERT_NE(loaded, nullptr);
+
+    auto const loadedCamera    = loaded->activeCamera;
+    auto*      cameraComponent = loaded->GetComponent<CameraComponent>(loadedCamera);
+    ASSERT_NE(cameraComponent, nullptr);
+    cameraComponent->fov           = 48.0F;
+    auto const               child = loaded->NewEntity(loadedCamera, "CreatedAfterLoad"_sid);
+    TransformComponent const childTransform{.position = {17.0F, 0.0F, 0.0F}};
+    ASSERT_NE(loaded->AddComponent(child, childTransform), nullptr);
+    for (auto [transform] : View<TransformComponent>{loaded})
+    {
+        transform->position.x *= 2.0F;
+    }
+    auto const secondPath = directory / "edited.scene";
+    loaded->name          = utils::RegisterString(secondPath.string());
+    ASSERT_TRUE(SceneManager::SaveScene(loaded->name));
+
+    auto* reloaded = SceneManager::LoadScene(secondPath.string());
+
+    ASSERT_NE(reloaded, nullptr);
+    auto const reloadedCamera = reloaded->activeCamera;
+    auto const reloadedChild  = reloaded->GetChild(reloadedCamera);
+    ASSERT_TRUE(reloadedChild != kInvalidEntityHandle);
+    auto const* restoredCamera = reloaded->GetComponent<CameraComponent>(reloadedCamera);
+    ASSERT_NE(restoredCamera, nullptr);
+    EXPECT_FLOAT_EQ(restoredCamera->fov, 48.0F);
+    EXPECT_EQ(reloaded->GetComponent<InfoComponent>(reloadedChild)->debugName, "CreatedAfterLoad"_sid);
+    EXPECT_TRUE(reloaded->GetParent(reloadedChild) == reloadedCamera);
+    EXPECT_EQ(reloaded->GetComponent<InfoComponent>(reloadedCamera)->childCount, 1U);
+
+    std::vector<float> positions;
+    for (auto [transform] : View<TransformComponent>{reloaded})
+    {
+        positions.push_back(transform->position.x);
+    }
+
+    std::vector<float> const expectedPositions{6.0F, 34.0F};
+    EXPECT_EQ(positions, expectedPositions);
 }
 
 }// namespace polos::ecs
