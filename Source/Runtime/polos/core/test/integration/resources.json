@@ -1,0 +1,4 @@
+[
+  { "id": "shader.quad.vertex", "path": "Shaders/quad.vert.spv" },
+  { "id": "shader.quad.fragment", "path": "Shaders/quad.frag.spv" }
+]

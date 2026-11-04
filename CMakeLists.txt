@@ -33,6 +33,7 @@ option(ENABLE_PROFILING  "Enable the profiling tools" OFF)
 option(GUI_USE_IMGUI     "Use ImGui for default Gui implementation" ON)
 option(BUILD_EXAMPLES    "Will build all example projects under Examples directory." ON)
 option(BUILD_TESTS       "Build all unit and component tests for the runtime" ON)
+option(BUILD_INTEGRATION_TESTS "Build window/Vulkan integration tests (requires BUILD_TESTS)" OFF)
 option(ENABLE_CLANG_TIDY   "Enable clang-tidy static analysis during builds" OFF)
 
 set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include")
