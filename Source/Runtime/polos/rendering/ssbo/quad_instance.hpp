@@ -10,6 +10,7 @@
 
 #include <glm/glm.hpp>
 
+#include <cstddef>
 #include <memory>
 
 namespace polos::rendering
@@ -24,7 +25,7 @@ struct QuadInstance
     float         tilingFactor{1.0F};
 };
 
-auto CreateQuadInstanceStorageBuffer() -> std::unique_ptr<Buffer>;
+auto CreateQuadInstanceStorageBuffer(std::size_t tInstanceCount) -> std::unique_ptr<Buffer>;
 
 }// namespace polos::rendering
 

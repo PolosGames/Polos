@@ -10,6 +10,7 @@
 
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
+#include "polos/polos_api.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -24,7 +25,7 @@ class Buffer;
 struct CameraUniform
 { glm::mat4 viewProj; };
 
-auto GetCameraUniform(
+auto POLOS_API GetCameraUniform(
     ecs::CameraComponent*    tCamera,
     ecs::TransformComponent* tTransform,
     std::uint32_t            tScWidth,

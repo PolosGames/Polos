@@ -16,15 +16,16 @@ namespace polos::resource::image
 auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<Image>
 {
     constexpr std::int32_t kOutputComponents{4};
-    std::int32_t width{0};
-    std::int32_t height{0};
-    std::int32_t sourceComponents{0};
+    std::int32_t           width{0};
+    std::int32_t           height{0};
+    std::int32_t           sourceComponents{0};
     if (1U != stbi_info(tPath.c_str(), &width, &height, &sourceComponents))
     {
         LogError("Could not read image information for '{}': {}", tPath.string(), stbi_failure_reason());
         return nullptr;
     }
 
+    stbi_set_flip_vertically_on_load_thread(1);
     std::uint8_t* pixels = stbi_load(tPath.c_str(), &width, &height, &sourceComponents, kOutputComponents);
     if (nullptr == pixels)
     {
@@ -32,8 +33,7 @@ auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<Image>
         return nullptr;
     }
 
-    auto const imgSize =
-        static_cast<std::uint64_t>(width) * static_cast<std::uint64_t>(height) * kOutputComponents;
+    auto const imgSize = static_cast<std::uint64_t>(width) * static_cast<std::uint64_t>(height) * kOutputComponents;
 
     return std::shared_ptr<Image>(
         new Image{

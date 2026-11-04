@@ -13,7 +13,7 @@ struct Settings
 {
     static constexpr bool          kEnableValidationLayers{true};
     static constexpr std::size_t   kMaxFramesInFlight{3U};
-    static constexpr std::uint32_t kMaxQuads{20000U};
+    static constexpr std::uint32_t kInitialQuadCapacity{20'000U};
     static constexpr std::uint32_t kMaxSamplers{32U};
     static constexpr std::uint32_t kMaxBatches{8U};
 };
