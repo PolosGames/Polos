@@ -25,6 +25,32 @@ static_assert(!std::is_invocable_v<decltype(&ResourceManager::GetImage), Resourc
 static_assert(!std::is_invocable_v<decltype(&ResourceManager::GetModel), ResourceManager const&, std::string_view>);
 static_assert(!std::is_invocable_v<decltype(&ResourceManager::GetFile), ResourceManager const&, std::filesystem::path>);
 
+struct ResourceCatalogCleanup
+{
+    ResourceManager&      manager;
+    std::filesystem::path catalog;
+    std::filesystem::path resources;
+    std::filesystem::path workingDirectory;
+    std::string           previousCatalog;
+    bool                  hadCatalog;
+
+    ~ResourceCatalogCleanup()
+    {
+        manager.ClearCache();
+        std::error_code error;
+        std::filesystem::current_path(workingDirectory, error);
+        std::filesystem::remove_all(resources, error);
+        if (hadCatalog)
+        {
+            std::ofstream(catalog) << previousCatalog;
+        }
+        else
+        {
+            std::filesystem::remove(catalog, error);
+        }
+    }
+};
+
 class ResourceManagerTest : public ::testing::Test
 {
 protected:
@@ -48,7 +74,7 @@ protected:
         std::filesystem::remove_all(directory);
     }
 
-    void Write(std::string_view path, std::string_view text)
+    auto Write(std::string_view path, std::string_view text) -> void
     {
         auto target = directory / "Resources" / path;
         std::filesystem::create_directories(target.parent_path());
@@ -59,26 +85,37 @@ protected:
     auto Catalog(std::initializer_list<std::pair<std::string_view, std::string_view>> entries) -> void
     {
         auto catalog = Json::array();
-        for (auto const& [id, path] : entries) catalog.push_back({{"id", id}, {"path", path}});
+        for (auto const& [id, path] : entries)
+        {
+            catalog.push_back({{"id", id}, {"path", path}});
+        }
         Write("resources.json", catalog.dump());
         resources->LoadCatalog();
     }
 
-    void WriteImage(std::string_view path, unsigned char red)
+    auto WriteImage(std::string_view path, unsigned char red) -> void
     {
         // One uncompressed RGBA pixel, top-left origin, BGRA byte order.
-        std::array<unsigned char, 22> const
-             tga{0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 32, 0x28, 0x33, 0x22, red, 0xFF};
+        std::array<unsigned char, 18> header{};
+        header[2]  = 2;
+        header[12] = 1;
+        header[14] = 1;
+        header[16] = 32;
+        header[17] = 0x28;
+        std::array<unsigned char, 4> const pixel{0x33, 0x22, red, 0xFF};
+
         auto target = directory / "Resources" / path;
         std::filesystem::create_directories(target.parent_path());
         std::ofstream file(target, std::ios::binary);
-        file.write(reinterpret_cast<char const*>(tga.data()), static_cast<std::streamsize>(tga.size()));
+        file.write(reinterpret_cast<char const*>(header.data()), static_cast<std::streamsize>(header.size()));
+        file.write(reinterpret_cast<char const*>(pixel.data()), static_cast<std::streamsize>(pixel.size()));
     }
 };
 
 TEST_F(ResourceManagerTest, GettersReturnNullBeforeCatalogLoad)
 {
     WriteImage("pixel.tga", 0x11);
+
     EXPECT_EQ(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_EQ(resources->GetModel("model"_sid), nullptr);
 }
@@ -90,6 +127,7 @@ TEST_F(ResourceManagerTest, GettersDoNotLoadOtherRepresentations)
     Write("model.gltf", R"({"asset":{"version":"2.0"},"scenes":[{}]})");
     Catalog({{"pixel", "pixel.tga"}, {"encoded", "encoded.bin"}, {"model", "model.gltf"}});
     ResourceManager const& view = *resources;
+
     EXPECT_NE(view.GetImage("pixel"_sid), nullptr);
     EXPECT_NE(view.GetFile("encoded"_sid), nullptr);
     EXPECT_NE(view.GetModel("model"_sid), nullptr);
@@ -111,7 +149,9 @@ TEST_F(ResourceManagerTest, ClearedCachesStayEmptyUntilExplicitCatalogReload)
     EXPECT_EQ(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_EQ(resources->GetModel("model"_sid), nullptr);
     EXPECT_EQ(resources->GetFile("data"_sid), nullptr);
+
     resources->LoadCatalog();
+
     EXPECT_NE(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_NE(resources->GetModel("model"_sid), nullptr);
     EXPECT_NE(resources->GetFile("data"_sid), nullptr);
@@ -135,6 +175,7 @@ TEST_F(ResourceManagerTest, CatalogPreloadsEveryResourceAndServesCachedDataAfter
     auto model  = resources->GetModel("model"_sid);
     auto shader = resources->GetFile("shader"_sid);
     auto data   = resources->GetFile("data"_sid);
+
     ASSERT_TRUE(image);
     ASSERT_TRUE(model);
     ASSERT_TRUE(shader);
@@ -151,6 +192,7 @@ TEST_F(ResourceManagerTest, ResourcesWithSameFilenameAreDistinctById)
     Catalog({{"texture.character", "characters/tux.png"}, {"texture.icon", "icons/tux.png"}});
     auto character = resources->GetImage("texture.character"_sid);
     auto icon      = resources->GetImage("texture.icon"_sid);
+
     ASSERT_TRUE(character);
     ASSERT_TRUE(icon);
     EXPECT_NE(character, icon);
@@ -168,6 +210,7 @@ TEST_F(ResourceManagerTest, CatalogNormalizesPathsBeforeLoading)
     Catalog({{"texture.character", "characters\\.\\tux.png"}, {"texture.upper", "Characters/../Characters/Tux.png"}});
     auto character = resources->GetImage("texture.character"_sid);
     auto upper     = resources->GetImage("texture.upper"_sid);
+
     ASSERT_TRUE(character);
     ASSERT_TRUE(upper);
     EXPECT_EQ(character->data[0], 0x11);
@@ -178,9 +221,14 @@ TEST_F(ResourceManagerTest, InvalidIdsAndDuplicateIdsOrNormalizedPathsAbort)
 {
     Write("a.bin", "data");
     Write("b.bin", "data");
+
     EXPECT_DEATH(Catalog({{"one", "a.bin"}, {"two", "./a.bin"}}), "");
     EXPECT_DEATH(Catalog({{"one", "a.bin"}, {"one", "b.bin"}}), "");
-    for (auto id : {std::string_view{}, std::string_view("a\0b", 3)}) { EXPECT_DEATH(Catalog({{id, "a.bin"}}), ""); }
+
+    for (auto const id : {std::string_view{}, std::string_view("a\0b", 3)})
+    {
+        EXPECT_DEATH(Catalog({{id, "a.bin"}}), "");
+    }
 }
 
 TEST_F(ResourceManagerTest, EscapingSymlinksAbortCatalogLoading)
@@ -190,12 +238,17 @@ TEST_F(ResourceManagerTest, EscapingSymlinksAbortCatalogLoading)
     std::error_code error;
     std::filesystem::create_directory_symlink(directory / "outside", directory / "Resources/link", error);
     if (error)
+    {
         GTEST_SKIP() << "Symlinks unavailable: " << error.message();
+    }
+
     EXPECT_DEATH(Catalog({{"escape", "link/data.txt"}}), "");
+
     Catalog({{"safe", "safe/data.txt"}});
     auto original = resources->GetFile("safe"_sid);
     std::filesystem::remove_all(directory / "Resources/safe");
     std::filesystem::create_directory_symlink(directory / "outside", directory / "Resources/safe");
+
     EXPECT_DEATH(resources->LoadCatalog(), "");
     // Disk changes cannot invalidate a preloaded resource or trigger a fresh read.
     EXPECT_NE(resources->GetFile("safe"_sid), nullptr);
@@ -207,13 +260,18 @@ TEST_F(ResourceManagerTest, SharedReferencesSurviveCacheClearingAndCatalogReload
     WriteImage("pixel.tga", 0x77);
     Catalog({{"pixel", "pixel.tga"}});
     auto original = resources->GetImage("pixel"_sid);
+
     ASSERT_TRUE(original);
+
     resources->ClearCache();
+
     EXPECT_EQ(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_EQ(original->data[0], 0x77);
+
     WriteImage("pixel.tga", 0x99);
     resources->LoadCatalog();
     auto replacement = resources->GetImage("pixel"_sid);
+
     ASSERT_TRUE(replacement);
     EXPECT_NE(original, replacement);
     EXPECT_EQ(replacement->data[0], 0x99);
@@ -225,6 +283,7 @@ TEST_F(ResourceManagerTest, UnlistedFilesCannotBeRetrieved)
     WriteImage("listed.tga", 0x11);
     WriteImage("unlisted.tga", 0x99);
     Catalog({{"listed", "listed.tga"}});
+
     EXPECT_EQ(resources->GetImage("unlisted"_sid), nullptr);
 }
 
@@ -233,13 +292,16 @@ TEST_F(ResourceManagerTest, CatalogPreservesIdentityAcrossMovesAndManagerRestart
     Write("old/data.txt", "hello");
     Catalog({{"stable", "old/data.txt"}});
     auto original = resources->GetFile("stable"_sid);
+
     ASSERT_TRUE(original);
+
     std::filesystem::create_directory(directory / "Resources/new");
     std::filesystem::rename(directory / "Resources/old/data.txt", directory / "Resources/new/renamed.txt");
     Write("resources.json", R"([{"id":"stable","path":"new/renamed.txt"}])");
     resources = std::make_unique<ResourceManager>(directory / "Resources");
     resources->LoadCatalog();
     auto moved = resources->GetFile("stable"_sid);
+
     ASSERT_TRUE(moved);
     EXPECT_EQ(original->data, moved->data);
 }
@@ -250,6 +312,7 @@ TEST_F(ResourceManagerTest, MissingOrMalformedCatalogAborts)
     for (auto catalog :
          {"{broken", "{}", "[{}]", R"([{"id":123,"path":"a"}])", R"([{"id":"escape","path":"../outside"}])"})
     {
+        SCOPED_TRACE(catalog);
         Write("resources.json", catalog);
         EXPECT_DEATH(resources->LoadCatalog(), "");
     }
@@ -259,17 +322,22 @@ TEST_F(ResourceManagerTest, MissingOrMalformedResourcesAbortImmediately)
 {
     for (auto missing : {"missing.tga", "missing.gltf", "missing.spv"})
     {
+        SCOPED_TRACE(missing);
         EXPECT_DEATH(Catalog({{"missing", missing}}), "");
     }
     Write("invalid.png", "not an image");
+
     EXPECT_DEATH(Catalog({{"invalid", "invalid.png"}}), "");
+
     Write("invalid.gltf", "not glTF");
+
     EXPECT_DEATH(Catalog({{"invalid", "invalid.gltf"}}), "");
 }
 
 TEST_F(ResourceManagerTest, UnavailableResourceRootAbortsCatalogLoading)
 {
     ResourceManager unavailable(std::filesystem::path{});
+
     EXPECT_DEATH(unavailable.LoadCatalog(), "");
 }
 
@@ -278,8 +346,11 @@ TEST_F(ResourceManagerTest, EmptyCatalogReplacesRegistryAndReleasesManagerOwners
     WriteImage("pixel.tga", 0x11);
     Catalog({{"pixel", "pixel.tga"}});
     auto image = resources->GetImage("pixel"_sid);
+
     ASSERT_TRUE(image);
+
     Catalog({});
+
     EXPECT_EQ(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_EQ(image->data[0], 0x11);
 }
@@ -293,27 +364,8 @@ TEST_F(ResourceManagerTest, SingletonGettersUseThePreloadedCacheFromAnyWorkingDi
     bool const        hadCatalog = previous.is_open();
     std::string const oldCatalog{std::istreambuf_iterator<char>(previous), std::istreambuf_iterator<char>()};
     previous.close();
-    auto const relative = std::filesystem::path(directory.filename()) / "pixel.tga";
-    struct Cleanup
-    {
-        ResourceManager&      manager;
-        std::filesystem::path catalog;
-        std::filesystem::path resources;
-        std::filesystem::path workingDirectory;
-        std::string           previousCatalog;
-        bool                  hadCatalog;
-        ~Cleanup()
-        {
-            manager.ClearCache();
-            std::error_code error;
-            std::filesystem::current_path(workingDirectory, error);
-            std::filesystem::remove_all(resources, error);
-            if (hadCatalog)
-                std::ofstream(catalog) << previousCatalog;
-            else
-                std::filesystem::remove(catalog, error);
-        }
-    } cleanup{
+    auto const             relative = std::filesystem::path(directory.filename()) / "pixel.tga";
+    ResourceCatalogCleanup cleanup{
         manager,
         catalogPath,
         manager.Root() / relative.parent_path(),
@@ -332,6 +384,7 @@ TEST_F(ResourceManagerTest, SingletonGettersUseThePreloadedCacheFromAnyWorkingDi
     std::filesystem::remove(manager.Root() / relative);
     std::filesystem::current_path(directory);
     auto byId = manager.GetImage("integration.pixel"_sid);
+
     ASSERT_TRUE(byId);
     EXPECT_EQ(byId, manager.GetImage(polos::utils::StrHash64("integration.pixel")));
     EXPECT_EQ(byId, manager.GetImage("integration.pixel"_sid));

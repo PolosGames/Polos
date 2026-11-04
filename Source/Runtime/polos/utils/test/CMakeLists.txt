@@ -20,3 +20,5 @@ target_compile_options(ut-assert-debug PRIVATE
     "$<$<CXX_COMPILER_ID:MSVC>:/UNDEBUG>"
     "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-UNDEBUG>")
 target_compile_definitions(ut-assert-release PRIVATE NDEBUG)
+
+polos_tests(utils SOURCES utils_test.cpp)

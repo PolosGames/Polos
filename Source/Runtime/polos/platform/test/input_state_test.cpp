@@ -18,7 +18,6 @@
 
 namespace
 {
-
 namespace input = polos::platform::input;
 using namespace polos::communication;
 
@@ -26,27 +25,35 @@ class InputStateTest : public ::testing::Test
 {
 protected:
     static void SetUpTestSuite()
-    { input::Initialize(); }
+    {
+        input::Initialize();
+    }
 
     void SetUp() override
-    { input::g_input_state = {}; }
+    {
+        input::g_input_state = {};
+    }
 };
 
 TEST_F(InputStateTest, KeyEventsRetainEdgesUntilInputIsProcessed)
 {
     DispatchNow<KeyPress>(GLFW_KEY_W);
+
     EXPECT_TRUE(input::IsKeyDown(GLFW_KEY_W));
     EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_W));
 
     DispatchNow<ProcessInput>();
+
     EXPECT_TRUE(input::IsKeyDown(GLFW_KEY_W));
     EXPECT_FALSE(input::IsKeyPressed(GLFW_KEY_W));
 
     DispatchNow<KeyRelease>(GLFW_KEY_W);
+
     EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_W));
     EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_W));
 
     DispatchNow<ProcessInput>();
+
     EXPECT_FALSE(input::IsKeyReleased(GLFW_KEY_W));
 }
 
@@ -54,21 +61,65 @@ TEST_F(InputStateTest, MouseEventsUpdateButtonsAndResetMovementAtEndFrame)
 {
     DispatchNow<MouseMove>(10.0, 20.0);
     DispatchNow<MouseMove>(13.0, 18.0);
+
     EXPECT_FLOAT_EQ(input::g_input_state.mousePos.x, 13.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mousePos.y, 18.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mouseDelta.x, 3.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mouseDelta.y, -2.0F);
 
     DispatchNow<MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
+
     EXPECT_TRUE(input::IsKeyDown(GLFW_MOUSE_BUTTON_RIGHT));
+
     DispatchNow<MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
+
     EXPECT_FALSE(input::IsKeyDown(GLFW_MOUSE_BUTTON_RIGHT));
 
     DispatchNow<EndFrame>();
+
     EXPECT_FLOAT_EQ(input::g_input_state.mouseDelta.x, 0.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mouseDelta.y, 0.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mousePos.x, 13.0F);
     EXPECT_FLOAT_EQ(input::g_input_state.mousePos.y, 18.0F);
+}
+
+TEST_F(InputStateTest, HeldKeyDoesNotGenerateAnotherPressUntilReleased)
+{
+    DispatchNow<KeyPress>(GLFW_KEY_A);
+    DispatchNow<ProcessInput>();
+
+    DispatchNow<KeyPress>(GLFW_KEY_A);
+
+    EXPECT_TRUE(input::IsKeyDown(GLFW_KEY_A));
+    EXPECT_FALSE(input::IsKeyPressed(GLFW_KEY_A));
+    EXPECT_FALSE(input::IsKeyReleased(GLFW_KEY_A));
+
+    DispatchNow<KeyRelease>(GLFW_KEY_A);
+    DispatchNow<ProcessInput>();
+    DispatchNow<KeyPress>(GLFW_KEY_A);
+
+    EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_A));
+    EXPECT_FALSE(input::IsKeyReleased(GLFW_KEY_A));
+}
+
+TEST_F(InputStateTest, ReleasingOneKeyDoesNotChangeOtherKeysOrMouseButtons)
+{
+    DispatchNow<KeyPress>(GLFW_KEY_A);
+    DispatchNow<KeyPress>(GLFW_KEY_D);
+    DispatchNow<MouseInput>(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS);
+    DispatchNow<ProcessInput>();
+
+    DispatchNow<KeyRelease>(GLFW_KEY_A);
+
+    EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_A));
+    EXPECT_TRUE(input::IsKeyDown(GLFW_KEY_D));
+    EXPECT_FALSE(input::IsKeyPressed(GLFW_KEY_D));
+    EXPECT_TRUE(input::IsKeyDown(GLFW_MOUSE_BUTTON_LEFT));
+
+    DispatchNow<EndFrame>();
+
+    EXPECT_TRUE(input::IsKeyDown(GLFW_KEY_D));
+    EXPECT_TRUE(input::IsKeyDown(GLFW_MOUSE_BUTTON_LEFT));
 }
 
 }// namespace

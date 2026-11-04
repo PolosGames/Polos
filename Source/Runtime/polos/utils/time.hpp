@@ -39,7 +39,7 @@ constexpr auto ConvertToMicroseconds(std::chrono::seconds const tSecs) -> Durati
 
 constexpr auto ConvertToMicroseconds(std::chrono::minutes const tMins) -> Duration
 {
-    return ConvertToMicroseconds(std::chrono::seconds{tMins * 60});// NOLINT
+    return std::chrono::duration_cast<Duration>(tMins);
 }
 
 }// namespace utils
