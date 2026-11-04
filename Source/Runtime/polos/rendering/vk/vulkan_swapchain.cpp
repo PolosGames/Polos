@@ -271,6 +271,7 @@ auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) 
     if (VK_ERROR_OUT_OF_DATE_KHR == res)
     {
         LogError("Swapchain image is out of date.");
+        return kInvalidImageIndex;
     }
 
     if (VK_SUCCESS != res)
@@ -284,7 +285,11 @@ auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) 
     // The submit waits for acquisition at TRANSFER. Put the first image transition
     // in that scope as well, retaining the layout from the previous presentation.
     auto& image = *mImageResources[mCurrentImage];
-    image.SetUse({image.GetUse().layout, VK_PIPELINE_STAGE_TRANSFER_BIT, 0U});
+    image.SetUse({
+        .layout   = image.GetUse().layout,
+        .stages   = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .accesses = 0U,
+    });
 
     return mCurrentImage;
 }

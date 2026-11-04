@@ -33,35 +33,38 @@ protected:
     }
 };
 
-TEST_F(ImageLoaderTest, DecodesPixelsFromValidImage)
+TEST_F(ImageLoaderTest, DecodesRgbaPixelsWithBottomRowFirst)
 {
-    // One uncompressed, top-left-origin RGBA pixel in TGA's BGRA byte order.
+    // Two rows in a top-left-origin TGA, stored in BGRA byte order.
     std::array<unsigned char, 18> header{};
     header[2]  = 2;// Uncompressed true-color image.
     header[12] = 1;
-    header[14] = 1;
+    header[14] = 2;
     header[16] = 32;
     header[17] = 0x28;
-    std::array<unsigned char, 4> const pixel{0x33, 0x22, 0x11, 0xFF};
+    std::array<unsigned char, 4> const topPixel{0x33, 0x22, 0x11, 0xFF};
+    std::array<unsigned char, 4> const bottomPixel{0x66, 0x55, 0x44, 0x80};
+    std::array<unsigned char, 8> const expected{0x44, 0x55, 0x66, 0x80, 0x11, 0x22, 0x33, 0xFF};
 
     auto const path = directory / "pixel.tga";
     {
         std::ofstream file(path, std::ios::binary);
         file.write(reinterpret_cast<char const*>(header.data()), static_cast<std::streamsize>(header.size()));
-        file.write(reinterpret_cast<char const*>(pixel.data()), static_cast<std::streamsize>(pixel.size()));
+        file.write(reinterpret_cast<char const*>(topPixel.data()), static_cast<std::streamsize>(topPixel.size()));
+        file.write(reinterpret_cast<char const*>(bottomPixel.data()), static_cast<std::streamsize>(bottomPixel.size()));
     }
 
     auto const image = polos::resource::image::LoadImage(path);
 
     ASSERT_NE(image, nullptr);
     EXPECT_EQ(image->width, 1);
-    EXPECT_EQ(image->height, 1);
+    EXPECT_EQ(image->height, 2);
     EXPECT_EQ(image->components, 4);
-    ASSERT_EQ(image->data.size(), 4U);
-    EXPECT_EQ(image->data[0], 0x11);
-    EXPECT_EQ(image->data[1], 0x22);
-    EXPECT_EQ(image->data[2], 0x33);
-    EXPECT_EQ(image->data[3], 0xFF);
+    ASSERT_EQ(image->data.size(), expected.size());
+    for (std::size_t i{0U}; i < expected.size(); ++i)
+    {
+        EXPECT_EQ(image->data[i], expected[i]) << "RGBA byte " << i;
+    }
 }
 
 TEST_F(ImageLoaderTest, ExpandsRgbAndGrayscaleInputsToCompleteRgbaBuffers)

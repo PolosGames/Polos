@@ -25,6 +25,7 @@
 #include "polos/utils/assert.hpp"
 
 #include <deque>
+#include <limits>
 #include <span>
 #include <utility>
 
@@ -196,6 +197,15 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
 
             if (quadPairIndex == quadPairs.size())
             {
+                if (TextureCache::GetTexture(quad->textureName) == nullptr)
+                {
+                    auto const texture = TextureCache::CreateTexture(quad->textureName, {});
+                    PL_ASSERT(
+                        texture != std::numeric_limits<std::size_t>::max(),
+                        "Could not upload quad texture {}.",
+                        quad->textureName);
+                }
+
                 auto& pair            = quadPairs.emplace_back();
                 quadPair              = &pair;
                 quadPair->textureName = quad->textureName;

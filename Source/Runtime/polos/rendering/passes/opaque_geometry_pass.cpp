@@ -359,7 +359,12 @@ auto CreateCameraUniformBuffers() -> std::array<std::unique_ptr<Buffer>, Setting
 
 auto CreateInstanceBuffers() -> std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight>
 {
-    return {CreateQuadInstanceStorageBuffer(), CreateQuadInstanceStorageBuffer(), CreateQuadInstanceStorageBuffer()};
+    std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> buffers;
+    for (auto& buffer : buffers)
+    {
+        buffer = CreateQuadInstanceStorageBuffer(Settings::kInitialQuadCapacity);
+    }
+    return buffers;
 }
 
 auto UpdateDescriptorSets(VkBuffer tCameraBuffer, VkBuffer tInstanceBuffer, VkDescriptorSet tSet) -> void
@@ -480,10 +485,16 @@ auto OpaqueGeometryPass::Prepare(std::uint32_t const tFrameSlot, std::span<QuadB
     std::size_t instanceCount{0U};
     for (auto const& batch : tQuadBatches)
     {
-        PL_ASSERT(
-            batch.quadInstances.size() <= Settings::kMaxQuads - instanceCount,
-            "Exceeded frame instance buffer capacity!");
         instanceCount += batch.quadInstances.size();
+    }
+
+    auto&      instanceBuffer = mInstanceBuffers[tFrameSlot];
+    auto const instanceBytes  = instanceCount * sizeof(QuadInstance);
+    if (instanceBytes > instanceBuffer->size)
+    {
+        // BeginFrame has waited for this slot's fence, so its buffer and descriptor set are idle.
+        instanceBuffer = CreateQuadInstanceStorageBuffer(instanceCount);
+        UpdateDescriptorSets(mCameraUniforms[tFrameSlot]->buffer, instanceBuffer->buffer, mDescriptorSet0[tFrameSlot]);
     }
 
     mFrameInstances.clear();
@@ -498,8 +509,7 @@ auto OpaqueGeometryPass::Prepare(std::uint32_t const tFrameSlot, std::span<QuadB
 
     if (!mFrameInstances.empty())
     {
-        auto const uploaded =
-            mInstanceBuffers[tFrameSlot]->Write(mFrameInstances.data(), sizeof(QuadInstance) * mFrameInstances.size());
+        auto const uploaded = instanceBuffer->Write(mFrameInstances.data(), instanceBytes);
         PL_ASSERT(uploaded, "Failed to upload frame instances!");
     }
 }

@@ -47,7 +47,6 @@ void MainLoop::Run() const
 
     Duration                     delta_time{Duration::zero()};
     TimePoint                    start = utils::GetTimeNow();
-    Duration                     lag{Duration::zero()};
     constexpr std::int32_t const kTargetFrames{120};
     constexpr Duration const     kTimestep{1_sec / kTargetFrames};
 
@@ -87,9 +86,13 @@ void MainLoop::Run() const
 }
 
 void MainLoop::on_window_close()
-{ mIsRunning = false; }
+{
+    mIsRunning = false;
+}
 
 void MainLoop::on_engine_terminate()
-{ mIsRunning = false; }
+{
+    mIsRunning = false;
+}
 
 }// namespace polos::core

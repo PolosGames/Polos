@@ -25,7 +25,7 @@ auto GetCameraUniform(
     glm::vec3 const forward     = orientation * glm::vec3{0.0F, 0.0F, -1.0F};
     glm::vec3 const up          = orientation * glm::vec3{0.0F, 1.0F, 0.0F};
 
-    glm::mat4 const viewMatrix = glm::lookAt(tTransform->position, forward, up);
+    glm::mat4 const viewMatrix = glm::lookAt(tTransform->position, tTransform->position + forward, up);
     glm::mat4       projMatrix = glm::perspective(
         glm::radians(static_cast<std::float_t>(tCamera->fov)),
         static_cast<float>(tScWidth) / static_cast<float>(tScHeight),
@@ -34,7 +34,7 @@ auto GetCameraUniform(
 
     projMatrix[1][1] *= -1;
 
-    return {.viewProj = viewMatrix * projMatrix};
+    return {.viewProj = projMatrix * viewMatrix};
 }
 
 auto CreateCameraUniformBuffer() -> std::unique_ptr<Buffer>

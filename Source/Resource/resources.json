@@ -18,13 +18,5 @@
   {
     "id": "shader.quad.fragment",
     "path": "Shaders/quad.frag.spv"
-  },
-  {
-    "id": "shader.blinn-phong.vertex",
-    "path": "Shaders/blinn_phong.vert.spv"
-  },
-  {
-    "id": "shader.blinn-phong.fragment",
-    "path": "Shaders/blinn_phong.frag.spv"
   }
 ]
