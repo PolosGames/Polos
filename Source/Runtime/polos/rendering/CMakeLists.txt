@@ -22,4 +22,9 @@ polos_sources(
     vulkan_rendering_api.cpp
 )
 
-polos_tests(rendering SOURCES test/render_subsystem_test.cpp)
+polos_tests(rendering SOURCES
+    test/render_subsystem_test.cpp
+    test/vertex_layout_test.cpp
+    vertex/primitive_vertex.cpp
+    vertex/quad_vertex.cpp
+)

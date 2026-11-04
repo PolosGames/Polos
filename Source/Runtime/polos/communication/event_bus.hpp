@@ -67,6 +67,8 @@ public:
     /// This should be called at the beginning of each frame.
     auto DispatchDeferredEvents() -> void;
 private:
+    friend class EventBusTestFixture;
+
     EventBus();
 
     // TODO(sorbatdev): Make a freelist so we can unsubscribe

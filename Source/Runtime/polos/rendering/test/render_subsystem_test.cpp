@@ -22,7 +22,6 @@ namespace polos::rendering
 {
 namespace
 {
-
 static_assert(RenderSubsystem<VulkanContext>);
 static_assert(RenderSubsystem<VulkanDevice>);
 static_assert(RenderSubsystem<VulkanSwapchain>);
@@ -36,6 +35,7 @@ struct WrongCreateResult
     struct CreationDetails
     {
     };
+
     auto Create(CreationDetails const&) -> bool;
     auto Destroy() -> void;
 };
@@ -45,6 +45,7 @@ struct WrongDestroyResult
     struct CreationDetails
     {
     };
+
     auto Create(CreationDetails const&) -> Result<void>;
     auto Destroy() -> Result<void>;
 };
@@ -55,7 +56,9 @@ static_assert(!RenderSubsystem<WrongDestroyResult>);
 struct TestSubsystem
 {
     struct CreationDetails
-    { bool fail{false}; };
+    {
+        bool fail{false};
+    };
 
     int               id;
     std::vector<int>& events;
@@ -82,12 +85,28 @@ struct TestSubsystem
     }
 };
 
+auto ExpectedRollbackEvents(std::size_t tFailureIndex) -> std::vector<int>
+{
+    std::vector<int> events;
+    for (std::size_t i{0U}; i <= tFailureIndex; ++i)
+    {
+        events.push_back(static_cast<int>(i + 1U));
+    }
+
+    for (std::size_t i{tFailureIndex + 1U}; i > 0U; --i)
+    {
+        events.push_back(-static_cast<int>(i));
+    }
+
+    return events;
+}
+
 TEST(RenderSubsystemTest, DetailsAreBuiltWhenDependenciesAreReady)
 {
     std::vector<int> events;
     TestSubsystem    first{1, events};
     TestSubsystem    second{2, events};
-    bool             details_built{false};
+    bool             detailsBuilt{false};
     std::array       entries{
         RegisterSubsystem(
             first,
@@ -95,20 +114,24 @@ TEST(RenderSubsystemTest, DetailsAreBuiltWhenDependenciesAreReady)
                 return TestSubsystem::CreationDetails{};
             }),
         RegisterSubsystem(second, [&] {
-            details_built = true;
+            detailsBuilt = true;
             EXPECT_TRUE(first.live);
             return TestSubsystem::CreationDetails{};
         }),
     };
 
-    EXPECT_FALSE(details_built);
+    EXPECT_FALSE(detailsBuilt);
+
     std::size_t initialized{0U};
+
     ASSERT_TRUE(CreateSubsystems(entries, initialized));
-    EXPECT_TRUE(details_built);
+    EXPECT_TRUE(detailsBuilt);
     EXPECT_EQ(initialized, 2U);
 
     DestroySubsystems(entries, initialized);
-    EXPECT_EQ(events, (std::vector<int>{1, 2, -2, -1}));
+    std::vector<int> const expectedEvents{1, 2, -2, -1};
+
+    EXPECT_EQ(events, expectedEvents);
     EXPECT_EQ(initialized, 0U);
 }
 
@@ -117,6 +140,8 @@ TEST(RenderSubsystemTest, FailureCleansPartialStateAndRollsBackEarlierEntries)
     // Exercise every failure position, including failure before any entry succeeds.
     for (std::size_t failure{0U}; failure < 3U; ++failure)
     {
+        SCOPED_TRACE(failure);
+
         std::vector<int> events;
         TestSubsystem    first{1, events};
         TestSubsystem    second{2, events};
@@ -146,9 +171,7 @@ TEST(RenderSubsystemTest, FailureCleansPartialStateAndRollsBackEarlierEntries)
         EXPECT_FALSE(second.live);
         EXPECT_FALSE(third.live);
 
-        std::vector<int> expected;
-        for (std::size_t i{0U}; i <= failure; ++i) { expected.push_back(static_cast<int>(i + 1U)); }
-        for (std::size_t i = failure + 1U; i > 0U; --i) { expected.push_back(-static_cast<int>(i)); }
+        auto const expected = ExpectedRollbackEvents(failure);
         EXPECT_EQ(events, expected);
 
         DestroySubsystems(entries, initialized);
@@ -167,14 +190,20 @@ TEST(RenderSubsystemTest, SupportsMoveOnlyFactoriesAndRepeatedLifecycle)
     };
 
     std::size_t initialized{0U};
+
     ASSERT_TRUE(CreateSubsystems(entries, initialized));
     ASSERT_TRUE(CreateSubsystems(entries, initialized));
+
     DestroySubsystems(entries, initialized);
-    DestroySubsystems(entries, initialized);
-    ASSERT_TRUE(CreateSubsystems(entries, initialized));
     DestroySubsystems(entries, initialized);
 
-    EXPECT_EQ(events, (std::vector<int>{1, -1, 1, -1}));
+    ASSERT_TRUE(CreateSubsystems(entries, initialized));
+
+    DestroySubsystems(entries, initialized);
+
+    std::vector<int> const expectedEvents{1, -1, 1, -1};
+
+    EXPECT_EQ(events, expectedEvents);
 }
 
 TEST(RenderSubsystemTest, CanRetryAfterFailure)
@@ -189,20 +218,29 @@ TEST(RenderSubsystemTest, CanRetryAfterFailure)
     };
 
     std::size_t initialized{0U};
+
     ASSERT_FALSE(CreateSubsystems(entries, initialized));
+
     fail = false;
+
     ASSERT_TRUE(CreateSubsystems(entries, initialized));
+
     DestroySubsystems(entries, initialized);
 
-    EXPECT_EQ(events, (std::vector<int>{1, -1, 1, -1}));
+    std::vector<int> const expectedEvents{1, -1, 1, -1};
+
+    EXPECT_EQ(events, expectedEvents);
 }
 
 TEST(RenderSubsystemTest, EmptyRegistrySucceeds)
 {
     std::array<SubsystemEntry, 0U> entries;
     std::size_t                    initialized{0U};
+
     EXPECT_TRUE(CreateSubsystems(entries, initialized));
+
     DestroySubsystems(entries, initialized);
+
     EXPECT_EQ(initialized, 0U);
 }
 
