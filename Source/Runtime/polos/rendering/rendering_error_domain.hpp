@@ -37,6 +37,7 @@ enum class RenderingErrc : utils::ErrorDomain::CodeType
     kFailedCreateInstance,
     kFailedCreateShaderModule,
     kFailedCreateDefaultTexture,
+    kFailedCreateGui,
 
     kRenderingErrcCount,
 };
@@ -67,6 +68,7 @@ public:
               "Failed to create the Vulkan instance!",
               "Failed to load or create a shader module!",
               "Failed to create the default white texture!",
+              "Failed to initialize the GUI renderer!",
           })
     {}
 

@@ -139,12 +139,18 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
     }
 
     mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>();
+    mUiRenderPass       = std::make_unique<UiRenderPass>();
+    if (!mUiRenderPass->Create(mFrameTargets.front().colorImg->format))
+    {
+        return ErrorType{RenderingErrc::kFailedCreateGui};
+    }
 
     return {};
 }
 
 auto RenderCompositor::Destroy() -> void
 {
+    mUiRenderPass.reset();
     mQuadVertexBuffer.reset();
     mQuadIndexBuffer.reset();
     mOpaqueGeometryPass.reset();
@@ -153,6 +159,7 @@ auto RenderCompositor::Destroy() -> void
 
 auto RenderCompositor::RecreateTargets() -> Result<void>
 {
+    mUiRenderPass->ReleaseFramebuffers();
     mOpaqueGeometryPass.reset();
     releaseTargets();
     if (auto result = createTargets(); !result)
@@ -262,6 +269,13 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> void
             .quadVertices  = mQuadVertexBuffer.get(),
             .quadIndices   = mQuadIndexBuffer.get(),
         });
+
+    mUiRenderPass->Record({
+        .frameSlot = tFrameData.frameSlot,
+        .cmdBuf    = tFrameData.currentCmdBuf,
+        .colorView = targets.colorImgView,
+        .extent    = ToExtent2D(tFrameData.scImage->extent),
+    });
 
     targets.colorImg->SetUse({
         .layout   = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,

@@ -7,6 +7,7 @@ polos_sources(
     compositor/render_compositor.cpp
     #passes/general_pass.cpp
     passes/opaque_geometry_pass.cpp
+    passes/ui_render_pass.cpp
     resources/buffer.cpp
     resources/image.cpp
     resources/texture.cpp

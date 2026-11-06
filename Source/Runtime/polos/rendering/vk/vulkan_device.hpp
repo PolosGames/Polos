@@ -41,6 +41,7 @@ public:
 
     [[nodiscard]] auto GetLogicalDevice() const -> VkDevice override;
     [[nodiscard]] auto GetPhysicalDevice() const -> VkPhysicalDevice override;
+    [[nodiscard]] auto GetGraphicsQueueFamily() const -> std::uint32_t;
     [[nodiscard]] auto GetAllocator() const -> VmaAllocator override;
 
     [[nodiscard]] auto CheckSurfaceFormatSupport(VkSurfaceFormatKHR const& tRequiredFormat) const -> bool override;

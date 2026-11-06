@@ -30,7 +30,6 @@ target_link_libraries(polos PUBLIC
     ctre::ctre
     glfw
     glm::glm
-    imgui::imgui
     Vulkan::Vulkan
     GPUOpen::VulkanMemoryAllocator
     quill::quill_shared
@@ -55,6 +54,7 @@ add_subdirectory(polos/communication)
 add_subdirectory(polos/core)
 add_subdirectory(polos/ecs)
 add_subdirectory(polos/filesystem)
+add_subdirectory(polos/gui)
 add_subdirectory(polos/logging)
 add_subdirectory(polos/platform)
 add_subdirectory(polos/rendering)

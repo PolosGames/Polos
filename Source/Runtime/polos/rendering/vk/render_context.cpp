@@ -5,6 +5,8 @@
 
 #include "polos/rendering/vk/render_context.hpp"
 
+#include "polos/gui/backend.hpp"
+
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
@@ -279,6 +281,7 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     };
 
     mRenderCompositor->Prepare(mFrameData[mCurrentFrameIndex]);
+    gui::backend::BeginFrame();
 
     return cur_cmd_buf;
 }
