@@ -8,6 +8,7 @@
 #include <polos/communication/engine_update.hpp>
 #include <polos/communication/event_bus.hpp>
 #include <polos/communication/key_press.hpp>
+#include <polos/communication/render_update.hpp>
 #include <polos/core/base_live_layer.hpp>
 #include <polos/core/polos_main.hpp>
 #include <polos/ecs/components/camera_component.hpp>
@@ -16,6 +17,7 @@
 #include <polos/ecs/components/transform_component.hpp>
 #include <polos/ecs/scene.hpp>
 #include <polos/ecs/scene_manager.hpp>
+#include <polos/gui/gui.hpp>
 #include <polos/platform/input_state.hpp>
 #include <polos/platform/platform_manager.hpp>
 #include <polos/resource/image.hpp>
@@ -26,6 +28,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <format>
 #include <numbers>
 #include <random>
 
@@ -110,6 +113,11 @@ public:
                 updateCamera(tEvent.deltaTime);
             });
 
+        polos::communication::Subscribe<polos::communication::RenderUpdate>(
+            [this](polos::communication::RenderUpdate& tEvent) {
+                drawFpsOverlay(tEvent.deltaTime);
+            });
+
         polos::communication::Subscribe<polos::communication::KeyPress>([](polos::communication::KeyPress& tEvent) {
             if (tEvent.key == GLFW_KEY_ESCAPE)
             {
@@ -123,6 +131,35 @@ public:
         return "TuxQuads";
     }
 private:
+    auto drawFpsOverlay(float tDeltaTime) -> void
+    {
+        namespace gui = polos::gui;
+        using Flags   = gui::WindowFlags;
+
+        constexpr float samplePeriod{0.25F};
+        if (tDeltaTime > 0.0F)
+        {
+            mFpsSampleTime += tDeltaTime;
+            ++mFpsSampleFrames;
+            if (mFpsSampleTime >= samplePeriod)
+            {
+                mFps             = static_cast<float>(mFpsSampleFrames) / mFpsSampleTime;
+                mFpsSampleTime   = 0.0F;
+                mFpsSampleFrames = 0U;
+            }
+        }
+
+        static auto const flags = Flags::kNoTitleBar | Flags::kNoResize | Flags::kNoMove | Flags::kAutoResize |
+                                  Flags::kNoInputs | Flags::kNoDocking;
+        gui::SetNextWindowPosition({8.0F, 8.0F});
+        gui::SetNextWindowBackgroundAlpha(0.65F);
+        if (gui::Begin("TuxFpsOverlay", nullptr, flags))
+        {
+            gui::Text(mFps > 0.0F ? std::format("FPS: {:.1f}", mFps) : "FPS: --");
+        }
+        gui::End();
+    }
+
     auto updateCamera(float tDeltaTime) -> void
     {
         using polos::platform::input::IsKeyDown;
@@ -181,6 +218,10 @@ private:
     glm::vec2                                    mTargetRotation{0.0F};
     glm::vec3                                    mCameraVelocity{0.0F};
     bool                                         mWasLooking{false};
+
+    float         mFps{0.0F};
+    float         mFpsSampleTime{0.0F};
+    std::uint32_t mFpsSampleFrames{0U};
 };
 
 }// namespace tux_quads

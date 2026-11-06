@@ -10,6 +10,7 @@
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
+#include "polos/gui/gui.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/resource/resource_manager.hpp"
 
@@ -24,11 +25,14 @@ namespace polos::core
 {
 namespace
 {
+constexpr unsigned kFrameCount{5U};
+
 struct SmokeState
 {
     unsigned                      updates{0U};
     unsigned                      renderUpdates{0U};
     unsigned                      completedFrames{0U};
+    unsigned                      guiFrames{0U};
     bool                          windowCreated{false};
     bool                          shadersLoaded{false};
     std::vector<std::string_view> lifecycle;
@@ -89,11 +93,25 @@ public:
         communication::Subscribe<communication::RenderUpdate>([&state = mState](communication::RenderUpdate&) {
             ++state.renderUpdates;
             state.lifecycle.push_back("render");
+
+            gui::SetNextWindowSize({320.0F, 180.0F});
+            if (gui::Begin("Integration GUI"))
+            {
+                gui::Text("A scene and a GUI overlay.");
+                if (gui::Image("texture.polos_default_white"_sid, {24.0F, 24.0F}))
+                {
+                    ++state.guiFrames;
+                }
+            }
+            gui::End();
         });
         communication::Subscribe<communication::EndFrame>([&state = mState](communication::EndFrame&) {
             ++state.completedFrames;
             state.lifecycle.push_back("end-frame");
-            communication::DispatchNow<communication::EngineTerminate>();
+            if (state.completedFrames == kFrameCount)
+            {
+                communication::DispatchNow<communication::EngineTerminate>();
+            }
         });
     }
 
@@ -105,7 +123,7 @@ private:
     SmokeState& mState;
 };
 
-TEST(EngineIntegrationTest, StartsRendersOneFrameAndShutsDown)
+TEST(EngineIntegrationTest, RendersSceneAndGuiAcrossFrameSlots)
 {
 #if defined(__linux__)
     if (std::getenv("DISPLAY") == nullptr && std::getenv("WAYLAND_DISPLAY") == nullptr)
@@ -122,9 +140,15 @@ TEST(EngineIntegrationTest, StartsRendersOneFrameAndShutsDown)
     EXPECT_TRUE(state.windowCreated);
     EXPECT_TRUE(state.shadersLoaded);
     EXPECT_GE(state.updates, 1U);
-    EXPECT_EQ(state.renderUpdates, 1U);
-    EXPECT_EQ(state.completedFrames, 1U);
-    std::vector<std::string_view> const expectedLifecycle{"create", "render", "end-frame", "destroy", "destruct"};
+    EXPECT_EQ(state.renderUpdates, kFrameCount);
+    EXPECT_EQ(state.completedFrames, kFrameCount);
+    EXPECT_EQ(state.guiFrames, kFrameCount);
+    std::vector<std::string_view> expectedLifecycle{"create"};
+    for (unsigned frame = 0U; frame < kFrameCount; ++frame)
+    {
+        expectedLifecycle.insert(expectedLifecycle.end(), {"render", "end-frame"});
+    }
+    expectedLifecycle.insert(expectedLifecycle.end(), {"destroy", "destruct"});
     EXPECT_EQ(state.lifecycle, expectedLifecycle);
     EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.quad.vertex"_sid), nullptr);
     EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.quad.fragment"_sid), nullptr);

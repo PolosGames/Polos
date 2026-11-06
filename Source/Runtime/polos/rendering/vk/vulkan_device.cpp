@@ -382,6 +382,11 @@ auto VulkanDevice::GetPhysicalDevice() const -> VkPhysicalDevice
     return physDevice;
 }
 
+auto VulkanDevice::GetGraphicsQueueFamily() const -> std::uint32_t
+{
+    return mQueueIndices.gfxQIndex;
+}
+
 auto VulkanDevice::GetAllocator() const -> VmaAllocator
 {
     return allocator;

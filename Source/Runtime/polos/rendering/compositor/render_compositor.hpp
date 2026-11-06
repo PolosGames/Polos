@@ -8,6 +8,7 @@
 
 #include "polos/rendering/compositor/frame_targets.hpp"
 #include "polos/rendering/passes/opaque_geometry_pass.hpp"
+#include "polos/rendering/passes/ui_render_pass.hpp"
 #include "polos/rendering/vk/settings.hpp"
 #include "polos/utils/error_code.hpp"
 
@@ -59,6 +60,7 @@ private:
 
     std::array<FrameTargets, Settings::kMaxFramesInFlight> mFrameTargets;
     std::unique_ptr<OpaqueGeometryPass>                    mOpaqueGeometryPass;
+    std::unique_ptr<UiRenderPass>                          mUiRenderPass;
 
     std::vector<OpaqueGeometryPass::QuadBatch> mQuadBatches;
     CameraUniform                              mCameraUbo;
