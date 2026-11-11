@@ -184,6 +184,11 @@ auto VulkanContext::Destroy() -> void
     LogInfo("Destroyed VulkanContext and DebugMessenger");
 }
 
+auto VulkanContext::HasValidationLayers() const -> bool
+{
+    return !mLayers.empty();
+}
+
 auto VulkanContext::enableValidationLayers() -> void
 {
     // No need for enabling debug utils extension if validation layers are not available anyways.

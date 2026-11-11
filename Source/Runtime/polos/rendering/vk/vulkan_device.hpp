@@ -56,8 +56,6 @@ private:
     VkInstance         mInstance{VK_NULL_HANDLE};
     VkSurfaceKHR       mSurface{VK_NULL_HANDLE};
     QueueFamilyIndices mQueueIndices;
-
-    VkPhysicalDeviceProperties2 mDeviceProps{};
 };
 
 }// namespace polos::rendering

@@ -55,6 +55,7 @@ public:
     auto Destroy() -> void;
 
     [[nodiscard]] auto GetSurfaceFormat() const -> VkSurfaceFormatKHR const&;
+    [[nodiscard]] auto GetPresentMode() const -> VkPresentModeKHR;
     [[nodiscard]] auto GetExtent() const -> VkExtent2D const&;
     [[nodiscard]] auto GetExtent3D() const -> VkExtent3D const&;
     [[nodiscard]] auto GetScissor() const -> VkRect2D const&;

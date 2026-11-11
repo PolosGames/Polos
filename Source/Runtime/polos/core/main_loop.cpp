@@ -20,6 +20,7 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/rendering_api.hpp"
+#include "polos/utils/profiling.hpp"
 #include "polos/utils/time.hpp"
 
 #include <quill/std/Chrono.h>
@@ -49,15 +50,14 @@ MainLoop::MainLoop()
 
 void MainLoop::Run() const
 {
-    using namespace std::literals::chrono_literals;
-
-    Duration                     delta_time{Duration::zero()};
-    TimePoint                    start = utils::GetTimeNow();
-    constexpr std::int32_t const kTargetFrames{120};
-    constexpr Duration const     kTimestep{1_sec / kTargetFrames};
+    TimePoint start = utils::GetTimeNow();
+#if !defined(ENABLE_PROFILING)
+    // constexpr std::int32_t const kTargetFrames{120};
+    // constexpr Duration const     kTimestep{1_sec / kTargetFrames};
+#endif
 
     ecs::EditorCameraSystem editorCameraSystem;
-    ecs::SystemRegistry systems;
+    ecs::SystemRegistry     systems;
     systems.Register([&editorCameraSystem](ecs::Scene* tScene, float tDeltaTime) {
         editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Instance().GetMainWindow());
     });
@@ -67,43 +67,61 @@ void MainLoop::Run() const
 
     while (mIsRunning)
     {
-        auto const current_time = utils::GetTimeNow();
-        delta_time              = current_time - start;
+        POLOS_PROFILE_ZONE("Engine frame");
+        auto const current_time       = utils::GetTimeNow();
+        auto const delta_time_in_secs = utils::ConvertToSeconds(current_time - start);
+        start                         = current_time;
 
-        //LogInfo("Frame Time: {} s", utils::ConvertToSeconds(delta_time));
-
-        start = current_time;
-
-        std::float_t const delta_time_in_secs = utils::ConvertToSeconds(delta_time);
-
-        communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
-        auto* scene = ecs::SceneManager::GetCurrentScene();
-        systems.UpdateAll(scene, delta_time_in_secs);
-        if (scene != nullptr)
         {
-            scene->ClearDirtyEntities();
+            POLOS_PROFILE_ZONE("Engine update callbacks");
+            communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
+        }
+        if (!mIsRunning)
+        {
+            break;
+        }
+        {
+            POLOS_PROFILE_ZONE("ECS system updates");
+            auto* scene = ecs::SceneManager::GetCurrentScene();
+            systems.UpdateAll(scene, delta_time_in_secs);
+            if (scene != nullptr)
+            {
+                scene->ClearDirtyEntities();
+            }
         }
 
         if (VK_NULL_HANDLE != rendering::RenderingApi::BeginFrame())
         {
-            communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
+            {
+                POLOS_PROFILE_ZONE("Render update callbacks");
+                communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
+            }
 
             rendering::RenderingApi::EndFrame();
+            POLOS_PROFILE_FRAME();
             communication::DispatchNow<communication::EndFrame>();
         }
 
-        communication::DispatchDeferredEvents();
-        communication::DispatchNow<communication::ProcessInput>();
-
-
-        auto const amount_time = utils::GetTimeNow() - start;
-        if (amount_time < kTimestep)
         {
-            std::this_thread::sleep_for(kTimestep - amount_time);
+            POLOS_PROFILE_ZONE("Deferred events and input");
+            communication::DispatchDeferredEvents();
+            communication::DispatchNow<communication::ProcessInput>();
         }
+
+
+#if !defined(ENABLE_PROFILING)
+        // auto const amount_time = utils::GetTimeNow() - start;
+        // if (amount_time < kTimestep)
+        // {
+        //     POLOS_PROFILE_ZONE("120 FPS limiter sleep");
+        //     std::this_thread::sleep_for(kTimestep - amount_time);
+        // }
+#endif
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+#if !defined(ENABLE_PROFILING)
+    // std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
 }
 
 void MainLoop::on_window_close()

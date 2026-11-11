@@ -14,6 +14,11 @@ if ! command -v x86_64-w64-mingw32-g++ >/dev/null; then
     exit 1
 fi
 
+if (( $# != 0 )); then
+    printf 'Usage: %s\n' "$0" >&2
+    exit 1
+fi
+
 build_dir="$polos_root/out/build/linux-to-win-mingw-release"
 bin_dir="$polos_root/out/bin/linux-to-win-mingw-release"
 
@@ -28,7 +33,7 @@ cmake -S "$polos_root" -B "$build_dir" -G Ninja \
     -DVCPKG_HOST_TRIPLET=x64-linux -DVCPKG_TARGET_TRIPLET=x64-mingw-static \
     -DVCPKG_APPLOCAL_DEPS=OFF \
     -DCMAKE_BUILD_TYPE=Release "-DCMAKE_INSTALL_PREFIX=$bin_dir" \
-    -DPOLOS_INSTALL_DIR:STRING=. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=OFF
+    -DPOLOS_INSTALL_DIR:STRING=. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=OFF -DENABLE_PROFILING=OFF
 cmake --build "$build_dir" --target sandbox
 cmake --install "$build_dir" --component Runtime
 

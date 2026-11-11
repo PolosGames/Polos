@@ -1,5 +1,8 @@
 #version 450
 
+#extension GL_KHR_shader_subgroup_vote : enable
+#extension GL_KHR_shader_subgroup_ballot : enable
+
 const uint kRootParentId  = 0u;
 const uint kInvalidMeshId = 0xFFFFFFFFu;
 
@@ -31,6 +34,7 @@ pc;
 layout(std140, set = 0, binding = 0) uniform CameraUniform
 {
     mat4 viewProj;
+    vec4 frustumPlanes[6];
 }
 camera;
 
@@ -42,6 +46,11 @@ layout(std430, set = 1, binding = 0) readonly buffer InputInstances
 layout(std430, set = 1, binding = 1) buffer IndirectCommands
 {
     IndirectCommand commands[];
+};
+
+layout(std430, set = 1, binding = 2) readonly buffer MeshBounds
+{
+    vec4 meshBounds[];
 };
 
 layout(std430, set = 2, binding = 0) writeonly buffer VisibleMatrixIndices
@@ -99,6 +108,18 @@ mat4 build_local_matrix(vec3 pos, vec4 q, float s)
     return m;
 }
 
+bool is_visible(vec3 pos, float radius)
+{
+    for (int i = 0; i < 6; i++)
+    {
+        if (dot(camera.frustumPlanes[i].xyz, pos) + camera.frustumPlanes[i].w < -radius)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void main()
 {
     uint gIdx = gl_GlobalInvocationID.x;
@@ -124,14 +145,35 @@ void main()
         curParent = p.parentId;
     }
 
+    uint  meshType    = obj.meshId;
+    vec4  localSphere = meshBounds[meshType];
+    vec3  worldCenter = accPos + accScale * rotate_quat(accRot, localSphere.xyz);
+    float worldRadius = localSphere.w * accScale;
+
+    if (!is_visible(worldCenter, worldRadius))
+        return;
+
     worldMatrices[gIdx] = build_local_matrix(accPos, accRot, accScale);
 
-    uint meshType = obj.meshId;
+    uint localInstanceIdx = 0u;
+    // https://www.khronos.org/blog/vulkan-subgroup-tutorial
+    if (subgroupAllEqual(meshType))
+    {
+        uvec4 mask  = subgroupBallot(true);
+        uint  count = subgroupBallotBitCount(mask);
+        uint  rank  = subgroupBallotExclusiveBitCount(mask);
+        uint  base  = 0u;
+        if (subgroupElect())
+        {
+            base = atomicAdd(commands[meshType].instanceCount, count);
+        }
+        localInstanceIdx = subgroupBroadcastFirst(base) + rank;
+    }
+    else
+    {
+        localInstanceIdx = atomicAdd(commands[meshType].instanceCount, 1u);
+    }
 
-    // Multi-Draw Indirect için instance sayısını güvenli şekilde artır
-    uint localInstanceIdx = atomicAdd(commands[meshType].instanceCount, 1);
-
-    // Çizim komutunun offset yerini kap ve indeks eşleştirmesini yap
     uint globalMatrixOffset                  = commands[meshType].firstInstance + localInstanceIdx;
     visibleMatrixIndices[globalMatrixOffset] = gIdx;
 }

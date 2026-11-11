@@ -13,7 +13,7 @@ namespace polos::ecs
 {
 struct Settings
 {
-    static constexpr std::size_t kMaxEntities = 1'048'575U;
+    static constexpr std::size_t kMaxEntities = 4'194'304U;// 2^22
     static constexpr std::size_t kMaxCameras  = 16U;
 };
 }// namespace polos::ecs

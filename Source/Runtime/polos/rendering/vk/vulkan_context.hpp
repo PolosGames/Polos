@@ -24,7 +24,9 @@ class VulkanContext
 {
 public:
     struct CreationDetails
-    { platform::IWindowSurface* windowSurface; };
+    {
+        platform::IWindowSurface* windowSurface;
+    };
 
     VulkanContext();
     ~VulkanContext();
@@ -36,6 +38,7 @@ public:
 
     [[nodiscard]] auto Create(CreationDetails const& tDetails) -> Result<void>;
     auto               Destroy() -> void;
+    [[nodiscard]] auto HasValidationLayers() const -> bool;
 
     VkInstance   mInstance{VK_NULL_HANDLE};
     VkSurfaceKHR surface{VK_NULL_HANDLE};

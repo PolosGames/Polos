@@ -15,6 +15,7 @@
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/build_info.hpp"
+#include "polos/utils/profiling.hpp"
 
 #include <format>
 #include <memory>
@@ -44,7 +45,10 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
         "Could not create the engine window.");
 
     auto& resources = resource::ResourceManager::Instance();
-    resources.LoadCatalog();
+    {
+        POLOS_PROFILE_ZONE("Preload resource catalog");
+        resources.LoadCatalog();
+    }
 
     auto sceneManager            = std::make_unique<ecs::SceneManager>();
     ecs::SceneManager::sInstance = sceneManager.get();
@@ -56,7 +60,10 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
     std::unique_ptr<ILiveLayer> engine_layer{new EngineLayer{}};
     std::unique_ptr<ILiveLayer> app_layer{tAppLayer};
     engine_layer->Create();
-    app_layer->Create();
+    {
+        POLOS_PROFILE_ZONE("Create application scene");
+        app_layer->Create();
+    }
 
     MainLoop loop{};// NOLINT
     loop.Run();

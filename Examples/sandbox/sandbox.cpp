@@ -18,88 +18,94 @@
 
 #include <GLFW/glfw3.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <format>
+
 namespace sandbox
 {
 
 namespace
 {
-static constexpr size_t const kRowCount{100U};
-static constexpr size_t const kColumnCount{100U};
+constexpr std::size_t const kRowCount{1000U};
+constexpr std::size_t const kColumnCount{1000U};
 }// namespace
 
-class SandboxApp : public polos::core::BaseLiveLayer
+class SandboxApp final : public polos::core::BaseLiveLayer
 {
 public:
-    auto Create() -> void override
-    {
-        using namespace polos;
-
-        auto* scene = ecs::SceneManager::CreateScene();
-
-        constexpr float const kApart = 2.0F;
-
-        for (size_t i{0U}; i < kRowCount; ++i)
-        {
-            for (size_t j{0U}; j < kColumnCount; ++j)
-            {
-                suzannes[j + (i * kColumnCount)] = CreateEntityFromModel("model.suzanne"_sid, scene);
-                scene->GetMutableComponent<ecs::TransformComponent>(suzannes[j + (i * kColumnCount)])->position =
-                    glm::vec3(static_cast<float>(j) * kApart, static_cast<float>(i), 0.0F);
-            }
-        }
-
-        communication::Subscribe<communication::RenderUpdate>([this](communication::RenderUpdate& tEvent) {
-            drawFpsOverlay(tEvent.deltaTime);
-        });
-        communication::Subscribe<communication::KeyPress>([](communication::KeyPress& tEvent) {
-            if (tEvent.key == GLFW_KEY_ESCAPE)
-            {
-                communication::DispatchNow<communication::EngineTerminate>();
-            }
-        });
-    }
-
-    [[nodiscard]] auto Name() const -> char const* override
-    {
-        return "SandboxApp";
-    }
+    auto               Create() -> void override;
+    [[nodiscard]] auto Name() const -> char const* override;
 private:
-    auto drawFpsOverlay(float tDeltaTime) -> void
-    {
-        namespace gui = polos::gui;
-        using Flags   = gui::WindowFlags;
-
-        constexpr float samplePeriod{0.25F};
-        if (tDeltaTime > 0.0F)
-        {
-            mFpsSampleTime += tDeltaTime;
-            ++mFpsSampleFrames;
-            if (mFpsSampleTime >= samplePeriod)
-            {
-                mFps             = static_cast<float>(mFpsSampleFrames) / mFpsSampleTime;
-                mFpsSampleTime   = 0.0F;
-                mFpsSampleFrames = 0U;
-            }
-        }
-
-        static auto const flags = Flags::kNoTitleBar | Flags::kNoResize | Flags::kNoMove | Flags::kAutoResize |
-                                  Flags::kNoInputs | Flags::kNoDocking;
-        gui::SetNextWindowPosition({.x = 8.0F, .y = 8.0F});
-        gui::SetNextWindowBackgroundAlpha(0.65F);
-        if (gui::Begin("FpsOverlay", nullptr, flags))
-        {
-            gui::Text(mFps > 0.0F ? std::format("FPS: {:.1f}", mFps) : "FPS: --");
-            gui::Text(std::format("DrawCalls: {}", polos::rendering::RenderingApi::GetLastFrameStatistics().drawCalls));
-        }
-        gui::End();
-    }
+    auto drawFpsOverlay(float tDeltaTime) -> void;
 
     float         mFps{0.0F};
     float         mFpsSampleTime{0.0F};
     std::uint32_t mFpsSampleFrames{0U};
-
-    std::array<polos::ecs::EntityHandle, kRowCount * kColumnCount> suzannes;
 };
+
+auto SandboxApp::Create() -> void
+{
+    using namespace polos;
+
+    auto* scene = ecs::SceneManager::CreateScene();
+
+    constexpr float kApart = 2.0F;
+    for (std::size_t i{0U}; i < kRowCount; ++i)
+    {
+        for (std::size_t j{0U}; j < kColumnCount; ++j)
+        {
+            auto const entity    = CreateEntityFromModel("model.suzanne"_sid, scene);
+            auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
+            transform->position  = glm::vec3(static_cast<float>(j) * kApart, static_cast<float>(i), 0.0F);
+        }
+    }
+
+    communication::Subscribe<communication::RenderUpdate>([this](communication::RenderUpdate& tEvent) {
+        drawFpsOverlay(tEvent.deltaTime);
+    });
+    communication::Subscribe<communication::KeyPress>([](communication::KeyPress& tEvent) {
+        if (tEvent.key == GLFW_KEY_ESCAPE)
+        {
+            communication::DispatchNow<communication::EngineTerminate>();
+        }
+    });
+}
+
+auto SandboxApp::Name() const -> char const*
+{
+    return "SandboxApp";
+}
+
+auto SandboxApp::drawFpsOverlay(float tDeltaTime) -> void
+{
+    namespace gui = polos::gui;
+    using Flags   = gui::WindowFlags;
+
+    constexpr float samplePeriod{0.25F};
+    if (tDeltaTime > 0.0F)
+    {
+        mFpsSampleTime += tDeltaTime;
+        ++mFpsSampleFrames;
+        if (mFpsSampleTime >= samplePeriod)
+        {
+            mFps             = static_cast<float>(mFpsSampleFrames) / mFpsSampleTime;
+            mFpsSampleTime   = 0.0F;
+            mFpsSampleFrames = 0U;
+        }
+    }
+
+    static constexpr auto const flags = Flags::kNoTitleBar | Flags::kNoResize | Flags::kNoMove | Flags::kAutoResize |
+                                        Flags::kNoInputs | Flags::kNoDocking;
+    gui::SetNextWindowPosition({.x = 8.0F, .y = 8.0F});
+    gui::SetNextWindowBackgroundAlpha(0.65F);
+    if (gui::Begin("FpsOverlay", nullptr, flags))
+    {
+        gui::Text(mFps > 0.0F ? std::format("FPS: {:.1f}", mFps) : "FPS: --");
+        gui::Text(std::format("DrawCalls: {}", polos::rendering::RenderingApi::GetLastFrameStatistics().drawCalls));
+    }
+    gui::End();
+}
 }// namespace sandbox
 
 namespace polos

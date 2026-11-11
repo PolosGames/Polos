@@ -6,3 +6,7 @@ add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
 add_subdirectory(tinygltf)
+
+if (ENABLE_PROFILING)
+    add_subdirectory(tracy)
+endif()

@@ -24,7 +24,9 @@ auto ReadFile(std::string_view tFilePath) -> Result<File> = delete;
 
 }// namespace polos::fs
 
-constexpr auto operator""_path(char const* tPathStr, std::size_t /*tSize*/) -> std::filesystem::path
-{ return {tPathStr}; }
+inline auto operator""_path(char const* tPathStr, std::size_t /*tSize*/) -> std::filesystem::path
+{
+    return {tPathStr};
+}
 
 #endif// POLOS_FILESYSTEM_FILE_MANIP_HPP

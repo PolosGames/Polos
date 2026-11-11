@@ -51,7 +51,7 @@ public:
         : polos::utils::ErrorDomain(polos::utils::kRenderingErrorDomainId),
           mMessages({
               "An error has occured in the render pipeline!",
-              "Failed to find a physical device! Exiting...",
+              "No GPU supports Vulkan 1.3 with the required rendering features, extensions and queues.",
               "No adequate queue family found! Exiting...",
               "Failed to create device instance! Exiting...",
               "No adequate extensions found on GPU that are needed for this instance! Exiting...",

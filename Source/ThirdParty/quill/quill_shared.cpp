@@ -14,6 +14,44 @@
 
 #include <string>
 
+#if defined(__MINGW32__)
+// Keep the exported definitions out of line so consumers import the same state.
+QUILL_BEGIN_NAMESPACE
+namespace detail
+{
+auto ThreadContextManager::instance() noexcept -> ThreadContextManager&
+{
+    static ThreadContextManager manager;
+    return manager;
+}
+
+auto LoggerManager::instance() noexcept -> LoggerManager&
+{
+    static LoggerManager manager;
+    return manager;
+}
+
+auto SinkManager::instance() noexcept -> SinkManager&
+{
+    static SinkManager manager;
+    return manager;
+}
+
+auto BackendManager::instance() noexcept -> BackendManager&
+{
+    static BackendManager manager;
+    return manager;
+}
+
+auto SignalHandlerContext::instance() noexcept -> SignalHandlerContext&
+{
+    static SignalHandlerContext context;
+    return context;
+}
+}// namespace detail
+QUILL_END_NAMESPACE
+#endif
+
 // Define a global variable for a logger to avoid looking up the logger each time.
 // Additional global variables can be defined for additional loggers if needed.
 

@@ -8,11 +8,14 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
+#include "polos/utils/profiling.hpp"
 #include "polos/utils/string_map.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -138,6 +141,17 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
 
     PL_ASSERT(nullptr != mIndexBuffer, "Index mega buffer was not created");
 
+    mMeshBoundsBuffer = Buffer::Create(
+        BufferDescription{
+            .size               = 4096ULL * sizeof(glm::vec4),
+            .usage              = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            .residence          = MemoryResidence::kDevice,
+            .hostAccess         = HostAccessFlags::kSeqWrite,
+            .persistentlyMapped = true,
+        });
+
+    PL_ASSERT(nullptr != mMeshBoundsBuffer, "Mesh bounds buffer was not created");
+
     for (size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
         mMeshInfoBuffer[i] = Buffer::Create(
@@ -172,12 +186,14 @@ auto MeshCache::Destroy() -> void
 {
     mVertexBuffer.reset();
     mIndexBuffer.reset();
+    mMeshBoundsBuffer.reset();
     for (auto& infoBuffer : mMeshInfoBuffer)
     {
         infoBuffer.reset();
     }
     mMeshInstances.clear();
     mMeshInfos.clear();
+    mMeshBounds.clear();
     mMeshUses.clear();
     mMeshes.clear();
     mVertexHead = 0U;
@@ -241,7 +257,33 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
 
     sInstance->mMeshInstances.push_back(0U);
 
+    glm::vec3 minPos{std::numeric_limits<float>::max()};
+    glm::vec3 maxPos{std::numeric_limits<float>::lowest()};
+    for (auto const& vertex : vertData)
+    {
+        minPos = glm::min(minPos, vertex.position);
+        maxPos = glm::max(maxPos, vertex.position);
+    }
+    glm::vec3 const localCenter = 0.5F * (minPos + maxPos);
+    float           maxRadiusSq = 0.0F;
+    for (auto const& vertex : vertData)
+    {
+        glm::vec3 const diff = vertex.position - localCenter;
+        maxRadiusSq          = std::max(maxRadiusSq, glm::dot(diff, diff));
+    }
+    glm::vec4 const boundingSphere{localCenter, std::sqrt(maxRadiusSq)};
+    sInstance->mMeshBounds.push_back(boundingSphere);
+
     entry.meshIndex = sInstance->mMeshCount++;
+
+    auto const boundsOffset = entry.meshIndex * sizeof(glm::vec4);
+    while (boundsOffset + sizeof(glm::vec4) > sInstance->mMeshBoundsBuffer->size)
+    {
+        PL_ASSERT(
+            sInstance->mMeshBoundsBuffer->Resize(sInstance->mMeshBoundsBuffer->size * 2ULL),
+            "Unable to resize mesh bounds buffer");
+    }
+    sInstance->mMeshBoundsBuffer->Write(&sInstance->mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
 
     sInstance->mMeshes[tMesh.name] = entry;
 
@@ -272,6 +314,11 @@ auto MeshCache::GetVertexBuffer() -> VkBuffer
 auto MeshCache::GetIndexBuffer() -> VkBuffer
 {
     return sInstance->mIndexBuffer->buffer;
+}
+
+auto MeshCache::GetMeshBoundsBuffer() -> VkBuffer
+{
+    return sInstance->mMeshBoundsBuffer->buffer;
 }
 
 auto MeshCache::GetMeshCount() -> uint32_t
@@ -344,6 +391,7 @@ auto MeshCache::DecreaseMeshUseByIndex(uint32_t const tMeshIndex) -> void
 
 auto MeshCache::FlushMeshUses(uint32_t const tFrameSlot) -> void
 {
+    POLOS_PROFILE_ZONE("Update indirect draw commands");
     if (!sInstance->mMeshUses.empty())
     {
         for (auto const& meshUse : sInstance->mMeshUses)

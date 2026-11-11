@@ -13,6 +13,7 @@
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/utils/error_code.hpp"
+#include "polos/utils/profiling.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -97,24 +98,21 @@ auto VulkanSwapchain::selectFormatAndMode(
     std::vector<VkSurfaceFormatKHR> const& tFormats,
     std::vector<VkPresentModeKHR> const&   tModes) -> bool
 {
-    bool is_surface_adequate{false};
-    for (auto const& format : tFormats)
+    auto const format = std::ranges::find_if(tFormats, [](VkSurfaceFormatKHR const& tFormat) {
+        return RenderContext::GetVulkanDevice().CheckSurfaceFormatSupport(tFormat);
+    });
+
+    auto const mode = std::ranges::find_if(tModes, [](VkPresentModeKHR tMode) {
+        return RenderContext::GetVulkanDevice().CheckPresentModeSupport(tMode);
+    });
+
+    if (format == tFormats.end() || mode == tModes.end())
     {
-        if (RenderContext::GetVulkanDevice().CheckSurfaceFormatSupport(format))
-        {
-            mSurfaceFormat      = format;
-            is_surface_adequate = true;
-        }
+        return false;
     }
-    for (auto const mode : tModes)
-    {
-        if (RenderContext::GetVulkanDevice().CheckPresentModeSupport(mode))
-        {
-            mPresentMode        = mode;
-            is_surface_adequate = true;
-        }
-    }
-    return is_surface_adequate;
+    mSurfaceFormat = *format;
+    mPresentMode   = *mode;
+    return true;
 }
 
 auto VulkanSwapchain::createSwapchainHandle(VkSurfaceTransformFlagsKHR tTransformFlags) -> bool
@@ -237,6 +235,11 @@ auto VulkanSwapchain::GetSurfaceFormat() const -> VkSurfaceFormatKHR const&
     return mSurfaceFormat;
 }
 
+auto VulkanSwapchain::GetPresentMode() const -> VkPresentModeKHR
+{
+    return mPresentMode;
+}
+
 auto VulkanSwapchain::GetExtent() const -> VkExtent2D const&
 {
     return mExtent;
@@ -264,6 +267,7 @@ auto VulkanSwapchain::GetRenderArea() const -> VkRect2D const&
 
 auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) -> std::uint32_t
 {
+    POLOS_PROFILE_ZONE("Acquire swapchain image");
     std::uint32_t  imageIndex{kInvalidImageIndex};
     VkResult const res =
         vkAcquireNextImageKHR(mDevice, mSwapchain, tDetails.timeout, tDetails.semaphore, VK_NULL_HANDLE, &imageIndex);
@@ -296,6 +300,7 @@ auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) 
 
 auto VulkanSwapchain::QueuePresent(VkSemaphore tWaitSemaphore) const -> bool
 {
+    POLOS_PROFILE_ZONE("Present swapchain image");
     VkPresentInfoKHR const present_info{
         .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext              = nullptr,

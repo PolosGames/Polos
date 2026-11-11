@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <array>
 #include <memory>
 
 namespace polos::rendering
@@ -24,7 +25,8 @@ class Buffer;
 
 struct CameraUniform
 {
-    glm::mat4 viewProj;
+    glm::mat4                 viewProj;
+    std::array<glm::vec4, 6U> frustumPlanes;
 };
 
 auto POLOS_API GetCameraUniform(

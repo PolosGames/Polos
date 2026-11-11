@@ -17,6 +17,7 @@
 #include "polos/rendering/vk/common.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
+#include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/error_code.hpp"
@@ -24,6 +25,7 @@
 #include <vulkan/vulkan.h>
 
 #include <array>
+#include <vector>
 
 namespace polos::rendering
 {
@@ -73,34 +75,19 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
             *mDevice,
             [] {
                 return VulkanDevice::CreationDetails{
-                    .enabledExtensions =
-                        {VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME},
+                    .enabledExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME},
                 };
             }),
-        RegisterSubsystem(
-            *mSwapchain,
-            [this] {
-                return VulkanSwapchain::CreationDetails{
-                    .windowSurface = mWindowSurface,
-                    .preferredSurfaceFormats =
-                        {
-                            {
-                                .format     = VK_FORMAT_B8G8R8A8_SRGB,
-                                .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-                            },
-                            {
-                                .format     = VK_FORMAT_R8G8B8A8_SRGB,
-                                .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-                            },
-                        },
-                    .preferredPresentModes =
-                        {
-                            VK_PRESENT_MODE_MAILBOX_KHR,
-                            VK_PRESENT_MODE_FIFO_KHR,
-                        },
-                    .transformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-                };
-            }),
+        SubsystemEntry{
+            .createFunc =
+                [this] {
+                    return createSwapchain();
+                },
+            .destroyFunc =
+                [this] {
+                    mSwapchain->Destroy();
+                },
+        },
         RegisterSubsystem(
             *mTextureCache,
             [] {
@@ -132,8 +119,49 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
         return result;
     }
 
+#if defined(ENABLE_PROFILING)
+    std::uint32_t queueCount{0U};
+    vkGetPhysicalDeviceQueueFamilyProperties(mDevice->physDevice, &queueCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queues(queueCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(mDevice->physDevice, &queueCount, queues.data());
+
+    if (queues[mDevice->GetGraphicsQueueFamily()].timestampValidBits > 0U)
+    {
+        char const* contextName = "Vulkan graphics queue";
+        mGpuProfileContext =
+            TracyVkContext(mDevice->physDevice, mDevice->logiDevice, mDevice->gfxQueue, mFrameCommandBuffers.front());
+        TracyVkContextName(mGpuProfileContext, contextName, std::strlen(contextName));
+    }
+    else
+    {
+        LogWarn("The Vulkan graphics queue does not support GPU timestamps. Tracy will record CPU zones.");
+    }
+#endif
+
     mIsInitialized = true;
     return {};
+}
+
+auto RenderContext::createSwapchain() -> Result<void>
+{
+    return mSwapchain->Create({
+        .windowSurface = mWindowSurface,
+        .preferredSurfaceFormats =
+            {
+                {.format = VK_FORMAT_R8G8B8A8_SRGB, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+                {.format = VK_FORMAT_B8G8R8A8_SRGB, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+            },
+        .preferredPresentModes =
+            {
+#if defined(ENABLE_PROFILING)
+                VK_PRESENT_MODE_IMMEDIATE_KHR,
+                VK_PRESENT_MODE_MAILBOX_KHR,
+#endif
+                VK_PRESENT_MODE_FIFO_KHR,
+            },
+        .transformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+    });
 }
 
 auto RenderContext::createFrameResources() -> Result<void>
@@ -209,12 +237,16 @@ auto RenderContext::destroyFrameResources() -> void
 
 auto RenderContext::BeginFrame() -> VkCommandBuffer
 {
-    vkWaitForFences(
-        mDevice->logiDevice,
-        1U,
-        &mFrameFences[mCurrentFrameIndex],
-        VK_TRUE,
-        std::numeric_limits<std::uint64_t>::max());
+    POLOS_PROFILE_ZONE("Begin frame");
+    {
+        POLOS_PROFILE_ZONE("Wait for frame fence");
+        vkWaitForFences(
+            mDevice->logiDevice,
+            1U,
+            &mFrameFences[mCurrentFrameIndex],
+            VK_TRUE,
+            std::numeric_limits<std::uint64_t>::max());
+    }
 
     bool acq_ok{false};
     while (!acq_ok)
@@ -249,6 +281,13 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         vkBeginCommandBuffer(cur_cmd_buf, &begin_info) == VK_SUCCESS,
         "Could not begin recording the frame command buffer.");
 
+#if defined(ENABLE_PROFILING)
+    if (mGpuProfileContext != nullptr)
+    {
+        TracyVkCollect(mGpuProfileContext, cur_cmd_buf);
+    }
+#endif
+
     mIsRecording = true;
 
     mFrameData[mCurrentFrameIndex] = FrameData{
@@ -260,13 +299,17 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     };
 
     mRenderCompositor->Prepare(mFrameData[mCurrentFrameIndex]);
-    gui::backend::BeginFrame();
+    {
+        POLOS_PROFILE_ZONE("Prepare ImGui frame");
+        gui::backend::BeginFrame();
+    }
 
     return cur_cmd_buf;
 }
 
 auto RenderContext::EndFrame() -> FrameStatistics
 {
+    POLOS_PROFILE_ZONE("End frame");
     FrameStatistics statistics;
     statistics.drawCalls = mRenderCompositor->Record(mFrameData[mCurrentFrameIndex]);
 
@@ -288,10 +331,13 @@ auto RenderContext::EndFrame() -> FrameStatistics
         .pSignalSemaphores    = &mSubmitSemaphores[mSwapchainImageIndex],
     };
 
-    vkResetFences(mDevice->logiDevice, 1U, &mFrameFences[mCurrentFrameIndex]);
-    PL_ASSERT(
-        vkQueueSubmit(mDevice->gfxQueue, 1U, &submit_info, mFrameFences[mCurrentFrameIndex]) == VK_SUCCESS,
-        "Could not submit the frame command buffer to the graphics queue.");
+    {
+        POLOS_PROFILE_ZONE("Submit frame to graphics queue");
+        vkResetFences(mDevice->logiDevice, 1U, &mFrameFences[mCurrentFrameIndex]);
+        PL_ASSERT(
+            vkQueueSubmit(mDevice->gfxQueue, 1U, &submit_info, mFrameFences[mCurrentFrameIndex]) == VK_SUCCESS,
+            "Could not submit the frame command buffer to the graphics queue.");
+    }
     mIsRecording = false;
 
     if (!mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]))
@@ -414,36 +460,24 @@ auto RenderContext::GetSwapchain() -> VulkanSwapchain&
 }
 
 
+#if defined(ENABLE_PROFILING)
+auto RenderContext::GetGpuProfileContext() -> tracy::VkCtx*
+{
+    return sRenderContext->mGpuProfileContext;
+}
+#endif
+
 void RenderContext::onFramebufferResize()
 {
+    POLOS_PROFILE_ZONE("Recreate swapchain");
     vkDeviceWaitIdle(mDevice->logiDevice);
     LogInfo("Recreating swapchain due to framebuffer resize...");
 
     mSwapchain->Destroy();
-    VulkanSwapchain::CreationDetails const details{
-        .windowSurface = mWindowSurface,
-        .preferredSurfaceFormats =
-            {
-                {
-                    .format     = VK_FORMAT_B8G8R8A8_SRGB,
-                    .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-                },
-                {
-                    .format     = VK_FORMAT_R8G8B8A8_SRGB,
-                    .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-                },
-            },
-        .preferredPresentModes =
-            {
-                VK_PRESENT_MODE_MAILBOX_KHR,
-                VK_PRESENT_MODE_FIFO_KHR,
-            },
-        .transformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-    };
     vkDeviceWaitIdle(mDevice->logiDevice);
 
     {
-        auto const res = mSwapchain->Create(details);
+        auto const res = createSwapchain();
         PL_ASSERT(res.has_value(), "Failed to recreate the swapchain after destroying the old swapchain.");
     }
 
@@ -466,6 +500,20 @@ auto RenderContext::Shutdown() -> Result<void>
         vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex]);
         mIsRecording = false;
     }
+
+#if defined(ENABLE_PROFILING)
+    if (mGpuProfileContext != nullptr)
+    {
+        // The device is idle here, so all remaining timestamp results can be sent to Tracy.
+        if (auto const commands = BeginSingleTimeCommands(); commands != VK_NULL_HANDLE)
+        {
+            TracyVkCollect(mGpuProfileContext, commands);
+            std::ignore = EndSingleTimeCommands(commands);
+        }
+        TracyVkDestroy(mGpuProfileContext);
+        mGpuProfileContext = nullptr;
+    }
+#endif
 
     DestroySubsystems(mSubsystems, mInitializedSubsystems);
     mSubsystems = {};
