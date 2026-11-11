@@ -1,5 +1,5 @@
 name: Set up Polos build
-description: Install native build dependencies and bootstrap the vcpkg manifest baseline
+description: Install native build dependencies and bootstrap pinned vcpkg
 runs:
   using: composite
   steps:
@@ -50,11 +50,14 @@ runs:
         $ErrorActionPreference = 'Stop'
         $PSNativeCommandUseErrorActionPreference = $true
         $Baseline = (Get-Content vcpkg.json -Raw | ConvertFrom-Json).'builtin-baseline'
+        # Linux needs the port index that added GLFW 3.5.1. Fetch the manifest baseline for the other ports.
+        $Revision = if ($IsLinux) { 'e208d9a2e58bc5cd6605268dec9550636cc8180d' } else { $Baseline }
+        $Refs = @(@($Baseline, $Revision) | Select-Object -Unique)
         $VcpkgRoot = Join-Path $env:RUNNER_TEMP 'polos-vcpkg'
         git init $VcpkgRoot
         git -C $VcpkgRoot remote add origin https://github.com/microsoft/vcpkg.git
-        git -C $VcpkgRoot fetch --depth 1 origin $Baseline
-        git -C $VcpkgRoot checkout --detach FETCH_HEAD
+        git -C $VcpkgRoot fetch --depth 1 origin @Refs
+        git -C $VcpkgRoot checkout --detach $Revision
         if ($IsWindows) {
           & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics
         } else {
