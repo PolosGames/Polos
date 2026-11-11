@@ -139,6 +139,59 @@ auto ResourceManager::LoadCatalog() -> void
     mFiles.Swap(staged.mFiles);
 }
 
+auto ResourceManager::LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<image::Image>
+{
+    if (auto cached = mImages.Get(tId))
+    {
+        return cached;
+    }
+
+    auto loaded = image::LoadImage(tPath);
+    return mImages.Add(tId, loaded) ? loaded : nullptr;
+}
+
+auto ResourceManager::LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>
+{
+    if (auto cached = mImages.Get(tId))
+    {
+        return cached;
+    }
+
+    auto loaded = image::LoadImage(tData);
+    return mImages.Add(tId, loaded) ? loaded : nullptr;
+}
+
+auto ResourceManager::LoadFile(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<fs::File>
+{
+    if (auto cached = mFiles.Get(tId))
+    {
+        return cached;
+    }
+
+    auto contents = fs::ReadFile(tPath);
+    if (!contents)
+    {
+        return nullptr;
+    }
+
+    auto loaded = std::make_shared<fs::File>(std::move(*contents));
+    return mFiles.Add(tId, loaded) ? loaded : nullptr;
+}
+
+auto ResourceManager::LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>
+{
+    if (auto cached = mFiles.Get(tId))
+    {
+        return cached;
+    }
+
+    auto loaded              = std::make_shared<fs::File>();
+    loaded->uncompressedSize = tData.size();
+    loaded->size             = tData.size();
+    loaded->data.assign(tData.begin(), tData.end());
+    return mFiles.Add(tId, loaded) ? loaded : nullptr;
+}
+
 auto ResourceManager::GetImage(ResourceId tId) const -> std::shared_ptr<image::Image>
 {
     return mImages.Get(tId);
@@ -221,13 +274,11 @@ auto ResourceManager::loadResources(ResourceManager& tStaged) -> void
             extension == ".tga" || extension == ".psd" || extension == ".gif" || extension == ".hdr" ||
             extension == ".pic" || extension == ".pnm" || extension == ".ppm" || extension == ".pgm")
         {
-            auto image = image::LoadImage(resourcePath);
-            loaded     = image && tStaged.mImages.Add(resourceId, std::move(image));
+            loaded = static_cast<bool>(tStaged.LoadImage(resourceId, resourcePath));
         }
         else
         {
-            auto contents = fs::ReadFile(resourcePath);
-            loaded = contents && tStaged.mFiles.Add(resourceId, std::make_shared<fs::File>(std::move(*contents)));
+            loaded = static_cast<bool>(tStaged.LoadFile(resourceId, resourcePath));
         };
 
         PL_ASSERT(loaded, "Could not preload resource {} from {}.", utils::GetStringFromID(resourceId), resource.path);

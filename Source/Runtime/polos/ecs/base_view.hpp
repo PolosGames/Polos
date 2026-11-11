@@ -49,6 +49,7 @@ protected:
     {}
 private:
     friend Iterator;
+    friend class Scene;
 
     [[nodiscard]] auto Matches(EntityIndex tIndex) const -> bool
     {

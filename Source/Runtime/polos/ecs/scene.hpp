@@ -7,15 +7,23 @@
 #define POLOS_ECS_SCENE_HPP
 
 #include "polos/ecs/component_pool.hpp"
+#include "polos/ecs/components/mesh_renderer_component.hpp"
+#include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/entity.hpp"
 #include "polos/ecs/scene_graph.hpp"
 #include "polos/ecs/settings.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/ssbo/mesh_instance.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <glm/glm.hpp>
 
 #include <array>
+#include <cstddef>
+#include <limits>
+#include <span>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace polos::ecs
@@ -35,7 +43,7 @@ public:
     /// @brief Create new entity inside entity pool
     /// @param tParent Parent of the entity to assign to, defaults to sceneRoot
     /// @param tName Initial name of entity, in string_id
-    auto NewEntity(
+    [[nodiscard]] auto NewEntity(
         EntityHandle     tParent = EntityHandle{.index = 0U, .version = 0U},
         utils::string_id tName   = "New Entity"_sid) -> EntityHandle;
 
@@ -63,11 +71,21 @@ public:
             return nullptr;
         }
 
-        return addComponent(tHandle.index, tComponent);
+        auto* component = addComponent(tHandle.index, tComponent);
+        if constexpr (T::kType == ComponentType::kTransform || T::kType == ComponentType::kMeshRenderer)
+        {
+            if (component != nullptr)
+            {
+                mInstanceChanges.push_back(tHandle);
+            }
+        }
+        return component;
     }
 
+    /// @brief Returns the component that belong to the entity in an immutable form.
+    /// @note Use GetMutableComponent to change the component.
     template<typename T>
-    auto GetComponent(EntityHandle const tHandle) -> T*
+    auto GetComponent(EntityHandle const tHandle) -> T const*
     {
         if (!isEntityValid(tHandle))
         {
@@ -85,6 +103,33 @@ public:
         return getComponent<T>(tHandle.index);
     }
 
+    /// @brief Returns the component that belong to the entity in a mutable form, and marks it dirty
+    template<typename T>
+    auto GetMutableComponent(EntityHandle const tHandle) -> T*
+    {
+        if (!isEntityValid(tHandle))
+        {
+            LogError("Entity is not valid.");
+            return nullptr;
+        }
+
+        ComponentType type = T::kType;
+        if (!HasComponent(tHandle, type))
+        {
+            LogError("Entity do not have the requested component {}.", static_cast<std::uint32_t>(type));
+            return nullptr;
+        }
+
+        markDirty(tHandle, type);
+        return getComponent<T>(tHandle.index);
+    }
+
+    [[nodiscard]] auto GetDirtyEntities() const -> std::span<DirtyEntity const>;
+    auto               ClearDirtyEntities() -> void;
+
+    [[nodiscard]] auto GetMeshInstances() const -> std::span<rendering::MeshInstance const>;
+    [[nodiscard]] auto ConsumeInstanceChanges() -> std::vector<EntityIndex>;
+
     auto HasComponent(EntityHandle tHandle, ComponentType tCompType) -> bool;
     auto RemoveComponent(EntityHandle tHandle, ComponentType tCompType) -> bool;
 
@@ -96,6 +141,8 @@ public:
     /// @brief Returns nullptr for indices outside the allocated entity slots.
     [[nodiscard]] auto GetEntityDataByIndex(EntityIndex tIndex) const -> EntityData const*;
 
+    [[nodiscard]] auto GetObjectsByLayer() -> std::vector<uint32_t> const&;
+
     auto SetActiveCamera(EntityHandle tHandle) -> bool;
 
     utils::string_id name{0};
@@ -105,14 +152,29 @@ public:
 private:
     friend class SceneManager;
 
+    friend class DirtyTransformSystem;
+
+    // Deserialization restores the saved cameras instead of creating another editor camera.
+    Scene(utils::string_id tName, bool tCreateEditorCamera);
+
     auto newEntity() -> EntityHandle;
     auto isEntityValid(EntityHandle tHandle) -> bool;
+
+    auto markDirty(EntityHandle tHandle, ComponentType tType) -> void;
+    auto discardDirtyEntity(EntityIndex tIndex) -> void;
+    auto isEntityDirty(EntityIndex tIndex) -> bool;
 
     template<typename T>
     auto addComponent(EntityIndex const tIndex, T const& tComponent) -> T*
     {
+        ComponentType type = T::kType;
+        if (type != ComponentType::kInfo && tIndex == 0)
+        {
+            LogError("Trying to add component to scene root is not allowed.");
+            return nullptr;
+        }
+
         Entity&        entity = mEntities[tIndex];
-        ComponentType  type   = T::kType;
         ComponentPool& pool   = mComponentPools[static_cast<std::size_t>(type)];
 
         if (!pool.IsInitialized())
@@ -138,9 +200,17 @@ private:
     std::array<Entity, Settings::kMaxEntities> mEntities;
     std::array<ComponentPool, kMaxComponents>  mComponentPools;
 
+    static constexpr auto    kNoDirtyEntry = std::numeric_limits<std::size_t>::max();
+    std::vector<std::size_t> mDirtyIndexByEntity;
+    std::vector<DirtyEntity> mDirtyEntities;
+
     std::uint32_t              mTotalEntities{0U};
     std::uint32_t              mEntitiesHead{0U};
     std::vector<std::uint32_t> mFreeIndices;
+
+    std::array<rendering::MeshInstance, Settings::kMaxEntities> mInstanceBuffer{};
+    std::vector<EntityHandle>                                   mInstanceChanges;
+    std::unordered_set<EntityIndex>                             mPendingInstanceUploads;
 
     SceneGraph mSceneGraph;
 };

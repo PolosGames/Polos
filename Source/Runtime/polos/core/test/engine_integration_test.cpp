@@ -2,19 +2,26 @@
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/communication/key_press.hpp"
+#include "polos/communication/key_release.hpp"
+#include "polos/communication/mouse_input.hpp"
 #include "polos/communication/render_update.hpp"
 #include "polos/core/engine.hpp"
 #include "polos/core/i_live_layer.hpp"
 #include "polos/ecs/components/camera_component.hpp"
-#include "polos/ecs/components/quad_renderer_component.hpp"
+#include "polos/ecs/components/editor_camera_controller_component.hpp"
+#include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/gui/gui.hpp"
 #include "polos/platform/platform_manager.hpp"
+#include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/resource/resource_manager.hpp"
 
 #include <gtest/gtest.h>
+
+#include <GLFW/glfw3.h>
 
 #include <cstdlib>
 #include <stdexcept>
@@ -35,6 +42,9 @@ struct SmokeState
     unsigned                      guiFrames{0U};
     bool                          windowCreated{false};
     bool                          shadersLoaded{false};
+    bool                          cameraMoved{false};
+    bool                          cursorCaptured{false};
+    bool                          cursorReleased{false};
     std::vector<std::string_view> lifecycle;
 };
 
@@ -63,48 +73,76 @@ public:
         mState.windowCreated   = platform.GetMainWindow() != nullptr && framebuffer.width > 0 && framebuffer.height > 0;
 
         auto& resources      = resource::ResourceManager::Instance();
-        mState.shadersLoaded = resources.GetFile("shader.quad.vertex"_sid) != nullptr &&
-                               resources.GetFile("shader.quad.fragment"_sid) != nullptr;
+        mState.shadersLoaded = resources.GetFile("shader.vert.quad"_sid) != nullptr &&
+                               resources.GetFile("shader.frag.quad"_sid) != nullptr;
 
-        auto*                            scene  = ecs::SceneManager::CreateScene();
-        auto const                       camera = scene->NewEntity(scene->sceneRoot, "SmokeCamera"_sid);
-        ecs::CameraComponent const       cameraSettings{.nearZ = 0.1F, .farZ = 100.0F, .fov = 60.0F};
-        ecs::TransformComponent const    cameraTransform{.position = {0.0F, 0.0F, 2.0F}};
-        auto const                       quad = scene->NewEntity(scene->sceneRoot, "SmokeQuad"_sid);
-        ecs::QuadRendererComponent const quadSettings{
-            .color       = {0.25F, 0.5F, 0.75F, 1.0F},
-            .textureName = "texture.polos_default_white"_sid,
-        };
+        auto*      scene           = ecs::SceneManager::CreateScene();
+        auto const camera          = scene->activeCamera;
+        auto*      cameraTransform = scene->GetMutableComponent<ecs::TransformComponent>(camera);
+        auto const cube            = scene->NewEntity(scene->sceneRoot, "SmokeCube"_sid);
+        auto const meshIndex       = rendering::MeshCache::GetMeshIndexByHandle(rendering::kPolosDefaultCube);
 
-        if (scene->AddComponent(camera, cameraSettings) == nullptr ||
-            scene->AddComponent(camera, cameraTransform) == nullptr || !scene->SetActiveCamera(camera) ||
-            scene->AddComponent(quad, ecs::TransformComponent{}) == nullptr ||
-            scene->AddComponent(quad, quadSettings) == nullptr)
+        if (cameraTransform == nullptr || !scene->HasComponent(camera, ecs::CameraComponent::kType) ||
+            !scene->HasComponent(camera, ecs::EditorCameraControllerComponent::kType) ||
+            meshIndex == rendering::kInvalidMeshId ||
+            scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
+            scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kPolosDefaultCube}) == nullptr)
         {
             throw std::runtime_error{"Could not create the integration-test scene"};
         }
+        cameraTransform->position = {0.0F, 0.0F, 2.0F};
 
-        communication::Subscribe<communication::EngineUpdate>([&state = mState](communication::EngineUpdate&) {
-            if (++state.updates >= 120U)
-            {
-                communication::DispatchNow<communication::EngineTerminate>();
-            }
-        });
-        communication::Subscribe<communication::RenderUpdate>([&state = mState](communication::RenderUpdate&) {
-            ++state.renderUpdates;
-            state.lifecycle.push_back("render");
-
-            gui::SetNextWindowSize({320.0F, 180.0F});
-            if (gui::Begin("Integration GUI"))
-            {
-                gui::Text("A scene and a GUI overlay.");
-                if (gui::Image("texture.polos_default_white"_sid, {24.0F, 24.0F}))
+        communication::Subscribe<communication::EngineUpdate>(
+            [&state = mState, scene, cube](communication::EngineUpdate&) {
+                ++state.updates;
+                if (state.updates == 1U)
                 {
-                    ++state.guiFrames;
+                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
+                    communication::DispatchNow<communication::KeyPress>(GLFW_KEY_W);
                 }
-            }
-            gui::End();
-        });
+                if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+                {
+                    EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
+                }
+                if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+                {
+                    EXPECT_NE(
+                        scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kPolosDefaultCube}), nullptr);
+                }
+                if (state.updates == 3U)
+                {
+                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
+                    communication::DispatchNow<communication::KeyRelease>(GLFW_KEY_W);
+                }
+                if (state.updates >= 120U)
+                {
+                    communication::DispatchNow<communication::EngineTerminate>();
+                }
+            });
+        communication::Subscribe<communication::RenderUpdate>(
+            [&state = mState, scene, cube, meshIndex, cameraTransform](communication::RenderUpdate&) {
+                auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
+                EXPECT_EQ(scene->GetMeshInstances()[cube.index].meshId, expectedMesh)
+                    << "Frame " << state.completedFrames;
+                ++state.renderUpdates;
+                state.lifecycle.push_back("render");
+                state.cameraMoved = state.cameraMoved || cameraTransform->position.z < 2.0F;
+                auto const cursorMode =
+                    glfwGetInputMode(platform::PlatformManager::Instance().GetMainWindow(), GLFW_CURSOR);
+                state.cursorCaptured = state.cursorCaptured || cursorMode == GLFW_CURSOR_DISABLED;
+                state.cursorReleased = state.cursorReleased || (state.cursorCaptured && cursorMode == GLFW_CURSOR_NORMAL);
+
+                gui::SetNextWindowSize({320.0F, 180.0F});
+                if (gui::Begin("Integration GUI"))
+                {
+                    gui::Text("A scene and a GUI overlay.");
+                    if (gui::Image("texture.polos_default_white"_sid, {24.0F, 24.0F}))
+                    {
+                        ++state.guiFrames;
+                    }
+                }
+                gui::End();
+            });
         communication::Subscribe<communication::EndFrame>([&state = mState](communication::EndFrame&) {
             ++state.completedFrames;
             state.lifecycle.push_back("end-frame");
@@ -139,6 +177,9 @@ TEST(EngineIntegrationTest, RendersSceneAndGuiAcrossFrameSlots)
     EXPECT_EQ(result, 0);
     EXPECT_TRUE(state.windowCreated);
     EXPECT_TRUE(state.shadersLoaded);
+    EXPECT_TRUE(state.cameraMoved);
+    EXPECT_TRUE(state.cursorCaptured);
+    EXPECT_TRUE(state.cursorReleased);
     EXPECT_GE(state.updates, 1U);
     EXPECT_EQ(state.renderUpdates, kFrameCount);
     EXPECT_EQ(state.completedFrames, kFrameCount);
@@ -150,8 +191,8 @@ TEST(EngineIntegrationTest, RendersSceneAndGuiAcrossFrameSlots)
     }
     expectedLifecycle.insert(expectedLifecycle.end(), {"destroy", "destruct"});
     EXPECT_EQ(state.lifecycle, expectedLifecycle);
-    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.quad.vertex"_sid), nullptr);
-    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.quad.fragment"_sid), nullptr);
+    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.vert.quad"_sid), nullptr);
+    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.frag.quad"_sid), nullptr);
 }
 
 }// namespace

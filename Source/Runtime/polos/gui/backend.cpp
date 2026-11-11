@@ -7,8 +7,8 @@
 
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/settings.hpp"
 #include "polos/rendering/vk/render_context.hpp"
-#include "polos/rendering/vk/settings.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/utils/assert.hpp"
@@ -70,7 +70,7 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
     info.RenderPass     = tRenderPass;
     // Backend upload buffers rotate by render submission, independently of swapchain images.
     info.MinImageCount      = 2U;
-    info.ImageCount         = static_cast<std::uint32_t>(Settings::kMaxFramesInFlight);
+    info.ImageCount         = static_cast<std::uint32_t>(rendering::Settings::kMaxFramesInFlight);
     info.MSAASamples        = VK_SAMPLE_COUNT_1_BIT;
     info.DescriptorPoolSize = kImageCapacity + IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE;
     info.CheckVkResultFn    = [](VkResult tResult) {

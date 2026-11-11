@@ -11,6 +11,7 @@
 #include <vulkan/vulkan.h>
 
 #include <cstdint>
+#include <memory>
 
 namespace polos::rendering
 {
@@ -27,9 +28,11 @@ enum class ShaderStage : std::uint8_t
 
 struct Shader
 {
+    [[nodiscard]] static auto Create(utils::string_id tResourceId, ShaderStage tStage) -> std::shared_ptr<Shader>;
+
     utils::string_id name;
     ShaderStage      stage;
-    VkShaderModule   module;
+    VkShaderModule   module{VK_NULL_HANDLE};
 };
 
 }// namespace polos::rendering

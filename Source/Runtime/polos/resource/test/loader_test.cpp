@@ -4,11 +4,13 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <span>
 #include <vector>
 
 namespace
@@ -149,6 +151,28 @@ TEST_F(ImageLoaderTest, ReturnsNullForMissingOrMalformedImages)
     }
 
     EXPECT_EQ(polos::resource::image::LoadImage(path), nullptr);
+}
+
+TEST_F(ImageLoaderTest, DecodesMemoryIntoRgbaWithBottomRowFirst)
+{
+    std::array<std::uint8_t, 26> encoded{};
+    encoded[2]  = 2;
+    encoded[12] = 1;
+    encoded[14] = 2;
+    encoded[16] = 32;
+    encoded[17] = 0x28;
+    std::array<std::uint8_t, 8> const pixels{0x33, 0x22, 0x11, 0xFF, 0x66, 0x55, 0x44, 0x80};
+    std::copy(pixels.begin(), pixels.end(), encoded.begin() + 18);
+
+    auto const image = polos::resource::image::LoadImage(std::as_bytes(std::span(encoded)));
+
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(image->width, 1);
+    EXPECT_EQ(image->height, 2);
+    EXPECT_EQ(image->components, 4);
+    std::array<std::uint8_t, 8> const expected{0x44, 0x55, 0x66, 0x80, 0x11, 0x22, 0x33, 0xFF};
+    ASSERT_EQ(image->data.size(), expected.size());
+    EXPECT_TRUE(std::equal(image->data.begin(), image->data.end(), expected.begin()));
 }
 
 TEST(ResourceStorageTest, ReportsInsertionSuccessAndDuplicateKeys)

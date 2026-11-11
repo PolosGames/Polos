@@ -10,18 +10,18 @@
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
-#include "polos/ecs/view.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
+#include "polos/rendering/resources/shader.hpp"
 #include "polos/rendering/uniforms/camera_uniform.hpp"
 #include "polos/rendering/vertex/quad_vertex.hpp"
 #include "polos/rendering/vk/frame_data.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
-#include "polos/rendering/vk/vulkan_util.hpp"
+#include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
 #include <deque>
@@ -32,114 +32,34 @@
 namespace polos::rendering
 {
 
-namespace
-{
-struct QuadTexturePair
-{
-    utils::string_id          textureName{"texture.polos_default_white"_sid};
-    std::vector<QuadInstance> quadInstances;
-};
-
-auto ArrangeQuadBatches(
-    std::vector<OpaqueGeometryPass::QuadBatch>& tQuadBatches,
-    std::vector<QuadTexturePair>&               tQuadPairs,
-    std::deque<std::size_t>&                    tInstanceCounts) -> void
-{
-    // We can start from 0 because white texture is counted only once.
-    std::uint32_t nextTextureIndex{0U};
-
-    OpaqueGeometryPass::QuadBatch* currentBatch{nullptr};
-
-    for (auto& quadPair : tQuadPairs)
-    {
-        // Next Batch
-        if (nextTextureIndex >= Settings::kMaxSamplers || nextTextureIndex == 0)
-        {
-            currentBatch = &tQuadBatches.emplace_back();
-            // We now know exactly how many instances will be in this batch
-            currentBatch->quadInstances.reserve(tInstanceCounts.front());
-            currentBatch->textures.fill("texture.polos_default_white"_sid);
-            tInstanceCounts.pop_front();
-            nextTextureIndex = 0U;
-        }
-
-        // We now know the texture index inside the descriptor, so we apply
-        std::ranges::for_each(
-            quadPair.quadInstances,
-            [nextTextureIndex](auto& textureIndex) {
-                textureIndex = nextTextureIndex;
-            },
-            &QuadInstance::textureIndex);
-
-        currentBatch->quadInstances.append_range(quadPair.quadInstances);
-        currentBatch->textures[nextTextureIndex++] = quadPair.textureName;
-    }
-}
-
-}// namespace
-
 auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    if (auto result = createTargets(); !result)
-    {
-        return result;
-    }
-    {
-        std::array<QuadVertex, 4U> quadVertices{
-            QuadVertex{
-                .position = glm::vec3{-0.5F, -0.5F, 0.0F},
-                .texCoord = glm::vec2{0.0F, 0.0F},
-            },
-            QuadVertex{
-                .position = glm::vec3{0.5F, -0.5F, 0.0F},
-                .texCoord = glm::vec2{1.0F, 0.0F},
-            },
-            QuadVertex{
-                .position = glm::vec3{0.5F, 0.5F, 0.0F},
-                .texCoord = glm::vec2{1.0F, 1.0F},
-            },
-            QuadVertex{
-                .position = glm::vec3{-0.5F, 0.5F, 0.0F},
-                .texCoord = glm::vec2{0.0F, 1.0F},
-            },
-        };
+    mQuadVertexShader      = Shader::Create("shader.vert.quad"_sid, ShaderStage::kVertex);
+    mQuadFragmentShader    = Shader::Create("shader.frag.quad"_sid, ShaderStage::kFragment);
+    mForwardVertexShader   = Shader::Create("shader.vert.forward_shading"_sid, ShaderStage::kVertex);
+    mForwardFragmentShader = Shader::Create("shader.frag.forward_shading"_sid, ShaderStage::kFragment);
+    mMainComputeShader     = Shader::Create("shader.comp.main_compute"_sid, ShaderStage::kCompute);
 
-        mQuadVertexBuffer = Buffer::Create(
-            BufferDescription{
-                .size       = sizeof(quadVertices),
-                .usage      = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                .residence  = MemoryResidence::kDevice,
-                .hostAccess = HostAccessFlags::kNone,
-            },
-            std::as_bytes(std::span{quadVertices}));
+    PL_ASSERT(createTargets().has_value(), "Failed to create render compositor");
 
-        PL_ASSERT(nullptr != mQuadVertexBuffer, "Failed to create and initialize quad vertex buffer");
-    }
+    mInstanceBuffer = Buffer::Create(
+        BufferDescription{
+            .size               = ecs::Settings::kMaxEntities * sizeof(MeshInstance),
+            .usage              = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            .residence          = MemoryResidence::kDevice,
+            .hostAccess         = HostAccessFlags::kSeqWrite,
+            .persistentlyMapped = true,
+            .resizable          = false,
+        });
 
-    {
-        std::array<std::uint16_t, 6U> quadIndices{
-            0U,
-            1U,
-            2U,
-            2U,
-            3U,
-            0U,
-        };
+    PL_ASSERT(nullptr != mInstanceBuffer, "Instance buffer could not be created");
 
-        mQuadIndexBuffer = Buffer::Create(
-            BufferDescription{
-                .size       = sizeof(quadIndices),
-                .usage      = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                .residence  = MemoryResidence::kDevice,
-                .hostAccess = HostAccessFlags::kNone,
-            },
-            std::as_bytes(std::span{quadIndices}));
+    // mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>(mQuadVertexShader, mQuadFragmentShader);
+    mForwardShadingPass =
+        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
 
-        PL_ASSERT(nullptr != mQuadIndexBuffer, "Failed to create and initialize quad index buffer");
-    }
-
-    mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>();
-    mUiRenderPass       = std::make_unique<UiRenderPass>();
+    mUiRenderPass = std::make_unique<UiRenderPass>();
     if (!mUiRenderPass->Create(mFrameTargets.front().colorImg->format))
     {
         return ErrorType{RenderingErrc::kFailedCreateGui};
@@ -151,22 +71,29 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
 auto RenderCompositor::Destroy() -> void
 {
     mUiRenderPass.reset();
-    mQuadVertexBuffer.reset();
-    mQuadIndexBuffer.reset();
-    mOpaqueGeometryPass.reset();
+    mForwardShadingPass.reset();
+    // mOpaqueGeometryPass.reset();
+    mInstanceBuffer.reset();
+    mMainComputeShader.reset();
+    mForwardFragmentShader.reset();
+    mForwardVertexShader.reset();
+    mQuadFragmentShader.reset();
+    mQuadVertexShader.reset();
     releaseTargets();
 }
 
 auto RenderCompositor::RecreateTargets() -> Result<void>
 {
     mUiRenderPass->ReleaseFramebuffers();
-    mOpaqueGeometryPass.reset();
+    // mOpaqueGeometryPass.reset();
+    mForwardShadingPass.reset();
     releaseTargets();
-    if (auto result = createTargets(); !result)
-    {
-        return result;
-    }
-    mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>();
+    PL_ASSERT(createTargets().has_value(), "Failed to recreate render compositor");
+
+    mForwardShadingPass =
+        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
+    // mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>(mQuadVertexShader, mQuadFragmentShader);
     return {};
 }
 
@@ -181,94 +108,56 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
         tFrameData.scImage->extent.width,
         tFrameData.scImage->extent.height);
 
+    auto changes = scene->ConsumeInstanceChanges();
+
+    for (auto const index : changes)
     {
-        mQuadBatches.clear();
-
-        std::vector<QuadTexturePair> quadPairs;
-
-        std::deque<std::size_t> quadInstanceCountsInBatch;
-
-        QuadTexturePair* quadPair{nullptr};
-        // Assign quads with their textures
-        for (auto const [transform, quad] : ecs::View<ecs::TransformComponent, ecs::QuadRendererComponent>(scene))
-        {
-            std::size_t quadPairIndex{0U};
-            while (quadPairIndex < quadPairs.size())
-            {
-                if (quad->textureName == quadPairs[quadPairIndex].textureName)
-                {
-                    break;
-                }
-                ++quadPairIndex;
-            }
-
-            if (quadPairIndex == quadPairs.size())
-            {
-                if (TextureCache::GetTexture(quad->textureName) == nullptr)
-                {
-                    auto const texture = TextureCache::CreateTexture(quad->textureName, {});
-                    PL_ASSERT(
-                        texture != std::numeric_limits<std::size_t>::max(),
-                        "Could not upload quad texture {}.",
-                        quad->textureName);
-                }
-
-                auto& pair            = quadPairs.emplace_back();
-                quadPair              = &pair;
-                quadPair->textureName = quad->textureName;
-            }
-            quadPair = &quadPairs[quadPairIndex];
-
-            auto const batchIndex = quadPairIndex / Settings::kMaxSamplers;
-
-            // Create a new batch
-            if (batchIndex == quadInstanceCountsInBatch.size())
-            {
-                quadInstanceCountsInBatch.emplace_back();
-            }
-
-            quadPair->quadInstances.push_back(
-                QuadInstance{
-                    .model           = glm::translate(glm::mat4{1.0F}, transform->position) *
-                                       glm::mat4_cast(glm::quat(glm::radians(transform->rotation))) *
-                                       glm::scale(glm::mat4{1.0F}, transform->scale),
-                    .color           = quad->color,
-                    .texCoordScissor = quad->scissor,
-                    .textureIndex    = 0U,// invalid for now
-                    .tilingFactor    = quad->tilingFactor,
-                });
-
-            ++quadInstanceCountsInBatch[batchIndex];
-        }
-
-        // Proceed to batching if we have anything in scene
-        if (!quadInstanceCountsInBatch.empty())
-        {
-            ArrangeQuadBatches(mQuadBatches, quadPairs, quadInstanceCountsInBatch);
-        }
+        mInstanceBuffer->Write(&scene->GetMeshInstances()[index], sizeof(MeshInstance), index * sizeof(MeshInstance));
     }
 
-    mOpaqueGeometryPass->Prepare(tFrameData.frameSlot, mQuadBatches);
+    mForwardShadingPass->Prepare(tFrameData.frameSlot, mInstanceBuffer->buffer);
+    // mOpaqueGeometryPass->Prepare(tFrameData.frameSlot, mQuadBatches);
 }
 
-auto RenderCompositor::Record(FrameData const& tFrameData) -> void
+auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
 {
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
-    mOpaqueGeometryPass->Record(
-        OpaqueGeometryPass::Inputs{
-            .frameSlot     = tFrameData.frameSlot,
-            .cmdBuf        = tFrameData.currentCmdBuf,
-            .renderArea    = RenderContext::GetSwapchain().GetRenderArea(),
-            .extent        = ToExtent2D(tFrameData.scImage->extent),
-            .scissor       = RenderContext::GetSwapchain().GetScissor(),
-            .viewport      = RenderContext::GetSwapchain().GetViewport(),
-            .cameraUniform = mCameraUbo,
-            .quadBatches   = mQuadBatches,
-            .colorView     = targets.colorImgView,
-            .depthView     = targets.depthImgView,
-            .quadVertices  = mQuadVertexBuffer.get(),
-            .quadIndices   = mQuadIndexBuffer.get(),
+    // mOpaqueGeometryPass->Record(
+    //     OpaqueGeometryPass::Inputs{
+    //         .frameSlot     = tFrameData.frameSlot,
+    //         .cmdBuf        = tFrameData.currentCmdBuf,
+    //         .renderArea    = RenderContext::GetSwapchain().GetRenderArea(),
+    //         .extent        = ToExtent2D(tFrameData.scImage->extent),
+    //         .scissor       = RenderContext::GetSwapchain().GetScissor(),
+    //         .viewport      = RenderContext::GetSwapchain().GetViewport(),
+    //         .cameraUniform = mCameraUbo,
+    //         .colorView     = targets.colorImgView,
+    //         .depthView     = targets.depthImgView,
+    //         .quadVertices  = mQuadVertexBuffer.get(),
+    //         .quadIndices   = mQuadIndexBuffer.get(),
+    //     });
+
+    ecs::Scene const* scene = ecs::SceneManager::GetCurrentScene();
+
+    int32_t drawCalls{0};
+    drawCalls += mForwardShadingPass->Record(
+        ForwardShadingPass::Inputs{
+            .frameSlot      = tFrameData.frameSlot,
+            .cmdBuf         = tFrameData.currentCmdBuf,
+            .renderArea     = RenderContext::GetSwapchain().GetRenderArea(),
+            .extent         = ToExtent2D(tFrameData.scImage->extent),
+            .scissor        = RenderContext::GetSwapchain().GetScissor(),
+            .viewport       = RenderContext::GetSwapchain().GetViewport(),
+            .cameraUbo      = mCameraUbo,
+            .instanceBuffer = mInstanceBuffer.get(),
+            .slotCount      = scene != nullptr ? scene->GetEntityPoolSize() : 0U,
         });
+
+    targets.colorImg->SetUse({
+        .layout   = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .stages   = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .accesses = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    });
 
     mUiRenderPass->Record({
         .frameSlot = tFrameData.frameSlot,
@@ -286,6 +175,8 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> void
     tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     tFrameData.scImage->BlitFrom(tFrameData.currentCmdBuf, *targets.colorImg);
     tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+    return drawCalls;
 }
 
 auto RenderCompositor::createTargets() -> Result<void>
@@ -328,16 +219,10 @@ auto RenderCompositor::createColorTarget() -> bool
     VkImageUsageFlags usage{0U};
     usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-    usage |= VK_IMAGE_USAGE_STORAGE_BIT;
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     ImageDescription colorDesc{
-        .extent =
-            {
-                .width  = RenderContext::GetSwapchain().GetExtent3D().width,
-                .height = RenderContext::GetSwapchain().GetExtent3D().height,
-                .depth  = 1U,
-            },
+        .extent      = RenderContext::GetSwapchain().GetExtent3D(),
         .format      = VK_FORMAT_R16G16B16A16_SFLOAT,
         .usage       = usage,
         .mipLevels   = 1U,
@@ -353,12 +238,9 @@ auto RenderCompositor::createColorTarget() -> bool
             LogError("Color image was not created.");
             return false;
         }
-        targets.colorImg     = std::move(idxRes);
-        targets.colorImgView = util::CreateImageView(
-            RenderContext::GetVulkanDevice().logiDevice,
-            targets.colorImg->img,
-            VK_FORMAT_R16G16B16A16_SFLOAT,
-            VK_IMAGE_ASPECT_COLOR_BIT);
+        targets.colorImg = std::move(idxRes);
+        targets.colorImgView =
+            util::CreateImageView(targets.colorImg->img, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if (VK_NULL_HANDLE == targets.colorImgView)
         {
@@ -394,12 +276,9 @@ auto RenderCompositor::createDepthTarget() -> bool
             return false;
         }
 
-        target.depthImg     = std::move(idxRes);
-        target.depthImgView = util::CreateImageView(
-            RenderContext::GetVulkanDevice().logiDevice,
-            target.depthImg->img,
-            VK_FORMAT_D32_SFLOAT,
-            VK_IMAGE_ASPECT_DEPTH_BIT);
+        target.depthImg = std::move(idxRes);
+        target.depthImgView =
+            util::CreateImageView(target.depthImg->img, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         if (VK_NULL_HANDLE == target.depthImgView)
         {

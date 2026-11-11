@@ -46,6 +46,7 @@ struct BufferDescription
     MemoryResidence    residence{MemoryResidence::kDevice};
     HostAccessFlags    hostAccess{HostAccessFlags::kNone};
     bool               persistentlyMapped{true};
+    bool               resizable{true};
 };
 
 class Buffer
@@ -60,15 +61,26 @@ public:
     auto operator=(Buffer const&) -> Buffer& = delete;
 
     /// @return The allocated buffer, or nullptr if allocation or mapping fails.
+    /// @note Adds TRANSFER_SRC and TRANSFER_DST usage when tDesc.resizable is true.
     [[nodiscard]] static auto Create(BufferDescription const& tDesc) -> std::unique_ptr<Buffer>;
 
     /// @brief Initialize a buffer through a temporary staging allocation. The upload completes before returning.
     /// @return Buffer, or nullptr if the data size differs from tDesc.size or upload fails.
-    /// @note Adds TRANSFER_DST usage automatically.
+    /// @note Adds TRANSFER_DST usage for the initial upload.
     [[nodiscard]] static auto Create(BufferDescription const& tDesc, std::span<std::byte const> tInitialData)
         -> std::unique_ptr<Buffer>;
 
     static auto Create(resource::model::Primitive const& tPrim) -> std::unique_ptr<Buffer>;
+
+    /// Preserves the common prefix and leaves newly added bytes uninitialized.
+    /// Finish using the old buffer before resizing. A size change replaces the handle and mapping.
+    /// Refresh descriptors that reference the old handle after a successful size change.
+    /// Returns false for fixed-size buffers, a zero size, or an allocation or copy failure.
+    [[nodiscard]] auto Resize(VkDeviceSize tSize) -> bool;
+
+    /// @brief Upload data into a buffer via a temporary staging allocation. The upload completes before returning.
+    /// @note Requires TRANSFER_DST usage (enabled automatically when resizable is true).
+    [[nodiscard]] auto Upload(std::span<std::byte const> tData, VkDeviceSize tDstOffset = 0U) -> bool;
 
     /// @brief Copy data into gpu buffer
     /// @tparam T Data type
@@ -86,9 +98,9 @@ public:
     /// @param tBuffer Raw pointer to data to be copied.
     /// @param tSize Size in total bytes
     template<typename T>
-    auto Write(T* tBuffer, std::size_t tSize) -> bool
+    auto Write(T* tBuffer, std::size_t tSize, size_t tOffset = 0U) -> bool
     {
-        return VK_SUCCESS == vmaCopyMemoryToAllocation(sAllocator, tBuffer, allocation, 0U, tSize);
+        return VK_SUCCESS == vmaCopyMemoryToAllocation(sAllocator, tBuffer, allocation, tOffset, tSize);
     }
 
     static auto SetAllocator(VmaAllocator tAllocator) -> void;
@@ -106,6 +118,9 @@ private:
 
     auto destroy() -> void;
     auto swap(Buffer& tOther) -> void;
+
+    VkBufferUsageFlags mUsage{0U};
+    bool               mResizable{false};
 
     static VmaAllocator sAllocator;
 };

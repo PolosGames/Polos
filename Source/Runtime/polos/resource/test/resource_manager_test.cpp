@@ -12,7 +12,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <span>
 #include <type_traits>
+#include <vector>
 
 namespace
 {
@@ -118,6 +120,152 @@ TEST_F(ResourceManagerTest, GettersReturnNullBeforeCatalogLoad)
 
     EXPECT_EQ(resources->GetImage("pixel"_sid), nullptr);
     EXPECT_EQ(resources->GetModel("model"_sid), nullptr);
+}
+
+TEST_F(ResourceManagerTest, LoadsImagesFromExplicitPathsWithoutCatalog)
+{
+    WriteImage("pixel.tga", 0x11);
+    auto const path = directory / "pixel.tga";
+    std::filesystem::rename(directory / "Resources/pixel.tga", path);
+
+    auto image = resources->LoadImage("dynamic.image"_sid, path);
+
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(image->width, 1);
+    EXPECT_EQ(image->height, 1);
+    EXPECT_EQ(image->components, 4);
+    ASSERT_EQ(image->data.size(), 4U);
+    EXPECT_EQ(image->data[0], 0x11);
+    std::filesystem::remove(path);
+    EXPECT_EQ(resources->GetImage("dynamic.image"_sid), image);
+}
+
+TEST_F(ResourceManagerTest, LoadsEncodedImagesFromMemoryAndOwnsDecodedPixels)
+{
+    WriteImage("encoded.bin", 0x77);
+    std::ifstream     input(directory / "Resources/encoded.bin", std::ios::binary);
+    std::vector<char> encoded{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+
+    auto image = resources->LoadImage("embedded.image"_sid, std::as_bytes(std::span(encoded)));
+    encoded.assign(encoded.size(), '\0');
+
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(resources->GetImage("embedded.image"_sid), image);
+    EXPECT_EQ(image->width, 1);
+    EXPECT_EQ(image->height, 1);
+    EXPECT_EQ(image->components, 4);
+    ASSERT_EQ(image->data.size(), 4U);
+    EXPECT_EQ(image->data[0], 0x77);
+    EXPECT_EQ(image->data[1], 0x22);
+    EXPECT_EQ(image->data[2], 0x33);
+    EXPECT_EQ(image->data[3], 0xFF);
+}
+
+TEST_F(ResourceManagerTest, LoadsBinaryFilesFromPathsWithoutCatalog)
+{
+    Write("data.bin", std::string_view("a\0b", 3));
+    auto const path = directory / "Resources/data.bin";
+
+    auto file = resources->LoadFile("dynamic.file"_sid, path);
+
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(resources->GetFile("dynamic.file"_sid), file);
+    EXPECT_EQ(file->size, 3U);
+    EXPECT_EQ(file->uncompressedSize, 3U);
+    EXPECT_EQ(file->path, path);
+    EXPECT_EQ(file->stemName, "data");
+    EXPECT_EQ(file->customName, "data.bin");
+    EXPECT_EQ(file->data, (std::vector<std::byte>{std::byte{0x61}, std::byte{0}, std::byte{0x62}}));
+}
+
+TEST_F(ResourceManagerTest, LoadsOwnedFileBytesAndPreservesExternalReferencesAfterClearing)
+{
+    std::vector<std::byte> bytes{std::byte{0x42}, std::byte{0}, std::byte{0xFF}};
+    auto const             expected = bytes;
+
+    auto file = resources->LoadFile("embedded.file"_sid, std::span(bytes));
+    bytes.assign(bytes.size(), std::byte{0});
+
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(resources->GetFile("embedded.file"_sid), file);
+    EXPECT_EQ(file->size, expected.size());
+    EXPECT_EQ(file->uncompressedSize, expected.size());
+    EXPECT_EQ(file->data, expected);
+    EXPECT_TRUE(file->path.empty());
+    EXPECT_TRUE(file->stemName.empty());
+
+    resources->ClearCache();
+
+    EXPECT_EQ(resources->GetFile("embedded.file"_sid), nullptr);
+    EXPECT_EQ(file->data, expected);
+}
+
+TEST_F(ResourceManagerTest, LoadsEmptyFilesFromPathsAndMemory)
+{
+    Write("empty.bin", "");
+    auto fromPath = resources->LoadFile("empty.path"_sid, directory / "Resources/empty.bin");
+    auto fromData = resources->LoadFile("empty.data"_sid, std::span<std::byte const>{});
+
+    for (auto const& file : {fromPath, fromData})
+    {
+        ASSERT_NE(file, nullptr);
+        EXPECT_TRUE(file->data.empty());
+        EXPECT_EQ(file->size, 0U);
+        EXPECT_EQ(file->uncompressedSize, 0U);
+    }
+}
+
+TEST_F(ResourceManagerTest, ReusesCachedRepresentationsAcrossLoadOverloads)
+{
+    WriteImage("pixel.tga", 0x11);
+    auto const imagePath = directory / "Resources/pixel.tga";
+    auto       image     = resources->LoadImage("cached.image"_sid, imagePath);
+    std::filesystem::remove(imagePath);
+    std::array<std::byte, 1> const bytes{std::byte{0x42}};
+
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(resources->LoadImage("cached.image"_sid, std::span(bytes)), image);
+    EXPECT_EQ(resources->LoadImage("cached.image"_sid, imagePath), image);
+
+    auto file = resources->LoadFile("cached.file"_sid, std::span(bytes));
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(resources->LoadFile("cached.file"_sid, directory / "missing.bin"), file);
+    EXPECT_EQ(resources->LoadFile("cached.file"_sid, std::span<std::byte const>{}), file);
+}
+
+TEST_F(ResourceManagerTest, FailedExplicitLoadsLeaveIdsAvailableForRetry)
+{
+    auto const                     missing = directory / "Resources/pixel.tga";
+    std::array<std::byte, 3> const invalid{std::byte{0x42}, std::byte{0}, std::byte{0xFF}};
+
+    EXPECT_EQ(resources->LoadImage("retry.image"_sid, missing), nullptr);
+    EXPECT_EQ(resources->LoadImage("retry.image"_sid, std::span(invalid)), nullptr);
+    EXPECT_EQ(resources->LoadImage("retry.image"_sid, std::span<std::byte const>{}), nullptr);
+    EXPECT_EQ(resources->GetImage("retry.image"_sid), nullptr);
+    EXPECT_EQ(resources->LoadFile("retry.file"_sid, missing), nullptr);
+    EXPECT_EQ(resources->GetFile("retry.file"_sid), nullptr);
+
+    WriteImage("pixel.tga", 0x55);
+    auto image = resources->LoadImage("retry.image"_sid, missing);
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(image->data[0], 0x55);
+    EXPECT_NE(resources->LoadFile("retry.file"_sid, std::span(invalid)), nullptr);
+}
+
+TEST_F(ResourceManagerTest, ExplicitLoadsCanCacheBothRepresentationsUnderOneId)
+{
+    WriteImage("pixel.tga", 0x11);
+    auto const path = directory / "Resources/pixel.tga";
+
+    auto image = resources->LoadImage("pixel"_sid, path);
+    auto file  = resources->LoadFile("pixel"_sid, path);
+
+    ASSERT_NE(image, nullptr);
+    ASSERT_NE(file, nullptr);
+    EXPECT_EQ(resources->GetImage("pixel"_sid), image);
+    EXPECT_EQ(resources->GetFile("pixel"_sid), file);
+    EXPECT_EQ(image->data.size(), 4U);
+    EXPECT_EQ(file->size, 22U);
 }
 
 TEST_F(ResourceManagerTest, GettersDoNotLoadOtherRepresentations)

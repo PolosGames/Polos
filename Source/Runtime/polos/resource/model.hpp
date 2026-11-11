@@ -6,63 +6,70 @@
 #ifndef POLOS_RESOURCE_MODEL_HPP
 #define POLOS_RESOURCE_MODEL_HPP
 
+#include "polos/rendering/resources/texture.hpp"
+#include "polos/rendering/vertex/primitive_vertex.hpp"
+#include "polos/utils/string_id.hpp"
+
 #include <glm/glm.hpp>
-#include <polos/rendering/vertex/primitive_vertex.hpp>
 
 #include <array>
 #include <cstdint>
-#include <limits>
 #include <string>
 #include <vector>
 
 namespace polos::resource::model
 {
-// TODO(sorbatdev): Implement some kind of reference system for keeping these values at one place.
-struct alignas(64) Vertex// NOLINT
+
+struct Texture
 {
-    glm::vec3 position{0.0F, 0.0F, 0.0F};
-    glm::vec3 normal{0.0F, 0.0F, 0.0F};
-    glm::vec3 color{0.0F, 0.0F, 0.0F};
-    glm::vec2 texCoord{0.0F, 0.0F};
+    utils::string_id          resourceId{"texture.polos_default_white"_sid};
+    rendering::TextureDetails samplerDetails{};
 };
 
+enum class AlphaMode : uint8_t
+{
+    kOpaque,
+    kMask,
+    kBlend,
+};
+
+// TODO(sorbatdev): Implement some kind of reference system for keeping these values at one place.
 struct Material
 {
-    std::array<double, 4U> baseColor{0.0, 0.0, 0.0, 1.0};
-    double                 metallic{1.0};
-    double                 roughness{1.0};
-    // int32_t               baseColorTexture; /* texture index or -1 */
-    // int32_t               alphaMode;        /* 0 = OPAQUE, 1 = MASK, 2 = BLEND */
-    // float                 alphaCutoff;
-    // int32_t               doubleSided;
+    // int32_t               doubleSided;                   /* 0 or 1 */
+    // const int32_t*        lods;
+    // uint32_t              lods_count;
+    std::array<float, 3U> emissiveFactor{0.0F, 0.0F, 0.0F};
+    AlphaMode             alphaMode{AlphaMode::kOpaque};
+    float                 alphaCutoff{0.5F};
+    std::array<float, 4U> baseColorFactor{1.0F, 1.0F, 1.0F, 1.0F};
+    Texture               baseColorTexture{};
+    float                 metallicFactor{1.0F};
+    float                 roughnessFactor{1.0F};
+    Texture               metallicRoughnessTexture;
+    Texture               normalTexture;
+    Texture               occlusionTexture;
+    Texture               emissiveTexture;
 };
 
-struct Primitive
+struct MeshPart
 {
-    std::size_t attributes{std::numeric_limits<std::size_t>::max()};
-    // Index into Model::indexStreams; the sentinel denotes a non-indexed primitive.
-    std::size_t indices{std::numeric_limits<std::size_t>::max()};
-    Material    material;
+    utils::string_id                        name;
+    std::vector<rendering::PrimitiveVertex> primitiveVertices;
+    std::vector<uint32_t>                   primitiveIndices;
+    Material                                material;
 };
 
 struct Mesh
 {
-    std::string            name;
-    std::vector<Primitive> primitives;
+    std::string           name;
+    std::vector<MeshPart> parts;
 };
-
-struct Stream
-{ std::vector<rendering::PrimitiveVertex> data; };
-
-struct IndexStream
-{ std::vector<std::uint32_t> data; };
 
 struct Model
 {
-    std::string              name;
-    std::vector<Stream>      streams;
-    std::vector<IndexStream> indexStreams;
-    std::vector<Mesh>        meshes;
+    std::string       name;
+    std::vector<Mesh> meshes;
 };
 }// namespace polos::resource::model
 

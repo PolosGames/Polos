@@ -1,5 +1,6 @@
 #include "polos/resource/gltf/gltf_loader.hpp"
 #include "polos/resource/model.hpp"
+#include "polos/resource/resource_manager.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
@@ -129,18 +130,16 @@ TEST_F(GltfLoaderTest, LoadsPackedPositionsAndDefaultsWithoutIndices)
 
     auto const& model = *result;
 
-    ASSERT_EQ(model.streams.size(), 1U);
-
     ASSERT_EQ(model.meshes.size(), 1U);
-    ASSERT_EQ(model.meshes[0].primitives.size(), 1U);
-
-    auto const& primitive = model.meshes[0].primitives[0];
-
-    EXPECT_EQ(primitive.attributes, 0U);
-    EXPECT_EQ(primitive.indices, std::numeric_limits<std::size_t>::max());
-    EXPECT_TRUE(model.indexStreams.empty());
-
-    auto const& vertices = model.streams[primitive.attributes].data;
+    ASSERT_EQ(model.meshes[0].parts.size(), 1U);
+    auto const& part = model.meshes[0].parts[0];
+    EXPECT_EQ(part.name, "mesh.0.part.0"_sid);
+    EXPECT_TRUE(part.primitiveIndices.empty());
+    EXPECT_EQ(part.material.baseColorFactor, (std::array<float, 4>{1, 1, 1, 1}));
+    EXPECT_EQ(part.material.alphaMode, resource::AlphaMode::kOpaque);
+    EXPECT_FLOAT_EQ(part.material.metallicFactor, 1);
+    EXPECT_FLOAT_EQ(part.material.roughnessFactor, 1);
+    auto const& vertices = part.primitiveVertices;
 
     ASSERT_EQ(vertices.size(), 3U);
     EXPECT_FLOAT_EQ(vertices[1].position.x, 1);
@@ -162,8 +161,9 @@ TEST_F(GltfLoaderTest, LoadsSeparatePositionsAndInterleavedNormalsAndUvsWithOffs
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->streams.size(), 1U);
-    auto const& vertices = result->streams[0].data;
+    ASSERT_EQ(result->meshes.size(), 1U);
+    ASSERT_EQ(result->meshes[0].parts.size(), 1U);
+    auto const& vertices = result->meshes[0].parts[0].primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_EQ(vertices[0].normal, glm::vec3(0, 0, 1));
@@ -185,8 +185,9 @@ TEST_F(GltfLoaderTest, DecodesNormalizedByteRgbBeforePositionAndKeepsAlphaOne)
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->streams.size(), 1U);
-    auto const& vertices = result->streams[0].data;
+    ASSERT_EQ(result->meshes.size(), 1U);
+    ASSERT_EQ(result->meshes[0].parts.size(), 1U);
+    auto const& vertices = result->meshes[0].parts[0].primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_FLOAT_EQ(vertices[0].color.r, 1);
@@ -218,8 +219,9 @@ TEST_F(GltfLoaderTest, DecodesNormalizedShortRgbaAndUvs)
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->streams.size(), 1U);
-    auto const& vertices = result->streams[0].data;
+    ASSERT_EQ(result->meshes.size(), 1U);
+    ASSERT_EQ(result->meshes[0].parts.size(), 1U);
+    auto const& vertices = result->meshes[0].parts[0].primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_FLOAT_EQ(vertices[0].color.g, 32768.0F / 65535.0F);
@@ -230,7 +232,7 @@ TEST_F(GltfLoaderTest, DecodesNormalizedShortRgbaAndUvs)
     EXPECT_FLOAT_EQ(vertices[1].texCoord.y, 16384.0F / 65535.0F);
 }
 
-TEST_F(GltfLoaderTest, LoadsAllUnsignedIndexWidthsAndRejectsOutOfRangeIndices)
+TEST_F(GltfLoaderTest, LoadsAllUnsignedIndexWidths)
 {
     struct IndexFormat
     {
@@ -244,30 +246,264 @@ TEST_F(GltfLoaderTest, LoadsAllUnsignedIndexWidthsAndRejectsOutOfRangeIndices)
         IndexFormat{4U, 5125},
     };
 
+    std::vector<std::uint32_t> const expected{0, 2, 1, 1, 2, 0};
     for (auto const [width, componentType] : formats)
     {
         SCOPED_TRACE(width);
 
-        std::vector<std::uint8_t> data;
-        for (auto value : {0U, 2U, 1U})
+        std::vector<std::uint8_t> data(4, 255);
+        for (auto index : expected)
         {
-            AppendUnsigned(data, value, width);
+            AppendUnsigned(data, index, width);
         }
         auto view              = AddView(data);
-        Primitive()["indices"] = AddAccessor(view, "SCALAR", 3, componentType);
+        Primitive()["indices"] = AddAccessor(view, "SCALAR", 6, componentType, false, 4);
 
         auto result = resource::LoadGltf(Write());
-        ASSERT_TRUE(result) << width;
-        ASSERT_EQ(result->indexStreams.size(), 1U);
+        ASSERT_TRUE(result);
         ASSERT_EQ(result->meshes.size(), 1U);
-        ASSERT_EQ(result->meshes[0].primitives.size(), 1U);
-        EXPECT_EQ(
-            result->indexStreams[result->meshes[0].primitives[0].indices].data,
-            (std::vector<std::uint32_t>{0, 2, 1}));
+        ASSERT_EQ(result->meshes[0].parts.size(), 1U);
+        auto const& part = result->meshes[0].parts[0];
+        EXPECT_EQ(part.primitiveIndices, expected);
+        EXPECT_EQ(part.primitiveVertices.size(), 3U);
     }
+}
 
-    bytes.back() = 255;// Corrupt the last UINT32 index.
+TEST_F(GltfLoaderTest, KeepsIndexedQuadVerticesInAccessorOrder)
+{
+    auto view                               = AddView(Floats({0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0}));
+    auto position                           = AddAccessor(view, "VEC3", 4, 5126);
+    document["accessors"][position]["min"]  = {0, 0, 0};
+    document["accessors"][position]["max"]  = {1, 1, 0};
+    Primitive()["attributes"]["POSITION"]   = position;
+    view                                    = AddView(Floats({0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1}));
+    Primitive()["attributes"]["NORMAL"]     = AddAccessor(view, "VEC3", 4, 5126);
+    view                                    = AddView(Floats({0, 0, 1, 0, 1, 1, 0, 1}));
+    Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC2", 4, 5126);
+    view                                    = AddView({255, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255, 0, 255, 255, 255, 0}, 4);
+    Primitive()["attributes"]["COLOR_0"]    = AddAccessor(view, "VEC3", 4, 5121, true);
+    std::vector<std::uint8_t> indices;
+    for (auto index : {0U, 2U, 1U, 0U, 3U, 2U})
+    {
+        AppendUnsigned(indices, index, 2);
+    }
+    view                   = AddView(indices);
+    Primitive()["indices"] = AddAccessor(view, "SCALAR", 6, 5123);
+
+    auto result = resource::LoadGltf(Write());
+    ASSERT_TRUE(result);
+    auto const& part     = result->meshes[0].parts[0];
+    auto const& vertices = part.primitiveVertices;
+    EXPECT_EQ(part.primitiveIndices, (std::vector<std::uint32_t>{0, 2, 1, 0, 3, 2}));
+    ASSERT_EQ(vertices.size(), 4U);
+    std::array const expectedUvs{glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1)};
+    std::array const
+        expectedColors{glm::vec4(1, 0, 0, 1), glm::vec4(0, 1, 0, 1), glm::vec4(0, 0, 1, 1), glm::vec4(1, 1, 1, 1)};
+    for (std::size_t i{0}; i < vertices.size(); ++i)
+    {
+        EXPECT_EQ(vertices[i].position, glm::vec3(expectedUvs[i], 0));
+        EXPECT_EQ(vertices[i].texCoord, expectedUvs[i]);
+        EXPECT_EQ(vertices[i].color, expectedColors[i]);
+        EXPECT_EQ(vertices[i].normal, glm::vec3(0, 0, 1));
+        EXPECT_FLOAT_EQ(vertices[i].tangent.w, 1);
+    }
+}
+
+TEST_F(GltfLoaderTest, DecodesNormalizedByteUvsAndFloatRgb)
+{
+    auto view                               = AddView({0, 255, 0, 0, 128, 0, 0, 0, 255, 128, 0, 0}, 4);
+    Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC2", 3, 5121, true);
+    view                                    = AddView(Floats({1, 0.5F, 0, 0, 1, 0.25F, 0.25F, 0, 1}));
+    Primitive()["attributes"]["COLOR_0"]    = AddAccessor(view, "VEC3", 3, 5126);
+
+    auto result = resource::LoadGltf(Write());
+    ASSERT_TRUE(result);
+    auto const& vertices = result->meshes[0].parts[0].primitiveVertices;
+    ASSERT_EQ(vertices.size(), 3U);
+    EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 1));
+    EXPECT_FLOAT_EQ(vertices[1].texCoord.x, 128.0F / 255.0F);
+    EXPECT_EQ(vertices[0].color, glm::vec4(1, 0.5F, 0, 1));
+    EXPECT_EQ(vertices[1].color, glm::vec4(0, 1, 0.25F, 1));
+}
+
+TEST_F(GltfLoaderTest, LoadsMultipleMeshesAndMaterialsWithoutTextures)
+{
+    document["meshes"][0]["name"] = "Sword";
+    document["materials"]         = Json::array(
+        {{{"alphaMode", "MASK"},
+          {"alphaCutoff", 0.25},
+          {"emissiveFactor", {0.1, 0.2, 0.3}},
+          {"pbrMetallicRoughness",
+           {{"baseColorFactor", {0.2, 0.3, 0.4, 0.5}}, {"metallicFactor", 0.25}, {"roughnessFactor", 0.75}}}}});
+    auto primitive        = Primitive();
+    primitive["material"] = 0;
+    document["meshes"][0]["primitives"].push_back(primitive);
+    document["meshes"].push_back({{"name", "second"}, {"primitives", Json::array({primitive})}});
+
+    auto result = resource::LoadGltf(Write());
+    ASSERT_TRUE(result);
+    ASSERT_EQ(result->meshes.size(), 2U);
+    ASSERT_EQ(result->meshes[0].parts.size(), 2U);
+    ASSERT_EQ(result->meshes[1].parts.size(), 1U);
+    EXPECT_EQ(result->meshes[0].parts[0].name, "mesh.Sword.part.0"_sid);
+    EXPECT_EQ(result->meshes[0].parts[1].name, "mesh.Sword.part.1"_sid);
+    EXPECT_EQ(result->meshes[1].parts[0].name, "mesh.second.part.0"_sid);
+    EXPECT_EQ(result->meshes[1].name, "second");
+    EXPECT_EQ(result->meshes[0].parts[0].material.alphaMode, resource::AlphaMode::kOpaque);
+    auto const& material = result->meshes[0].parts[1].material;
+    EXPECT_EQ(material.alphaMode, resource::AlphaMode::kMask);
+    EXPECT_FLOAT_EQ(material.alphaCutoff, 0.25F);
+    EXPECT_FLOAT_EQ(material.emissiveFactor[2], 0.3F);
+    EXPECT_FLOAT_EQ(material.baseColorFactor[1], 0.3F);
+    EXPECT_FLOAT_EQ(material.metallicFactor, 0.25F);
+    EXPECT_FLOAT_EQ(material.roughnessFactor, 0.75F);
+    EXPECT_EQ(material.normalTexture.resourceId, "texture.polos_default_white"_sid);
+    EXPECT_EQ(material.baseColorTexture.resourceId, "texture.polos_default_white"_sid);
+    EXPECT_EQ(result->meshes[1].parts[0].primitiveVertices.size(), 3U);
+}
+
+TEST_F(GltfLoaderTest, RejectsMismatchedAttributeCountsInEitherDirection)
+{
+    for (auto count : {2U, 4U})
+    {
+        SCOPED_TRACE(count);
+        auto view                           = AddView(std::vector<std::uint8_t>(count * 12U));
+        Primitive()["attributes"]["NORMAL"] = AddAccessor(view, "VEC3", count, 5126);
+        EXPECT_FALSE(resource::LoadGltf(Write()));
+    }
+}
+
+TEST_F(GltfLoaderTest, RejectsAttributesWiderThanTheVertexLayout)
+{
+    auto view                               = AddView(Floats({0, 0, 1, 0, 1, 0, 1, 0, 0}));
+    Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC3", 3, 5126);
     EXPECT_FALSE(resource::LoadGltf(Write()));
+}
+
+TEST_F(GltfLoaderTest, RejectsMissingPositionsAndUnsupportedModes)
+{
+    auto const original       = document;
+    Primitive()["attributes"] = {{"NORMAL", 0}};
+    EXPECT_FALSE(resource::LoadGltf(Write()));
+    for (auto mode : {0, 1, 5, 6})
+    {
+        document            = original;
+        Primitive()["mode"] = mode;
+        EXPECT_FALSE(resource::LoadGltf(Write()));
+    }
+}
+
+TEST_F(GltfLoaderTest, PropagatesTextureFailuresAndRejectsInvalidMaterials)
+{
+    document["images"]   = Json::array({{{"uri", "missing.png"}}});
+    document["textures"] = Json::array({{{"source", 0}}});
+    EXPECT_FALSE(resource::LoadGltf(Write()));
+
+    document.erase("images");
+    document.erase("textures");
+    document["materials"] = Json::array({{{"alphaMode", "INVALID"}}});
+    EXPECT_FALSE(resource::LoadGltf(Write()));
+}
+
+TEST_F(GltfLoaderTest, ResolvesRelativeImagesAndSharedSamplerIndices)
+{
+    // A complete one-pixel RGBA PNG, stored below the glTF directory.
+    std::array<std::uint8_t, 70> const png{
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x48,
+        0x44,
+        0x52,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x08,
+        0x06,
+        0x00,
+        0x00,
+        0x00,
+        0x1F,
+        0x15,
+        0xC4,
+        0x89,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x44,
+        0x41,
+        0x54,
+        0x78,
+        0x9C,
+        0x63,
+        0xF8,
+        0xFF,
+        0xFF,
+        0xFF,
+        0x7F,
+        0x00,
+        0x09,
+        0xFB,
+        0x03,
+        0xFD,
+        0x2A,
+        0x86,
+        0xE3,
+        0x8A,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x49,
+        0x45,
+        0x4E,
+        0x44,
+        0xAE,
+        0x42,
+        0x60,
+        0x82
+    };
+    std::filesystem::create_directory(directory / "textures");
+    auto const filename = directory.filename().string() + ".png";
+    {
+        std::ofstream file(directory / "textures" / filename, std::ios::binary);
+        file.write(reinterpret_cast<char const*>(png.data()), static_cast<std::streamsize>(png.size()));
+    }
+    document["images"] = Json::array({{{"uri", "textures/" + filename}}});
+    document["samplers"] =
+        Json::array({{{"minFilter", 9986}, {"magFilter", 9729}, {"wrapS", 33071}, {"wrapT", 33648}}});
+    document["textures"]    = Json::array({{{"source", 0}, {"sampler", 0}}, {{"source", 0}, {"sampler", 0}}});
+    document["materials"]   = Json::array({{{"pbrMetallicRoughness", {{"baseColorTexture", {{"index", 1}}}}}}});
+    Primitive()["material"] = 0;
+    auto view               = AddView(Floats({0, 0, 1, 0, 0, 1}));
+    Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC2", 3, 5126);
+
+    auto result = resource::LoadGltf(Write());
+    ASSERT_TRUE(result);
+    auto const& texture = result->meshes[0].parts[0].material.baseColorTexture;
+    EXPECT_NE(polos::resource::ResourceManager::Instance().GetImage(texture.resourceId), nullptr);
+    EXPECT_EQ(texture.samplerDetails.minFilter, VK_FILTER_NEAREST);
+    EXPECT_EQ(texture.samplerDetails.magFilter, VK_FILTER_LINEAR);
+    EXPECT_EQ(texture.samplerDetails.mipmap, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+    EXPECT_EQ(texture.samplerDetails.addressModeU, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    EXPECT_EQ(texture.samplerDetails.addressModeV, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT);
 }
 
 TEST_F(GltfLoaderTest, RejectsMalformedAccessorsAndRanges)
@@ -359,7 +595,7 @@ TEST_F(GltfLoaderTest, ReturnsNullForMissingOrMalformedFiles)
 
 TEST_F(GltfLoaderTest, SkipsUnsupportedAttributesAndCleansUpFailedLoads)
 {
-    Primitive()["attributes"]["_UNUSED"] = 999;
+    Primitive()["attributes"]["_UNUSED"] = 0;
 
     EXPECT_TRUE(resource::LoadGltf(Write()));
 

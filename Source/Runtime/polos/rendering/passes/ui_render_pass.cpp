@@ -8,7 +8,7 @@
 #include "polos/gui/backend.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
-#include "polos/rendering/vk/vulkan_util.hpp"
+#include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
 namespace polos::rendering
@@ -126,11 +126,7 @@ auto UiRenderPass::Record(Inputs const& tInputs) -> void
     if (framebuffer == VK_NULL_HANDLE)
     {
         std::array attachments{tInputs.colorView};
-        framebuffer = util::CreateFramebuffer(
-            RenderContext::GetVulkanDevice().logiDevice,
-            mRenderPass,
-            attachments,
-            tInputs.extent);
+        framebuffer = util::CreateFramebuffer(mRenderPass, attachments, tInputs.extent);
         PL_ASSERT(framebuffer != VK_NULL_HANDLE, "Could not create the GUI framebuffer.");
     }
 

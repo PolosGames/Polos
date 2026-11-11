@@ -6,9 +6,9 @@
 #ifndef POLOS_RENDERING_RENDERING_API_HPP
 #define POLOS_RENDERING_RENDERING_API_HPP
 
-#include "polos/ecs/scene.hpp"
 #include "polos/platform/i_window_surface.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/frame_statistics.hpp"
 
 #include <memory>
 
@@ -37,6 +37,8 @@ public:
 
     static auto BeginFrame() -> VkCommandBuffer;
     static auto EndFrame() -> void;
+
+    static auto GetLastFrameStatistics() -> FrameStatistics const&;
 private:
     friend class core::Engine;
 
@@ -47,6 +49,7 @@ private:
 
     platform::IWindowSurface* mWindowSurface{nullptr};
 
+    FrameStatistics                 lastStatistics{};
     std::shared_ptr<IRenderContext> mRenderContext;
 };
 

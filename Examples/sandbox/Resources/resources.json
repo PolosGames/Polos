@@ -1,0 +1,22 @@
+[
+  {
+    "id": "texture.tux",
+    "path": "Textures/tux.png"
+  },
+  {
+    "id": "texture.polos_icon",
+    "path": "Textures/polos_icon.png"
+  },
+  {
+    "id": "texture.polos_icon_white",
+    "path": "Textures/polos_icon_white.png"
+  },
+  {
+    "id": "model.sponza",
+    "path": "Models/Sponza/Sponza.gltf"
+  },
+  {
+    "id": "model.suzanne",
+    "path": "Models/Suzanne/Suzanne.gltf"
+  }
+]

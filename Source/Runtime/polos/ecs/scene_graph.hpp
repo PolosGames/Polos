@@ -65,7 +65,7 @@ private:
     using Index                          = std::uint32_t;
     static constexpr Index kInvalidIndex = kInvalidEntityIndex;
 
-    struct Node
+    struct alignas(32) Node
     {
         EntityHandle  entity;
         Index         parent{kInvalidIndex};
@@ -73,6 +73,7 @@ private:
         Index         rightSibling{kInvalidIndex};
         Index         previousSibling{kInvalidIndex};
         std::uint32_t generation{0U};
+        int32_t       layer{-1};// sceneRoot is an invalid layer
     };
 
     [[nodiscard]] auto isValid(SceneGraphHandle tHandle) const -> bool;
@@ -82,6 +83,8 @@ private:
     // Retired nodes reuse parent as the free-list link.
     Index             mFreeHead{kInvalidIndex};
     std::vector<Node> mNodes;
+
+    std::vector<uint32_t> mObjectCountByLayer;
 };
 }// namespace polos::ecs
 

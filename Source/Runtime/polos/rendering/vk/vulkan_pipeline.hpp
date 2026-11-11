@@ -6,18 +6,28 @@
 #ifndef POLOS_RENDERING_VULKAN_PIPELINE_HPP
 #define POLOS_RENDERING_VULKAN_PIPELINE_HPP
 
+#include "polos/rendering/vk/descriptor_set_layout.hpp"
+
 #include <vulkan/vulkan.h>
 
+#include <memory>
 #include <span>
+#include <vector>
 
 namespace polos::rendering
 {
 
-struct alignas(16) VulkanPipeline
+struct VulkanPipeline
 {
-    VkPipeline                             pipeline{VK_NULL_HANDLE};
-    VkPipelineLayout                       pipelineLayout{VK_NULL_HANDLE};
-    std::span<VkDescriptorSetLayout const> dsLayouts;
+    [[nodiscard]] static auto
+    Create(VkPipeline tPipeline, VkPipelineLayout tLayout, std::span<VkDescriptorSetLayout> tSetLayouts)
+        -> VulkanPipeline;
+
+    static auto Reset(VulkanPipeline& tPipeline) -> void;
+
+    VkPipeline                         pipeline{VK_NULL_HANDLE};
+    VkPipelineLayout                   pipelineLayout{VK_NULL_HANDLE};
+    std::vector<VkDescriptorSetLayout> dsLayouts;
 };
 
 }// namespace polos::rendering

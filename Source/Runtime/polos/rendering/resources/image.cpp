@@ -7,7 +7,6 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/resources/buffer.hpp"
-#include "polos/rendering/vk/common.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 

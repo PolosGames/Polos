@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_I_RENDER_CONTEXT_HPP
 
 #include "polos/platform/i_window_surface.hpp"
+#include "polos/rendering/frame_statistics.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -28,7 +29,7 @@ public:
     virtual auto Shutdown() -> Result<void>                            = 0;
 
     virtual auto BeginFrame() -> VkCommandBuffer = 0;
-    virtual auto EndFrame() -> void              = 0;
+    virtual auto EndFrame() -> FrameStatistics   = 0;
 };
 
 }// namespace polos::rendering

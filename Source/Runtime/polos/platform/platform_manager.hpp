@@ -6,8 +6,8 @@
 #ifndef POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 #define POLOS_PLATFORM_PLATFORM_MANAGER_HPP
 
-#include "polos/polos_api.hpp"
 #include "polos/platform/i_window_surface.hpp"
+#include "polos/polos_api.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -48,7 +48,6 @@ private:
 
     static PlatformManager* sInstance;
 
-    void on_end_frame() const;
     GLFWwindow*                        mWindow{nullptr};
     std::unique_ptr<GlfwWindowSurface> mWindowSurface;
     bool                               mGlfwInitialized{false};

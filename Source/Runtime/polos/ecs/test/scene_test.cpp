@@ -1,15 +1,42 @@
 #include "polos/ecs/components/camera_component.hpp"
+#include "polos/ecs/components/editor_camera_controller_component.hpp"
+#include "polos/ecs/components/info_component.hpp"
+#include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
 #include "polos/ecs/scene.hpp"
+#include "polos/ecs/systems/dirty_transform_system.hpp"
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
 
 namespace polos::ecs
 {
 namespace
 {
+TEST(SceneTest, CreatesAnActiveEditorCameraUnderTheRoot)
+{
+    auto       scene  = std::make_unique<Scene>();
+    auto const camera = scene->activeCamera;
+
+    ASSERT_TRUE(IsEntityValid(camera));
+    EXPECT_TRUE(camera != scene->sceneRoot);
+    EXPECT_TRUE(scene->GetParent(camera) == scene->sceneRoot);
+    EXPECT_EQ(scene->GetComponent<InfoComponent>(camera)->debugName, "Editor Camera"_sid);
+    EXPECT_TRUE(scene->HasComponent(camera, ComponentType::kEditorCameraController));
+
+    auto const* settings  = scene->GetComponent<CameraComponent>(camera);
+    auto const* transform = scene->GetComponent<TransformComponent>(camera);
+    ASSERT_NE(settings, nullptr);
+    ASSERT_NE(transform, nullptr);
+    EXPECT_EQ(settings->cameraType, CameraType::kPerspective);
+    EXPECT_GT(settings->nearZ, 0.0F);
+    EXPECT_GT(settings->farZ, settings->nearZ);
+    EXPECT_EQ(transform->position, (glm::vec3{0.0F, 0.0F, 5.0F}));
+    EXPECT_EQ(transform->rotation, glm::vec3{0.0F});
+}
+
 TEST(SceneTest, ComponentRemovalAllowsReaddingWithoutAffectingOtherEntities)
 {
     auto                      scene  = std::make_unique<Scene>();
@@ -59,6 +86,105 @@ TEST(SceneTest, RecycledSlotsRejectOldHandlesWithoutChangingTheNewEntity)
     ASSERT_NE(component, nullptr);
     EXPECT_TRUE(component->isVisible);
     EXPECT_EQ(scene->GetEntityAtIndex(replacement.index).version, replacement.version);
+}
+
+TEST(SceneTest, RepeatedWritesShareOneDirtyEntryAndClearingAllowsNewWrites)
+{
+    auto       scene  = std::make_unique<Scene>();
+    auto const entity = scene->activeCamera;
+    EXPECT_NE(scene->GetComponent<TransformComponent>(entity), nullptr);
+    EXPECT_TRUE(scene->GetDirtyEntities().empty());
+
+    ASSERT_NE(scene->GetMutableComponent<TransformComponent>(entity), nullptr);
+    ASSERT_NE(scene->GetMutableComponent<CameraComponent>(entity), nullptr);
+    ASSERT_NE(scene->GetMutableComponent<TransformComponent>(entity), nullptr);
+
+    auto dirty = scene->GetDirtyEntities();
+    ASSERT_EQ(dirty.size(), 1U);
+    EXPECT_TRUE(dirty.front().handle == entity);
+    EXPECT_EQ(dirty.front().componentMask.count(), 2U);
+    EXPECT_TRUE(dirty.front().componentMask.test(static_cast<std::size_t>(ComponentType::kTransform)));
+    EXPECT_TRUE(dirty.front().componentMask.test(static_cast<std::size_t>(ComponentType::kCamera)));
+
+    scene->ClearDirtyEntities();
+    EXPECT_TRUE(scene->GetDirtyEntities().empty());
+
+    ASSERT_NE(scene->GetMutableComponent<CameraComponent>(entity), nullptr);
+    dirty = scene->GetDirtyEntities();
+    ASSERT_EQ(dirty.size(), 1U);
+    EXPECT_EQ(dirty.front().componentMask.count(), 1U);
+    EXPECT_TRUE(dirty.front().componentMask.test(static_cast<std::size_t>(ComponentType::kCamera)));
+}
+
+TEST(SceneTest, RemovingDirtyEntriesKeepsLookupValidForSurvivorsAndRecycledSlots)
+{
+    auto       scene    = std::make_unique<Scene>();
+    auto const retired  = scene->NewEntity();
+    auto const survivor = scene->NewEntity();
+    for (auto entity : {retired, survivor})
+    {
+        ASSERT_NE(scene->AddComponent(entity, VisibilityComponent{}), nullptr);
+        ASSERT_NE(scene->GetMutableComponent<VisibilityComponent>(entity), nullptr);
+    }
+
+    ASSERT_TRUE(scene->RetireEntity(retired));
+    ASSERT_NE(scene->GetMutableComponent<VisibilityComponent>(survivor), nullptr);
+    ASSERT_EQ(scene->GetDirtyEntities().size(), 1U);
+    EXPECT_TRUE(scene->GetDirtyEntities().front().handle == survivor);
+
+    auto const replacement = scene->NewEntity();
+    ASSERT_EQ(replacement.index, retired.index);
+    ASSERT_NE(replacement.version, retired.version);
+    ASSERT_NE(scene->AddComponent(replacement, VisibilityComponent{}), nullptr);
+    ASSERT_NE(scene->GetMutableComponent<VisibilityComponent>(replacement), nullptr);
+    ASSERT_TRUE(scene->RemoveComponent(survivor, ComponentType::kVisibility));
+    ASSERT_EQ(scene->GetDirtyEntities().size(), 1U);
+    EXPECT_TRUE(scene->GetDirtyEntities().front().handle == replacement);
+}
+
+TEST(SceneTest, MeshInstancesFollowComponentRemovalAndRecycledEntitySlots)
+{
+    auto                 scene = std::make_unique<Scene>();
+    DirtyTransformSystem system;
+    auto const           parent = scene->NewEntity();
+    auto const           child  = scene->NewEntity(parent);
+
+    ASSERT_NE(scene->AddComponent(child, TransformComponent{.position = {1.0F, 2.0F, 3.0F}}), nullptr);
+    system.Update(scene.get());
+    auto const first = scene->GetMeshInstances()[child.index];
+    EXPECT_EQ(first.parentId, parent.index);
+    EXPECT_EQ(first.position, (glm::vec3{1.0F, 2.0F, 3.0F}));
+
+    auto* transform = scene->GetMutableComponent<TransformComponent>(child);
+    ASSERT_NE(transform, nullptr);
+    transform->position.x = 4.0F;
+    system.Update(scene.get());
+    scene->ClearDirtyEntities();
+    EXPECT_EQ(scene->GetMeshInstances()[child.index].position.x, 4.0F);
+    auto const initialUploads = scene->ConsumeInstanceChanges();
+    EXPECT_EQ(std::ranges::count(initialUploads, child.index), 1);
+
+    ASSERT_TRUE(scene->RemoveComponent(child, ComponentType::kTransform));
+    system.Update(scene.get());
+    EXPECT_EQ(scene->GetMeshInstances()[child.index].position, glm::vec3{0.0F});
+    EXPECT_EQ(scene->GetMeshInstances()[child.index].parentId, parent.index);
+
+    ASSERT_TRUE(scene->RetireEntity(parent));
+    auto const replacement = scene->NewEntity();
+    ASSERT_EQ(replacement.index, child.index);
+    ASSERT_NE(replacement.version, child.version);
+    ASSERT_NE(scene->AddComponent(replacement, TransformComponent{.position = {5.0F, 0.0F, 0.0F}}), nullptr);
+    system.Update(scene.get());
+    EXPECT_EQ(scene->GetMeshInstances()[parent.index].parentId, rendering::kRootParentId);
+    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].position.x, 5.0F);
+    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].parentId, scene->sceneRoot.index);
+
+    ASSERT_TRUE(scene->RetireEntity(replacement));
+    system.Update(scene.get());
+    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].position, glm::vec3{0.0F});
+    auto const finalUploads = scene->ConsumeInstanceChanges();
+    EXPECT_EQ(std::ranges::count(finalUploads, replacement.index), 1);
+    EXPECT_TRUE(scene->ConsumeInstanceChanges().empty());
 }
 
 TEST(SceneTest, ActiveCameraSelectionRejectsEntitiesWithoutCameraComponents)

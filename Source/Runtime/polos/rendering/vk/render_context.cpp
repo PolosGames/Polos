@@ -5,13 +5,11 @@
 
 #include "polos/rendering/vk/render_context.hpp"
 
-#include "polos/gui/backend.hpp"
-
 #include "polos/communication/event_bus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
+#include "polos/gui/backend.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/cache/pipeline_cache.hpp"
-#include "polos/rendering/cache/shader_cache.hpp"
+#include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/compositor/render_compositor.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
@@ -58,10 +56,9 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     mContext          = std::make_unique<VulkanContext>();
     mDevice           = std::make_unique<VulkanDevice>();
     mSwapchain        = std::make_unique<VulkanSwapchain>();
-    mShaderCache      = std::make_unique<ShaderCache>();
-    mPipelineCache    = std::make_unique<PipelineCache>();
     mTextureCache     = std::make_unique<TextureCache>();
     mRenderCompositor = std::make_unique<RenderCompositor>();
+    mMeshCache        = std::make_unique<MeshCache>();
 
     // Supporting resources share the lifecycle order of the subsystems that use them.
     mSubsystems = {
@@ -105,30 +102,14 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
                 };
             }),
         RegisterSubsystem(
-            *mPipelineCache,
-            [] {
-                return PipelineCache::CreationDetails{};
-            }),
-        RegisterSubsystem(
-            *mShaderCache,
-            [] {
-                return ShaderCache::CreationDetails{
-                    .shaderFiles = {
-                        {
-                            .stage      = ShaderStage::kVertex,
-                            .resourceId = "shader.quad.vertex"_sid,
-                        },
-                        {
-                            .stage      = ShaderStage::kFragment,
-                            .resourceId = "shader.quad.fragment"_sid,
-                        },
-                    },
-                };
-            }),
-        RegisterSubsystem(
             *mTextureCache,
             [] {
                 return TextureCache::CreationDetails{};
+            }),
+        RegisterSubsystem(
+            *mMeshCache,
+            [] {
+                return MeshCache::CreationDetails{};
             }),
         SubsystemEntry{
             .createFunc =
@@ -140,10 +121,8 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
                     destroyFrameResources();
                 },
         },
-        RegisterSubsystem(*mRenderCompositor, [this] {
-            return RenderCompositor::CreationDetails{
-                .context = *this,
-            };
+        RegisterSubsystem(*mRenderCompositor, [] {
+            return RenderCompositor::CreationDetails{};
         }),
     };
 
@@ -286,9 +265,10 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
     return cur_cmd_buf;
 }
 
-auto RenderContext::EndFrame() -> void
+auto RenderContext::EndFrame() -> FrameStatistics
 {
-    mRenderCompositor->Record(mFrameData[mCurrentFrameIndex]);
+    FrameStatistics statistics;
+    statistics.drawCalls = mRenderCompositor->Record(mFrameData[mCurrentFrameIndex]);
 
     PL_ASSERT(
         vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex]) == VK_SUCCESS,
@@ -321,16 +301,8 @@ auto RenderContext::EndFrame() -> void
     }
 
     mCurrentFrameIndex = (mCurrentFrameIndex + 1) % Settings::kMaxFramesInFlight;
-}
 
-auto RenderContext::GetShaderCache() -> ShaderCache&
-{
-    return *sRenderContext->mShaderCache;
-}
-
-auto RenderContext::GetPipelineCache() -> PipelineCache&
-{
-    return *sRenderContext->mPipelineCache;
+    return statistics;
 }
 
 VkCommandBuffer RenderContext::BeginSingleTimeCommands()
@@ -500,8 +472,7 @@ auto RenderContext::Shutdown() -> Result<void>
 
     mRenderCompositor.reset();
     mTextureCache.reset();
-    mShaderCache.reset();
-    mPipelineCache.reset();
+    mMeshCache.reset();
     mSwapchain.reset();
     mDevice.reset();
     mContext.reset();

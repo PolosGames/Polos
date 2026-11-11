@@ -8,8 +8,8 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/platform/glfw_window_surface.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
-#include "polos/rendering/vk/common.hpp"
-#include "polos/rendering/vk/settings.hpp"
+#include "polos/rendering/settings.hpp"
+#include "polos/rendering/vk/vulkan_utils.hpp"
 
 #include <algorithm>
 #include <string>
@@ -122,9 +122,9 @@ auto VulkanContext::Create(CreationDetails const& tDetails) -> Result<void>
         .pNext                   = Settings::kEnableValidationLayers ? &debug_info : nullptr,
         .flags                   = 0U,
         .pApplicationInfo        = &app,
-        .enabledLayerCount       = VK_SIZE_CAST(mLayers.size()),
+        .enabledLayerCount       = ToVkSize(mLayers.size()),
         .ppEnabledLayerNames     = mLayers.data(),
-        .enabledExtensionCount   = VK_SIZE_CAST(mExtensions.size()),
+        .enabledExtensionCount   = ToVkSize(mExtensions.size()),
         .ppEnabledExtensionNames = mExtensions.data(),// provides VK_KHR_swapchain
     };
 
