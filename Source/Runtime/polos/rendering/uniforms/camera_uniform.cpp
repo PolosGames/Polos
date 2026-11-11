@@ -11,10 +11,10 @@
 namespace polos::rendering
 {
 auto GetCameraUniform(
-    ecs::CameraComponent*    tCamera,
-    ecs::TransformComponent* tTransform,
-    std::uint32_t const      tScWidth,
-    std::uint32_t const      tScHeight) -> CameraUniform
+    ecs::CameraComponent const*    tCamera,
+    ecs::TransformComponent const* tTransform,
+    std::uint32_t const            tScWidth,
+    std::uint32_t const            tScHeight) -> CameraUniform
 {
     // Compute forward vector from pitch and yaw
     glm::quat const pitch_quat = glm::angleAxis(glm::radians(tTransform->rotation.x), glm::vec3(1.0F, 0.0F, 0.0F));

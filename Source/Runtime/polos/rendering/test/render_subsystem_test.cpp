@@ -3,8 +3,7 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/rendering/cache/pipeline_cache.hpp"
-#include "polos/rendering/cache/shader_cache.hpp"
+#include "polos/rendering/compositor/render_compositor.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/render_subsystem.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
@@ -25,8 +24,7 @@ namespace
 static_assert(RenderSubsystem<VulkanContext>);
 static_assert(RenderSubsystem<VulkanDevice>);
 static_assert(RenderSubsystem<VulkanSwapchain>);
-static_assert(RenderSubsystem<ShaderCache>);
-static_assert(RenderSubsystem<PipelineCache>);
+static_assert(RenderSubsystem<RenderCompositor>);
 static_assert(RenderSubsystem<TextureCache>);
 static_assert(!RenderSubsystem<int>);
 

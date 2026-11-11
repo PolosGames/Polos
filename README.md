@@ -42,22 +42,24 @@ advance it or modify the tracked semantic version.
 
 ### Resources
 
-Resources load from `Resources` beside the executable. Stable resource IDs and relative
-paths are listed in `Source/Resource/resources.json`; see the
-[resource loading guide](Source/Runtime/polos/resource/README.md) for lookup and caching rules.
+Resources load from `Resources` beside the executable. The engine catalog lives in
+`Source/Resources/resources.json`. The sandbox keeps its models, textures, and catalog
+in `Examples/sandbox/Resources`. The build combines both catalogs when packaging the
+sandbox. See the [resource loading guide](Source/Runtime/polos/resource/README.md) for
+lookup and caching rules.
+
+Run the sandbox with `./Scripts/build_and_run.sh run linux-debug`.
 
 ### Nightly builds
 
-The `Nightly dummy` GitHub Actions workflow builds Linux x64 Release from the repository's default branch
+The `Nightly sandbox` GitHub Actions workflow builds Linux x64 Release from the repository's default branch
 (currently `master`)
-at 00:17 UTC (03:17 Istanbul) each day, runs the unit tests, and publishes the dummy
-example, engine libraries, shaders, textures, and checksums as a GitHub prerelease.
+at 00:17 UTC (03:17 Istanbul) each day, runs the unit tests, and publishes the sandbox,
+engine libraries, resources, and checksums as a GitHub prerelease.
 Tags use `v<VERSION>-nightly.<YYYYMMDD>.<run>.<attempt>` and point to the exact built
 commit. It can also be dispatched manually from the default branch; other refs are skipped.
 It follows the default branch automatically if it is renamed to `main`.
 The workflow needs to be on the repository's default branch for scheduled runs.
 
-Extract the archive and run `./dummy` from its directory with a Vulkan 1.3 capable
-driver and a desktop session. Optional model resources under `Source/Resource/Models`
-are included when present; the Suzanne model currently referenced by the dummy is
-not checked into the repository.
+Extract the archive and run `./sandbox` from its directory with a Vulkan 1.3 capable
+driver and a desktop session.

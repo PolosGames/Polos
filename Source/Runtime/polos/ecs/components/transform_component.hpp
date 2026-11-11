@@ -9,6 +9,7 @@
 #include "polos/ecs/component.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace polos::ecs
 {
@@ -19,6 +20,8 @@ struct TransformComponent
     glm::vec3 position{0.0F, 0.0F, 0.0F};
     glm::vec3 rotation{0.0F, 0.0F, 0.0F};
     glm::vec3 scale{1.0F, 1.0F, 1.0F};
+
+    glm::quat quatRotation;
 };
 }// namespace polos::ecs
 

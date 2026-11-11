@@ -43,7 +43,8 @@ struct EntityData
     std::bitset<kMaxComponents> componentMask;
 };
 
-using Entity = EntityData;
+using Entity      = EntityData;
+using DirtyEntity = EntityData;
 
 struct SerializedEntity
 {

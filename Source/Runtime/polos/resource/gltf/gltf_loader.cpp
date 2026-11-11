@@ -7,21 +7,22 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/resource/model.hpp"
-#include "polos/resource/resource_error_domain.hpp"
+#include "polos/resource/resource_manager.hpp"
+#include "polos/utils/constexpr_map.hpp"
+#include "polos/utils/pair.hpp"
 
 #include <tiny_gltf_v3.h>
 
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <limits>
 #include <span>
-#include <utility>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace polos::resource::model
 {
@@ -29,335 +30,144 @@ namespace polos::resource::model
 namespace
 {
 
-struct LoadContext
+auto ToSv(tg3_str const& tStr) -> std::string_view
 {
-    Model&           model;
-    tg3_model const& gltf;
-};
-
-struct Semantic
-{
-    std::string_view name;
-    std::int32_t     type;
-    std::size_t      offset;
-};
-
-constexpr std::array<Semantic, 5U> kSupportedSemantics{
-    Semantic{
-        .name   = "POSITION",
-        .type   = TG3_TYPE_VEC3,
-        .offset = offsetof(rendering::PrimitiveVertex, position),
-    },
-    Semantic{
-        .name   = "NORMAL",
-        .type   = TG3_TYPE_VEC3,
-        .offset = offsetof(rendering::PrimitiveVertex, normal),
-    },
-    Semantic{
-        .name   = "TANGENT",
-        .type   = TG3_TYPE_VEC4,
-        .offset = offsetof(rendering::PrimitiveVertex, tangent),
-    },
-    Semantic{
-        .name   = "TEXCOORD_0",
-        .type   = TG3_TYPE_VEC2,
-        .offset = offsetof(rendering::PrimitiveVertex, texCoord),
-    },
-    Semantic{
-        .name   = "COLOR_0",
-        .type   = TG3_TYPE_VEC4,
-        .offset = offsetof(rendering::PrimitiveVertex, color),
-    },
-};
-
-struct AccessorData
-{
-    tg3_accessor const*           accessor;
-    std::span<std::uint8_t const> bytes;
-    std::size_t                   stride;
-    std::size_t                   components;
-    std::size_t                   componentSize;
-};
-
-// Validate all ranges before forming pointers or allocating destination vertices.
-auto GetAccessorData(LoadContext const& tContext, std::int32_t tIndex) -> Result<AccessorData>
-{
-    auto const& gltf = tContext.gltf;
-    if (tIndex < 0 || std::cmp_greater_equal(tIndex, gltf.accessors_count))
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfAccessorIndex};
-    }
-
-    auto const& accessor = gltf.accessors[static_cast<std::size_t>(tIndex)];
-    if (accessor.sparse.is_sparse)
-    {
-        return ErrorType{ResourceErrc::kUnsupportedGltfSparseAccessor};
-    }
-    if (accessor.buffer_view < 0 || std::cmp_greater_equal(accessor.buffer_view, gltf.buffer_views_count))
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfBufferViewIndex};
-    }
-
-    auto const& view = gltf.buffer_views[static_cast<std::size_t>(accessor.buffer_view)];
-    if (view.buffer < 0 || std::cmp_greater_equal(view.buffer, gltf.buffers_count))
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfBufferIndex};
-    }
-
-    auto const& buffer = gltf.buffers[static_cast<std::size_t>(view.buffer)].data;
-    if (std::cmp_greater(buffer.count, std::numeric_limits<std::size_t>::max()) || view.byte_offset > buffer.count ||
-        view.byte_length > buffer.count - view.byte_offset || accessor.byte_offset > view.byte_length ||
-        accessor.count == 0 || buffer.data == nullptr)
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfBufferRange};
-    }
-
-    std::size_t components{0U};
-    switch (accessor.type)
-    {
-        case TG3_TYPE_SCALAR: components = 1U; break;
-        case TG3_TYPE_VEC2: components = 2U; break;
-        case TG3_TYPE_VEC3: components = 3U; break;
-        case TG3_TYPE_VEC4: components = 4U; break;
-        default: return ErrorType{ResourceErrc::kUnsupportedGltfAccessorType};
-    }
-
-    std::size_t componentSize{0U};
-    switch (accessor.component_type)
-    {
-        case TG3_COMPONENT_TYPE_UNSIGNED_BYTE: componentSize = 1U; break;
-        case TG3_COMPONENT_TYPE_UNSIGNED_SHORT: componentSize = 2U; break;
-        case TG3_COMPONENT_TYPE_UNSIGNED_INT:
-        case TG3_COMPONENT_TYPE_FLOAT: componentSize = 4U; break;
-        default: return ErrorType{ResourceErrc::kUnsupportedGltfComponentType};
-    }
-
-    std::size_t const   elementSize = components * componentSize;
-    std::size_t const   stride      = view.byte_stride != 0 ? view.byte_stride : elementSize;
-    std::uint64_t const available   = view.byte_length - accessor.byte_offset;
-
-    // Division avoids overflowing (count - 1) * stride on malformed input.
-    if (stride < elementSize || stride % componentSize != 0 || available < elementSize ||
-        accessor.count - 1U > (available - elementSize) / stride)
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfBufferRange};
-    }
-
-    auto const offset = view.byte_offset + accessor.byte_offset;
-    return AccessorData{
-        .accessor      = &accessor,
-        .bytes         = std::span{buffer.data + offset, static_cast<std::size_t>(available)},
-        .stride        = stride,
-        .components    = components,
-        .componentSize = componentSize,
-    };
+    return tStr.len == 0 ? std::string_view{} : std::string_view(tStr.data, tStr.len);
 }
 
-// glTF components are little-endian; byte reads also avoid alignment/aliasing issues.
-auto ReadUnsigned(std::uint8_t const* tBytes, std::size_t tSize) -> std::uint32_t
+using FilterPair = utils::Pair<VkFilter, VkSamplerMipmapMode>;
+auto FindFilterPair(int32_t const tFilter) -> FilterPair
 {
-    std::uint32_t value{};
-    for (std::size_t i = 0; i < tSize; ++i) value |= static_cast<std::uint32_t>(tBytes[i]) << (i * 8U);
-    return value;
-}
-
-auto CreateMaterial(LoadContext const& tContext, tg3_primitive const& tPrimitive) -> Result<Material>
-{
-    // TODO(sorbatdev): Only basic color now, texture later.
-    if (-1 != tPrimitive.material)
+    switch (tFilter)
     {
-        if (tPrimitive.material < 0 || std::cmp_greater_equal(tPrimitive.material, tContext.gltf.materials_count))
-        {
-            LogError("glTF primitive references invalid material index {}", tPrimitive.material);
-            return ErrorType{ResourceErrc::kInvalidGltfMaterialIndex};
-        }
-
-        auto const& material = tContext.gltf.materials[static_cast<std::size_t>(tPrimitive.material)];
-        return Material{
-            .baseColor = std::to_array(material.pbr_metallic_roughness.base_color_factor),
-            .metallic  = material.pbr_metallic_roughness.metallic_factor,
-            .roughness = material.pbr_metallic_roughness.roughness_factor,
-        };
+        case TG3_TEXTURE_FILTER_NEAREST: return {.first = VK_FILTER_NEAREST, .second = VK_SAMPLER_MIPMAP_MODE_NEAREST};
+        case TG3_TEXTURE_FILTER_LINEAR: return {.first = VK_FILTER_LINEAR, .second = VK_SAMPLER_MIPMAP_MODE_LINEAR};
+        case TG3_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+            return {.first = VK_FILTER_NEAREST, .second = VK_SAMPLER_MIPMAP_MODE_NEAREST};
+        case TG3_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
+            return {.first = VK_FILTER_LINEAR, .second = VK_SAMPLER_MIPMAP_MODE_NEAREST};
+        case TG3_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
+            return {.first = VK_FILTER_NEAREST, .second = VK_SAMPLER_MIPMAP_MODE_LINEAR};
+        case TG3_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:
+        default: return {.first = VK_FILTER_LINEAR, .second = VK_SAMPLER_MIPMAP_MODE_LINEAR};
     }
-
-    return Material{
-        .baseColor = {1.0, 1.0, 1.0, 1.0},
-        .metallic  = 1.0,
-        .roughness = 1.0,
-    };
 }
 
-auto LoadPrimitive(LoadContext& tContext, Primitive& tPrimitive, tg3_primitive const& tGltfPrimitive) -> Result<void>
+auto FindTextureWrap(int32_t tWrap) -> VkSamplerAddressMode
 {
-    auto const attributes = std::span(tGltfPrimitive.attributes, tGltfPrimitive.attributes_count);
-    auto const position   = std::ranges::find_if(attributes, [](auto const& tAttribute) {
-        return std::string_view(tAttribute.key.data, tAttribute.key.len) == "POSITION";
+    switch (tWrap)
+    {
+        case TG3_TEXTURE_WRAP_CLAMP_TO_EDGE: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case TG3_TEXTURE_WRAP_MIRRORED_REPEAT: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case TG3_TEXTURE_WRAP_REPEAT:
+        default: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    }
+}
+
+using namespace std::string_view_literals;
+constexpr utils::ConstexprMap kAlphaModeLookup(
+    std::array<utils::Pair<std::string_view, AlphaMode>, 3U>{
+        utils::MakePair("OPAQUE"sv, AlphaMode::kOpaque),
+        utils::MakePair("MASK"sv, AlphaMode::kMask),
+        utils::MakePair("BLEND"sv, AlphaMode::kBlend),
     });
-    if (position == attributes.end())
-    {
-        LogError("Position attribute not found in primitive");
-        return ErrorType{ResourceErrc::kFailedLoadModel};
-    }
 
-    auto const positions = GetAccessorData(tContext, position->value);
-    if (!positions.has_value())
+auto CheckBufferSources(tg3_model const& tGltf) -> bool
+{
+    for (auto const& buffer : std::span(tGltf.buffers, tGltf.buffers_count))
     {
-        return ErrorType{positions.error()};
-    }
-
-    auto const& positionAccessor = *positions->accessor;
-    if (positionAccessor.type != TG3_TYPE_VEC3)
-    {
-        return ErrorType{ResourceErrc::kUnsupportedGltfAccessorType};
-    }
-    if (positionAccessor.component_type != TG3_COMPONENT_TYPE_FLOAT || positionAccessor.normalized)
-    {
-        return ErrorType{ResourceErrc::kUnsupportedGltfComponentType};
-    }
-
-    Stream stream;
-    if (positionAccessor.count > stream.data.max_size())
-    {
-        return ErrorType{ResourceErrc::kInvalidGltfBufferRange};
-    }
-
-    stream.data.resize(static_cast<std::size_t>(positionAccessor.count));
-    auto destination = std::as_writable_bytes(std::span{stream.data});
-
-    for (auto const& attribute : attributes)
-    {
-        std::string_view const name{attribute.key.data, attribute.key.len};
-        auto const             semantic = std::ranges::find(kSupportedSemantics, name, &Semantic::name);
-        if (semantic == kSupportedSemantics.end())
+        if (buffer.data.data == nullptr || buffer.data.count == 0)
         {
-            LogWarn("Unsupported Vertex attrib: {}", name);
+            LogError("glTF buffer data is missing.");
+            return false;
+        }
+    }
+
+    for (auto const& accessor : std::span(tGltf.accessors, tGltf.accessors_count))
+    {
+        if (accessor.sparse.is_sparse || accessor.buffer_view < 0)
+        {
+            LogError("Sparse accessors and accessors without a buffer view are not supported.");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+auto LoadTextures(tg3_model const& tGltf, std::filesystem::path const& tDirectory, std::span<Texture> tTextures) -> bool
+{
+    for (std::size_t i{0}; i < tTextures.size(); ++i)
+    {
+        auto const& texture = tGltf.textures[i];
+        if (texture.source < 0)
+        {
             continue;
         }
 
-        auto const source = GetAccessorData(tContext, attribute.value);
-        if (!source.has_value())
+        auto const& image = tGltf.images[texture.source];
+        if (image.buffer_view >= 0)
         {
-            return ErrorType{source.error()};
+            LogError("Images stored in buffer views are not supported.");
+            return false;
         }
 
-        auto const& accessor = *source->accessor;
-        if (accessor.count != positionAccessor.count)
+        auto const imagePath = tDirectory / std::filesystem::path(ToSv(image.uri));
+        auto&      loaded    = tTextures[i];
+        loaded.resourceId    = utils::StrHash64("texture." + imagePath.stem().string());
+        if (!ResourceManager::Instance().LoadImage(loaded.resourceId, imagePath))
         {
-            return ErrorType{ResourceErrc::kFailedLoadModel};
-        }
-        if (accessor.type != semantic->type)
-        {
-            if (name != "COLOR_0" || accessor.type != TG3_TYPE_VEC3)
-            {
-                return ErrorType{ResourceErrc::kUnsupportedGltfAccessorType};
-            }
+            LogError("Failed to load texture at [{}]", imagePath.string());
+            return false;
         }
 
-        bool const isFloat = accessor.component_type == TG3_COMPONENT_TYPE_FLOAT;
-        bool const isNormalizedInteger =
-            accessor.normalized && (accessor.component_type == TG3_COMPONENT_TYPE_UNSIGNED_BYTE ||
-                                    accessor.component_type == TG3_COMPONENT_TYPE_UNSIGNED_SHORT);
-        if (isFloat ? accessor.normalized != 0 : !(isNormalizedInteger && (name == "COLOR_0" || name == "TEXCOORD_0")))
+        if (texture.sampler >= 0)
         {
-            return ErrorType{ResourceErrc::kUnsupportedGltfComponentType};
-        }
-
-        for (std::size_t i = 0; i < stream.data.size(); ++i)
-        {
-            auto const* element = source->bytes.data() + i * source->stride;
-            for (std::size_t component = 0; component < source->components; ++component)
-            {
-                auto const  bits  = ReadUnsigned(element + component * source->componentSize, source->componentSize);
-                float const value = isFloat
-                                      ? std::bit_cast<float>(bits)
-                                      : static_cast<float>(bits) / (source->componentSize == 1U ? 255.0F : 65535.0F);
-                if (!std::isfinite(value))
-                {
-                    return ErrorType{ResourceErrc::kFailedLoadModel};
-                }
-                std::memcpy(
-                    destination.data() + i * sizeof(rendering::PrimitiveVertex) + semantic->offset +
-                        component * sizeof(float),
-                    &value,
-                    sizeof(value));
-            }
+            auto const& sampler   = tGltf.samplers[texture.sampler];
+            auto const  minFilter = FindFilterPair(sampler.min_filter);
+            loaded.samplerDetails = {
+                .minFilter    = minFilter.first,
+                .magFilter    = FindFilterPair(sampler.mag_filter).first,
+                .mipmap       = minFilter.second,
+                .addressModeU = FindTextureWrap(sampler.wrap_s),
+                .addressModeV = FindTextureWrap(sampler.wrap_t),
+            };
         }
     }
 
-    IndexStream indexStream;
-    bool const  hasIndices = tGltfPrimitive.indices != -1;
-    if (hasIndices)
-    {
-        auto const source = GetAccessorData(tContext, tGltfPrimitive.indices);
-        if (!source.has_value())
-        {
-            return ErrorType{source.error()};
-        }
-
-        auto const& accessor = *source->accessor;
-        if (accessor.type != TG3_TYPE_SCALAR)
-        {
-            return ErrorType{ResourceErrc::kUnsupportedGltfAccessorType};
-        }
-        if (accessor.normalized || accessor.component_type == TG3_COMPONENT_TYPE_FLOAT)
-        {
-            return ErrorType{ResourceErrc::kUnsupportedGltfComponentType};
-        }
-
-        auto const& view = tContext.gltf.buffer_views[static_cast<std::size_t>(accessor.buffer_view)];
-        if (view.byte_stride != 0 || std::cmp_greater(accessor.count, indexStream.data.max_size()))
-        {
-            return ErrorType{ResourceErrc::kInvalidGltfBufferRange};
-        }
-
-        indexStream.data.reserve(static_cast<std::size_t>(accessor.count));
-        auto const restartIndex = source->componentSize == 4U
-                                    ? std::numeric_limits<std::uint32_t>::max()
-                                    : (std::uint32_t{1U} << (source->componentSize * 8U)) - 1U;
-        for (std::size_t i = 0; i < static_cast<std::size_t>(accessor.count); ++i)
-        {
-            auto const index = ReadUnsigned(source->bytes.data() + i * source->stride, source->componentSize);
-            if (index >= positionAccessor.count || index == restartIndex)
-            {
-                return ErrorType{ResourceErrc::kFailedLoadModel};
-            }
-            indexStream.data.push_back(index);
-        }
-    }
-
-    auto const material = CreateMaterial(tContext, tGltfPrimitive);
-    if (!material.has_value())
-    {
-        return ErrorType{material.error()};
-    }
-
-    // Publish only completely decoded primitives.
-    tPrimitive.attributes = tContext.model.streams.size();
-    tContext.model.streams.push_back(std::move(stream));
-    tPrimitive.indices = std::numeric_limits<std::size_t>::max();
-    if (hasIndices)
-    {
-        tPrimitive.indices = tContext.model.indexStreams.size();
-        tContext.model.indexStreams.push_back(std::move(indexStream));
-    }
-    tPrimitive.material = *material;
-    return {};
+    return true;
 }
 
-auto LoadMesh(LoadContext& tContext, Mesh& tMesh, tg3_mesh const& tGltfMesh) -> Result<void>
+auto LoadMaterials(tg3_model const& tGltf, std::span<Texture const> tTextures) -> std::vector<Material>
 {
-    tMesh.name = std::string(tGltfMesh.name.data, tGltfMesh.name.len);
-    tMesh.primitives.reserve(tGltfMesh.primitives_count);
+    auto const textureOrDefault = [&](std::int32_t tIndex) {
+        return tIndex >= 0 ? tTextures[static_cast<std::size_t>(tIndex)] : Texture{};
+    };
+    auto const toFloat = [](double tValue) {
+        return static_cast<float>(tValue);
+    };
 
-    for (auto const& primitive : std::span<tg3_primitive const>(tGltfMesh.primitives, tGltfMesh.primitives_count))
+    std::vector<Material> materials(tGltf.materials_count);
+    for (std::size_t i{0}; i < materials.size(); ++i)
     {
-        if (auto result = LoadPrimitive(tContext, tMesh.primitives.emplace_back(), primitive); !result.has_value())
-        {
-            return ErrorType{result.error()};
-        }
+        auto const& source   = tGltf.materials[i];
+        auto const& pbr      = source.pbr_metallic_roughness;
+        auto&       material = materials[i];
+
+        std::ranges::transform(source.emissive_factor, material.emissiveFactor.begin(), toFloat);
+        std::ranges::transform(pbr.base_color_factor, material.baseColorFactor.begin(), toFloat);
+        material.alphaMode                = *kAlphaModeLookup.at(ToSv(source.alpha_mode));
+        material.alphaCutoff              = static_cast<float>(source.alpha_cutoff);
+        material.baseColorTexture         = textureOrDefault(pbr.base_color_texture.index);
+        material.metallicFactor           = static_cast<float>(pbr.metallic_factor);
+        material.roughnessFactor          = static_cast<float>(pbr.roughness_factor);
+        material.metallicRoughnessTexture = textureOrDefault(pbr.metallic_roughness_texture.index);
+        material.normalTexture            = textureOrDefault(source.normal_texture.index);
+        material.occlusionTexture         = textureOrDefault(source.occlusion_texture.index);
+        material.emissiveTexture          = textureOrDefault(source.emissive_texture.index);
     }
 
-    return {};
+    return materials;
 }
 
 auto LogParseErrors(tinygltf3::ErrorStack const& tErrors) -> void
@@ -369,6 +179,167 @@ auto LogParseErrors(tinygltf3::ErrorStack const& tErrors) -> void
     }
 }
 
+struct AccessorData
+{
+    std::uint8_t const* bytes;
+    std::size_t         stride;
+};
+
+auto GetAccessorData(tg3_model const& tGltf, tg3_accessor const& tAccessor) -> AccessorData
+{
+    // tinygltf has already checked the buffer references and byte ranges.
+    auto const& view   = tGltf.buffer_views[tAccessor.buffer_view];
+    auto const& buffer = tGltf.buffers[view.buffer];
+    return {
+        .bytes  = buffer.data.data + view.byte_offset + tAccessor.byte_offset,
+        .stride = static_cast<std::size_t>(tg3_accessor_byte_stride(&tAccessor, &view)),
+    };
+}
+
+// glTF components are little-endian and may be unaligned.
+auto ReadUnsigned(std::uint8_t const* tBytes, std::size_t tSize) -> std::uint32_t
+{
+    std::uint32_t value{0};
+    for (std::size_t i{0}; i < tSize; ++i)
+    {
+        value |= static_cast<std::uint32_t>(tBytes[i]) << (i * 8U);
+    }
+    return value;
+}
+
+auto FindAttribute(tg3_model const& tGltf, std::span<tg3_str_int_pair const> tAttributes, std::string_view tName)
+    -> tg3_accessor const*
+{
+    auto const attribute = std::ranges::find(tAttributes, tName, [](tg3_str_int_pair const& tAttribute) {
+        return ToSv(tAttribute.key);
+    });
+    return attribute == tAttributes.end() ? nullptr : &tGltf.accessors[attribute->value];
+}
+
+template<typename Vector>
+auto LoadAttribute(
+    tg3_model const&                      tGltf,
+    tg3_accessor const*                   tAccessor,
+    std::span<rendering::PrimitiveVertex> tVertices,
+    Vector rendering::PrimitiveVertex::* tMember) -> bool
+{
+    if (tAccessor == nullptr)
+    {
+        return true;
+    }
+
+    auto const componentCount = tg3_num_components(tAccessor->type);
+    if (tAccessor->count != tVertices.size() || componentCount > Vector::length())
+    {
+        LogError("Vertex attribute does not fit the mesh vertex layout.");
+        return false;
+    }
+
+    auto const [bytes, stride] = GetAccessorData(tGltf, *tAccessor);
+    auto const componentSize   = static_cast<std::size_t>(tg3_component_size(tAccessor->component_type));
+    auto const isFloat         = tAccessor->component_type == TG3_COMPONENT_TYPE_FLOAT;
+    auto const normalizedScale = componentSize == 1U ? 255.0F : 65535.0F;
+
+    for (std::size_t i{0}; i < tVertices.size(); ++i)
+    {
+        auto&       attribute      = tVertices[i].*tMember;
+        auto const* componentBytes = bytes + (i * stride);
+        for (glm::length_t component{0}; component < componentCount; ++component)
+        {
+            auto const value     = ReadUnsigned(componentBytes, componentSize);
+            attribute[component] = isFloat ? std::bit_cast<float>(value) : static_cast<float>(value) / normalizedScale;
+            componentBytes += componentSize;
+        }
+    }
+    return true;
+}
+
+auto LoadVertices(
+    tg3_model const&                         tGltf,
+    tg3_primitive const&                     tPrimitive,
+    std::vector<rendering::PrimitiveVertex>& tVertices) -> bool
+{
+    using rendering::PrimitiveVertex;
+
+    auto const  attributes = std::span(tPrimitive.attributes, tPrimitive.attributes_count);
+    auto const* position   = FindAttribute(tGltf, attributes, "POSITION");
+    if (position == nullptr)
+    {
+        LogError("Mesh primitive is missing POSITION.");
+        return false;
+    }
+
+    tVertices.resize(static_cast<std::size_t>(position->count));
+    auto const loadAttribute = [&](std::string_view tName, auto tMember) {
+        return LoadAttribute(tGltf, FindAttribute(tGltf, attributes, tName), tVertices, tMember);
+    };
+
+    return LoadAttribute(tGltf, position, tVertices, &PrimitiveVertex::position) &&
+           loadAttribute("NORMAL", &PrimitiveVertex::normal) && loadAttribute("TANGENT", &PrimitiveVertex::tangent) &&
+           loadAttribute("TEXCOORD_0", &PrimitiveVertex::texCoord) && loadAttribute("COLOR_0", &PrimitiveVertex::color);
+}
+
+auto LoadIndices(tg3_model const& tGltf, tg3_accessor const& tAccessor, std::vector<std::uint32_t>& tIndices) -> void
+{
+    auto const [bytes, stride] = GetAccessorData(tGltf, tAccessor);
+    auto const componentSize   = static_cast<std::size_t>(tg3_component_size(tAccessor.component_type));
+    tIndices.resize(static_cast<std::size_t>(tAccessor.count));
+    for (std::size_t i{0}; i < tIndices.size(); ++i)
+    {
+        tIndices[i] = ReadUnsigned(bytes + i * stride, componentSize);
+    }
+}
+
+auto LoadMeshParts(tg3_model const& tGltf, std::span<Material const> tMaterials, std::size_t tMeshIndex, Mesh& tMesh)
+    -> bool
+{
+    auto const& source = tGltf.meshes[tMeshIndex];
+    tMesh.name         = ToSv(source.name);
+    tMesh.parts.resize(source.primitives_count);
+
+    auto const partPrefix = "mesh." + (tMesh.name.empty() ? std::to_string(tMeshIndex) : tMesh.name) + ".part.";
+    for (std::size_t i{0}; i < tMesh.parts.size(); ++i)
+    {
+        auto const& primitive = source.primitives[i];
+        if (primitive.mode != TG3_MODE_TRIANGLES)
+        {
+            LogError("Only triangle-list mesh primitives are supported.");
+            return false;
+        }
+
+        auto& part = tMesh.parts[i];
+        part.name  = utils::StrHash64(partPrefix + std::to_string(i));
+        if (primitive.material >= 0)
+        {
+            part.material = tMaterials[static_cast<std::size_t>(primitive.material)];
+        }
+
+        if (!LoadVertices(tGltf, primitive, part.primitiveVertices))
+        {
+            return false;
+        }
+
+        if (primitive.indices >= 0)
+        {
+            LoadIndices(tGltf, tGltf.accessors[primitive.indices], part.primitiveIndices);
+        }
+    }
+
+    return true;
+}
+
+auto LoadMeshes(tg3_model const& tGltf, std::span<Material const> tMaterials, std::span<Mesh> tMeshes) -> bool
+{
+    for (std::size_t i{0}; i < tMeshes.size(); ++i)
+    {
+        if (!LoadMeshParts(tGltf, tMaterials, i, tMeshes[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 }// namespace
 
 auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
@@ -378,48 +349,36 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
     tg3_parse_options     tgOpts;
 
     tg3_parse_options_init(&tgOpts);
+    tgOpts.strictness       = TG3_STRICT;
+    tgOpts.parse_float32    = 0;
+    tgOpts.validate_indices = 1;
+    tgOpts.validate_ranges  = 1;
 
-    tg3_error_code parse_ok = tg3_parse_file(
-        tgModel.get(),
-        tgErrors.get(),
-        tPath.c_str(),
-        static_cast<std::uint32_t>(tPath.string().size()),
-        &tgOpts);
-
-    if (parse_ok != TG3_OK)
+    auto const path = tPath.string();
+    auto const parseResult =
+        tg3_parse_file(tgModel.get(), tgErrors.get(), path.c_str(), static_cast<std::uint32_t>(path.size()), &tgOpts);
+    if (parseResult != TG3_OK)
     {
-        LogError("Failed to parse the glTF model or load its external resources: '{}'", tPath.string());
         LogParseErrors(tgErrors);
         return nullptr;
     }
 
-    auto* model = new Model();
-    model->name = std::filesystem::path(tPath).stem().string();
-    model->meshes.reserve(tgModel->meshes_count);
-    LoadContext context{
-        .model = *model,
-        .gltf  = *tgModel.get(),
-    };
-
-    // 1 pass to determine stream size
-    std::size_t streamsSize{0U};
-    for (auto const& tgMesh : std::span<tg3_mesh const>(tgModel->meshes, tgModel->meshes_count))
+    auto const&          gltf = *tgModel.get();
+    std::vector<Texture> textures(gltf.textures_count);
+    if (!CheckBufferSources(gltf) || !LoadTextures(gltf, tPath.parent_path(), textures))
     {
-        streamsSize += tgMesh.primitives_count;
+        return nullptr;
     }
-    model->streams.reserve(streamsSize);
-    model->indexStreams.reserve(streamsSize);
+    auto const materials = LoadMaterials(gltf, textures);
 
-    for (auto const& tgMesh : std::span<tg3_mesh const>(tgModel->meshes, tgModel->meshes_count))
+    auto model  = std::make_unique<Model>();
+    model->name = tPath.stem().string();
+    model->meshes.resize(gltf.meshes_count);
+    if (!LoadMeshes(gltf, materials, model->meshes))
     {
-        if (auto res = LoadMesh(context, model->meshes.emplace_back(), tgMesh); !res.has_value())
-        {
-            LogError("Could not load model '{}': {}", tPath.string(), res.error());
-            return nullptr;
-        }
+        return nullptr;
     }
-
-    return std::unique_ptr<Model>(model);
+    return model;
 }
 
 }// namespace polos::resource::model

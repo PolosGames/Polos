@@ -4,7 +4,7 @@
     "dependencies": [
         {
             "name": "tinygltf",
-            "version>=": "3.0.0#1"
+            "version>=": "3.0.0#2"
         },
         "ctre",
         {
@@ -30,5 +30,10 @@
         },
         "vulkan-memory-allocator"
     ],
-    "builtin-baseline": "83956e89e656f1b95af0a03506dc7214a7d67716"
+    "builtin-baseline": "83956e89e656f1b95af0a03506dc7214a7d67716",
+    "vcpkg-configuration": {
+        "overlay-ports": [
+            "CMake/vcpkg-ports"
+        ]
+    }
 }

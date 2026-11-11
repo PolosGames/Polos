@@ -23,13 +23,15 @@ namespace polos::rendering
 class Buffer;
 
 struct CameraUniform
-{ glm::mat4 viewProj; };
+{
+    glm::mat4 viewProj;
+};
 
 auto POLOS_API GetCameraUniform(
-    ecs::CameraComponent*    tCamera,
-    ecs::TransformComponent* tTransform,
-    std::uint32_t            tScWidth,
-    std::uint32_t            tScHeight) -> CameraUniform;
+    ecs::CameraComponent const*    tCamera,
+    ecs::TransformComponent const* tTransform,
+    std::uint32_t                  tScWidth,
+    std::uint32_t                  tScHeight) -> CameraUniform;
 
 auto CreateCameraUniformBuffer() -> std::unique_ptr<Buffer>;
 }// namespace polos::rendering

@@ -55,7 +55,7 @@ Write-Host ""
 
 # --- Run the Application ---
 Write-Host "Starting application..." -ForegroundColor Green
-$ExePath = Join-Path -Path $InstallDir -ChildPath "dummy.exe"
+$ExePath = Join-Path -Path $InstallDir -ChildPath "sandbox.exe"
 
 # Check if the executable exists before trying to run it.
 if (-not (Test-Path $ExePath)) {

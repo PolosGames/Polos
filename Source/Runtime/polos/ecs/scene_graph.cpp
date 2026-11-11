@@ -5,6 +5,8 @@
 
 #include "polos/ecs/scene_graph.hpp"
 
+#include <utility>
+
 namespace polos::ecs
 {
 
@@ -48,6 +50,17 @@ auto SceneGraph::AddChild(SceneGraphHandle const tParent, EntityHandle const tEn
         mNodes[node.rightSibling].previousSibling = index;
     }
     mNodes[parent].leftChild = index;
+
+    node.layer = 1 + mNodes[parent].layer;
+
+    if (std::cmp_equal(node.layer, mObjectCountByLayer.size()))
+    {
+        mObjectCountByLayer.push_back(1);
+    }
+    else
+    {
+        ++mObjectCountByLayer[static_cast<size_t>(node.layer)];
+    }
 
     return PackSceneGraphHandle(index, mNodes[index].generation);
 }
@@ -157,6 +170,7 @@ auto SceneGraph::retireSubtree(Index const tIndex) -> std::uint32_t
     while (true)
     {
         auto& node = mNodes[current];
+
         if (node.leftChild != kInvalidIndex)
         {
             auto const child = node.leftChild;
@@ -167,6 +181,8 @@ auto SceneGraph::retireSubtree(Index const tIndex) -> std::uint32_t
 
         auto const next = node.rightSibling != kInvalidIndex ? node.rightSibling : node.parent;
         node.entity     = kInvalidEntityHandle;
+        --mObjectCountByLayer[static_cast<std::size_t>(node.layer)];
+
         // Exhausted generations stay retired so an old handle can never become valid again.
         if (node.generation != std::numeric_limits<std::uint32_t>::max())
         {

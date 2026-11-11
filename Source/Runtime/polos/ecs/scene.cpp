@@ -5,7 +5,10 @@
 
 #include "polos/ecs/scene.hpp"
 
+#include "polos/ecs/components/camera_component.hpp"
+#include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/info_component.hpp"
+#include "polos/ecs/components/transform_component.hpp"
 #include "polos/logging/log_macros.hpp"
 
 #include <glm/gtc/quaternion.hpp>
@@ -16,6 +19,10 @@ namespace polos::ecs
 {
 
 Scene::Scene(utils::string_id const tName)
+    : Scene(tName, true)
+{}
+
+Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
     : name(tName)
 {
     sceneRoot = newEntity();
@@ -26,6 +33,15 @@ Scene::Scene(utils::string_id const tName)
             .debugName   = "SceneRoot"_sid,
             .graphHandle = SceneGraphHandle{0U},
         });
+
+    if (tCreateEditorCamera)
+    {
+        auto const camera = NewEntity(sceneRoot, "Editor Camera"_sid);
+        AddComponent(camera, TransformComponent{.position = {0.0F, 0.0F, 5.0F}});
+        AddComponent(camera, CameraComponent{.nearZ = 0.1F, .farZ = 1000.0F});
+        AddComponent(camera, EditorCameraControllerComponent{});
+        SetActiveCamera(camera);
+    }
 }
 
 Scene::~Scene() = default;
@@ -63,6 +79,7 @@ auto Scene::NewEntity(EntityHandle tParent, utils::string_id const tName) -> Ent
         });
 
     ++parentInfo->childCount;
+    mInstanceChanges.push_back(child);
 
     return child;
 }
@@ -89,6 +106,8 @@ auto Scene::RetireEntity(EntityHandle const tHandle) -> bool
         auto const  handle = node.entity;
         auto&       entity = mEntities[handle.index];
 
+        mInstanceChanges.push_back(handle);
+        discardDirtyEntity(handle.index);
         entity.handle.index = kInvalidEntityIndex;
         for (std::size_t i{0}; i < kMaxComponents; ++i)
         {
@@ -181,10 +200,77 @@ auto Scene::RemoveComponent(EntityHandle const tHandle, ComponentType tCompType)
         return false;
     }
 
-    mEntities[tHandle.index].componentMask[static_cast<std::size_t>(tCompType)].flip();
-    --mComponentPools[static_cast<std::size_t>(tCompType)].mTotalComponents;
+    auto const componentIndex = static_cast<std::size_t>(tCompType);
+    mEntities[tHandle.index].componentMask.reset(componentIndex);
+    --mComponentPools[componentIndex].mTotalComponents;
+    if (tCompType == ComponentType::kTransform || tCompType == ComponentType::kMeshRenderer)
+    {
+        mInstanceChanges.push_back(tHandle);
+    }
+
+    auto const dirtyIndex = mDirtyIndexByEntity[tHandle.index];
+    if (dirtyIndex != kNoDirtyEntry && mDirtyEntities[dirtyIndex].componentMask.reset(componentIndex).none())
+    {
+        discardDirtyEntity(tHandle.index);
+    }
 
     return true;
+}
+
+auto Scene::GetDirtyEntities() const -> std::span<DirtyEntity const>
+{
+    return mDirtyEntities;
+}
+
+auto Scene::GetMeshInstances() const -> std::span<rendering::MeshInstance const>
+{
+    return {mInstanceBuffer.data(), mEntitiesHead};
+}
+
+auto Scene::ConsumeInstanceChanges() -> std::vector<EntityIndex>
+{
+    std::vector<EntityIndex> changes(mPendingInstanceUploads.begin(), mPendingInstanceUploads.end());
+    mPendingInstanceUploads.clear();
+    return changes;
+}
+
+auto Scene::ClearDirtyEntities() -> void
+{
+    for (auto const& dirty : mDirtyEntities)
+    {
+        mDirtyIndexByEntity[dirty.handle.index] = kNoDirtyEntry;
+    }
+    mDirtyEntities.clear();
+}
+
+auto Scene::markDirty(EntityHandle tHandle, ComponentType tType) -> void
+{
+    auto& dirtyIndex = mDirtyIndexByEntity[tHandle.index];
+    if (dirtyIndex == kNoDirtyEntry)
+    {
+        mDirtyEntities.push_back({.handle = tHandle, .componentMask = {}});
+        dirtyIndex = mDirtyEntities.size() - 1U;
+    }
+    mDirtyEntities[dirtyIndex].componentMask.set(static_cast<std::size_t>(tType));
+}
+
+auto Scene::discardDirtyEntity(EntityIndex tIndex) -> void
+{
+    auto& dirtyIndex = mDirtyIndexByEntity[tIndex];
+    if (dirtyIndex == kNoDirtyEntry)
+    {
+        return;
+    }
+
+    mDirtyEntities[dirtyIndex]                                   = mDirtyEntities.back();
+    mDirtyIndexByEntity[mDirtyEntities[dirtyIndex].handle.index] = dirtyIndex;
+    mDirtyEntities.pop_back();
+    dirtyIndex = kNoDirtyEntry;
+}
+
+auto Scene::isEntityDirty(EntityIndex tIndex) -> bool
+{
+    return mDirtyIndexByEntity[tIndex] != kNoDirtyEntry;
 }
 
 auto Scene::GetEntityAtIndex(EntityIndex const tIndex) const -> EntityHandle
@@ -201,6 +287,11 @@ auto Scene::GetEntityPoolSize() const -> EntityIndex
 auto Scene::GetEntityDataByIndex(EntityIndex const tIndex) const -> EntityData const*
 {
     return tIndex < mEntitiesHead ? &mEntities[tIndex] : nullptr;
+}
+
+auto Scene::GetObjectsByLayer() -> std::vector<uint32_t> const&
+{
+    return mSceneGraph.mObjectCountByLayer;
 }
 
 auto Scene::SetActiveCamera(EntityHandle tHandle) -> bool
@@ -234,6 +325,7 @@ auto Scene::newEntity() -> EntityHandle
     EntityHandle handle = kInvalidEntityHandle;
     if (mFreeIndices.empty())
     {
+        mDirtyIndexByEntity.push_back(kNoDirtyEntry);
         index  = mEntitiesHead++;
         handle = EntityHandle{.index = index, .version = 0U};
 

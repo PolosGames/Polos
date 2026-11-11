@@ -1,4 +1,6 @@
 #include "polos/ecs/components/camera_component.hpp"
+#include "polos/ecs/components/mesh_renderer_component.hpp"
+#include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
 #include "polos/ecs/view.hpp"
 
@@ -6,6 +8,7 @@
 
 #include <memory>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace polos::ecs
@@ -37,11 +40,14 @@ TEST(ViewTest, FiltersByAllRequestedComponentsAndReturnsLiveComponentPointers)
     ASSERT_TRUE(scene->RemoveComponent(removedComponent, ComponentType::kVisibility));
     ASSERT_TRUE(scene->RetireEntity(retired));
 
-    View<VisibilityComponent, CameraComponent> const view{scene.get()};
-    auto                                             iterator = view.begin();
+    View<EntityHandle, Read<VisibilityComponent>, Write<CameraComponent>> const view{scene.get()};
+    auto                                                                        iterator = view.begin();
 
     ASSERT_NE(iterator, view.end());
-    auto const [visibility, actualCamera] = *iterator;
+    auto [entity, visibility, actualCamera] = *iterator;
+    static_assert(std::is_same_v<decltype(visibility), VisibilityComponent const*>);
+    static_assert(std::is_same_v<decltype(actualCamera), CameraComponent*>);
+    ExpectEntity(entity, match);
     EXPECT_EQ(visibility, scene->GetComponent<VisibilityComponent>(match));
     EXPECT_EQ(actualCamera, scene->GetComponent<CameraComponent>(match));
     EXPECT_FALSE(visibility->isVisible);
@@ -54,13 +60,41 @@ TEST(ViewTest, FiltersByAllRequestedComponentsAndReturnsLiveComponentPointers)
     EXPECT_FLOAT_EQ(scene->GetComponent<CameraComponent>(match)->fov, 95.0F);
 }
 
+TEST(ViewTest, GroupedAccessFlattensInDeclarationOrderAndRequiresEveryComponent)
+{
+    auto       scene             = std::make_unique<Scene>();
+    auto const match             = scene->NewEntity();
+    auto const missingVisibility = scene->NewEntity();
+    for (auto entity : {match, missingVisibility})
+    {
+        ASSERT_NE(scene->AddComponent(entity, TransformComponent{}), nullptr);
+        ASSERT_NE(scene->AddComponent(entity, MeshRendererComponent{}), nullptr);
+    }
+    ASSERT_NE(scene->AddComponent(match, VisibilityComponent{}), nullptr);
+
+    View<Write<TransformComponent, MeshRendererComponent>, Read<VisibilityComponent>> const view{scene.get()};
+    auto                                                                                    iterator = view.begin();
+    ASSERT_NE(iterator, view.end());
+    auto [transform, renderer, visibility] = *iterator;
+    static_assert(std::is_same_v<decltype(transform), TransformComponent*>);
+    static_assert(std::is_same_v<decltype(renderer), MeshRendererComponent*>);
+    static_assert(std::is_same_v<decltype(visibility), VisibilityComponent const*>);
+    EXPECT_EQ(visibility, scene->GetComponent<VisibilityComponent>(match));
+
+    transform->position.x = 2.0F;
+    renderer->meshHandle  = "mesh.test"_sid;
+    EXPECT_FLOAT_EQ(scene->GetComponent<TransformComponent>(match)->position.x, 2.0F);
+    EXPECT_EQ(scene->GetComponent<MeshRendererComponent>(match)->meshHandle, "mesh.test"_sid);
+    EXPECT_EQ(++iterator, view.end());
+}
+
 TEST(ViewTest, UnfilteredViewSkipsRetiredSlotsAndExposesRecycledVersions)
 {
     auto       scene    = std::make_unique<Scene>();
     auto const retired  = scene->NewEntity();
     auto const survivor = scene->NewEntity();
     ASSERT_TRUE(scene->RetireEntity(retired));
-    View<> const view{scene.get()};
+    View<EntityHandle> const view{scene.get()};
 
     std::vector<EntityHandle> beforeReuse;
     for (auto entity : view)
@@ -68,9 +102,10 @@ TEST(ViewTest, UnfilteredViewSkipsRetiredSlotsAndExposesRecycledVersions)
         beforeReuse.push_back(entity);
     }
 
-    ASSERT_EQ(beforeReuse.size(), 2U);
+    ASSERT_EQ(beforeReuse.size(), 3U);
     ExpectEntity(beforeReuse[0], scene->sceneRoot);
-    ExpectEntity(beforeReuse[1], survivor);
+    ExpectEntity(beforeReuse[1], scene->activeCamera);
+    ExpectEntity(beforeReuse[2], survivor);
 
     auto const                replacement = scene->NewEntity();
     std::vector<EntityHandle> afterReuse;
@@ -79,18 +114,19 @@ TEST(ViewTest, UnfilteredViewSkipsRetiredSlotsAndExposesRecycledVersions)
         afterReuse.push_back(entity);
     }
 
-    ASSERT_EQ(afterReuse.size(), 3U);
+    ASSERT_EQ(afterReuse.size(), 4U);
     ExpectEntity(afterReuse[0], scene->sceneRoot);
-    ExpectEntity(afterReuse[1], replacement);
-    ExpectEntity(afterReuse[2], survivor);
+    ExpectEntity(afterReuse[1], scene->activeCamera);
+    ExpectEntity(afterReuse[2], replacement);
+    ExpectEntity(afterReuse[3], survivor);
     EXPECT_EQ(replacement.index, retired.index);
     EXPECT_NE(replacement.version, retired.version);
 }
 
 TEST(ViewTest, IteratorsSupportEmptyRangesCopiesAndPostIncrement)
 {
-    auto                        scene = std::make_unique<Scene>();
-    View<CameraComponent> const emptyView{scene.get()};
+    auto                                  scene = std::make_unique<Scene>();
+    View<Read<VisibilityComponent>> const emptyView{scene.get()};
 
     EXPECT_EQ(emptyView.begin(), emptyView.end());
     EXPECT_EQ(emptyView.cbegin(), emptyView.cend());
@@ -105,6 +141,10 @@ TEST(ViewTest, IteratorsSupportEmptyRangesCopiesAndPostIncrement)
 
     ExpectEntity(*previous, scene->sceneRoot);
     ExpectEntity(*independentCopy, scene->sceneRoot);
+    ExpectEntity(*iterator, scene->activeCamera);
+
+    ++iterator;
+
     ExpectEntity(*iterator, first);
 
     ++iterator;

@@ -1,0 +1,137 @@
+#version 450
+
+const uint kRootParentId  = 0u;
+const uint kInvalidMeshId = 0xFFFFFFFFu;
+
+struct Instance
+{
+    vec3  position;
+    uint  parentId;
+    vec4  rotation;
+    float scale;
+    uint  meshId;
+};
+
+struct IndirectCommand
+{
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    int  vertexOffset;
+    uint firstInstance;
+};
+
+layout(push_constant) uniform ComputePushConstants
+{
+    uint slotCount;
+}
+pc;
+
+// Bindings
+layout(std140, set = 0, binding = 0) uniform CameraUniform
+{
+    mat4 viewProj;
+}
+camera;
+
+layout(std430, set = 1, binding = 0) readonly buffer InputInstances
+{
+    Instance instances[];
+};
+
+layout(std430, set = 1, binding = 1) buffer IndirectCommands
+{
+    IndirectCommand commands[];
+};
+
+layout(std430, set = 2, binding = 0) writeonly buffer VisibleMatrixIndices
+{
+    uint visibleMatrixIndices[];
+};
+
+layout(std430, set = 2, binding = 1) writeonly buffer OutputMatrices
+{
+    mat4 worldMatrices[];
+};
+
+
+layout(local_size_x = 256) in;
+
+vec3 rotate_quat(vec4 q, vec3 v)
+{
+    vec3 t = 2.0 * cross(q.xyz, v);
+    return v + q.w * t + cross(q.xyz, t);
+}
+
+vec4 mul_quat(vec4 a, vec4 b)
+{
+    return vec4(a.w * b.xyz + b.w * a.xyz + cross(a.xyz, b.xyz), a.w * b.w - dot(a.xyz, b.xyz));
+}
+
+mat4 build_local_matrix(vec3 pos, vec4 q, float s)
+{
+    float qx2 = q.x + q.x;
+    float qy2 = q.y + q.y;
+    float qz2 = q.z + q.z;
+    float qxx = q.x * qx2;
+    float qyy = q.y * qy2;
+    float qzz = q.z * qz2;
+    float qxy = q.x * qy2;
+    float qxz = q.x * qz2;
+    float qyz = q.y * qz2;
+    float qwx = q.w * qx2;
+    float qwy = q.w * qy2;
+    float qwz = q.w * qz2;
+
+    mat4 m  = mat4(1.0);
+    m[0][0] = (1.0 - (qyy + qzz)) * s;
+    m[0][1] = (qxy + qwz) * s;
+    m[0][2] = (qxz - qwy) * s;
+    m[1][0] = (qxy - qwz) * s;
+    m[1][1] = (1.0 - (qxx + qzz)) * s;
+    m[1][2] = (qyz + qwx) * s;
+    m[2][0] = (qxz + qwy) * s;
+    m[2][1] = (qyz - qwx) * s;
+    m[2][2] = (1.0 - (qxx + qyy)) * s;
+    m[3][0] = pos.x;
+    m[3][1] = pos.y;
+    m[3][2] = pos.z;
+    return m;
+}
+
+void main()
+{
+    uint gIdx = gl_GlobalInvocationID.x;
+    if (gIdx == kRootParentId || gIdx >= pc.slotCount)
+        return;
+
+    Instance obj = instances[gIdx];
+
+    if (obj.meshId == kInvalidMeshId)
+        return;
+
+    vec3  accPos    = obj.position;
+    vec4  accRot    = obj.rotation;
+    float accScale  = obj.scale;
+    uint  curParent = obj.parentId;
+
+    while (curParent != kRootParentId)
+    {
+        Instance p = instances[curParent];
+        accPos     = p.position + p.scale * rotate_quat(p.rotation, accPos);
+        accRot     = mul_quat(p.rotation, accRot);
+        accScale *= p.scale;
+        curParent = p.parentId;
+    }
+
+    worldMatrices[gIdx] = build_local_matrix(accPos, accRot, accScale);
+
+    uint meshType = obj.meshId;
+
+    // Multi-Draw Indirect için instance sayısını güvenli şekilde artır
+    uint localInstanceIdx = atomicAdd(commands[meshType].instanceCount, 1);
+
+    // Çizim komutunun offset yerini kap ve indeks eşleştirmesini yap
+    uint globalMatrixOffset                  = commands[meshType].firstInstance + localInstanceIdx;
+    visibleMatrixIndices[globalMatrixOffset] = gIdx;
+}

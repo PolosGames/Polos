@@ -2,9 +2,8 @@
 // Copyright (c) 2025 Kayra Urfali
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
+#include "polos/utils/assert.hpp"
 #define VMA_IMPLEMENTATION
-
-#include "polos/rendering/vk/vulkan_device.hpp"
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
@@ -14,6 +13,8 @@
 #include "polos/rendering/vk/queue_family_indices.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
+#include "polos/rendering/vk/vulkan_device.hpp"
+#include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -66,7 +67,7 @@ auto FindQueueFamily(VkPhysicalDevice tDevice, VkSurfaceKHR tSurface, VkQueueFla
         }
     }
 
-    if (queue_index == VK_SIZE_CAST(queue_families.size()))
+    if (queue_index == ToVkSize(queue_families.size()))
     {
         LogError("No adequate queue family found for queue flags {}.", tFlags);
         return VK_QUEUE_FAMILY_IGNORED;
@@ -218,8 +219,28 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
         mDeviceProps.properties.deviceName,
         DecodeDriverVersion(mDeviceProps.properties.vendorID, mDeviceProps.properties.driverVersion));
 
-    VkPhysicalDeviceFeatures device_features;
-    vkGetPhysicalDeviceFeatures(physDevice, &device_features);
+    PL_ASSERT(
+        mDeviceProps.properties.apiVersion >= VK_API_VERSION_1_3,
+        "Vulkan 1.3 is required to enable core synchronization2.");
+
+    VkPhysicalDeviceSynchronization2Features synchronization2_features{
+        .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
+        .pNext            = nullptr,
+        .synchronization2 = VK_FALSE,
+    };
+    VkPhysicalDeviceFeatures2 device_features{
+        .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext    = &synchronization2_features,
+        .features = {},
+    };
+    vkGetPhysicalDeviceFeatures2(physDevice, &device_features);
+
+    PL_ASSERT(
+        VK_TRUE == synchronization2_features.synchronization2,
+        "The selected GPU does not support the required synchronization2 feature.");
+
+    PL_ASSERT(device_features.features.multiDrawIndirect, "multiDrawIndirect support is needed.");
+    PL_ASSERT(device_features.features.drawIndirectFirstInstance, "drawIndirectFirstInstance support is needed.");
 
     constexpr float const kQueuePrio{1.0F};
 
@@ -299,15 +320,15 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
 
     VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext                   = nullptr,
+        .pNext                   = &device_features,
         .flags                   = 0U,
-        .queueCreateInfoCount    = VK_SIZE_CAST(q_create_infos.size()),
+        .queueCreateInfoCount    = ToVkSize(q_create_infos.size()),
         .pQueueCreateInfos       = q_create_infos.data(),
         .enabledLayerCount       = 0U,     // deprecated
         .ppEnabledLayerNames     = nullptr,// deprecated
-        .enabledExtensionCount   = VK_SIZE_CAST(tInfo.enabledExtensions.size()),
+        .enabledExtensionCount   = ToVkSize(tInfo.enabledExtensions.size()),
         .ppEnabledExtensionNames = tInfo.enabledExtensions.data(),
-        .pEnabledFeatures        = &device_features,
+        .pEnabledFeatures        = nullptr,
     };
 
     CHECK_VK_SUCCESS_OR_ERR(

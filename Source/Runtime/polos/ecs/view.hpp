@@ -10,32 +10,58 @@
 #include "polos/ecs/component.hpp"
 #include "polos/ecs/view_iterator.hpp"
 
-#include <bitset>
-#include <cstddef>
+#include <tuple>
+#include <type_traits>
 
 namespace polos::ecs
 {
 
-/// Iterates tuples of component pointers for live entities containing every requested component.
-/// View<> instead iterates the handles of all live entities.
 template<Component... C>
-class View : public BaseView<ViewIterator<C...>>
+struct Read
 {
+};
+
+template<Component... C>
+struct Write
+{
+};
+
+namespace detail
+{
+template<typename T>
+    requires(Component<T> || std::same_as<T, EntityHandle>)
+auto ViewElements(std::type_identity<T>) -> std::tuple<T>;
+
+template<Component... C>
+auto ViewElements(std::type_identity<Read<C...>>) -> std::tuple<C const...>;
+
+template<Component... C>
+auto ViewElements(std::type_identity<Write<C...>>) -> std::tuple<C...>;
+
+template<typename... C>
+auto IteratorFor(std::tuple<C...>) -> ViewIterator<C...>;
+
+template<typename... Access>
+using ViewIteratorFor = decltype(IteratorFor(std::tuple_cat(ViewElements(std::type_identity<Access>{})...)));
+}// namespace detail
+
+// A handle-only view yields EntityHandle values. Other views yield tuples in
+// declaration order, with const pointers for Read and mutable pointers for Write.
+// View<EntityHandle>
+// View<EntityHandle, Read<TransformComponent>, Write<MeshRendererComponent>>
+// View<Write<TransformComponent, MeshRendererComponent>, Read<VisibilityComponent>>
+template<typename... Access>
+class View : public BaseView<detail::ViewIteratorFor<Access...>>
+{
+    using Iterator = detail::ViewIteratorFor<Access...>;
 public:
     View() = delete;
 
     explicit View(Scene* tScene)
-        : BaseView<ViewIterator<C...>>{tScene, MakeMask()}
+        : BaseView<Iterator>{tScene, Iterator::MakeMask()}
     {}
 
     ~View() override = default;
-private:
-    static auto MakeMask() -> std::bitset<kMaxComponents>
-    {
-        std::bitset<kMaxComponents> mask;
-        (mask.set(static_cast<std::size_t>(C::kType)), ...);
-        return mask;
-    }
 };
 
 }// namespace polos::ecs

@@ -7,6 +7,7 @@
 #define POLOS_ECS_SCENE_MANAGER_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/utils/pair.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <filesystem>
@@ -26,20 +27,22 @@ class Scene;
 class POLOS_API SceneManager
 {
 public:
-    SceneManager()  = default;
-    ~SceneManager() = default;
+    SceneManager();
+    ~SceneManager();
 
     SceneManager(SceneManager const&)                    = delete;
     SceneManager(SceneManager&&)                         = delete;
     auto operator=(SceneManager const&) -> SceneManager& = delete;
     auto operator=(SceneManager&&) -> SceneManager&      = delete;
 
-    static auto CreateScene() -> Scene*;
+    static auto CreateScene(utils::string_id tName = "Scene"_sid) -> Scene*;
     static auto MakeCurrentScene(utils::string_id tName) -> bool;
     static auto GetCurrentScene() -> Scene*;
 
+    static auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
+
     /// An empty path writes <scene ID>.scene in the working directory.
-    [[nodiscard]] static auto SaveScene(utils::string_id tName = "PolosScene.slop"_sid) -> bool;
+    [[nodiscard]] static auto SaveScene(utils::string_id tName = "Scene.slop"_sid) -> bool;
     static auto               LoadScene(std::string_view tScene) -> Scene*;
 private:
     auto serializeEntity();

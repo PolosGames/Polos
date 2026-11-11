@@ -92,25 +92,37 @@ constexpr std::array kComponentLoaders{
 SceneManager* SceneManager::sInstance     = nullptr;
 Scene*        SceneManager::sCurrentScene = nullptr;
 
-auto SceneManager::CreateScene() -> Scene*
+SceneManager::SceneManager() = default;
+SceneManager::~SceneManager() = default;
+
+auto SceneManager::CreateScene(utils::string_id const tName) -> Scene*
 {
-    auto& scene = sInstance->mScenes.emplace_back(std::make_unique<Scene>());
+    auto& scene = sInstance->mScenes.emplace_back(std::make_unique<Scene>(tName));
     MakeCurrentScene(scene->name);
     return scene.get();
 }
 
 auto SceneManager::MakeCurrentScene(utils::string_id const tName) -> bool
 {
+    if (auto result = QueryScene(tName); result.second)
+    {
+        sCurrentScene = result.first;
+        return true;
+    }
+
+    return false;
+}
+
+auto SceneManager::QueryScene(utils::string_id const tName) -> utils::Pair<Scene*, bool>
+{
     auto itr = std::ranges::find(sInstance->mScenes, tName, &Scene::name);
     if (itr == sInstance->mScenes.end())
     {
         LogError("Failed to find requested scene in scene library.");
-        return false;
+        return {.first = nullptr, .second = false};
     }
 
-    sCurrentScene = itr->get();
-
-    return true;
+    return {.first = itr->get(), .second = true};
 }
 
 auto SceneManager::GetCurrentScene() -> Scene*
@@ -263,7 +275,8 @@ auto SceneManager::SaveScene(utils::string_id const tName) -> bool
 
 auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
 {
-    auto* scene = CreateScene();
+    std::unique_ptr<Scene> owned{new Scene{"Scene"_sid, false}};
+    auto*                  scene = owned.get();
 
     SceneHeader header{};
 
@@ -365,6 +378,8 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         }
     }
 
+    sInstance->mScenes.push_back(std::move(owned));
+    sCurrentScene = scene;
     return scene;
 }
 

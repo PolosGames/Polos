@@ -5,9 +5,6 @@
 
 #include "polos/rendering/passes/opaque_geometry_pass.hpp"
 
-#include "polos/rendering/cache/graphics_pipeline_info.hpp"
-#include "polos/rendering/cache/pipeline_cache.hpp"
-#include "polos/rendering/cache/shader_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/resources/texture.hpp"
@@ -15,15 +12,16 @@
 #include "polos/rendering/uniforms/camera_uniform.hpp"
 #include "polos/rendering/vertex/quad_vertex.hpp"
 #include "polos/rendering/vk/common.hpp"
+#include "polos/rendering/vk/graphics_pipeline_info.hpp"
 #include "polos/rendering/vk/render_context.hpp"
-#include "polos/rendering/vk/settings.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
-#include "polos/rendering/vk/vulkan_util.hpp"
+#include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
 #include <vulkan/vulkan.h>
 
 #include <span>
+#include <utility>
 
 namespace polos::rendering
 {
@@ -141,11 +139,11 @@ static constexpr RenderPassInfo rpInfo = [] -> RenderPassInfo {
         .sType                   = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2,
         .pNext                   = nullptr,
         .flags                   = 0U,
-        .attachmentCount         = VK_SIZE_CAST(attachments.size()),
+        .attachmentCount         = ToVkSize(attachments.size()),
         .pAttachments            = attachments.data(),
-        .subpassCount            = VK_SIZE_CAST(subpassDescriptions.size()),
+        .subpassCount            = ToVkSize(subpassDescriptions.size()),
         .pSubpasses              = subpassDescriptions.data(),
-        .dependencyCount         = VK_SIZE_CAST(subpassDependencies.size()),
+        .dependencyCount         = ToVkSize(subpassDependencies.size()),
         .pDependencies           = subpassDependencies.data(),
         .correlatedViewMaskCount = 0U,
         .pCorrelatedViewMasks    = nullptr,
@@ -189,7 +187,7 @@ auto CreateDescriptorSetLayouts() -> std::array<VkDescriptorSetLayout, 2U>
         .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .pNext        = nullptr,
         .flags        = 0U,
-        .bindingCount = VK_SIZE_CAST(dslbSet0.size()),
+        .bindingCount = ToVkSize(dslbSet0.size()),
         .pBindings    = dslbSet0.data(),
     };
 
@@ -207,7 +205,7 @@ auto CreateDescriptorSetLayouts() -> std::array<VkDescriptorSetLayout, 2U>
         .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .pNext        = nullptr,
         .flags        = 0U,
-        .bindingCount = VK_SIZE_CAST(dslbSet1.size()),
+        .bindingCount = ToVkSize(dslbSet1.size()),
         .pBindings    = dslbSet1.data(),
     };
 
@@ -229,12 +227,13 @@ auto CreateDescriptorSetLayouts() -> std::array<VkDescriptorSetLayout, 2U>
     return setLayouts;
 }
 
-auto CreatePipeline(VkRenderPass tPass, std::array<VkDescriptorSetLayout, 2U>& tSetLayouts) -> VulkanPipeline
+auto CreatePipeline(
+    VkRenderPass                          tPass,
+    std::array<VkDescriptorSetLayout, 2U>& tSetLayouts,
+    Shader const*                         tVertexShader,
+    Shader const*                         tFragmentShader) -> VulkanPipeline
 {
-    std::array<Shader const*, 2U> shaders = {
-        RenderContext::GetShaderCache().GetShaderModule("shader.quad.vertex"_sid),
-        RenderContext::GetShaderCache().GetShaderModule("shader.quad.fragment"_sid),
-    };
+    std::array shaders{tVertexShader, tFragmentShader};
 
     std::array<VkPipelineColorBlendAttachmentState const, 1U> colorBlendAttachments{
         VkPipelineColorBlendAttachmentState{
@@ -269,7 +268,7 @@ auto CreatePipeline(VkRenderPass tPass, std::array<VkDescriptorSetLayout, 2U>& t
         .descriptorSetLayouts  = tSetLayouts,
     };
 
-    return RenderContext::GetPipelineCache().ConstructPipeline(pInfo);
+    return util::CreateGraphicsPipeline(pInfo);
 }
 
 auto CreateDescriptorPool() -> VkDescriptorPool
@@ -295,7 +294,7 @@ auto CreateDescriptorPool() -> VkDescriptorPool
         .pNext         = nullptr,
         .flags         = 0U,
         .maxSets       = kTotalDescriptorSets,
-        .poolSizeCount = VK_SIZE_CAST(poolSize.size()),
+        .poolSizeCount = ToVkSize(poolSize.size()),
         .pPoolSizes    = poolSize.data(),
     };
 
@@ -316,7 +315,7 @@ auto CreateDescriptorSet0(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout)
         .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .pNext              = nullptr,
         .descriptorPool     = tPool,
-        .descriptorSetCount = VK_SIZE_CAST(OpaqueGeometryPass::kDescriptorSet0Count),
+        .descriptorSetCount = ToVkSize(OpaqueGeometryPass::kDescriptorSet0Count),
         .pSetLayouts        = layouts.data(),
     };
 
@@ -339,7 +338,7 @@ auto CreateDescriptorSet1(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout)
         .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .pNext              = nullptr,
         .descriptorPool     = tPool,
-        .descriptorSetCount = VK_SIZE_CAST(OpaqueGeometryPass::kDescriptorSet1Count),
+        .descriptorSetCount = ToVkSize(OpaqueGeometryPass::kDescriptorSet1Count),
         .pSetLayouts        = layouts.data(),
     };
 
@@ -410,7 +409,7 @@ auto UpdateDescriptorSets(VkBuffer tCameraBuffer, VkBuffer tInstanceBuffer, VkDe
 
     vkUpdateDescriptorSets(
         RenderContext::GetVulkanDevice().logiDevice,
-        VK_SIZE_CAST(descriptor_writes.size()),
+        ToVkSize(descriptor_writes.size()),
         descriptor_writes.data(),
         0U,
         nullptr);
@@ -445,10 +444,14 @@ auto UpdateSamplers(std::array<utils::string_id, Settings::kMaxSamplers> const& 
 
 }// namespace
 
-OpaqueGeometryPass::OpaqueGeometryPass()
-    : mRenderPass(CreateRenderPass()),
+OpaqueGeometryPass::OpaqueGeometryPass(
+    std::shared_ptr<Shader const> tVertexShader,
+    std::shared_ptr<Shader const> tFragmentShader)
+    : mVertexShader(std::move(tVertexShader)),
+      mFragmentShader(std::move(tFragmentShader)),
+      mRenderPass(CreateRenderPass()),
       mSetLayouts(CreateDescriptorSetLayouts()),
-      mQuadPipeline(CreatePipeline(mRenderPass, mSetLayouts)),
+      mQuadPipeline(CreatePipeline(mRenderPass, mSetLayouts, mVertexShader.get(), mFragmentShader.get())),
       mDescriptorPool(CreateDescriptorPool()),
       mDescriptorSet0(CreateDescriptorSet0(mDescriptorPool, mSetLayouts[0])),
       mDescriptorSet1(CreateDescriptorSet1(mDescriptorPool, mSetLayouts[1])),
@@ -468,6 +471,8 @@ OpaqueGeometryPass::~OpaqueGeometryPass()
     {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
     }
+
+    VulkanPipeline::Reset(mQuadPipeline);
 
     // Destroying the pool also frees all descriptor sets allocated from it.
     vkDestroyDescriptorPool(device, mDescriptorPool, nullptr);
@@ -527,11 +532,7 @@ auto OpaqueGeometryPass::Record(Inputs const& tInputs) -> void
                 mFramebuffers[tInputs.frameSlot],
                 nullptr);
         }
-        mFramebuffers[tInputs.frameSlot] = util::CreateFramebuffer(
-            RenderContext::GetVulkanDevice().logiDevice,
-            mRenderPass,
-            attachments,
-            tInputs.extent);
+        mFramebuffers[tInputs.frameSlot] = util::CreateFramebuffer(mRenderPass, attachments, tInputs.extent);
     }
     VkFramebuffer currentFb = mFramebuffers[tInputs.frameSlot];
 
@@ -546,7 +547,7 @@ auto OpaqueGeometryPass::Record(Inputs const& tInputs) -> void
         .renderPass      = mRenderPass,
         .framebuffer     = currentFb,
         .renderArea      = tInputs.renderArea,
-        .clearValueCount = VK_SIZE_CAST(clearValues.size()),
+        .clearValueCount = ToVkSize(clearValues.size()),
         .pClearValues    = clearValues.data(),
     };
 
@@ -560,8 +561,8 @@ auto OpaqueGeometryPass::Record(Inputs const& tInputs) -> void
 
     // clang-format off
     vkCmdBeginRenderPass(cmdBuf, &rpbInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdSetScissor(cmdBuf, 0U, VK_SIZE_CAST(scissors.size()), scissors.data());
-        vkCmdSetViewport(cmdBuf, 0U, VK_SIZE_CAST(viewports.size()), viewports.data());
+        vkCmdSetScissor(cmdBuf, 0U, ToVkSize(scissors.size()), scissors.data());
+        vkCmdSetViewport(cmdBuf, 0U, ToVkSize(viewports.size()), viewports.data());
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mQuadPipeline.pipeline);
 
         vkCmdBindDescriptorSets(cmdBuf,
@@ -577,14 +578,14 @@ auto OpaqueGeometryPass::Record(Inputs const& tInputs) -> void
         std::uint32_t firstInstance = 0U;
         for (std::size_t b{0U}; b < tInputs.quadBatches.size(); ++b)
         {
-            auto const count = VK_SIZE_CAST(tInputs.quadBatches[b].quadInstances.size());
+            auto const count = ToVkSize(tInputs.quadBatches[b].quadInstances.size());
             vkCmdBindDescriptorSets(cmdBuf,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
                 mQuadPipeline.pipelineLayout,
                 1U, 1U, &mDescriptorSet1[(static_cast<std::size_t>(tInputs.frameSlot) * Settings::kMaxBatches) + b],
                 0U, nullptr);
 
-            vkCmdDrawIndexed(cmdBuf, 6U, VK_SIZE_CAST(count), 0U, 0U, firstInstance);
+            vkCmdDrawIndexed(cmdBuf, 6U, ToVkSize(count), 0U, 0U, firstInstance);
             firstInstance += count;
         }
     vkCmdEndRenderPass(cmdBuf);

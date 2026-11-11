@@ -12,7 +12,13 @@
 #include "polos/communication/process_input.hpp"
 #include "polos/communication/render_update.hpp"
 #include "polos/communication/window_close.hpp"
+#include "polos/ecs/scene.hpp"
+#include "polos/ecs/scene_manager.hpp"
+#include "polos/ecs/system_registry.hpp"
+#include "polos/ecs/systems/dirty_transform_system.hpp"
+#include "polos/ecs/systems/editor_camera_system.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/rendering_api.hpp"
 #include "polos/utils/time.hpp"
 
@@ -50,6 +56,15 @@ void MainLoop::Run() const
     constexpr std::int32_t const kTargetFrames{120};
     constexpr Duration const     kTimestep{1_sec / kTargetFrames};
 
+    ecs::EditorCameraSystem editorCameraSystem;
+    ecs::SystemRegistry systems;
+    systems.Register([&editorCameraSystem](ecs::Scene* tScene, float tDeltaTime) {
+        editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Instance().GetMainWindow());
+    });
+    systems.Register([system = ecs::DirtyTransformSystem{}](ecs::Scene* tScene, float) mutable {
+        system.Update(tScene);
+    });
+
     while (mIsRunning)
     {
         auto const current_time = utils::GetTimeNow();
@@ -62,6 +77,12 @@ void MainLoop::Run() const
         std::float_t const delta_time_in_secs = utils::ConvertToSeconds(delta_time);
 
         communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
+        auto* scene = ecs::SceneManager::GetCurrentScene();
+        systems.UpdateAll(scene, delta_time_in_secs);
+        if (scene != nullptr)
+        {
+            scene->ClearDirtyEntities();
+        }
 
         if (VK_NULL_HANDLE != rendering::RenderingApi::BeginFrame())
         {

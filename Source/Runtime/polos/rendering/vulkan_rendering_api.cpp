@@ -18,7 +18,9 @@ RenderingApi* RenderingApi::sInstance{nullptr};
 
 RenderingApi::RenderingApi(platform::IWindowSurface& tSurface)
     : mWindowSurface{&tSurface}
-{ createRenderContext(); }
+{
+    createRenderContext();
+}
 
 RenderingApi::~RenderingApi() = default;
 
@@ -43,8 +45,13 @@ auto RenderingApi::EndFrame() -> void
 {
     if (nullptr != sInstance->mRenderContext)
     {
-        sInstance->mRenderContext->EndFrame();
+        sInstance->lastStatistics = sInstance->mRenderContext->EndFrame();
     }
+}
+
+auto RenderingApi::GetLastFrameStatistics() -> FrameStatistics const&
+{
+    return sInstance->lastStatistics;
 }
 
 void RenderingApi::createRenderContext()

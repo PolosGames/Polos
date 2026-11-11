@@ -35,6 +35,8 @@ protected:
 
         auto owned = std::make_unique<Scene>("SerializationTest"_sid);
         scene      = owned.get();
+        // These fixtures build their own camera and hierarchy, including root-only scenes.
+        ASSERT_TRUE(scene->RetireEntity(scene->activeCamera));
         manager->mScenes.push_back(std::move(owned));
 
         directory = std::filesystem::temp_directory_path() /
@@ -74,7 +76,7 @@ struct Header
 };
 
 template<typename T>
-auto Read(std::ifstream& file) -> T
+auto ReadBinary(std::ifstream& file) -> T
 {
     T value{};
 
@@ -207,10 +209,10 @@ TEST_F(SceneSerializationTest, WritesDfsRecordsSparseComponentsAndCamera)
 
     ASSERT_TRUE(file.is_open());
 
-    auto const header = Read<Header>(file);
+    auto const header = ReadBinary<Header>(file);
 
-    EXPECT_EQ(Read<utils::string_id>(file), scene->name);
-    EXPECT_EQ(Read<EntityIndex>(file), 4U);
+    EXPECT_EQ(ReadBinary<utils::string_id>(file), scene->name);
+    EXPECT_EQ(ReadBinary<EntityIndex>(file), 4U);
 
     constexpr std::size_t count = 5U;
 
@@ -224,7 +226,7 @@ TEST_F(SceneSerializationTest, WritesDfsRecordsSparseComponentsAndCamera)
     for (std::size_t i{0U}; i < count; ++i)
     {
         SCOPED_TRACE(i);
-        auto const  record = Read<SerializedEntity>(file);
+        auto const  record = ReadBinary<SerializedEntity>(file);
         auto const* entity = scene->GetEntityDataByIndex(order[i].index);
         EXPECT_EQ(record.componentTypes, entity->componentMask.to_ullong());
         EXPECT_EQ(record.componentCount, entity->componentMask.count());
@@ -256,7 +258,7 @@ TEST_F(SceneSerializationTest, WritesDfsRecordsSparseComponentsAndCamera)
             file.seekg(static_cast<std::streamoff>(sectionStart));
             for (auto handle : order)
             {
-                auto const info = Read<InfoComponent>(file);
+                auto const info = ReadBinary<InfoComponent>(file);
                 EXPECT_EQ(info.graphHandle, scene->GetComponent<InfoComponent>(handle)->graphHandle);
                 EXPECT_EQ(info.childCount, scene->GetComponent<InfoComponent>(handle)->childCount);
             }
@@ -265,8 +267,8 @@ TEST_F(SceneSerializationTest, WritesDfsRecordsSparseComponentsAndCamera)
         if (type == static_cast<std::size_t>(ComponentType::kTransform))
         {
             file.seekg(static_cast<std::streamoff>(sectionStart));
-            EXPECT_FLOAT_EQ(Read<TransformComponent>(file).position.x, 42.0F);
-            EXPECT_FLOAT_EQ(Read<TransformComponent>(file).position.x, 91.0F);
+            EXPECT_FLOAT_EQ(ReadBinary<TransformComponent>(file).position.x, 42.0F);
+            EXPECT_FLOAT_EQ(ReadBinary<TransformComponent>(file).position.x, 91.0F);
         }
 
         sectionStart = header.components[type].end;
@@ -290,12 +292,12 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
 
     ASSERT_TRUE(file.is_open());
 
-    auto const header = Read<Header>(file);
+    auto const header = ReadBinary<Header>(file);
 
-    EXPECT_EQ(Read<utils::string_id>(file), scene->name);
-    EXPECT_EQ(Read<EntityIndex>(file), kInvalidEntityIndex);
+    EXPECT_EQ(ReadBinary<utils::string_id>(file), scene->name);
+    EXPECT_EQ(ReadBinary<EntityIndex>(file), kInvalidEntityIndex);
 
-    auto const root = Read<SerializedEntity>(file);
+    auto const root = ReadBinary<SerializedEntity>(file);
 
     EXPECT_EQ(root.componentCount, 1U);
     EXPECT_EQ(root.componentIndices[static_cast<std::size_t>(ComponentType::kInfo)], 0U);
@@ -308,6 +310,30 @@ TEST_F(SceneSerializationTest, ReportsMissingSceneAndOpenFailure)
     EXPECT_FALSE(SceneManager::SaveScene("MissingScene"_sid));
     EXPECT_FALSE(std::filesystem::exists(directory / "missing.scene"));
     EXPECT_FALSE(Save(directory / "absent" / "fail.scene"));
+}
+
+TEST_F(SceneSerializationTest, DefaultEditorCameraRoundTripsWithoutDuplication)
+{
+    scene                 = SceneManager::CreateScene();
+    auto* transform       = scene->GetMutableComponent<TransformComponent>(scene->activeCamera);
+    auto* controller      = scene->GetMutableComponent<EditorCameraControllerComponent>(scene->activeCamera);
+    transform->position   = {1.0F, 2.0F, 3.0F};
+    transform->rotation   = {-25.0F, 40.0F, 0.0F};
+    controller->moveSpeed = 12.0F;
+    auto const path       = directory / "editor-camera.scene";
+    ASSERT_TRUE(Save(path));
+
+    auto* loaded = SceneManager::LoadScene(path.string());
+
+    ASSERT_NE(loaded, nullptr);
+    EXPECT_EQ(SceneManager::GetCurrentScene(), loaded);
+    EXPECT_EQ(loaded->GetEntityPoolSize(), 2U);
+    ExpectChildren(*loaded, loaded->sceneRoot, {"Editor Camera"_sid});
+    auto const camera = loaded->activeCamera;
+    EXPECT_TRUE(camera == loaded->GetChild(loaded->sceneRoot));
+    ExpectRestoredComponent<CameraComponent>(*scene, scene->activeCamera, *loaded, camera);
+    ExpectRestoredComponent<TransformComponent>(*scene, scene->activeCamera, *loaded, camera);
+    ExpectRestoredComponent<EditorCameraControllerComponent>(*scene, scene->activeCamera, *loaded, camera);
 }
 
 TEST_F(SceneSerializationTest, LoadPreservesSiblingOrderAndLinksAtEveryDepth)
@@ -477,7 +503,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
     auto const         oldCamera      = loaded->activeCamera;
     std::vector<float> observedFovs;
 
-    for (auto [cameraComponent, transformComponent] : View<CameraComponent, TransformComponent>{loaded})
+    for (auto [cameraComponent, transformComponent] : View<Read<CameraComponent>, Write<TransformComponent>>{loaded})
     {
         observedFovs.push_back(cameraComponent->fov);
         transformComponent->position.x += cameraComponent->fov;
@@ -490,7 +516,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
 
     ASSERT_TRUE(loaded->RetireEntity(loadedBranch));
     observedFovs.clear();
-    for (auto [cameraComponent, transformComponent] : View<CameraComponent, TransformComponent>{loaded})
+    for (auto [cameraComponent, transformComponent] : View<Read<CameraComponent, TransformComponent>>{loaded})
     {
         observedFovs.push_back(cameraComponent->fov);
         EXPECT_FLOAT_EQ(transformComponent->position.x, 75.0F);
@@ -509,7 +535,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
     ASSERT_NE(loaded->AddComponent(replacement, transform), nullptr);
 
     observedFovs.clear();
-    for (auto [cameraComponent] : View<CameraComponent>{loaded})
+    for (auto [cameraComponent] : View<Read<CameraComponent>>{loaded})
     {
         observedFovs.push_back(cameraComponent->fov);
     }
@@ -533,13 +559,13 @@ TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
     ASSERT_NE(loaded, nullptr);
 
     auto const loadedCamera    = loaded->activeCamera;
-    auto*      cameraComponent = loaded->GetComponent<CameraComponent>(loadedCamera);
+    auto*      cameraComponent = loaded->GetMutableComponent<CameraComponent>(loadedCamera);
     ASSERT_NE(cameraComponent, nullptr);
     cameraComponent->fov           = 48.0F;
     auto const               child = loaded->NewEntity(loadedCamera, "CreatedAfterLoad"_sid);
     TransformComponent const childTransform{.position = {17.0F, 0.0F, 0.0F}};
     ASSERT_NE(loaded->AddComponent(child, childTransform), nullptr);
-    for (auto [transform] : View<TransformComponent>{loaded})
+    for (auto [transform] : View<Write<TransformComponent>>{loaded})
     {
         transform->position.x *= 2.0F;
     }
@@ -561,7 +587,7 @@ TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
     EXPECT_EQ(reloaded->GetComponent<InfoComponent>(reloadedCamera)->childCount, 1U);
 
     std::vector<float> positions;
-    for (auto [transform] : View<TransformComponent>{reloaded})
+    for (auto [transform] : View<Read<TransformComponent>>{reloaded})
     {
         positions.push_back(transform->position.x);
     }

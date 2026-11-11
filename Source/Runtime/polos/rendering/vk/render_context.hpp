@@ -8,10 +8,10 @@
 
 #include "polos/polos_api.hpp"
 #include "polos/rendering/render_subsystem.hpp"
+#include "polos/rendering/settings.hpp"
 #include "polos/rendering/vk/frame_data.hpp"
 #include "polos/rendering/vk/i_render_context.hpp"
 #include "polos/rendering/vk/queue_family_indices.hpp"
-#include "polos/rendering/vk/settings.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -41,10 +41,9 @@ namespace polos::rendering
 class VulkanContext;
 class VulkanDevice;
 class VulkanSwapchain;
-class ShaderCache;
-class PipelineCache;
 class RenderCompositor;
 class TextureCache;
+class MeshCache;
 
 class POLOS_API RenderContext : public IRenderContext
 {
@@ -60,11 +59,9 @@ public:
     auto Shutdown() -> Result<void> override;
 
     auto BeginFrame() -> VkCommandBuffer override;
-    auto EndFrame() -> void override;
+    auto EndFrame() -> FrameStatistics override;
 
     [[nodiscard]] static auto IsInitialized() -> bool;
-    [[nodiscard]] static auto GetShaderCache() -> ShaderCache&;
-    [[nodiscard]] static auto GetPipelineCache() -> PipelineCache&;
 
     [[nodiscard]] static auto BeginSingleTimeCommands() -> VkCommandBuffer;
     [[nodiscard]] static auto EndSingleTimeCommands(VkCommandBuffer tCommandBuffer) -> bool;
@@ -85,10 +82,9 @@ private:
     std::unique_ptr<VulkanContext>    mContext;
     std::unique_ptr<VulkanDevice>     mDevice;
     std::unique_ptr<VulkanSwapchain>  mSwapchain;
-    std::unique_ptr<ShaderCache>      mShaderCache;
-    std::unique_ptr<PipelineCache>    mPipelineCache;
     std::unique_ptr<TextureCache>     mTextureCache;
     std::unique_ptr<RenderCompositor> mRenderCompositor;
+    std::unique_ptr<MeshCache>        mMeshCache;
 
     std::array<VkFence, Settings::kMaxFramesInFlight>         mFrameFences{};
     std::array<VkSemaphore, Settings::kMaxFramesInFlight>     mAcqSemaphores{};
@@ -99,7 +95,7 @@ private:
 
     std::array<FrameData, Settings::kMaxFramesInFlight> mFrameData;
 
-    std::array<SubsystemEntry, 8U> mSubsystems{};
+    std::array<SubsystemEntry, 7U> mSubsystems{};
     std::size_t                    mInitializedSubsystems{0U};
 
     bool mHasFramebufferResized{false};

@@ -16,17 +16,15 @@
         return polos::ErrorType{(Errc)};      \
     }// NOLINT
 
-#define VK_SIZE_CAST(Var) static_cast<std::uint32_t>(Var)// NOLINT
-
 namespace polos::rendering::common
 {
 
 // Linear RGB for the sRGB brand color #8298A4. Blitting into the sRGB swapchain encodes it for display.
-constexpr std::float_t const kPolosRed{0.22322796F};
-constexpr std::float_t const kPolosGreen{0.31398871F};
-constexpr std::float_t const kPolosBlue{0.37123768F};
+constexpr float const kPolosRed{0.22322796F};
+constexpr float const kPolosGreen{0.31398871F};
+constexpr float const kPolosBlue{0.37123768F};
 
-constexpr VkClearValue kClearValue{
+inline constexpr VkClearValue kClearValue{
     .color = {.float32 = {kPolosRed, kPolosGreen, kPolosBlue, 1.0F}},
 };
 

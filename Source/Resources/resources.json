@@ -1,0 +1,22 @@
+[
+  {
+    "id": "shader.vert.quad",
+    "path": "Shaders/quad.vert.spv"
+  },
+  {
+    "id": "shader.frag.quad",
+    "path": "Shaders/quad.frag.spv"
+  },
+  {
+    "id": "shader.vert.forward_shading",
+    "path": "Shaders/forward_shading.vert.spv"
+  },
+  {
+    "id": "shader.frag.forward_shading",
+    "path": "Shaders/forward_shading.frag.spv"
+  },
+  {
+    "id": "shader.comp.main_compute",
+    "path": "Shaders/main_compute.comp.spv"
+  }
+]

@@ -6,7 +6,7 @@
 #ifndef POLOS_RENDERING_UI_RENDER_PASS_HPP
 #define POLOS_RENDERING_UI_RENDER_PASS_HPP
 
-#include "polos/rendering/vk/settings.hpp"
+#include "polos/rendering/settings.hpp"
 
 #include <vulkan/vulkan.h>
 
