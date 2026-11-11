@@ -76,12 +76,19 @@ enum class StyleColor
     kHeader,
 };
 
-// Call End and EndChild after their matching Begin calls, even when Begin returns false.
-// For the other Begin/End pairs, call End only when Begin returns true.
-auto POLOS_API operator|(WindowFlags tLeft, WindowFlags tRight) -> WindowFlags;
-auto POLOS_API operator|(TableFlags tLeft, TableFlags tRight) -> TableFlags;
+constexpr auto POLOS_API operator|(WindowFlags tLeft, WindowFlags tRight) -> WindowFlags
+{
+    return static_cast<WindowFlags>(static_cast<std::uint32_t>(tLeft) | static_cast<std::uint32_t>(tRight));
+}
+
+constexpr auto POLOS_API operator|(TableFlags tLeft, TableFlags tRight) -> TableFlags
+{
+    return static_cast<TableFlags>(static_cast<std::uint32_t>(tLeft) | static_cast<std::uint32_t>(tRight));
+}
 
 // Windows and docking
+// Call End and EndChild after their matching Begin calls, even when Begin returns false.
+// For the other Begin/End pairs, call End only when Begin returns true.
 auto POLOS_API Begin(char const* tTitle, bool* tOpen = nullptr, WindowFlags tFlags = WindowFlags::kNone) -> bool;
 auto POLOS_API End() -> void;
 auto POLOS_API
@@ -139,7 +146,8 @@ auto POLOS_API InputFloat(char const* tLabel, float& tValue) -> bool;
 auto POLOS_API InputText(char const* tLabel, std::span<char> tBuffer) -> bool;
 auto POLOS_API InputTextMultiline(char const* tLabel, std::span<char> tBuffer, Vec2 tSize = {}) -> bool;
 auto POLOS_API ColorEdit(char const* tLabel, Color& tColor) -> bool;
-auto POLOS_API ProgressBar(float tFraction, Vec2 tSize = {-1.0F, 0.0F}, char const* tOverlay = nullptr) -> void;
+auto POLOS_API ProgressBar(float tFraction, Vec2 tSize = {.x = -1.0F, .y = 0.0F}, char const* tOverlay = nullptr)
+    -> void;
 auto POLOS_API PlotLines(char const* tLabel, std::span<float const> tValues, Vec2 tSize = {}) -> void;
 // Displays an image from the resource catalog. Returns false when the texture cannot be displayed.
 auto POLOS_API Image(utils::string_id tTexture, Vec2 tSize, Vec2 tUvMin = {}, Vec2 tUvMax = {1.0F, 1.0F}) -> bool;

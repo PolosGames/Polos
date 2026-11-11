@@ -72,5 +72,36 @@ TEST(CameraUniformTest, OverheadCameraFramesTheEntireTuxQuadGroup)
     }
 }
 
+TEST(CameraUniformTest, FrustumPlanesClassifySpheresAccurately)
+{
+    ecs::CameraComponent const    camera{.nearZ = 1.0F, .farZ = 100.0F, .fov = 90.0F};
+    ecs::TransformComponent const transform{};
+
+    auto const uniform = GetCameraUniform(&camera, &transform, 1000U, 1000U);
+
+    auto const isSphereVisible = [&uniform](glm::vec3 const& tCenter, float const tRadius) -> bool {
+        for (auto const& plane : uniform.frustumPlanes)
+        {
+            if (glm::dot(glm::vec3{plane}, tCenter) + plane.w < -tRadius)
+            {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    // Camera at origin looking down -Z with near=1, far=100, fov=90, aspect=1
+    EXPECT_TRUE(isSphereVisible({0.0F, 0.0F, -10.0F}, 0.5F));   // Inside frustum
+    EXPECT_FALSE(isSphereVisible({0.0F, 0.0F, 5.0F}, 0.5F));    // Behind camera
+    EXPECT_FALSE(isSphereVisible({0.0F, 0.0F, -0.2F}, 0.5F));   // In front of near plane (z = -0.2, r = 0.5 < 0.8)
+    EXPECT_TRUE(isSphereVisible({0.0F, 0.0F, -0.2F}, 0.9F));    // Intersecting near plane (r = 0.9 > 0.8)
+    EXPECT_FALSE(isSphereVisible({0.0F, 0.0F, -105.0F}, 2.0F)); // Beyond far plane
+    EXPECT_TRUE(isSphereVisible({0.0F, 0.0F, -105.0F}, 6.0F));  // Intersecting far plane
+    EXPECT_FALSE(isSphereVisible({20.0F, 0.0F, -10.0F}, 1.0F)); // Outside right plane (at z=-10, x_max = 10)
+    EXPECT_FALSE(isSphereVisible({-20.0F, 0.0F, -10.0F}, 1.0F));// Outside left plane
+    EXPECT_FALSE(isSphereVisible({0.0F, 20.0F, -10.0F}, 1.0F)); // Outside top/bottom plane
+    EXPECT_FALSE(isSphereVisible({0.0F, -20.0F, -10.0F}, 1.0F));// Outside bottom/top plane
+}
+
 }// namespace
 }// namespace polos::rendering

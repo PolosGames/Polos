@@ -1,0 +1,95 @@
+diff --git a/include/quill/core/ThreadContextManager.h b/include/quill/core/ThreadContextManager.h
+--- a/include/quill/core/ThreadContextManager.h
++++ b/include/quill/core/ThreadContextManager.h
+@@ -211,11 +211,15 @@
+ {
+ public:
+   /***/
++#if defined(__MINGW32__) && (defined(QUILL_DLL_EXPORT) || defined(QUILL_DLL_IMPORT))
++  QUILL_EXPORT static ThreadContextManager& instance() noexcept;
++#else
+   QUILL_EXPORT static ThreadContextManager& instance() noexcept
+   {
+     static ThreadContextManager instance;
+     return instance;
+   }
++#endif
+
+   /***/
+   ThreadContextManager(ThreadContextManager const&) = delete;
+diff --git a/include/quill/core/LoggerManager.h b/include/quill/core/LoggerManager.h
+--- a/include/quill/core/LoggerManager.h
++++ b/include/quill/core/LoggerManager.h
+@@ -38,11 +38,15 @@
+   LoggerManager& operator=(LoggerManager const&) = delete;
+
+   /***/
++#if defined(__MINGW32__) && (defined(QUILL_DLL_EXPORT) || defined(QUILL_DLL_IMPORT))
++  QUILL_EXPORT static LoggerManager& instance() noexcept;
++#else
+   QUILL_EXPORT static LoggerManager& instance() noexcept
+   {
+     static LoggerManager instance;
+     return instance;
+   }
++#endif
+
+   /***/
+   QUILL_NODISCARD LoggerBase* get_logger(std::string const& logger_name) const
+diff --git a/include/quill/core/SinkManager.h b/include/quill/core/SinkManager.h
+--- a/include/quill/core/SinkManager.h
++++ b/include/quill/core/SinkManager.h
+@@ -43,11 +43,15 @@
+   SinkManager& operator=(SinkManager const&) = delete;
+
+   /***/
++#if defined(__MINGW32__) && (defined(QUILL_DLL_EXPORT) || defined(QUILL_DLL_IMPORT))
++  QUILL_EXPORT static SinkManager& instance() noexcept;
++#else
+   QUILL_EXPORT static SinkManager& instance() noexcept
+   {
+     static SinkManager instance;
+     return instance;
+   }
++#endif
+
+   /***/
+   QUILL_NODISCARD std::shared_ptr<Sink> get_sink(std::string const& sink_name) const
+diff --git a/include/quill/backend/BackendManager.h b/include/quill/backend/BackendManager.h
+--- a/include/quill/backend/BackendManager.h
++++ b/include/quill/backend/BackendManager.h
+@@ -33,11 +33,15 @@
+ {
+ public:
+   /***/
++#if defined(__MINGW32__) && (defined(QUILL_DLL_EXPORT) || defined(QUILL_DLL_IMPORT))
++  QUILL_EXPORT static BackendManager& instance() noexcept;
++#else
+   QUILL_EXPORT static BackendManager& instance() noexcept
+   {
+     static BackendManager instance;
+     return instance;
+   }
++#endif
+
+   /***/
+   BackendManager(BackendManager const&) = delete;
+diff --git a/include/quill/backend/SignalHandler.h b/include/quill/backend/SignalHandler.h
+--- a/include/quill/backend/SignalHandler.h
++++ b/include/quill/backend/SignalHandler.h
+@@ -81,11 +81,15 @@
+   SignalHandlerContext& operator=(SignalHandlerContext const&) = delete;
+
+   /***/
++#if defined(__MINGW32__) && (defined(QUILL_DLL_EXPORT) || defined(QUILL_DLL_IMPORT))
++  QUILL_EXPORT static SignalHandlerContext& instance() noexcept;
++#else
+   QUILL_EXPORT static SignalHandlerContext& instance() noexcept
+   {
+     static SignalHandlerContext instance;
+     return instance;
+   }
++#endif
+
+   /***/
+   QUILL_NODISCARD static LoggerBase* get_logger() noexcept

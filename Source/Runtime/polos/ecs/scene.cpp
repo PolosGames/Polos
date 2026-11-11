@@ -24,6 +24,7 @@ Scene::Scene(utils::string_id const tName)
 
 Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
     : name(tName)
+    , mInstanceBuffer(std::make_unique<rendering::MeshInstance[]>(Settings::kMaxEntities))
 {
     sceneRoot = newEntity();
 
@@ -224,7 +225,7 @@ auto Scene::GetDirtyEntities() const -> std::span<DirtyEntity const>
 
 auto Scene::GetMeshInstances() const -> std::span<rendering::MeshInstance const>
 {
-    return {mInstanceBuffer.data(), mEntitiesHead};
+    return {mInstanceBuffer.get(), mEntitiesHead};
 }
 
 auto Scene::ConsumeInstanceChanges() -> std::vector<EntityIndex>

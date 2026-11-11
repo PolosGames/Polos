@@ -22,6 +22,9 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <optional>
+#include <span>
+#include <string_view>
 
 namespace polos::rendering
 {
@@ -32,48 +35,28 @@ namespace
 constexpr std::uint32_t const kVendorNvidia{0x10DEU};
 constexpr std::uint32_t const kVendorAmd{0x1002U};
 
-// VK_QUEUE_FAMILY_IGNORED is not a valid queue-family index.
-auto FindQueueFamily(VkPhysicalDevice tDevice, VkSurfaceKHR tSurface, VkQueueFlags tFlags) -> std::uint32_t
+auto FindGraphicsQueueFamily(VkPhysicalDevice tDevice, VkSurfaceKHR tSurface) -> std::uint32_t
 {
-    std::uint32_t queue_family_count{0U};
-    vkGetPhysicalDeviceQueueFamilyProperties(tDevice, &queue_family_count, nullptr);
+    constexpr VkQueueFlags required = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
 
-    std::vector<VkQueueFamilyProperties> queue_families{queue_family_count};
-    vkGetPhysicalDeviceQueueFamilyProperties(tDevice, &queue_family_count, queue_families.data());
+    std::uint32_t count{0U};
+    vkGetPhysicalDeviceQueueFamilyProperties(tDevice, &count, nullptr);
 
-    std::uint32_t queue_index{0U};
-    auto const    queue_families_size = static_cast<std::uint32_t>(queue_families.size());
-    for (; queue_index < queue_families_size; ++queue_index)
+    std::vector<VkQueueFamilyProperties> families(count);
+    vkGetPhysicalDeviceQueueFamilyProperties(tDevice, &count, families.data());
+
+    for (std::uint32_t index = 0U; index < count; ++index)
     {
-        VkQueueFamilyProperties const& family = queue_families[queue_index];
+        VkBool32 canPresent{VK_FALSE};
 
-        if (0U != (family.queueFlags & tFlags))
+        if ((families[index].queueFlags & required) == required &&
+            vkGetPhysicalDeviceSurfaceSupportKHR(tDevice, index, tSurface, &canPresent) == VK_SUCCESS &&
+            canPresent == VK_TRUE)
         {
-            if (0U != (tFlags & VK_QUEUE_GRAPHICS_BIT))
-            {
-                // If gfx family is requested, also check if it has present capabilities
-                VkBool32 present_support{0U};
-                vkGetPhysicalDeviceSurfaceSupportKHR(tDevice, queue_index, tSurface, &present_support);
-
-                if (0U != present_support)
-                {
-                    break;
-                }
-            }
-            else
-            {
-                break;
-            }
+            return index;
         }
     }
-
-    if (queue_index == ToVkSize(queue_families.size()))
-    {
-        LogError("No adequate queue family found for queue flags {}.", tFlags);
-        return VK_QUEUE_FAMILY_IGNORED;
-    }
-
-    return queue_index;
+    return VK_QUEUE_FAMILY_IGNORED;
 }
 
 auto DecodeDriverVersion(std::uint32_t tVendorId, std::uint32_t tDriverVersion) -> std::string
@@ -102,61 +85,122 @@ auto DecodeDriverVersion(std::uint32_t tVendorId, std::uint32_t tDriverVersion) 
     return "Not Found";
 }
 
-auto CreatePhysDevice(VkInstance tInstance) -> VkPhysicalDevice
+auto QueryDeviceFeatures(VkPhysicalDevice tDevice, VkPhysicalDeviceSynchronization2Features& tSynchronization2)
+    -> VkPhysicalDeviceFeatures2
 {
-    // --- Physical device selection ---
-    std::uint32_t device_count{0U};
-    if (VK_SUCCESS != vkEnumeratePhysicalDevices(tInstance, &device_count, nullptr))
-    {
-        return nullptr;
-    }
-    if (device_count == 0U)
-    {
-        return nullptr;
-    }
-
-    std::vector<VkPhysicalDevice> physical_devices(static_cast<std::size_t>(device_count));
-    if (VK_SUCCESS != vkEnumeratePhysicalDevices(tInstance, &device_count, physical_devices.data()))
-    {
-        return nullptr;
-    }
-
-    // TODO(sorbatdev): Select the first available GPU, no need for suitability checks for now.
-
-    return physical_devices[0];
+    VkPhysicalDeviceFeatures2 features{
+        .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext    = &tSynchronization2,
+        .features = {},
+    };
+    vkGetPhysicalDeviceFeatures2(tDevice, &features);
+    return features;
 }
 
-auto CreateQueueIndices(VkPhysicalDevice tPhysDevice, VkSurfaceKHR tSurface) -> Result<QueueFamilyIndices>
+auto SupportsDeviceExtensions(VkPhysicalDevice tDevice, std::span<char const* const> tRequired) -> bool
 {
-    QueueFamilyIndices indices;
-    // --- Suitable queue family selection ---
-    {// Graphics Family
-        auto const q_result = FindQueueFamily(tPhysDevice, tSurface, VK_QUEUE_GRAPHICS_BIT);
-        if (q_result == VK_QUEUE_FAMILY_IGNORED)
-        {
-            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
-        }
-        indices.gfxQIndex = q_result;
+    std::uint32_t count{0U};
+    if (vkEnumerateDeviceExtensionProperties(tDevice, nullptr, &count, nullptr) != VK_SUCCESS)
+    {
+        return false;
     }
-    {// Transfer Family
-        auto const q_result = FindQueueFamily(tPhysDevice, tSurface, VK_QUEUE_TRANSFER_BIT);
-        if (q_result == VK_QUEUE_FAMILY_IGNORED)
-        {
-            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
-        }
-        indices.transferQIndex = q_result;
-    }
-    {// Compute Family
-        auto const q_result = FindQueueFamily(tPhysDevice, tSurface, VK_QUEUE_COMPUTE_BIT);
-        if (q_result == VK_QUEUE_FAMILY_IGNORED)
-        {
-            return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
-        }
-
-        indices.computeQIndex = q_result;
+    std::vector<VkExtensionProperties> extensions(count);
+    if (vkEnumerateDeviceExtensionProperties(tDevice, nullptr, &count, extensions.data()) != VK_SUCCESS)
+    {
+        return false;
     }
 
-    return indices;
+    return std::ranges::all_of(tRequired, [&extensions](std::string_view tName) {
+        return std::ranges::any_of(extensions, [tName](VkExtensionProperties const& tExtension) {
+            return tName == tExtension.extensionName;
+        });
+    });
+}
+
+struct PhysicalDeviceSelection
+{
+    VkPhysicalDevice           device;
+    VkPhysicalDeviceProperties properties;
+    std::uint32_t              graphicsQueueFamily;
+};
+
+auto SelectPhysicalDevice(VkInstance tInstance, VkSurfaceKHR tSurface, std::span<char const* const> tExtensions)
+    -> std::optional<PhysicalDeviceSelection>
+{
+    std::uint32_t count{0U};
+    if (VK_SUCCESS != vkEnumeratePhysicalDevices(tInstance, &count, nullptr) || count == 0U)
+    {
+        return std::nullopt;
+    }
+
+    std::vector<VkPhysicalDevice> devices(count);
+    if (VK_SUCCESS != vkEnumeratePhysicalDevices(tInstance, &count, devices.data()))
+    {
+        return std::nullopt;
+    }
+    devices.resize(count);
+
+    std::optional<PhysicalDeviceSelection> fallback;
+    for (auto* const device : devices)
+    {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(device, &properties);
+        if (properties.apiVersion < VK_API_VERSION_1_3)
+        {
+            LogInfo(
+                "Skipping GPU '{}' because it reports Vulkan {}.{}.{} and Polos requires Vulkan 1.3.",
+                properties.deviceName,
+                VK_API_VERSION_MAJOR(properties.apiVersion),
+                VK_API_VERSION_MINOR(properties.apiVersion),
+                VK_API_VERSION_PATCH(properties.apiVersion));
+            continue;
+        }
+
+        VkPhysicalDeviceSynchronization2Features synchronization2{
+            .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
+            .pNext            = nullptr,
+            .synchronization2 = VK_FALSE,
+        };
+        auto const features = QueryDeviceFeatures(device, synchronization2).features;
+        if (!synchronization2.synchronization2 || !features.multiDrawIndirect || !features.drawIndirectFirstInstance)
+        {
+            LogInfo(
+                "Skipping GPU '{}' because it lacks required synchronization or indirect draw features.",
+                properties.deviceName);
+            continue;
+        }
+        if (!SupportsDeviceExtensions(device, tExtensions))
+        {
+            LogInfo("Skipping GPU '{}' because it lacks a required device extension.", properties.deviceName);
+            continue;
+        }
+
+        // Compute dispatch, rendering and presentation all use the same graphics queue.
+        auto const graphics = FindGraphicsQueueFamily(device, tSurface);
+        if (graphics == VK_QUEUE_FAMILY_IGNORED)
+        {
+            LogInfo(
+                "Skipping GPU '{}' because it has no graphics/compute queue with presentation support.",
+                properties.deviceName);
+            continue;
+        }
+
+        PhysicalDeviceSelection const selected{
+            .device              = device,
+            .properties          = properties,
+            .graphicsQueueFamily = graphics,
+        };
+        if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+            return selected;
+        }
+        if (!fallback)
+        {
+            fallback = selected;
+        }
+    }
+
+    return fallback;
 }
 
 auto CreateCommandPool(VmaAllocator tAllocator, std::uint32_t const tGfxQ, VkDevice tDevice) -> VkCommandPool
@@ -191,139 +235,46 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
     mInstance = RenderContext::GetVulkanContext().mInstance;
     mSurface  = RenderContext::GetVulkanContext().surface;
 
-    if (physDevice = CreatePhysDevice(mInstance); VK_NULL_HANDLE == physDevice)
+    auto const selected = SelectPhysicalDevice(mInstance, mSurface, tInfo.enabledExtensions);
+    if (!selected)
     {
         return ErrorType{RenderingErrc::kFailedFindPhysDevice};
     }
 
-    auto res = CreateQueueIndices(physDevice, mSurface);
-    if (!res.has_value())
-    {
-        return ErrorType{RenderingErrc::kNoAdequateQueueFamily};
-    }
-    mQueueIndices = *res;
-
-    mDeviceProps = {
-        .sType      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
-        .pNext      = nullptr,
-        .properties = {},
-    };
-
-    /// ====================================================================================
-    /// Print out device information
-    /// ====================================================================================
-    vkGetPhysicalDeviceProperties2(physDevice, &mDeviceProps);
-
+    physDevice              = selected->device;
+    mQueueIndices.gfxQIndex = selected->graphicsQueueFamily;
+    auto const& properties  = selected->properties;
     LogInfo(
-        "Selected GPU:\n- Device Name: {}\n- Driver Version: {}",
-        mDeviceProps.properties.deviceName,
-        DecodeDriverVersion(mDeviceProps.properties.vendorID, mDeviceProps.properties.driverVersion));
-
-    PL_ASSERT(
-        mDeviceProps.properties.apiVersion >= VK_API_VERSION_1_3,
-        "Vulkan 1.3 is required to enable core synchronization2.");
+        "Selected GPU:\n- Device Name: {}\n- Driver Version: {}\n- Vulkan API Version: {}.{}.{}",
+        properties.deviceName,
+        DecodeDriverVersion(properties.vendorID, properties.driverVersion),
+        VK_API_VERSION_MAJOR(properties.apiVersion),
+        VK_API_VERSION_MINOR(properties.apiVersion),
+        VK_API_VERSION_PATCH(properties.apiVersion));
 
     VkPhysicalDeviceSynchronization2Features synchronization2_features{
         .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
         .pNext            = nullptr,
         .synchronization2 = VK_FALSE,
     };
-    VkPhysicalDeviceFeatures2 device_features{
-        .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext    = &synchronization2_features,
-        .features = {},
+    auto const device_features = QueryDeviceFeatures(physDevice, synchronization2_features);
+
+    constexpr float const         kQueuePrio{1.0F};
+    VkDeviceQueueCreateInfo const queue_info{
+        .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .pNext            = nullptr,
+        .flags            = 0U,
+        .queueFamilyIndex = mQueueIndices.gfxQIndex,
+        .queueCount       = 1U,
+        .pQueuePriorities = &kQueuePrio,
     };
-    vkGetPhysicalDeviceFeatures2(physDevice, &device_features);
-
-    PL_ASSERT(
-        VK_TRUE == synchronization2_features.synchronization2,
-        "The selected GPU does not support the required synchronization2 feature.");
-
-    PL_ASSERT(device_features.features.multiDrawIndirect, "multiDrawIndirect support is needed.");
-    PL_ASSERT(device_features.features.drawIndirectFirstInstance, "drawIndirectFirstInstance support is needed.");
-
-    constexpr float const kQueuePrio{1.0F};
-
-    std::vector<VkDeviceQueueCreateInfo> q_create_infos;
-
-    if (mQueueIndices.gfxQIndex != std::numeric_limits<std::uint32_t>::max())
-    {
-        VkDeviceQueueCreateInfo const info{
-            .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .pNext            = nullptr,
-            .flags            = 0U,
-            .queueFamilyIndex = mQueueIndices.gfxQIndex,
-            .queueCount       = 1U,
-            .pQueuePriorities = &kQueuePrio,
-        };
-        q_create_infos.push_back(info);
-    }
-
-    if (mQueueIndices.transferQIndex != std::numeric_limits<std::uint32_t>::max() &&
-        // Create only if gfx queue doesn't include a VK_QUEUE_TRANSFER_BIT as well.
-        mQueueIndices.transferQIndex != mQueueIndices.gfxQIndex)
-    {
-        VkDeviceQueueCreateInfo const info{
-            .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .pNext            = nullptr,
-            .flags            = 0U,
-            .queueFamilyIndex = mQueueIndices.transferQIndex,
-            .queueCount       = 1U,
-            .pQueuePriorities = &kQueuePrio,
-        };
-        q_create_infos.push_back(info);
-    }
-
-    if (mQueueIndices.gfxQIndex != std::numeric_limits<std::uint32_t>::max() &&
-        // Create only if either gfx or transfer queues doesn't include a VK_QUEUE_COMPUTE_BIT as well.
-        mQueueIndices.computeQIndex != mQueueIndices.gfxQIndex &&
-        mQueueIndices.computeQIndex != mQueueIndices.transferQIndex)
-    {
-        VkDeviceQueueCreateInfo const info{
-            .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .pNext            = nullptr,
-            .flags            = 0U,
-            .queueFamilyIndex = mQueueIndices.gfxQIndex,
-            .queueCount       = 1U,
-            .pQueuePriorities = &kQueuePrio,
-        };
-        q_create_infos.push_back(info);
-    }
-
-    /// ==========================================
-    ///         Logical device creation
-    /// ==========================================
-
-    std::uint32_t count{0U};
-    vkEnumerateDeviceExtensionProperties(physDevice, nullptr, &count, nullptr);
-    std::vector<VkExtensionProperties> extensions(count);
-    vkEnumerateDeviceExtensionProperties(physDevice, nullptr, &count, extensions.data());
-
-    std::size_t satisifed_extensions{0U};
-
-    for (auto const* req_ext : tInfo.enabledExtensions)
-    {
-        for (auto const& device_ext : extensions)
-        {
-            if (std::string_view{&device_ext.extensionName[0]} == std::string_view{req_ext})
-            {
-                ++satisifed_extensions;
-                break;
-            }
-        }
-    }
-
-    if (satisifed_extensions != tInfo.enabledExtensions.size())
-    {
-        return ErrorType{RenderingErrc::kNoAdequateExtension};
-    }
 
     VkDeviceCreateInfo const device_create_info{
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext                   = &device_features,
         .flags                   = 0U,
-        .queueCreateInfoCount    = ToVkSize(q_create_infos.size()),
-        .pQueueCreateInfos       = q_create_infos.data(),
+        .queueCreateInfoCount    = 1U,
+        .pQueueCreateInfos       = &queue_info,
         .enabledLayerCount       = 0U,     // deprecated
         .ppEnabledLayerNames     = nullptr,// deprecated
         .enabledExtensionCount   = ToVkSize(tInfo.enabledExtensions.size()),

@@ -20,6 +20,13 @@
 #include <cstddef>
 #include <memory>
 
+#if defined(ENABLE_PROFILING)
+namespace tracy
+{
+class VkCtx;
+}
+#endif
+
 namespace polos::platform
 {
 class PlatformManager;
@@ -69,12 +76,16 @@ public:
     static auto GetVulkanContext() -> VulkanContext&;
     static auto GetVulkanDevice() -> VulkanDevice&;
     static auto GetSwapchain() -> VulkanSwapchain&;
+#if defined(ENABLE_PROFILING)
+    static auto GetGpuProfileContext() -> tracy::VkCtx*;
+#endif
 private:
     friend class platform::PlatformManager;
     static RenderContext* sRenderContext;
 
     void onFramebufferResize();
 
+    auto createSwapchain() -> Result<void>;
     auto createFrameResources() -> Result<void>;
     auto destroyFrameResources() -> void;
 
@@ -97,6 +108,10 @@ private:
 
     std::array<SubsystemEntry, 7U> mSubsystems{};
     std::size_t                    mInitializedSubsystems{0U};
+
+#if defined(ENABLE_PROFILING)
+    tracy::VkCtx* mGpuProfileContext{nullptr};
+#endif
 
     bool mHasFramebufferResized{false};
 

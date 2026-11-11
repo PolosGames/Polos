@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <memory>
 #include <span>
 #include <unordered_map>
 #include <unordered_set>
@@ -208,9 +209,9 @@ private:
     std::uint32_t              mEntitiesHead{0U};
     std::vector<std::uint32_t> mFreeIndices;
 
-    std::array<rendering::MeshInstance, Settings::kMaxEntities> mInstanceBuffer{};
-    std::vector<EntityHandle>                                   mInstanceChanges;
-    std::unordered_set<EntityIndex>                             mPendingInstanceUploads;
+    std::unique_ptr<rendering::MeshInstance[]> mInstanceBuffer;
+    std::vector<EntityHandle>                 mInstanceChanges;
+    std::unordered_set<EntityIndex>           mPendingInstanceUploads;
 
     SceneGraph mSceneGraph;
 };

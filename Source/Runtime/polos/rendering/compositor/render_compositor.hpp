@@ -7,7 +7,6 @@
 #define POLOS_RENDERING_RENDER_COMPOSITOR_HPP
 
 #include "polos/rendering/compositor/frame_targets.hpp"
-// #include "polos/rendering/passes/opaque_geometry_pass.hpp"
 #include "polos/rendering/passes/forward_shading_pass.hpp"
 #include "polos/rendering/passes/ui_render_pass.hpp"
 #include "polos/rendering/settings.hpp"
@@ -69,7 +68,6 @@ private:
 
     std::unique_ptr<Buffer> mInstanceBuffer;
 
-    //std::unique_ptr<OpaqueGeometryPass>                    mOpaqueGeometryPass;
     std::unique_ptr<ForwardShadingPass> mForwardShadingPass;
     std::unique_ptr<UiRenderPass>       mUiRenderPass;
 

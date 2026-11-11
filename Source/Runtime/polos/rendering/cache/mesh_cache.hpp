@@ -52,6 +52,7 @@ public:
 
     [[nodiscard]] static auto GetVertexBuffer() -> VkBuffer;
     [[nodiscard]] static auto GetIndexBuffer() -> VkBuffer;
+    [[nodiscard]] static auto GetMeshBoundsBuffer() -> VkBuffer;
     [[nodiscard]] static auto GetMeshCount() -> uint32_t;
     [[nodiscard]] static auto GetIndirectCommandBufferByFrameSlot(uint32_t tFrameSlot) -> VkBuffer;
 
@@ -78,6 +79,8 @@ private:
 
     std::vector<uint32_t>                                             mMeshInstances;
     std::vector<VkDrawIndexedIndirectCommand>                         mMeshInfos;
+    std::vector<glm::vec4>                                            mMeshBounds;
+    std::unique_ptr<Buffer>                                           mMeshBoundsBuffer;
     std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mMeshInfoBuffer;
 
     // How many new uses added/removed of a specific mesh at a index

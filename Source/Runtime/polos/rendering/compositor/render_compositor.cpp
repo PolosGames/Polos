@@ -20,6 +20,7 @@
 #include "polos/rendering/vk/frame_data.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
+#include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
@@ -54,7 +55,6 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
 
     PL_ASSERT(nullptr != mInstanceBuffer, "Instance buffer could not be created");
 
-    // mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>(mQuadVertexShader, mQuadFragmentShader);
     mForwardShadingPass =
         std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
@@ -72,7 +72,6 @@ auto RenderCompositor::Destroy() -> void
 {
     mUiRenderPass.reset();
     mForwardShadingPass.reset();
-    // mOpaqueGeometryPass.reset();
     mInstanceBuffer.reset();
     mMainComputeShader.reset();
     mForwardFragmentShader.reset();
@@ -85,7 +84,6 @@ auto RenderCompositor::Destroy() -> void
 auto RenderCompositor::RecreateTargets() -> Result<void>
 {
     mUiRenderPass->ReleaseFramebuffers();
-    // mOpaqueGeometryPass.reset();
     mForwardShadingPass.reset();
     releaseTargets();
     PL_ASSERT(createTargets().has_value(), "Failed to recreate render compositor");
@@ -93,12 +91,12 @@ auto RenderCompositor::RecreateTargets() -> Result<void>
     mForwardShadingPass =
         std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
-    // mOpaqueGeometryPass = std::make_unique<OpaqueGeometryPass>(mQuadVertexShader, mQuadFragmentShader);
     return {};
 }
 
 auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
 {
+    POLOS_PROFILE_ZONE("Prepare render compositor");
     ecs::Scene* scene = ecs::SceneManager::GetCurrentScene();
 
     // Always at least 1 camera, no need to check if activeCamera exists
@@ -108,34 +106,27 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
         tFrameData.scImage->extent.width,
         tFrameData.scImage->extent.height);
 
-    auto changes = scene->ConsumeInstanceChanges();
-
-    for (auto const index : changes)
     {
-        mInstanceBuffer->Write(&scene->GetMeshInstances()[index], sizeof(MeshInstance), index * sizeof(MeshInstance));
+        POLOS_PROFILE_ZONE("Upload changed mesh instances");
+        auto const changes = scene->ConsumeInstanceChanges();
+        POLOS_PROFILE_PLOT("Changed mesh instances", static_cast<std::int64_t>(changes.size()));
+        for (auto const index : changes)
+        {
+            mInstanceBuffer->Write(
+                &scene->GetMeshInstances()[index],
+                sizeof(MeshInstance),
+                index * sizeof(MeshInstance));
+        }
     }
 
     mForwardShadingPass->Prepare(tFrameData.frameSlot, mInstanceBuffer->buffer);
-    // mOpaqueGeometryPass->Prepare(tFrameData.frameSlot, mQuadBatches);
 }
 
 auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
 {
+    POLOS_PROFILE_ZONE("Record render compositor");
+    POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU frame");
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
-    // mOpaqueGeometryPass->Record(
-    //     OpaqueGeometryPass::Inputs{
-    //         .frameSlot     = tFrameData.frameSlot,
-    //         .cmdBuf        = tFrameData.currentCmdBuf,
-    //         .renderArea    = RenderContext::GetSwapchain().GetRenderArea(),
-    //         .extent        = ToExtent2D(tFrameData.scImage->extent),
-    //         .scissor       = RenderContext::GetSwapchain().GetScissor(),
-    //         .viewport      = RenderContext::GetSwapchain().GetViewport(),
-    //         .cameraUniform = mCameraUbo,
-    //         .colorView     = targets.colorImgView,
-    //         .depthView     = targets.depthImgView,
-    //         .quadVertices  = mQuadVertexBuffer.get(),
-    //         .quadIndices   = mQuadIndexBuffer.get(),
-    //     });
 
     ecs::Scene const* scene = ecs::SceneManager::GetCurrentScene();
 
@@ -159,12 +150,16 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
         .accesses = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     });
 
-    mUiRenderPass->Record({
-        .frameSlot = tFrameData.frameSlot,
-        .cmdBuf    = tFrameData.currentCmdBuf,
-        .colorView = targets.colorImgView,
-        .extent    = ToExtent2D(tFrameData.scImage->extent),
-    });
+    {
+        POLOS_PROFILE_ZONE("Record ImGui");
+        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU ImGui");
+        mUiRenderPass->Record({
+            .frameSlot = tFrameData.frameSlot,
+            .cmdBuf    = tFrameData.currentCmdBuf,
+            .colorView = targets.colorImgView,
+            .extent    = ToExtent2D(tFrameData.scImage->extent),
+        });
+    }
 
     targets.colorImg->SetUse({
         .layout   = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -172,9 +167,13 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
         .accesses = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     });
 
-    tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    tFrameData.scImage->BlitFrom(tFrameData.currentCmdBuf, *targets.colorImg);
-    tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    {
+        POLOS_PROFILE_ZONE("Record blit to swapchain");
+        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU blit to swapchain");
+        tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        tFrameData.scImage->BlitFrom(tFrameData.currentCmdBuf, *targets.colorImg);
+        tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    }
 
     return drawCalls;
 }

@@ -95,7 +95,7 @@ struct fmtquill::formatter<polos::utils::ErrorCode>
 {
     constexpr auto parse(format_parse_context& tCtx)// NOLINT
     { return tCtx.begin(); }
-    constexpr auto format(polos::utils::ErrorCode const& tEvent, format_context& tCtx) const// NOLINT
+    auto format(polos::utils::ErrorCode const& tEvent, format_context& tCtx) const// NOLINT
     { return fmtquill::format_to(tCtx.out(), "{}", tEvent.Message()); }
 };
 

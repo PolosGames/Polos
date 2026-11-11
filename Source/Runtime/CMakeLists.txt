@@ -37,6 +37,10 @@ target_link_libraries(polos PUBLIC
     stb_textedit::stb_textedit
     tinygltf::tinygltf
 )
+if (ENABLE_PROFILING)
+    target_link_libraries(polos PUBLIC Tracy::TracyClient)
+endif()
+
 set_target_properties(polos
     PROPERTIES
         CXX_STANDARD              ${POLOS_CXX_STANDARD}

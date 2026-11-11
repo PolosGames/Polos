@@ -7,6 +7,7 @@
 
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/scene.hpp"
+#include "polos/utils/profiling.hpp"
 
 namespace polos::ecs
 {
@@ -19,6 +20,7 @@ constexpr auto kMeshRendererBit = static_cast<std::size_t>(ComponentType::kMeshR
 
 void DirtyTransformSystem::Update(Scene* tScene)
 {
+    POLOS_PROFILE_ZONE("Dirty transforms and mesh instances");
     if (tScene == nullptr)
     {
         return;

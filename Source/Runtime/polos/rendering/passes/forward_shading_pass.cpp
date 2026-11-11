@@ -13,6 +13,7 @@
 #include "polos/rendering/vk/graphics_pipeline_info.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
+#include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
@@ -46,10 +47,11 @@ constexpr DescriptorBinding const kBinding_Ubo_Camera{
 
 // Set 1
 constexpr uint32_t const kSet1{1U};
-constexpr size_t const   kSet1BindingCount{2U};
+constexpr size_t const   kSet1BindingCount{3U};
 
 constexpr DescriptorBinding const kBinding_Ssbo_MeshInstance{.set = 1U, .binding = 0U};
 constexpr DescriptorBinding const kBinding_Ssbo_IndirectCommands{.set = 1U, .binding = 1U};
+constexpr DescriptorBinding const kBinding_Ssbo_MeshBounds{.set = 1U, .binding = 2U};
 
 
 // Set 2
@@ -279,7 +281,11 @@ auto UpdateSet0(VkBuffer tCameraUbo, DescriptorSet& tSet0) -> void
     tSet0.Update(wdss);
 }
 
-auto UpdateSet1(VkBuffer tMeshInstanceSsbo, VkBuffer tIndirectCommandSsbo, DescriptorSet& tSet1) -> void
+auto UpdateSet1(
+    VkBuffer       tMeshInstanceSsbo,
+    VkBuffer       tIndirectCommandSsbo,
+    VkBuffer       tMeshBoundsSsbo,
+    DescriptorSet& tSet1) -> void
 {
     VkDescriptorBufferInfo const meshInstanceSsbo{
         .buffer = tMeshInstanceSsbo,
@@ -289,6 +295,12 @@ auto UpdateSet1(VkBuffer tMeshInstanceSsbo, VkBuffer tIndirectCommandSsbo, Descr
 
     VkDescriptorBufferInfo const indirectCommandsSsbo{
         .buffer = tIndirectCommandSsbo,
+        .offset = 0U,
+        .range  = VK_WHOLE_SIZE,
+    };
+
+    VkDescriptorBufferInfo const meshBoundsSsbo{
+        .buffer = tMeshBoundsSsbo,
         .offset = 0U,
         .range  = VK_WHOLE_SIZE,
     };
@@ -316,6 +328,18 @@ auto UpdateSet1(VkBuffer tMeshInstanceSsbo, VkBuffer tIndirectCommandSsbo, Descr
             .descriptorType   = kBinding_Ssbo_IndirectCommands.type,
             .pImageInfo       = nullptr,
             .pBufferInfo      = &indirectCommandsSsbo,
+            .pTexelBufferView = nullptr,
+        },
+        VkWriteDescriptorSet{
+            .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext            = nullptr,
+            .dstSet           = VK_NULL_HANDLE,
+            .dstBinding       = kBinding_Ssbo_MeshBounds.binding,
+            .dstArrayElement  = 0U,
+            .descriptorCount  = 1U,
+            .descriptorType   = kBinding_Ssbo_MeshBounds.type,
+            .pImageInfo       = nullptr,
+            .pBufferInfo      = &meshBoundsSsbo,
             .pTexelBufferView = nullptr,
         },
     };
@@ -373,10 +397,11 @@ auto RecordPreComputeBarriers(
     VkCommandBuffer tCmdBuf,
     VkBuffer        tIndirectBuffer,
     VkBuffer        tInstanceBuffer,
+    VkBuffer        tMeshBoundsBuffer,
     VkBuffer        tVisibleIndicesBuffer,
     VkBuffer        tWorldMatricesBuffer) -> void
 {
-    std::array<VkBufferMemoryBarrier2 const, 4U> const bufferBarriers{
+    std::array<VkBufferMemoryBarrier2 const, 5U> const bufferBarriers{
         // Flush CPU indirect command reset (instanceCount = 0, firstInstance) & wait for prior indirect draw reads
         VkBufferMemoryBarrier2{
             .sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2,
@@ -402,6 +427,20 @@ auto RecordPreComputeBarriers(
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .buffer              = tInstanceBuffer,
+            .offset              = 0U,
+            .size                = VK_WHOLE_SIZE,
+        },
+        // Ensure CPU MeshBounds writes are visible to compute shader
+        VkBufferMemoryBarrier2{
+            .sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2,
+            .pNext               = nullptr,
+            .srcStageMask        = VK_PIPELINE_STAGE_2_HOST_BIT,
+            .srcAccessMask       = VK_ACCESS_2_HOST_WRITE_BIT,
+            .dstStageMask        = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+            .dstAccessMask       = VK_ACCESS_2_SHADER_STORAGE_READ_BIT,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .buffer              = tMeshBoundsBuffer,
             .offset              = 0U,
             .size                = VK_WHOLE_SIZE,
         },
@@ -542,6 +581,10 @@ ForwardShadingPass::ForwardShadingPass(
             .descriptorCount = Settings::kMaxFramesInFlight,
         },
         VkDescriptorPoolSize{
+            .type            = kBinding_Ssbo_MeshBounds.type,
+            .descriptorCount = Settings::kMaxFramesInFlight,
+        },
+        VkDescriptorPoolSize{
             .type            = kBinding_Ssbo_VisibleMatrixIndices.type,
             .descriptorCount = Settings::kMaxFramesInFlight,
         },
@@ -580,6 +623,13 @@ ForwardShadingPass::ForwardShadingPass(
             VkDescriptorSetLayoutBinding{
                 .binding            = kBinding_Ssbo_IndirectCommands.binding,
                 .descriptorType     = kBinding_Ssbo_IndirectCommands.type,
+                .descriptorCount    = 1U,
+                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
+                .pImmutableSamplers = nullptr,
+            },
+            VkDescriptorSetLayoutBinding{
+                .binding            = kBinding_Ssbo_MeshBounds.binding,
+                .descriptorType     = kBinding_Ssbo_MeshBounds.type,
                 .descriptorCount    = 1U,
                 .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
                 .pImmutableSamplers = nullptr,
@@ -697,12 +747,14 @@ auto ForwardShadingPass::Prepare(uint32_t const tFrameSlot, VkBuffer tInstanceBu
         UpdateSet1(
             tInstanceBuffer,
             MeshCache::GetIndirectCommandBufferByFrameSlot(tFrameSlot),
+            MeshCache::GetMeshBoundsBuffer(),
             mDescPool.GetSetForFrameSlotAtIndex(kSet1, tFrameSlot));
     }
 }
 
 auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
 {
+    POLOS_PROFILE_ZONE("Record forward shading");
     VkFramebuffer const fbuf = mFramebuffers[tInputs.frameSlot];
 
     std::array<VkDescriptorSet const, 3U> const descriptorSets{
@@ -721,12 +773,17 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
 
     VkCommandBuffer const cmdBuf = tInputs.cmdBuf;
 
+    POLOS_PROFILE_PLOT("Compute entity slots", static_cast<std::int64_t>(tInputs.slotCount));
+    POLOS_PROFILE_PLOT("Indirect draw commands", static_cast<std::int64_t>(meshCount));
     if (hasWork)
     {
+        POLOS_PROFILE_ZONE("Record compute dispatch");
+        POLOS_PROFILE_GPU_ZONE(cmdBuf, "GPU instance transform compute");
         RecordPreComputeBarriers(
             cmdBuf,
             indirectBuffer,
             tInputs.instanceBuffer->buffer,
+            MeshCache::GetMeshBoundsBuffer(),
             mVisibleMatrixIndicesBuffer->buffer,
             mWorldMatrices->buffer);
 
@@ -777,6 +834,9 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
     std::array<VkViewport, 1U> const viewports{tInputs.viewport};
 
     int32_t drawCalls{0};
+
+    POLOS_PROFILE_ZONE("Record indexed indirect draw pass");
+    POLOS_PROFILE_GPU_ZONE(cmdBuf, "GPU indexed indirect draw pass");
 
     // clang-format off
     vkCmdBeginRenderPass(cmdBuf, &rpbi, VK_SUBPASS_CONTENTS_INLINE);

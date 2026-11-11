@@ -61,7 +61,7 @@ install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK
 | Build and stage Sandbox | `./Scripts/Linux/build_sandbox.sh linux-release` | `./Scripts/Windows/build_sandbox.ps1 -Preset win-release` |
 | Build and run Sandbox | `./Scripts/Linux/run_sandbox.sh` | `./Scripts/Windows/run_sandbox.ps1` |
 | Build and debug with LLDB | `./Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
-| Export the SDK | `./Scripts/Linux/export_sdk.sh` | `./Scripts/Windows/export_sdk.ps1` |
+| Export the SDK | `bash Scripts/Linux/export_sdk.sh linux-release` | `./Scripts/Windows/export_sdk.ps1` |
 
 Sandbox is staged in `out/bin/<preset>` with the engine shared libraries and
 resources. Run and debug default to the Debug preset. The SDK defaults to Release
@@ -69,9 +69,9 @@ and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, librari
 engine resources, and Windows import libraries. Link against Polos and place the
 engine shared libraries and `Resources` beside the application executable.
 
-The **Build Sandbox** and **Export Polos SDK** workflows upload separate Linux and
-Windows Release artifacts. Running the Windows build requires a Vulkan 1.3 driver and
-the x64 MSVC runtime on the destination machine.
+The **Export Polos SDK** workflow uploads separate Linux and Windows Release
+SDK archives. Running applications with the Windows SDK requires a Vulkan 1.3
+driver and the x64 MSVC runtime on the destination machine.
 
 ### Windows Sandbox from Linux
 
@@ -80,20 +80,6 @@ x86_64 MinGW-w64 GCC toolchain with C++23 support. If the compiler is outside
 `PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
 The script stages the Windows executable, DLLs, and resources in
 `out/bin/linux-to-win-mingw-release`. Use the native Windows build for the MSVC SDK ABI.
-
-### Nightly builds
-
-The `Nightly sandbox` GitHub Actions workflow builds Linux x64 Release from the repository's default branch
-(currently `master`)
-at 00:17 UTC (03:17 Istanbul) each day, runs the unit tests, and publishes the sandbox,
-engine libraries, resources, and checksums as a GitHub prerelease.
-Tags use `v<VERSION>-nightly.<YYYYMMDD>.<run>.<attempt>` and point to the exact built
-commit. It can also be dispatched manually from the default branch; other refs are skipped.
-It follows the default branch automatically if it is renamed to `main`.
-The workflow needs to be on the repository's default branch for scheduled runs.
-
-Extract the archive and run `./sandbox` from its directory with a Vulkan 1.3 capable
-driver and a desktop session.
 
 ## AI Usage
 

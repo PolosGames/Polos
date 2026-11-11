@@ -30,7 +30,8 @@ jobs:
       - uses: ./.github/actions/setup-polos
       - name: Export Linux SDK
         if: runner.os == 'Linux'
-        run: Scripts/Linux/export_sdk.sh linux-release
+        shell: bash
+        run: bash Scripts/Linux/export_sdk.sh linux-release
       - name: Export Windows SDK
         if: runner.os == 'Windows'
         run: ./Scripts/Windows/export_sdk.ps1 -Preset win-release

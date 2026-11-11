@@ -65,7 +65,7 @@ void RenderingApi::createRenderContext()
     mRenderContext = std::make_shared<RenderContext>();
 
     auto result = mRenderContext->Initialize(*mWindowSurface);
-    PL_ASSERT(result.has_value(), "Could not initialize the Vulkan render context.");
+    PL_ASSERT(result.has_value(), "Could not initialize the Vulkan render context: {}", result.error().Message());
 }
 
 }// namespace polos::rendering

@@ -141,16 +141,6 @@ auto ToImGui(TableFlags tFlags) -> ImGuiTableFlags
 }
 }// namespace
 
-auto operator|(WindowFlags tLeft, WindowFlags tRight) -> WindowFlags
-{
-    return static_cast<WindowFlags>(static_cast<std::uint32_t>(tLeft) | static_cast<std::uint32_t>(tRight));
-}
-
-auto operator|(TableFlags tLeft, TableFlags tRight) -> TableFlags
-{
-    return static_cast<TableFlags>(static_cast<std::uint32_t>(tLeft) | static_cast<std::uint32_t>(tRight));
-}
-
 auto Begin(char const* tTitle, bool* tOpen, WindowFlags tFlags) -> bool
 {
     return ImGui::Begin(tTitle, tOpen, ToImGui(tFlags));
