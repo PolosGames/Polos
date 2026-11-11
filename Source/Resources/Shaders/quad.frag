@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_terminate_invocation : require
 
 layout(set = 1, binding = 1) uniform sampler2D uTexture[32];
 
@@ -51,7 +52,7 @@ void main()
 
     if (color.a == 0)
     {
-        discard;
+        terminateInvocation;
     }
 
     oColor = color;

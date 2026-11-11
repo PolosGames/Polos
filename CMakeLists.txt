@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
+if (POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+endif()
 # The LINUX platform variable used by the build requires CMake 3.25.
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" POLOS_VERSION)

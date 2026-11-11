@@ -34,8 +34,8 @@ function(build_options target warnings)
                 PRIVATE
                     "/EHsc"
                     "/permissive-"
+                    "/Zc:preprocessor"
                     "/W4"
-                    "/WX"
                     "/w14101" # unreferenced local variable
                     "/w14189" # local variable is initialized but not referenced
                     "/w14242" # conversion from 'type1' to 'type1', possible loss of data

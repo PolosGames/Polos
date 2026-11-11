@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.25)
 
-if (LINUX)
-    set(CMAKE_C_COMPILER /usr/bin/gcc)
-    set(CMAKE_CXX_COMPILER /usr/bin/g++)
+set(vcpkg_root "$ENV{VCPKG_ROOT}")
+if (NOT vcpkg_root)
+    set(vcpkg_root "$ENV{VCPKG_INSTALLATION_ROOT}")
 endif()
-
-include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+if (NOT vcpkg_root AND EXISTS "$ENV{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    set(vcpkg_root "$ENV{HOME}/vcpkg")
+endif()
+if (NOT EXISTS "${vcpkg_root}/scripts/buildsystems/vcpkg.cmake")
+    message(FATAL_ERROR "Set VCPKG_ROOT to a bootstrapped vcpkg installation.")
+endif()
+include("${vcpkg_root}/scripts/buildsystems/vcpkg.cmake")

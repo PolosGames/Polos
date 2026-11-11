@@ -4,7 +4,7 @@ find_package(ctre CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
+find_package(Vulkan 1.3 REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
 add_library(polos SHARED)
@@ -22,7 +22,7 @@ target_sources(polos
                 "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp"
 )
 # Pair headers with the SDK loader instead of vcpkg's transitive Vulkan headers.
-if (UNIX AND NOT APPLE AND DEFINED ENV{VULKAN_SDK})
+if (DEFINED ENV{VULKAN_SDK})
     target_include_directories(polos BEFORE PUBLIC "${Vulkan_INCLUDE_DIR}")
 endif()
 
@@ -71,21 +71,39 @@ polos_attach_build_info(polos "${POLOS_SOURCES};${POLOS_RUNTIME_HEADERS};${POLOS
 
 add_dependencies(polos compile_shaders)
 install(TARGETS polos
-    LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-    ARCHIVE DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-    RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-    FILE_SET runtime_headers DESTINATION "${POLOS_INSTALL_INC_DIR}"
-    FILE_SET generated_headers DESTINATION "${POLOS_INSTALL_INC_DIR}"
+    LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime NAMELINK_COMPONENT SDK
+    ARCHIVE DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT SDK
+    RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime
+    FILE_SET runtime_headers DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK
+    FILE_SET generated_headers DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK
 )
-install(FILES "${CMAKE_SOURCE_DIR}/VERSION" DESTINATION "${POLOS_INSTALL_DIR}")
+if (MSVC)
+    install(FILES "$<TARGET_PDB_FILE:polos>" DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime OPTIONAL)
+endif()
+install(FILES "${CMAKE_SOURCE_DIR}/VERSION" "${CMAKE_SOURCE_DIR}/LICENSE"
+    DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime)
 
-# Install shared third-party runtime artifacts with their SONAME symlink chains.
-foreach(DEPENDENCY ctre::ctre glfw glm::glm imgui::imgui GPUOpen::VulkanMemoryAllocator)
+# Headers included by the installed engine headers and by sample applications.
+set(POLOS_VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+install(DIRECTORY
+    "${POLOS_VCPKG_INCLUDE_DIR}/glm"
+    "${POLOS_VCPKG_INCLUDE_DIR}/quill"
+    "${POLOS_VCPKG_INCLUDE_DIR}/GLFW"
+    "${Vulkan_INCLUDE_DIR}/vulkan"
+    "${Vulkan_INCLUDE_DIR}/vk_video"
+    DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
+find_path(POLOS_VMA_INCLUDE_DIR vk_mem_alloc.h
+    HINTS "${POLOS_VCPKG_INCLUDE_DIR}" "${Vulkan_INCLUDE_DIR}" REQUIRED)
+install(FILES "${POLOS_VMA_INCLUDE_DIR}/vk_mem_alloc.h"
+    DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
+
+# Vulkan's loader is provided by the target system.
+foreach(DEPENDENCY glfw glm::glm imgui::imgui)
     get_target_property(DEPENDENCY_TYPE ${DEPENDENCY} TYPE)
     if (DEPENDENCY_TYPE STREQUAL "SHARED_LIBRARY")
         install(IMPORTED_RUNTIME_ARTIFACTS ${DEPENDENCY}
-            LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}"
-            RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}"
+            LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime
+            RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime
         )
     endif()
 endforeach()

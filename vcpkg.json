@@ -9,6 +9,7 @@
         "ctre",
         {
             "name": "glfw3",
+            "platform": "linux",
             "features": [
                 "wayland"
             ]
