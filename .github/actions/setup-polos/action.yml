@@ -21,6 +21,29 @@ runs:
       with:
         version: 1.4.309.0
 
+    - name: Install pkgconf for Windows vcpkg
+      if: runner.os == 'Windows'
+      id: msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: mingw-w64-ucrt-x86_64-pkgconf
+
+    - name: Configure vcpkg to use installed pkgconf
+      if: runner.os == 'Windows'
+      shell: pwsh
+      env:
+        MSYS2_ROOT: ${{ steps.msys2.outputs.msys2-location }}
+      run: |
+        $PkgConfig = Join-Path $env:MSYS2_ROOT 'ucrt64/bin/pkgconf.exe'
+        & $PkgConfig --version
+        if ($LASTEXITCODE -ne 0) { throw 'pkgconf failed to start' }
+        # The pinned vcpkg otherwise downloads an MSYS2 runtime removed from its mirrors.
+        "PKG_CONFIG=$PkgConfig" >> $env:GITHUB_ENV
+        $KeepVars = @($env:VCPKG_KEEP_ENV_VARS, 'PKG_CONFIG') | Where-Object { $_ }
+        "VCPKG_KEEP_ENV_VARS=$($KeepVars -join ';')" >> $env:GITHUB_ENV
+
     - name: Bootstrap pinned vcpkg
       shell: pwsh
       run: |

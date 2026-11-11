@@ -1,4 +1,5 @@
 # Binaries
+/out/packages/
 **/bin/
 build/
 vsbuild/

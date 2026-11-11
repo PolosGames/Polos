@@ -49,6 +49,10 @@ set_target_properties(polos
         INSTALL_RPATH             "$ORIGIN"
 )
 build_options(polos true)
+if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # libstdc++ keeps the Windows terminal helpers used by std::println here.
+    target_link_libraries(polos PRIVATE stdc++exp)
+endif()
 
 add_subdirectory(polos/communication)
 add_subdirectory(polos/core)
@@ -92,8 +96,10 @@ install(DIRECTORY
     "${Vulkan_INCLUDE_DIR}/vulkan"
     "${Vulkan_INCLUDE_DIR}/vk_video"
     DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
+get_target_property(POLOS_VMA_INCLUDE_HINTS GPUOpen::VulkanMemoryAllocator INTERFACE_INCLUDE_DIRECTORIES)
 find_path(POLOS_VMA_INCLUDE_DIR vk_mem_alloc.h
-    HINTS "${POLOS_VCPKG_INCLUDE_DIR}" "${Vulkan_INCLUDE_DIR}" REQUIRED)
+    HINTS ${POLOS_VMA_INCLUDE_HINTS} "${POLOS_VCPKG_INCLUDE_DIR}" "${Vulkan_INCLUDE_DIR}"
+    PATH_SUFFIXES vma REQUIRED)
 install(FILES "${POLOS_VMA_INCLUDE_DIR}/vk_mem_alloc.h"
     DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
 

@@ -41,17 +41,19 @@ auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<Image>
     std::int32_t width{0};
     std::int32_t height{0};
     std::int32_t sourceComponents{0};
-    if (1U != stbi_info(tPath.c_str(), &width, &height, &sourceComponents))
+    auto const pathUtf8 = tPath.u8string();
+    auto const* path = reinterpret_cast<char const*>(pathUtf8.c_str());
+    if (1U != stbi_info(path, &width, &height, &sourceComponents))
     {
-        LogError("Could not read image information for '{}': {}", tPath.string(), stbi_failure_reason());
+        LogError("Could not read image information for '{}': {}", path, stbi_failure_reason());
         return nullptr;
     }
 
     stbi_set_flip_vertically_on_load_thread(1);
-    std::uint8_t* pixels = stbi_load(tPath.c_str(), &width, &height, &sourceComponents, kOutputComponents);
+    std::uint8_t* pixels = stbi_load(path, &width, &height, &sourceComponents, kOutputComponents);
     if (nullptr == pixels)
     {
-        LogError("Could not decode image '{}': {}", tPath.string(), stbi_failure_reason());
+        LogError("Could not decode image '{}': {}", path, stbi_failure_reason());
         return nullptr;
     }
 
