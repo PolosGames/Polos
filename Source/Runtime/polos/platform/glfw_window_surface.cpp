@@ -47,6 +47,11 @@ auto GlfwWindowSurface::GetFramebufferSize() const -> FramebufferSize
     std::int32_t width{0};
     std::int32_t height{0};
     glfwGetFramebufferSize(mWindow, &width, &height);
+    while (width == 0 || height == 0)
+    {
+        glfwGetFramebufferSize(mWindow, &width, &height);
+        glfwWaitEvents();
+    }
 
     return {.width = static_cast<std::uint32_t>(width), .height = static_cast<std::uint32_t>(height)};
 }

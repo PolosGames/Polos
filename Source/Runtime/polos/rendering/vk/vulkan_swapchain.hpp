@@ -35,7 +35,7 @@ class VulkanSwapchain
 public:
     struct alignas(128) CreationDetails// NOLINT
     {
-        platform::IWindowSurface const* windowSurface{nullptr};
+        platform::FramebufferSize const& fremebufferSize;
 
         std::vector<VkSurfaceFormatKHR> preferredSurfaceFormats;
         std::vector<VkPresentModeKHR>   preferredPresentModes;
@@ -78,7 +78,7 @@ public:
     [[nodiscard]] auto GetImageView(std::uint32_t tIndex) const -> VkImageView;
     [[nodiscard]] auto GetImageCount() const -> std::uint32_t;
 private:
-    auto setupExtentAndViewport(VkPhysicalDevice tPhysDevice) -> void;
+    auto setupExtentAndViewport(VkPhysicalDevice tPhysDevice, platform::FramebufferSize const& tFrameBuffer) -> void;
     auto
     selectFormatAndMode(std::vector<VkSurfaceFormatKHR> const& tFormats, std::vector<VkPresentModeKHR> const& tModes)
         -> bool;

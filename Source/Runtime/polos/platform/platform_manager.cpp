@@ -5,7 +5,6 @@
 
 #include "polos/platform/platform_manager.hpp"
 
-#include "polos/platform/glfw_window_surface.hpp"
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
@@ -17,6 +16,7 @@
 #include "polos/communication/window_focus.hpp"
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/platform/glfw_window_surface.hpp"
 #include "polos/utils/assert.hpp"
 
 #include <GLFW/glfw3.h>
@@ -92,10 +92,14 @@ void GlfwErrorCallback(std::int32_t tErrorCode, const char* tDescription)
 #endif
 
 void OnWindowClose()
-{ communication::DispatchDefer<communication::EngineTerminate>(); }
+{
+    communication::DispatchDefer<communication::EngineTerminate>();
+}
 
 void OnEndFrame()
-{ glfwPollEvents(); }
+{
+    glfwPollEvents();
+}
 
 }// namespace
 
@@ -150,11 +154,26 @@ PlatformManager::PlatformManager()
 }
 
 PlatformManager& PlatformManager::Instance()
-{ return *sInstance; }
+{
+    return *sInstance;
+}
 
 bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight, std::string_view tTitle)
 {
     std::string const title(tTitle);
+
+#if defined(__linux__)
+    std::string const session_type(std::getenv("XDG_SESSION_TYPE"));// NOLINT
+    if (session_type == "wayland")
+    {
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, "PolosApp");
+    }
+    if (session_type == "x11")
+    {
+        glfwWindowHintString(GLFW_X11_CLASS_NAME, "PolosApp");
+    }
+#endif
+
     mWindow = glfwCreateWindow(tWidth, tHeight, title.c_str(), nullptr, nullptr);
     if (nullptr == mWindow)
     {
@@ -179,6 +198,10 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
         });
 
         glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* /**/, std::int32_t tNewWidth, std::int32_t tNewHeight) {
+            DispatchDefer<WindowFramebufferResize>(tNewWidth, tNewHeight);
+        });
+
+        glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* /**/, std::int32_t tNewWidth, std::int32_t tNewHeight) {
             DispatchDefer<WindowFramebufferResize>(tNewWidth, tNewHeight);
         });
 
@@ -218,9 +241,13 @@ void PlatformManager::ChangeWindowTitle(std::string_view const tTitle)
 }
 
 GLFWwindow* PlatformManager::GetMainWindow() const
-{ return mWindow; }
+{
+    return mWindow;
+}
 
 auto PlatformManager::GetWindowSurface() const -> IWindowSurface&
-{ return *mWindowSurface; }
+{
+    return *mWindowSurface;
+}
 
 }// namespace polos::platform
