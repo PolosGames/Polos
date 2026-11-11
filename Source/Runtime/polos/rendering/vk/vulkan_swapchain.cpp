@@ -29,12 +29,11 @@ VulkanSwapchain::~VulkanSwapchain() = default;
 
 auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
 {
-    mSurface       = RenderContext::GetVulkanContext().surface;
-    mGfxQueue      = RenderContext::GetVulkanDevice().gfxQueue;
-    mDevice        = RenderContext::GetVulkanDevice().logiDevice;
-    mWindowSurface = tDetails.windowSurface;
+    mSurface  = RenderContext::GetVulkanContext().surface;
+    mGfxQueue = RenderContext::GetVulkanDevice().gfxQueue;
+    mDevice   = RenderContext::GetVulkanDevice().logiDevice;
 
-    setupExtentAndViewport(RenderContext::GetVulkanDevice().physDevice);
+    setupExtentAndViewport(RenderContext::GetVulkanDevice().physDevice, tDetails.fremebufferSize);
 
     if (!selectFormatAndMode(tDetails.preferredSurfaceFormats, tDetails.preferredPresentModes))
     {
@@ -60,16 +59,16 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
     return {};
 }
 
-auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice tPhysDevice) -> void
+auto VulkanSwapchain::setupExtentAndViewport(
+    VkPhysicalDevice                 tPhysDevice,
+    platform::FramebufferSize const& tFrameBuffer) -> void
 {
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(tPhysDevice, mSurface, &mSurfaceCap);
 
-    platform::FramebufferSize const framebuffer = mWindowSurface->GetFramebufferSize();
-
     mExtent.width = mExtent3D.width =
-        std::clamp(framebuffer.width, mSurfaceCap.minImageExtent.width, mSurfaceCap.maxImageExtent.width);
+        std::clamp(tFrameBuffer.width, mSurfaceCap.minImageExtent.width, mSurfaceCap.maxImageExtent.width);
     mExtent.height = mExtent3D.height =
-        std::clamp(framebuffer.height, mSurfaceCap.minImageExtent.height, mSurfaceCap.maxImageExtent.height);
+        std::clamp(tFrameBuffer.height, mSurfaceCap.minImageExtent.height, mSurfaceCap.maxImageExtent.height);
     mExtent3D.depth = 1U;
 
     mRenderArea.offset.x = 0;

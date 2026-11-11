@@ -85,7 +85,7 @@ private:
 
     void onFramebufferResize();
 
-    auto createSwapchain() -> Result<void>;
+    auto createSwapchain(platform::FramebufferSize const& tFbSize) -> Result<void>;
     auto createFrameResources() -> Result<void>;
     auto destroyFrameResources() -> void;
 

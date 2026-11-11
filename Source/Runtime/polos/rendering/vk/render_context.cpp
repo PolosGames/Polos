@@ -81,7 +81,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
         SubsystemEntry{
             .createFunc =
                 [this] {
-                    return createSwapchain();
+                    return createSwapchain(mWindowSurface->GetFramebufferSize());
                 },
             .destroyFunc =
                 [this] {
@@ -143,10 +143,10 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     return {};
 }
 
-auto RenderContext::createSwapchain() -> Result<void>
+auto RenderContext::createSwapchain(platform::FramebufferSize const& tFbSize) -> Result<void>
 {
     return mSwapchain->Create({
-        .windowSurface = mWindowSurface,
+        .fremebufferSize = tFbSize,
         .preferredSurfaceFormats =
             {
                 {.format = VK_FORMAT_R8G8B8A8_SRGB, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
@@ -340,8 +340,9 @@ auto RenderContext::EndFrame() -> FrameStatistics
     }
     mIsRecording = false;
 
-    if (!mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]))
+    if (!mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]) || mHasFramebufferResized)
     {
+        mHasFramebufferResized = false;
         LogWarn("Failed to present the image to the presentation queue. Recreating the swapchain.");
         onFramebufferResize();
     }
@@ -477,7 +478,7 @@ void RenderContext::onFramebufferResize()
     vkDeviceWaitIdle(mDevice->logiDevice);
 
     {
-        auto const res = createSwapchain();
+        auto const res = createSwapchain(mWindowSurface->GetFramebufferSize());
         PL_ASSERT(res.has_value(), "Failed to recreate the swapchain after destroying the old swapchain.");
     }
 
