@@ -24,8 +24,11 @@
 #include <utility>
 
 #if defined(_WIN32)
-#    define NOMINMAX
+#    ifndef NOMINMAX
+#        define NOMINMAX
+#    endif
 #    include <windows.h>
+#    undef LoadImage
 #elif defined(__APPLE__)
 #    include <mach-o/dyld.h>
 #endif

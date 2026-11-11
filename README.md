@@ -73,6 +73,14 @@ The **Build Sandbox** and **Export Polos SDK** workflows upload separate Linux a
 Windows Release artifacts. Running the Windows build requires a Vulkan 1.3 driver and
 the x64 MSVC runtime on the destination machine.
 
+### Windows Sandbox from Linux
+
+Run `./Scripts/Linux/build_windows.sh` with Ninja, glslang, vcpkg, and an
+x86_64 MinGW-w64 GCC toolchain with C++23 support. If the compiler is outside
+`PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
+The script stages the Windows executable, DLLs, and resources in
+`out/bin/linux-to-win-mingw-release`. Use the native Windows build for the MSVC SDK ABI.
+
 ### Nightly builds
 
 The `Nightly sandbox` GitHub Actions workflow builds Linux x64 Release from the repository's default branch
