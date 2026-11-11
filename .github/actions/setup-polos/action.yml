@@ -1,0 +1,40 @@
+name: Set up Polos build
+description: Install native build dependencies and bootstrap the vcpkg manifest baseline
+runs:
+  using: composite
+  steps:
+    - if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-14 g++-14 ninja-build pkg-config libvulkan-dev glslang-tools \
+          xorg-dev libglu1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols
+        printf 'CC=gcc-14\nCXX=g++-14\n' >> "$GITHUB_ENV"
+
+    - if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - if: runner.os == 'Windows'
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.4.309.0
+
+    - name: Bootstrap pinned vcpkg
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        $Baseline = (Get-Content vcpkg.json -Raw | ConvertFrom-Json).'builtin-baseline'
+        $VcpkgRoot = Join-Path $env:RUNNER_TEMP 'polos-vcpkg'
+        git init $VcpkgRoot
+        git -C $VcpkgRoot remote add origin https://github.com/microsoft/vcpkg.git
+        git -C $VcpkgRoot fetch --depth 1 origin $Baseline
+        git -C $VcpkgRoot checkout --detach FETCH_HEAD
+        if ($IsWindows) {
+          & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics
+        } else {
+          & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.sh') -disableMetrics
+        }
+        "VCPKG_ROOT=$VcpkgRoot" >> $env:GITHUB_ENV

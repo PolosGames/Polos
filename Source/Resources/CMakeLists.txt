@@ -19,7 +19,6 @@ foreach(SHADER_SOURCE_FILE ${SHADER_SOURCE_FILES})
         OUTPUT ${SHADER_BINARY_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory "${SHADER_BINARY_PARENT}"
         COMMAND ${GLSLANG_EXECUTABLE}
-            --discard-is-terminate # otherwise discard needs shaderDemoteToHelperInvocation 1.3 feature
             --target-env vulkan1.3
             -o ${SHADER_BINARY_FILE}
             ${SHADER_SOURCE_DIR}/${SHADER_SOURCE_FILE}
@@ -30,10 +29,10 @@ foreach(SHADER_SOURCE_FILE ${SHADER_SOURCE_FILES})
     list(APPEND SHADER_BINARY_FILES ${SHADER_BINARY_FILE})
 endforeach()
 add_custom_target(compile_shaders ALL DEPENDS ${SHADER_BINARY_FILES})
-install(DIRECTORY "${SHADER_BINARY_DIR}" DESTINATION "${POLOS_INSTALL_DIR}/Resources")
+install(DIRECTORY "${SHADER_BINARY_DIR}" DESTINATION "${POLOS_INSTALL_DIR}/Resources" COMPONENT Runtime)
 
 if (NOT BUILD_EXAMPLES)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources.json" DESTINATION "${POLOS_INSTALL_DIR}/Resources")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources.json" DESTINATION "${POLOS_INSTALL_DIR}/Resources" COMPONENT Runtime)
 endif()
 
 # Each executable resolves resources beside itself, independent of the working directory.
@@ -68,7 +67,7 @@ function(polos_stage_resources TARGET_NAME)
         VERBATIM
     )
     add_dependencies(${TARGET_NAME} ${TARGET_NAME}-resources)
-    install(DIRECTORY "${APP_RESOURCES}/" DESTINATION "${POLOS_INSTALL_DIR}/Resources"
+    install(DIRECTORY "${APP_RESOURCES}/" DESTINATION "${POLOS_INSTALL_DIR}/Resources" COMPONENT Runtime
         PATTERN "resources.json" EXCLUDE)
-    install(FILES "${STAGED_CATALOG}" DESTINATION "${POLOS_INSTALL_DIR}/Resources")
+    install(FILES "${STAGED_CATALOG}" DESTINATION "${POLOS_INSTALL_DIR}/Resources" COMPONENT Runtime)
 endfunction()

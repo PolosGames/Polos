@@ -1,0 +1,41 @@
+name: Export Polos SDK
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+jobs:
+  sdk:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            preset: linux-release
+          - runner: windows-2022
+            preset: win-release
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-polos
+      - name: Export Linux SDK
+        if: runner.os == 'Linux'
+        run: Scripts/Linux/export_sdk.sh linux-release
+      - name: Export Windows SDK
+        if: runner.os == 'Windows'
+        run: ./Scripts/Windows/export_sdk.ps1 -Preset win-release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: polos-sdk-${{ matrix.preset }}
+          path: out/packages/polos-sdk-*-${{ matrix.preset }}.zip
+          if-no-files-found: error

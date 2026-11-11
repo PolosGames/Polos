@@ -117,11 +117,11 @@ macro (define_polos_app)
 
     if (MSVC)
         install(FILES "$<TARGET_PDB_FILE:${app_NAME}>"
-            DESTINATION "${POLOS_INSTALL_DIR}" OPTIONAL)
+            DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime OPTIONAL)
     endif()
 
     install(
         TARGETS ${app_NAME}
-        RUNTIME DESTINATION ${POLOS_INSTALL_DIR}
+        RUNTIME DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime
     )
 endmacro ()

@@ -10,7 +10,8 @@ A C++ game engine project.
 
 ### Supported Platforms
 
-- Windows
+- Windows x64
+- Linux x64
 
 ### To Build
 
@@ -48,7 +49,29 @@ in `Examples/sandbox/Resources`. The build combines both catalogs when packaging
 sandbox. See the [resource loading guide](Source/Runtime/polos/resource/README.md) for
 lookup and caching rules.
 
-Run the sandbox with `./Scripts/build_and_run.sh run linux-debug`.
+### Sandbox and SDK
+
+Run the scripts below from the repository root. They configure CMake and build with
+Ninja. Set `VCPKG_ROOT` to a bootstrapped vcpkg installation. On Windows, use an
+x64 Visual Studio Developer PowerShell with the Vulkan SDK installed. On Linux,
+install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK.
+
+| Task | Linux | Windows |
+| --- | --- | --- |
+| Build and stage Sandbox | `./Scripts/Linux/build_sandbox.sh linux-release` | `./Scripts/Windows/build_sandbox.ps1 -Preset win-release` |
+| Build and run Sandbox | `./Scripts/Linux/run_sandbox.sh` | `./Scripts/Windows/run_sandbox.ps1` |
+| Build and debug with LLDB | `./Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
+| Export the SDK | `./Scripts/Linux/export_sdk.sh` | `./Scripts/Windows/export_sdk.ps1` |
+
+Sandbox is staged in `out/bin/<preset>` with the engine shared libraries and
+resources. Run and debug default to the Debug preset. The SDK defaults to Release
+and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, libraries,
+engine resources, and Windows import libraries. Link against Polos and place the
+engine shared libraries and `Resources` beside the application executable.
+
+The **Build Sandbox** and **Export Polos SDK** workflows upload separate Linux and
+Windows Release artifacts. Running the Windows build requires a Vulkan 1.3 driver and
+the x64 MSVC runtime on the destination machine.
 
 ### Nightly builds
 
@@ -63,3 +86,7 @@ The workflow needs to be on the repository's default branch for scheduled runs.
 
 Extract the archive and run `./sandbox` from its directory with a Vulkan 1.3 capable
 driver and a desktop session.
+
+## AI Usage
+
+This repository's AI tool usage is limited to create Unit/Component tests, README files, CI units and Scripts.
