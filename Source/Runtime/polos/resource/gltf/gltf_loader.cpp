@@ -10,7 +10,7 @@
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
-#include "polos/utils/string_map.hpp"
+#include "polos/utils/string_id.hpp"
 
 #include <tiny_gltf_v3.h>
 
@@ -113,17 +113,11 @@ auto LoadTextures(tg3_model const& tGltf, std::filesystem::path const& tDirector
             return false;
         }
 
-        auto const imagePath = tDirectory / std::filesystem::path(ToSv(image.uri));
-        auto&      loaded    = tTextures[i];
-        loaded.resourceId    = utils::StrHash64("texture." + imagePath.stem().string());
+        auto const        imagePath = tDirectory / std::filesystem::path(ToSv(image.uri));
+        auto&             loaded    = tTextures[i];
+        std::string const hashStr   = "texture." + imagePath.stem().string();
 
-        if (!ResourceManager::Get().LoadImage(loaded.resourceId, imagePath))
-        {
-            LogError("Failed to load texture at [{}]", imagePath.string());
-            return false;
-        }
-
-        LogDebug("Texture: {} is loaded to ResourceManager", utils::GetStringFromID(loaded.resourceId));
+        loaded.resourceId = utils::StrHash64Runtime(hashStr);
 
         if (texture.sampler >= 0)
         {
@@ -137,15 +131,16 @@ auto LoadTextures(tg3_model const& tGltf, std::filesystem::path const& tDirector
                 .addressModeV = FindTextureWrap(sampler.wrap_t),
             };
         }
+        loaded.path = imagePath;
     }
 
     return true;
 }
 
-auto LoadMaterials(tg3_model const& tGltf, std::span<Texture const> tTextures) -> std::vector<Material>
+auto LoadMaterials(tg3_model const& tGltf) -> std::vector<Material>
 {
-    auto const textureOrDefault = [&](std::int32_t tIndex) {
-        return tIndex >= 0 ? tTextures[static_cast<std::size_t>(tIndex)] : Texture{};
+    auto const textureOrDefault = [](std::int32_t tIndex) {
+        return tIndex >= 0 ? static_cast<std::size_t>(tIndex) : kNoTextureIndex;
     };
     auto const toFloat = [](double tValue) {
         return static_cast<float>(tValue);
@@ -158,6 +153,7 @@ auto LoadMaterials(tg3_model const& tGltf, std::span<Texture const> tTextures) -
         auto const& pbr      = source.pbr_metallic_roughness;
         auto&       material = materials[i];
 
+        material.name = ToSv(source.name);
         std::ranges::transform(source.emissive_factor, material.emissiveFactor.begin(), toFloat);
         std::ranges::transform(pbr.base_color_factor, material.baseColorFactor.begin(), toFloat);
         material.alphaMode                = *kAlphaModeLookup.at(ToSv(source.alpha_mode));
@@ -312,7 +308,7 @@ auto LoadMeshParts(tg3_model const& tGltf, std::span<Material const> tMaterials,
         }
 
         auto& part = tMesh.parts[i];
-        part.name  = utils::StrHash64(partPrefix + std::to_string(i));
+        part.name  = utils::StrHash64Runtime(partPrefix + std::to_string(i));
         if (primitive.material >= 0)
         {
             part.material = tMaterials[static_cast<std::size_t>(primitive.material)];
@@ -367,16 +363,18 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         return nullptr;
     }
 
-    auto const&          gltf = *tgModel.get();
-    std::vector<Texture> textures(gltf.textures_count);
-    if (!CheckBufferSources(gltf) || !LoadTextures(gltf, tPath.parent_path(), textures))
+    auto model  = std::make_unique<Model>();
+    model->name = tPath.stem().string();
+
+    auto const& gltf = *tgModel.get();
+    model->textures.resize(gltf.textures_count);
+    if (!CheckBufferSources(gltf) || !LoadTextures(gltf, tPath.parent_path(), model->textures))
     {
         return nullptr;
     }
-    auto const materials = LoadMaterials(gltf, textures);
 
-    auto model  = std::make_unique<Model>();
-    model->name = tPath.stem().string();
+    auto const materials = LoadMaterials(gltf);
+
     model->meshes.resize(gltf.meshes_count);
     if (!LoadMeshes(gltf, materials, model->meshes))
     {

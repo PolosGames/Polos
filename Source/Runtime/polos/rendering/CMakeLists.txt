@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 polos_sources(
+    cache/material_cache.cpp
     cache/mesh_cache.cpp
     cache/texture_cache.cpp
     compositor/render_compositor.cpp

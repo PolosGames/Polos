@@ -15,6 +15,8 @@
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -25,6 +27,7 @@ struct Texture
 {
     utils::string_id          resourceId{rendering::kDefaultTexture};
     rendering::TextureDetails samplerDetails{};
+    std::filesystem::path     path;
 };
 
 enum class AlphaMode : uint8_t
@@ -34,23 +37,26 @@ enum class AlphaMode : uint8_t
     kBlend,
 };
 
+inline constexpr std::size_t kNoTextureIndex{std::numeric_limits<std::size_t>::max()};
+
 // TODO(sorbatdev): Implement some kind of reference system for keeping these values at one place.
 struct Material
 {
     // int32_t               doubleSided;                   /* 0 or 1 */
     // const int32_t*        lods;
     // uint32_t              lods_count;
+    std::string           name;
     std::array<float, 3U> emissiveFactor{0.0F, 0.0F, 0.0F};
     AlphaMode             alphaMode{AlphaMode::kOpaque};
     float                 alphaCutoff{0.5F};
     std::array<float, 4U> baseColorFactor{1.0F, 1.0F, 1.0F, 1.0F};
-    Texture               baseColorTexture{};
+    std::size_t           baseColorTexture{kNoTextureIndex};
     float                 metallicFactor{1.0F};
     float                 roughnessFactor{1.0F};
-    Texture               metallicRoughnessTexture;
-    Texture               normalTexture;
-    Texture               occlusionTexture;
-    Texture               emissiveTexture;
+    std::size_t           metallicRoughnessTexture{kNoTextureIndex};
+    std::size_t           normalTexture{kNoTextureIndex};
+    std::size_t           occlusionTexture{kNoTextureIndex};
+    std::size_t           emissiveTexture{kNoTextureIndex};
 };
 
 struct MeshPart
@@ -69,8 +75,9 @@ struct Mesh
 
 struct Model
 {
-    std::string       name;
-    std::vector<Mesh> meshes;
+    std::string          name;
+    std::vector<Mesh>    meshes;
+    std::vector<Texture> textures;
 };
 }// namespace polos::resource::model
 

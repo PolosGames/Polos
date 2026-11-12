@@ -58,7 +58,7 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
         return ErrorType{RenderingErrc::kGenericError};
     }
 
-    LogDebug("Swapchain object created, receiving images for it...");
+    LogTrace("Swapchain object created, receiving images for it...");
 
     if (auto res = createImageViews(); !res.has_value())
     {
@@ -66,7 +66,7 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
         return ErrorType{res.error()};
     }
 
-    LogDebug("Swapchain creation done!");
+    LogTrace("Swapchain creation done!");
 
     return {};
 }
@@ -171,7 +171,7 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
     mImageViews.resize(static_cast<std::size_t>(mImgCount));
     mImageResources.resize(static_cast<std::size_t>(mImgCount));
 
-    LogDebug("Received {} swapchain images.", mImgCount);
+    LogTrace("Received {} swapchain images.", mImgCount);
 
     auto const img_count = static_cast<std::size_t>(mImgCount);
 
@@ -211,14 +211,14 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
             RenderingErrc::kFailedCreateSwapchainImageViews);
     }
 
-    LogDebug("Created {} image views.", mImageViews.size());
+    LogTrace("Created {} image views.", mImageViews.size());
 
     return {};
 }
 
 auto VulkanSwapchain::Destroy() -> void
 {
-    LogDebug("Destroying VulkanSwapchain and associated images...");
+    LogTrace("Destroying VulkanSwapchain and associated images...");
 
     std::ranges::for_each(mImageViews, [this](VkImageView& tView) {
         vkDestroyImageView(mDevice, tView, nullptr);

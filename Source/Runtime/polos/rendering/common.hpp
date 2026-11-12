@@ -24,10 +24,11 @@
 namespace polos::rendering
 {
 
-using MeshHandle    = utils::string_id;
-using TextureHandle = utils::string_id;
-using MeshIndex     = std::uint32_t;
-using TextureIndex  = std::uint32_t;
+using MeshHandle     = utils::string_id;
+using TextureHandle  = utils::string_id;
+using MaterialHandle = utils::string_id;
+using MeshIndex      = std::uint32_t;
+using TextureIndex   = std::uint32_t;
 
 inline constexpr MeshHandle                   kPolosDefaultCube = "mesh.PolosDefaultCube.part.0"_sid;
 inline constexpr MeshHandle                   kPolosDefaultQuad = "mesh.PolosDefaultQuad.part.0"_sid;

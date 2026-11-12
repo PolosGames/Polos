@@ -9,8 +9,8 @@
 #include <polos/ecs/components/mesh_renderer_component.hpp>
 #include <polos/ecs/components/transform_component.hpp>
 #include <polos/ecs/scene.hpp>
+#include <polos/rendering/cache/material_cache.hpp>
 #include <polos/rendering/cache/mesh_cache.hpp>
-#include <polos/rendering/cache/texture_cache.hpp>
 #include <polos/resource/resource_manager.hpp>
 
 namespace sandbox
@@ -29,17 +29,16 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
         tScene->AddComponent(meshEntity, ecs::TransformComponent{});
         for (auto& part : mesh.parts)
         {
-            // LogDebug("Trying to create texture {}", utils::GetStringFromsID(part.material.baseColorTexture.resourceId));
-            auto const handle = rendering::TextureCache::Get().GetOrCreateTextureIndex(
-                part.material.baseColorTexture.resourceId,
-                part.material.baseColorTexture.samplerDetails);
+            auto& materials = rendering::MaterialCache::Get();
+            auto const handle = materials.CreateMaterial(part.material, model->textures);
+            auto const* material = materials.GetMaterial(handle);
             auto partEntity = tScene->NewEntity(meshEntity);
             tScene->AddComponent(partEntity, ecs::TransformComponent{});
             tScene->AddComponent(
                 partEntity,
                 ecs::MeshRendererComponent{
                     .meshHandle       = rendering::MeshCache::Get().AddMesh(part),
-                    .baseColorTexture = handle,
+                    .baseColorTexture = material->baseColorTexture,
                 });
         }
     }

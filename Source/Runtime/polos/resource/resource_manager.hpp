@@ -89,9 +89,10 @@ private:
 
     std::filesystem::path                    mRoot;
     std::unordered_map<ResourceId, Resource> mResources;
-    ImageStorage                             mImages;
-    ModelStorage                             mModels;
-    Storage<fs::File>                        mFiles;
+
+    Storage<image::Image> mImages;
+    Storage<model::Model> mModels;
+    Storage<fs::File>     mFiles;
 };
 
 }// namespace polos::resource

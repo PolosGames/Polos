@@ -21,8 +21,9 @@ auto operator<<(std::vector<polos::ecs::SerializedEntity>& tEntities, polos::ecs
 {
     tEntities.push_back(
         polos::ecs::SerializedEntity{
-            .componentCount = static_cast<std::uint8_t>(tEntity.componentMask.count()),
-            .componentTypes = static_cast<std::uint32_t>(tEntity.componentMask.to_ullong()),
+            .componentCount   = static_cast<std::uint8_t>(tEntity.componentMask.count()),
+            .componentTypes   = static_cast<std::uint32_t>(tEntity.componentMask.to_ullong()),
+            .componentIndices = {},
         });
 
     return tEntities;

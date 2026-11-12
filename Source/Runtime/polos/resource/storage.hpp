@@ -6,6 +6,7 @@
 #ifndef POLOS_RESOURCE_STORAGE_HPP
 #define POLOS_RESOURCE_STORAGE_HPP
 
+#include "polos/polos_api.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <memory>
@@ -26,7 +27,7 @@ struct Model;
 }// namespace model
 
 template<typename T>
-class Storage
+class POLOS_API Storage
 {
 public:
     using ResourceType = T;
@@ -41,10 +42,9 @@ public:
     auto operator=(Storage const&) -> Storage& = delete;
     auto operator=(Storage&&) -> Storage&      = delete;
 
-    /// @return true if inserted, or false if the key already exists.
     [[nodiscard]] auto Add(utils::string_id tKey, Pointer tResource) -> bool
     {
-        return tResource && mResources.emplace(tKey, std::move(tResource)).second;
+        return nullptr != tResource && mResources.emplace(tKey, std::move(tResource)).second;
     }
 
     [[nodiscard]] auto Get(utils::string_id tKey) const -> Pointer
@@ -57,7 +57,7 @@ public:
 
         return itr->second;
     }
-    /// Exchange cache ownership without making Storage movable.
+
     auto Swap(Storage& tOther) -> void
     {
         mResources.swap(tOther.mResources);
@@ -70,9 +70,6 @@ public:
 private:
     std::unordered_map<utils::string_id, Pointer> mResources;
 };
-
-using ImageStorage = Storage<image::Image>;
-using ModelStorage = Storage<model::Model>;
 }// namespace polos::resource
 
 #endif// POLOS_RESOURCE_STORAGE_HPP

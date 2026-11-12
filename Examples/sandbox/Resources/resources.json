@@ -12,10 +12,6 @@
     "path": "Textures/polos_icon_white.png"
   },
   {
-    "id": "model.sponza",
-    "path": "Models/Sponza/Sponza.gltf"
-  },
-  {
     "id": "model.suzanne",
     "path": "Models/Suzanne/Suzanne.gltf"
   }

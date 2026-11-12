@@ -9,6 +9,7 @@
 #include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/gui/backend.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/common.hpp"
@@ -66,6 +67,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     mTextureCache     = std::make_unique<TextureCache>();
     mRenderCompositor = std::make_unique<RenderCompositor>();
     mMeshCache        = std::make_unique<MeshCache>();
+    mMaterialCache    = std::make_unique<MaterialCache>();
 
     // Supporting resources share the lifecycle order of the subsystems that use them.
     mSubsystems = {
@@ -98,6 +100,9 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
             [] {
                 return TextureCache::CreationDetails{};
             }),
+        RegisterSubsystem(*mMaterialCache, [] {
+            return MaterialCache::CreationDetails{};
+        }),
         RegisterSubsystem(
             *mMeshCache,
             [] {
@@ -461,7 +466,7 @@ void RenderContext::onFramebufferResize()
 {
     POLOS_PROFILE_ZONE("Recreate swapchain");
     vkDeviceWaitIdle(mDevice->logiDevice);
-    LogDebug("Recreating swapchain due to framebuffer resize...");
+    LogTrace("Recreating swapchain due to framebuffer resize...");
 
     mSwapchain->Destroy();
     vkDeviceWaitIdle(mDevice->logiDevice);
@@ -509,6 +514,7 @@ auto RenderContext::Shutdown() -> Result<void>
     mSubsystems = {};
 
     mRenderCompositor.reset();
+    mMaterialCache.reset();
     mTextureCache.reset();
     mMeshCache.reset();
     mSwapchain.reset();
