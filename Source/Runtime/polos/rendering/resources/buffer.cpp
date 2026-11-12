@@ -25,7 +25,7 @@ auto CopyBuffer(
     VkDeviceSize tSrcOffset = 0U,
     VkDeviceSize tDstOffset = 0U) -> bool
 {
-    VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+    VkCommandBuffer cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
     if (cmdBuf == VK_NULL_HANDLE)
     {
         return false;
@@ -84,7 +84,7 @@ auto CopyBuffer(
         0U,
         nullptr);
 
-    return RenderContext::EndSingleTimeCommands(cmdBuf);
+    return RenderContext::Get().EndSingleTimeCommands(cmdBuf);
 }
 
 }// namespace

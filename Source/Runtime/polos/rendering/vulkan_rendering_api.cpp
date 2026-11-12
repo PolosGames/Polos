@@ -16,6 +16,11 @@ namespace polos::rendering
 
 RenderingApi* RenderingApi::sInstance{nullptr};
 
+auto RenderingApi::Get() -> RenderingApi&
+{
+    return *sInstance;
+}
+
 RenderingApi::RenderingApi(platform::IWindowSurface& tSurface)
     : mWindowSurface{&tSurface}
 {
@@ -26,7 +31,7 @@ RenderingApi::~RenderingApi() = default;
 
 auto RenderingApi::Shutdown() -> void
 {
-    if (auto const result = sInstance->mRenderContext->Shutdown(); !result.has_value())
+    if (auto const result = mRenderContext->Shutdown(); !result.has_value())
     {
         LogWarn("{}", result.error());
     }
@@ -34,24 +39,24 @@ auto RenderingApi::Shutdown() -> void
 
 auto RenderingApi::BeginFrame() -> VkCommandBuffer
 {
-    if (nullptr == sInstance->mRenderContext)
+    if (nullptr == mRenderContext)
     {
         return VK_NULL_HANDLE;
     }
-    return sInstance->mRenderContext->BeginFrame();
+    return mRenderContext->BeginFrame();
 }
 
 auto RenderingApi::EndFrame() -> void
 {
-    if (nullptr != sInstance->mRenderContext)
+    if (nullptr != mRenderContext)
     {
-        sInstance->lastStatistics = sInstance->mRenderContext->EndFrame();
+        lastStatistics = mRenderContext->EndFrame();
     }
 }
 
 auto RenderingApi::GetLastFrameStatistics() -> FrameStatistics const&
 {
-    return sInstance->lastStatistics;
+    return lastStatistics;
 }
 
 void RenderingApi::createRenderContext()

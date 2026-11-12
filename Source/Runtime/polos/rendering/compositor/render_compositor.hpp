@@ -60,8 +60,6 @@ private:
     auto createDepthTarget() -> bool;
 
     std::array<FrameTargets, Settings::kMaxFramesInFlight> mFrameTargets;
-    std::shared_ptr<Shader const>                          mQuadVertexShader;
-    std::shared_ptr<Shader const>                          mQuadFragmentShader;
     std::shared_ptr<Shader const>                          mForwardVertexShader;
     std::shared_ptr<Shader const>                          mForwardFragmentShader;
     std::shared_ptr<Shader const>                          mMainComputeShader;

@@ -12,7 +12,7 @@ namespace polos::communication
 
 EventBus::EventBus() = default;
 
-auto EventBus::Instance() -> EventBus&
+auto EventBus::Get() -> EventBus&
 {
     static EventBus sInstance;
     return sInstance;
@@ -37,7 +37,7 @@ auto EventBus::DispatchDeferredEvents() -> void
 
 auto DispatchDeferredEvents() -> void
 {
-    EventBus::Instance().DispatchDeferredEvents();
+    EventBus::Get().DispatchDeferredEvents();
 }
 
 }// namespace polos::communication

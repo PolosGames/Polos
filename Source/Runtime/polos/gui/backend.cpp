@@ -6,9 +6,9 @@
 #include "polos/gui/backend.hpp"
 
 #include "polos/platform/platform_manager.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/settings.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/utils/assert.hpp"
@@ -45,7 +45,7 @@ auto ToTextureId(T tDescriptor) -> std::uint64_t
 
 auto Initialize(VkRenderPass tRenderPass) -> bool
 {
-    auto const& device = rendering::RenderContext::GetVulkanDevice();
+    auto const& device = rendering::VulkanDevice::Get();
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     auto& io       = ImGui::GetIO();
@@ -53,7 +53,7 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
 
-    auto* window = platform::PlatformManager::Instance().GetMainWindow();
+    auto* window = platform::PlatformManager::Get().GetMainWindow();
     if (window == nullptr || !ImGui_ImplGlfw_InitForVulkan(window, true))
     {
         ImGui::DestroyContext();
@@ -62,7 +62,7 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
 
     ImGui_ImplVulkan_InitInfo info{};
     info.ApiVersion     = VK_API_VERSION_1_3;
-    info.Instance       = rendering::RenderContext::GetVulkanContext().mInstance;
+    info.Instance       = rendering::VulkanContext::Get().mInstance;
     info.PhysicalDevice = device.physDevice;
     info.Device         = device.logiDevice;
     info.QueueFamily    = device.GetGraphicsQueueFamily();
@@ -71,7 +71,7 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
     // Backend upload buffers rotate by render submission, independently of swapchain images.
     info.MinImageCount      = 2U;
     info.ImageCount         = static_cast<std::uint32_t>(rendering::Settings::kMaxFramesInFlight);
-    info.MSAASamples        = VK_SAMPLE_COUNT_1_BIT;
+    info.MSAASamples        = rendering::kSceneSampleCount;
     info.DescriptorPoolSize = kImageCapacity + IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE;
     info.CheckVkResultFn    = [](VkResult tResult) {
         PL_ASSERT(tResult >= VK_SUCCESS, "Dear ImGui Vulkan backend failed ({})", static_cast<int>(tResult));
@@ -126,15 +126,15 @@ auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
             return 0U;
         }
 
-        auto const* texture = rendering::TextureCache::GetTexture(tTexture);
+        auto const* texture = rendering::TextureCache::Get().GetTexture(tTexture);
         if (texture == nullptr)
         {
-            auto const index = rendering::TextureCache::CreateTexture(tTexture, {});
+            auto const index = rendering::TextureCache::Get().CreateTexture(tTexture, {});
             if (index == std::numeric_limits<std::size_t>::max())
             {
                 return 0U;
             }
-            texture = rendering::TextureCache::GetTextureAtIndex(index);
+            texture = rendering::TextureCache::Get().GetTextureAtIndex(index);
         }
 
         auto const descriptor =

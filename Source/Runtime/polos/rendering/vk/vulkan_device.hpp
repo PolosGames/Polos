@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_VULKAN_DEVICE_HPP
 #define POLOS_RENDERING_VULKAN_DEVICE_HPP
 
+#include "polos/polos_api.hpp"
 #include "polos/rendering/vk/i_device.hpp"
 #include "polos/rendering/vk/queue_family_indices.hpp"
 #include "polos/utils/error_code.hpp"
@@ -23,6 +24,8 @@ namespace polos::rendering
 class VulkanDevice final : public IDevice
 {
 public:
+    [[nodiscard]] static auto POLOS_API Get() -> VulkanDevice&;
+
     struct CreationDetails// NOLINT
     {
         std::vector<char const*> enabledExtensions;
@@ -53,6 +56,8 @@ public:
     VkCommandPool    commandPool{VK_NULL_HANDLE};
     VkQueue          gfxQueue{VK_NULL_HANDLE};
 private:
+    static VulkanDevice* sInstance;
+
     VkInstance         mInstance{VK_NULL_HANDLE};
     VkSurfaceKHR       mSurface{VK_NULL_HANDLE};
     QueueFamilyIndices mQueueIndices;

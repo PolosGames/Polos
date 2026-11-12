@@ -9,9 +9,8 @@
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/resources/image.hpp"
-#include "polos/rendering/vk/common.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/queue_family_indices.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
@@ -85,9 +84,14 @@ auto DecodeDriverVersion(std::uint32_t tVendorId, std::uint32_t tDriverVersion) 
     return "Not Found";
 }
 
-auto QueryDeviceFeatures(VkPhysicalDevice tDevice, VkPhysicalDeviceSynchronization2Features& tSynchronization2)
-    -> VkPhysicalDeviceFeatures2
+auto QueryDeviceFeatures(
+    VkPhysicalDevice                          tDevice,
+    VkPhysicalDeviceSynchronization2Features& tSynchronization2,
+    VkPhysicalDeviceVulkan12Features&         tVulkan12) -> VkPhysicalDeviceFeatures2
 {
+    tVulkan12.pNext         = nullptr;
+    tSynchronization2.pNext = &tVulkan12;
+
     VkPhysicalDeviceFeatures2 features{
         .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
         .pNext    = &tSynchronization2,
@@ -145,7 +149,7 @@ auto SelectPhysicalDevice(VkInstance tInstance, VkSurfaceKHR tSurface, std::span
     {
         VkPhysicalDeviceProperties properties{};
         vkGetPhysicalDeviceProperties(device, &properties);
-        if (properties.apiVersion < VK_API_VERSION_1_3)
+        if (properties.apiVersion < kVulkanApiVersion)
         {
             LogInfo(
                 "Skipping GPU '{}' because it reports Vulkan {}.{}.{} and Polos requires Vulkan 1.3.",
@@ -156,16 +160,23 @@ auto SelectPhysicalDevice(VkInstance tInstance, VkSurfaceKHR tSurface, std::span
             continue;
         }
 
+        VkPhysicalDeviceVulkan12Features vulkan12{};
+        vulkan12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+
         VkPhysicalDeviceSynchronization2Features synchronization2{
             .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-            .pNext            = nullptr,
+            .pNext            = &vulkan12,
             .synchronization2 = VK_FALSE,
         };
-        auto const features = QueryDeviceFeatures(device, synchronization2).features;
-        if (!synchronization2.synchronization2 || !features.multiDrawIndirect || !features.drawIndirectFirstInstance)
+        auto const features    = QueryDeviceFeatures(device, synchronization2, vulkan12).features;
+        bool const hasBindless = vulkan12.descriptorIndexing && vulkan12.shaderSampledImageArrayNonUniformIndexing &&
+                                 vulkan12.descriptorBindingSampledImageUpdateAfterBind &&
+                                 vulkan12.descriptorBindingPartiallyBound && vulkan12.runtimeDescriptorArray;
+        if (!synchronization2.synchronization2 || !features.multiDrawIndirect || !features.drawIndirectFirstInstance ||
+            !hasBindless)
         {
             LogInfo(
-                "Skipping GPU '{}' because it lacks required synchronization or indirect draw features.",
+                "Skipping GPU '{}' because it lacks required synchronization, indirect draw, or bindless features.",
                 properties.deviceName);
             continue;
         }
@@ -227,13 +238,27 @@ auto CreateCommandPool(VmaAllocator tAllocator, std::uint32_t const tGfxQ, VkDev
 
 }// namespace
 
-VulkanDevice::VulkanDevice()  = default;
-VulkanDevice::~VulkanDevice() = default;
+VulkanDevice* VulkanDevice::sInstance{nullptr};
+
+auto VulkanDevice::Get() -> VulkanDevice&
+{
+    return *sInstance;
+}
+
+VulkanDevice::VulkanDevice()
+{
+    sInstance = this;
+}
+
+VulkanDevice::~VulkanDevice()
+{
+    sInstance = nullptr;
+}
 
 auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
 {
-    mInstance = RenderContext::GetVulkanContext().mInstance;
-    mSurface  = RenderContext::GetVulkanContext().surface;
+    mInstance = VulkanContext::Get().mInstance;
+    mSurface  = VulkanContext::Get().surface;
 
     auto const selected = SelectPhysicalDevice(mInstance, mSurface, tInfo.enabledExtensions);
     if (!selected)
@@ -252,12 +277,15 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
         VK_API_VERSION_MINOR(properties.apiVersion),
         VK_API_VERSION_PATCH(properties.apiVersion));
 
+    VkPhysicalDeviceVulkan12Features vulkan12_features{};
+    vulkan12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+
     VkPhysicalDeviceSynchronization2Features synchronization2_features{
         .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-        .pNext            = nullptr,
+        .pNext            = &vulkan12_features,
         .synchronization2 = VK_FALSE,
     };
-    auto const device_features = QueryDeviceFeatures(physDevice, synchronization2_features);
+    auto const device_features = QueryDeviceFeatures(physDevice, synchronization2_features, vulkan12_features);
 
     constexpr float const         kQueuePrio{1.0F};
     VkDeviceQueueCreateInfo const queue_info{
@@ -292,7 +320,7 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
     allocator_info.physicalDevice   = physDevice;
     allocator_info.device           = logiDevice;
     allocator_info.instance         = mInstance;
-    allocator_info.vulkanApiVersion = VK_API_VERSION_1_3;
+    allocator_info.vulkanApiVersion = kVulkanApiVersion;
 
     if (VK_SUCCESS != vmaCreateAllocator(&allocator_info, &allocator))
     {

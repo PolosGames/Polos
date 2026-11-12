@@ -3,6 +3,7 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 
 #include "polos/logging/log_macros.hpp"
@@ -90,8 +91,22 @@ bool IsValidationLayersAvailable()
 
 }// namespace
 
-VulkanContext::VulkanContext()  = default;
-VulkanContext::~VulkanContext() = default;
+VulkanContext* VulkanContext::sInstance{nullptr};
+
+auto VulkanContext::Get() -> VulkanContext&
+{
+    return *sInstance;
+}
+
+VulkanContext::VulkanContext()
+{
+    sInstance = this;
+}
+
+VulkanContext::~VulkanContext()
+{
+    sInstance = nullptr;
+}
 
 auto VulkanContext::Create(CreationDetails const& tDetails) -> Result<void>
 {
@@ -102,7 +117,7 @@ auto VulkanContext::Create(CreationDetails const& tDetails) -> Result<void>
         .applicationVersion = VK_API_VERSION_1_3,
         .pEngineName        = "Polos",
         .engineVersion      = VK_MAKE_API_VERSION(0, POLOS_VERSION_MAJOR, POLOS_VERSION_MINOR, POLOS_VERSION_PATCH),
-        .apiVersion         = VK_API_VERSION_1_3,
+        .apiVersion         = kVulkanApiVersion,
     };
 
     mLayers.clear();

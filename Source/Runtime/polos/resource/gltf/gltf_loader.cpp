@@ -10,6 +10,7 @@
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
+#include "polos/utils/string_map.hpp"
 
 #include <tiny_gltf_v3.h>
 
@@ -115,11 +116,14 @@ auto LoadTextures(tg3_model const& tGltf, std::filesystem::path const& tDirector
         auto const imagePath = tDirectory / std::filesystem::path(ToSv(image.uri));
         auto&      loaded    = tTextures[i];
         loaded.resourceId    = utils::StrHash64("texture." + imagePath.stem().string());
-        if (!ResourceManager::Instance().LoadImage(loaded.resourceId, imagePath))
+
+        if (!ResourceManager::Get().LoadImage(loaded.resourceId, imagePath))
         {
             LogError("Failed to load texture at [{}]", imagePath.string());
             return false;
         }
+
+        LogDebug("Texture: {} is loaded to ResourceManager", utils::GetStringFromID(loaded.resourceId));
 
         if (texture.sampler >= 0)
         {

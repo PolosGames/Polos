@@ -9,7 +9,7 @@
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/info_component.hpp"
-#include "polos/ecs/components/quad_renderer_component.hpp"
+#include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
 
@@ -50,9 +50,9 @@ struct ComponentEnumToType<ComponentType::kEditorCameraController>
 };
 
 template<>
-struct ComponentEnumToType<ComponentType::kQuadRenderer>
+struct ComponentEnumToType<ComponentType::kMeshRenderer>
 {
-    using Type = QuadRendererComponent;
+    using Type = MeshRendererComponent;
 };
 
 }// namespace polos::ecs

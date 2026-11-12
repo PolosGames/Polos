@@ -3,10 +3,10 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/passes/ui_render_pass.hpp"
 
 #include "polos/gui/backend.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
@@ -20,7 +20,7 @@ auto CreateRenderPass(VkDevice tDevice, VkFormat tColorFormat) -> VkRenderPass
     VkAttachmentDescription const color{
         .flags          = 0U,
         .format         = tColorFormat,
-        .samples        = VK_SAMPLE_COUNT_1_BIT,
+        .samples        = kSceneSampleCount,
         .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
         .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
         .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -83,7 +83,7 @@ auto CreateRenderPass(VkDevice tDevice, VkFormat tColorFormat) -> VkRenderPass
 
 auto UiRenderPass::Create(VkFormat tColorFormat) -> bool
 {
-    auto const device = RenderContext::GetVulkanDevice().logiDevice;
+    auto const device = VulkanDevice::Get().logiDevice;
     auto const pass   = CreateRenderPass(device, tColorFormat);
     if (pass == VK_NULL_HANDLE)
     {
@@ -106,13 +106,13 @@ UiRenderPass::~UiRenderPass()
     {
         gui::backend::Shutdown();
         ReleaseFramebuffers();
-        vkDestroyRenderPass(RenderContext::GetVulkanDevice().logiDevice, mRenderPass, nullptr);
+        vkDestroyRenderPass(VulkanDevice::Get().logiDevice, mRenderPass, nullptr);
     }
 }
 
 auto UiRenderPass::ReleaseFramebuffers() -> void
 {
-    auto const device = RenderContext::GetVulkanDevice().logiDevice;
+    auto const device = VulkanDevice::Get().logiDevice;
     for (auto& framebuffer : mFramebuffers)
     {
         vkDestroyFramebuffer(device, framebuffer, nullptr);

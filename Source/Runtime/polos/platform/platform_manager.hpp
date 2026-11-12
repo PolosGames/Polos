@@ -37,7 +37,7 @@ public:
     PlatformManager& operator=(PlatformManager const&) = delete;
     PlatformManager& operator=(PlatformManager&&)      = delete;
 
-    static auto Instance() -> PlatformManager&;
+    static auto Get() -> PlatformManager&;
 
     auto               CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight, std::string_view tTitle) -> bool;
     auto               ChangeWindowTitle(std::string_view tTitle) -> void;

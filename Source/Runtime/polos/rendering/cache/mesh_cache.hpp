@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_CACHE_MESH_CACHE_HPP
 #define POLOS_RENDERING_CACHE_MESH_CACHE_HPP
 
+#include "polos/rendering/common.hpp"
 #include "polos/polos_api.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/settings.hpp"
@@ -20,10 +21,6 @@
 namespace polos::rendering
 {
 
-using MeshHandle = utils::string_id;
-
-inline constexpr MeshHandle kPolosDefaultCube = "mesh.PolosDefaultCube.part.0"_sid;
-
 struct Mesh
 {
     int64_t vertexCount{0};
@@ -33,6 +30,8 @@ struct Mesh
 class POLOS_API MeshCache
 {
 public:
+    [[nodiscard]] static auto Get() -> MeshCache&;
+
     struct CreationDetails
     {
     };
@@ -43,24 +42,24 @@ public:
     auto Create(CreationDetails const& tDetails) -> Result<void>;
     auto Destroy() -> void;
 
-    [[nodiscard]] static auto AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle;
+    [[nodiscard]] auto AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle;
 
     /// @brief Check if we have a mesh with the handle
-    [[nodiscard]] static auto HasMesh(MeshHandle tHandle) -> bool;
+    [[nodiscard]] auto HasMesh(MeshHandle tHandle) -> bool;
 
-    [[nodiscard]] static auto GetMeshIndexByHandle(MeshHandle tHandle) -> uint32_t;
+    [[nodiscard]] auto GetMeshIndexByHandle(MeshHandle tHandle) -> MeshIndex;
 
-    [[nodiscard]] static auto GetVertexBuffer() -> VkBuffer;
-    [[nodiscard]] static auto GetIndexBuffer() -> VkBuffer;
-    [[nodiscard]] static auto GetMeshBoundsBuffer() -> VkBuffer;
-    [[nodiscard]] static auto GetMeshCount() -> uint32_t;
-    [[nodiscard]] static auto GetIndirectCommandBufferByFrameSlot(uint32_t tFrameSlot) -> VkBuffer;
+    [[nodiscard]] auto GetVertexBuffer() -> VkBuffer;
+    [[nodiscard]] auto GetIndexBuffer() -> VkBuffer;
+    [[nodiscard]] auto GetMeshBoundsBuffer() -> VkBuffer;
+    [[nodiscard]] auto GetMeshCount() -> uint32_t;
+    [[nodiscard]] auto GetIndirectCommandBufferByFrameSlot(uint32_t tFrameSlot) -> VkBuffer;
 
-    static auto IncreaseMeshUse(MeshHandle tHandle) -> void;
-    static auto DecreaseMeshUse(MeshHandle tHandle) -> void;
-    static auto IncreaseMeshUseByIndex(uint32_t tMeshIndex) -> void;
-    static auto DecreaseMeshUseByIndex(uint32_t tMeshIndex) -> void;
-    static auto FlushMeshUses(uint32_t tFrameSlot) -> void;
+    auto IncreaseMeshUse(MeshHandle tHandle) -> void;
+    auto DecreaseMeshUse(MeshHandle tHandle) -> void;
+    auto IncreaseMeshUseByIndex(MeshIndex tMeshIndex) -> void;
+    auto DecreaseMeshUseByIndex(MeshIndex tMeshIndex) -> void;
+    auto FlushMeshUses(uint32_t tFrameSlot) -> void;
 private:
     static MeshCache* sInstance;
 
@@ -71,7 +70,7 @@ private:
         VkDeviceSize     indexOffset{0U};
         uint32_t         vertexCount{0};
         uint32_t         indexCount{0};
-        uint32_t         meshIndex{0U};
+        MeshIndex         meshIndex{0U};
     };
 
     std::unique_ptr<Buffer> mVertexBuffer;
@@ -84,7 +83,7 @@ private:
     std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mMeshInfoBuffer;
 
     // How many new uses added/removed of a specific mesh at a index
-    std::vector<utils::Pair<uint32_t, int32_t>> mMeshUses;
+    std::vector<utils::Pair<MeshIndex, int32_t>> mMeshUses;
 
     VkDeviceSize mVertexHead{0U};
     VkDeviceSize mIndexHead{0U};

@@ -7,6 +7,7 @@
 
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/scene.hpp"
+#include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/utils/profiling.hpp"
 
 namespace polos::ecs
@@ -35,10 +36,10 @@ void DirtyTransformSystem::Update(Scene* tScene)
         else if (!IsEntityValid(tScene->GetEntityAtIndex(handle.index)))
         {
             // A replacement entity has its own creation record for this slot.
-            uint32_t const oldMeshId = tScene->mInstanceBuffer[handle.index].meshId;
+            rendering::MeshIndex const oldMeshId = tScene->mInstanceBuffer[handle.index].meshId;
             if (oldMeshId != rendering::kInvalidMeshId)
             {
-                rendering::MeshCache::DecreaseMeshUseByIndex(oldMeshId);
+                rendering::MeshCache::Get().DecreaseMeshUseByIndex(oldMeshId);
             }
             tScene->mInstanceBuffer[handle.index] = {};
             tScene->mPendingInstanceUploads.insert(handle.index);
@@ -68,24 +69,24 @@ void DirtyTransformSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
         glm::quat const rotation{glm::radians(transform.rotation)};
         instance.position = transform.position;
         instance.rotation = glm::vec4(rotation.x, rotation.y, rotation.z, rotation.w);
-        instance.scale    = transform.scale.x;
+        instance.scale    = transform.scale;
     }
     if (mask.test(kMeshRendererBit))
     {
         auto const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index)->meshHandle;
-        instance.meshId = rendering::MeshCache::GetMeshIndexByHandle(mesh);
+        instance.meshId = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh);
     }
 
-    uint32_t const oldMeshId = tScene.mInstanceBuffer[tEntity.index].meshId;
+    rendering::MeshIndex const oldMeshId = tScene.mInstanceBuffer[tEntity.index].meshId;
     if (oldMeshId != instance.meshId)
     {
         if (oldMeshId != rendering::kInvalidMeshId)
         {
-            rendering::MeshCache::DecreaseMeshUseByIndex(oldMeshId);
+            rendering::MeshCache::Get().DecreaseMeshUseByIndex(oldMeshId);
         }
         if (instance.meshId != rendering::kInvalidMeshId)
         {
-            rendering::MeshCache::IncreaseMeshUseByIndex(instance.meshId);
+            rendering::MeshCache::Get().IncreaseMeshUseByIndex(instance.meshId);
         }
     }
 

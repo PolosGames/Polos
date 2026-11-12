@@ -27,6 +27,8 @@ class Scene;
 class POLOS_API SceneManager
 {
 public:
+    [[nodiscard]] static auto Get() -> SceneManager&;
+
     SceneManager();
     ~SceneManager();
 
@@ -35,15 +37,15 @@ public:
     auto operator=(SceneManager const&) -> SceneManager& = delete;
     auto operator=(SceneManager&&) -> SceneManager&      = delete;
 
-    static auto CreateScene(utils::string_id tName = "Scene"_sid) -> Scene*;
-    static auto MakeCurrentScene(utils::string_id tName) -> bool;
-    static auto GetCurrentScene() -> Scene*;
+    auto CreateScene(utils::string_id tName = "Scene"_sid) -> Scene*;
+    auto MakeCurrentScene(utils::string_id tName) -> bool;
+    auto GetCurrentScene() -> Scene*;
 
-    static auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
+    auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
 
     /// An empty path writes <scene ID>.scene in the working directory.
-    [[nodiscard]] static auto SaveScene(utils::string_id tName = "Scene.slop"_sid) -> bool;
-    static auto               LoadScene(std::string_view tScene) -> Scene*;
+    [[nodiscard]] auto SaveScene(utils::string_id tName = "Scene.slop"_sid) -> bool;
+    auto               LoadScene(std::string_view tScene) -> Scene*;
 private:
     auto serializeEntity();
 
@@ -51,7 +53,7 @@ private:
     friend class SceneSerializationTest;
 
     static SceneManager* sInstance;
-    static Scene*        sCurrentScene;
+    Scene* mCurrentScene{nullptr};
 
     std::vector<std::unique_ptr<Scene>> mScenes;
 };

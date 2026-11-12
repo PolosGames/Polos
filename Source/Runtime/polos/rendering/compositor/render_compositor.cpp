@@ -3,10 +3,10 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/render_compositor.hpp"
 
 #include "polos/ecs/components/camera_component.hpp"
-#include "polos/ecs/components/quad_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
@@ -16,9 +16,7 @@
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/resources/shader.hpp"
 #include "polos/rendering/uniforms/camera_uniform.hpp"
-#include "polos/rendering/vertex/quad_vertex.hpp"
 #include "polos/rendering/vk/frame_data.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
@@ -35,8 +33,6 @@ namespace polos::rendering
 
 auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    mQuadVertexShader      = Shader::Create("shader.vert.quad"_sid, ShaderStage::kVertex);
-    mQuadFragmentShader    = Shader::Create("shader.frag.quad"_sid, ShaderStage::kFragment);
     mForwardVertexShader   = Shader::Create("shader.vert.forward_shading"_sid, ShaderStage::kVertex);
     mForwardFragmentShader = Shader::Create("shader.frag.forward_shading"_sid, ShaderStage::kFragment);
     mMainComputeShader     = Shader::Create("shader.comp.main_compute"_sid, ShaderStage::kCompute);
@@ -57,7 +53,7 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
 
     mForwardShadingPass =
         std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
-    mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
+    mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
 
     mUiRenderPass = std::make_unique<UiRenderPass>();
     if (!mUiRenderPass->Create(mFrameTargets.front().colorImg->format))
@@ -76,8 +72,6 @@ auto RenderCompositor::Destroy() -> void
     mMainComputeShader.reset();
     mForwardFragmentShader.reset();
     mForwardVertexShader.reset();
-    mQuadFragmentShader.reset();
-    mQuadVertexShader.reset();
     releaseTargets();
 }
 
@@ -90,14 +84,14 @@ auto RenderCompositor::RecreateTargets() -> Result<void>
 
     mForwardShadingPass =
         std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
-    mForwardShadingPass->CreateFramebuffers(mFrameTargets, RenderContext::GetSwapchain().GetExtent());
+    mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
     return {};
 }
 
 auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
 {
     POLOS_PROFILE_ZONE("Prepare render compositor");
-    ecs::Scene* scene = ecs::SceneManager::GetCurrentScene();
+    ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
 
     // Always at least 1 camera, no need to check if activeCamera exists
     mCameraUbo = GetCameraUniform(
@@ -128,17 +122,17 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
     POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU frame");
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
 
-    ecs::Scene const* scene = ecs::SceneManager::GetCurrentScene();
+    ecs::Scene const* scene = ecs::SceneManager::Get().GetCurrentScene();
 
     int32_t drawCalls{0};
     drawCalls += mForwardShadingPass->Record(
         ForwardShadingPass::Inputs{
             .frameSlot      = tFrameData.frameSlot,
             .cmdBuf         = tFrameData.currentCmdBuf,
-            .renderArea     = RenderContext::GetSwapchain().GetRenderArea(),
+            .renderArea     = VulkanSwapchain::Get().GetRenderArea(),
             .extent         = ToExtent2D(tFrameData.scImage->extent),
-            .scissor        = RenderContext::GetSwapchain().GetScissor(),
-            .viewport       = RenderContext::GetSwapchain().GetViewport(),
+            .scissor        = VulkanSwapchain::Get().GetScissor(),
+            .viewport       = VulkanSwapchain::Get().GetViewport(),
             .cameraUbo      = mCameraUbo,
             .instanceBuffer = mInstanceBuffer.get(),
             .slotCount      = scene != nullptr ? scene->GetEntityPoolSize() : 0U,
@@ -200,12 +194,12 @@ auto RenderCompositor::releaseTargets() -> void
     {
         if (target.colorImgView != VK_NULL_HANDLE)
         {
-            vkDestroyImageView(RenderContext::GetVulkanDevice().logiDevice, target.colorImgView, nullptr);
+            vkDestroyImageView(VulkanDevice::Get().logiDevice, target.colorImgView, nullptr);
             target.colorImgView = VK_NULL_HANDLE;
         }
         if (target.depthImgView != VK_NULL_HANDLE)
         {
-            vkDestroyImageView(RenderContext::GetVulkanDevice().logiDevice, target.depthImgView, nullptr);
+            vkDestroyImageView(VulkanDevice::Get().logiDevice, target.depthImgView, nullptr);
             target.depthImgView = VK_NULL_HANDLE;
         }
         target.colorImg.reset();
@@ -221,12 +215,12 @@ auto RenderCompositor::createColorTarget() -> bool
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     ImageDescription colorDesc{
-        .extent      = RenderContext::GetSwapchain().GetExtent3D(),
-        .format      = VK_FORMAT_R16G16B16A16_SFLOAT,
+        .extent      = VulkanSwapchain::Get().GetExtent3D(),
+        .format      = kSceneColorFormat,
         .usage       = usage,
         .mipLevels   = 1U,
         .arrayLayers = 1U,
-        .samples     = VK_SAMPLE_COUNT_1_BIT,
+        .samples     = kSceneSampleCount,
     };
 
     for (auto& targets : mFrameTargets)
@@ -239,7 +233,7 @@ auto RenderCompositor::createColorTarget() -> bool
         }
         targets.colorImg = std::move(idxRes);
         targets.colorImgView =
-            util::CreateImageView(targets.colorImg->img, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_ASPECT_COLOR_BIT);
+            util::CreateImageView(targets.colorImg->img, kSceneColorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 
         if (VK_NULL_HANDLE == targets.colorImgView)
         {
@@ -255,15 +249,15 @@ auto RenderCompositor::createDepthTarget() -> bool
     ImageDescription depthDesc{
         .extent =
             {
-                .width  = RenderContext::GetSwapchain().GetExtent3D().width,
-                .height = RenderContext::GetSwapchain().GetExtent3D().height,
+                .width  = VulkanSwapchain::Get().GetExtent3D().width,
+                .height = VulkanSwapchain::Get().GetExtent3D().height,
                 .depth  = 1U,
             },
-        .format      = VK_FORMAT_D32_SFLOAT,
+        .format      = kSceneDepthFormat,
         .usage       = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         .mipLevels   = 1U,
         .arrayLayers = 1U,
-        .samples     = VK_SAMPLE_COUNT_1_BIT,
+        .samples     = kSceneSampleCount,
     };
 
     for (auto& target : mFrameTargets)
@@ -277,7 +271,7 @@ auto RenderCompositor::createDepthTarget() -> bool
 
         target.depthImg = std::move(idxRes);
         target.depthImgView =
-            util::CreateImageView(target.depthImg->img, VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT);
+            util::CreateImageView(target.depthImg->img, kSceneDepthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         if (VK_NULL_HANDLE == target.depthImgView)
         {

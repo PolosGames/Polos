@@ -23,8 +23,8 @@ Scene::Scene(utils::string_id const tName)
 {}
 
 Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
-    : name(tName)
-    , mInstanceBuffer(std::make_unique<rendering::MeshInstance[]>(Settings::kMaxEntities))
+    : name(tName),
+      mInstanceBuffer(std::make_unique<rendering::MeshInstance[]>(Settings::kMaxEntities))
 {
     sceneRoot = newEntity();
 

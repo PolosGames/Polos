@@ -1,7 +1,7 @@
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/info_component.hpp"
-#include "polos/ecs/components/quad_renderer_component.hpp"
+#include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
 #include "polos/ecs/scene.hpp"
@@ -53,7 +53,7 @@ protected:
     auto Save(std::filesystem::path const& path) -> bool
     {
         scene->name = utils::RegisterString(path.string());
-        return SceneManager::SaveScene(scene->name);
+        return SceneManager::Get().SaveScene(scene->name);
     }
 
     std::unique_ptr<SceneManager> manager;
@@ -127,8 +127,8 @@ auto ExpectComponentEqual(TransformComponent const& tExpected, TransformComponen
     {
         EXPECT_FLOAT_EQ(tActual.position[axis], tExpected.position[axis]);
         EXPECT_FLOAT_EQ(tActual.rotation[axis], tExpected.rotation[axis]);
-        EXPECT_FLOAT_EQ(tActual.scale[axis], tExpected.scale[axis]);
     }
+    EXPECT_FLOAT_EQ(tActual.scale, tExpected.scale);
 }
 
 auto ExpectComponentEqual(
@@ -139,20 +139,9 @@ auto ExpectComponentEqual(
     EXPECT_FLOAT_EQ(tActual.lookSensitivity, tExpected.lookSensitivity);
 }
 
-auto ExpectComponentEqual(QuadRendererComponent const& tExpected, QuadRendererComponent const& tActual) -> void
+auto ExpectComponentEqual(MeshRendererComponent const& tExpected, MeshRendererComponent const& tActual) -> void
 {
-    for (int axis{0}; axis < 4; ++axis)
-    {
-        EXPECT_FLOAT_EQ(tActual.color[axis], tExpected.color[axis]);
-    }
-
-    for (int axis{0}; axis < 2; ++axis)
-    {
-        EXPECT_FLOAT_EQ(tActual.scissor[axis], tExpected.scissor[axis]);
-    }
-
-    EXPECT_EQ(tActual.textureName, tExpected.textureName);
-    EXPECT_FLOAT_EQ(tActual.tilingFactor, tExpected.tilingFactor);
+    EXPECT_EQ(tActual.meshHandle, tExpected.meshHandle);
 }
 
 template<Component T>
@@ -307,14 +296,14 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
 
 TEST_F(SceneSerializationTest, ReportsMissingSceneAndOpenFailure)
 {
-    EXPECT_FALSE(SceneManager::SaveScene("MissingScene"_sid));
+    EXPECT_FALSE(SceneManager::Get().SaveScene("MissingScene"_sid));
     EXPECT_FALSE(std::filesystem::exists(directory / "missing.scene"));
     EXPECT_FALSE(Save(directory / "absent" / "fail.scene"));
 }
 
 TEST_F(SceneSerializationTest, DefaultEditorCameraRoundTripsWithoutDuplication)
 {
-    scene                 = SceneManager::CreateScene();
+    scene                 = SceneManager::Get().CreateScene();
     auto* transform       = scene->GetMutableComponent<TransformComponent>(scene->activeCamera);
     auto* controller      = scene->GetMutableComponent<EditorCameraControllerComponent>(scene->activeCamera);
     transform->position   = {1.0F, 2.0F, 3.0F};
@@ -323,10 +312,10 @@ TEST_F(SceneSerializationTest, DefaultEditorCameraRoundTripsWithoutDuplication)
     auto const path       = directory / "editor-camera.scene";
     ASSERT_TRUE(Save(path));
 
-    auto* loaded = SceneManager::LoadScene(path.string());
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
 
     ASSERT_NE(loaded, nullptr);
-    EXPECT_EQ(SceneManager::GetCurrentScene(), loaded);
+    EXPECT_EQ(SceneManager::Get().GetCurrentScene(), loaded);
     EXPECT_EQ(loaded->GetEntityPoolSize(), 2U);
     ExpectChildren(*loaded, loaded->sceneRoot, {"Editor Camera"_sid});
     auto const camera = loaded->activeCamera;
@@ -351,7 +340,7 @@ TEST_F(SceneSerializationTest, LoadPreservesSiblingOrderAndLinksAtEveryDepth)
 
     ASSERT_TRUE(Save(path));
 
-    auto* loaded = SceneManager::LoadScene(path.string());
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
 
     ASSERT_NE(loaded, nullptr);
 
@@ -387,7 +376,7 @@ TEST_F(SceneSerializationTest, LoadPreservesRootOnlyScene)
 
     ASSERT_TRUE(Save(path));
 
-    auto* loaded = SceneManager::LoadScene(path.string());
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
 
     ASSERT_NE(loaded, nullptr);
     EXPECT_TRUE(loaded->GetChild(loaded->sceneRoot) == kInvalidEntityHandle);
@@ -419,28 +408,18 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInDfsOrder)
     TransformComponent const transformA{
         .position = {1.0F, 2.0F, 3.0F},
         .rotation = {4.0F, 5.0F, 6.0F},
-        .scale    = {7.0F, 8.0F, 9.0F},
+        .scale    = 7.0F,
     };
     TransformComponent const transformB{
         .position = {9.0F, 8.0F, 7.0F},
         .rotation = {6.0F, 5.0F, 4.0F},
-        .scale    = {3.0F, 2.0F, 1.0F},
+        .scale    = 3.0F,
     };
 
     EditorCameraControllerComponent const controllerC{.moveSpeed = 17.0F, .lookSensitivity = 0.75F};
 
-    QuadRendererComponent const quadB{
-        .color        = {0.1F, 0.2F, 0.3F, 0.4F},
-        .scissor      = {33.0F, 44.0F},
-        .textureName  = "TextureB"_sid,
-        .tilingFactor = 2.5F,
-    };
-    QuadRendererComponent const quadC{
-        .color        = {0.9F, 0.8F, 0.7F, 0.6F},
-        .scissor      = {55.0F, 66.0F},
-        .textureName  = "TextureC"_sid,
-        .tilingFactor = 4.5F,
-    };
+    MeshRendererComponent const meshB{rendering::kPolosDefaultQuad};
+    MeshRendererComponent const meshC{rendering::kPolosDefaultCube};
 
     ASSERT_NE(scene->AddComponent(a, VisibilityComponent{.isVisible = false}), nullptr);
     ASSERT_NE(scene->AddComponent(c, VisibilityComponent{.isVisible = true}), nullptr);
@@ -449,15 +428,15 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInDfsOrder)
     ASSERT_NE(scene->AddComponent(a, transformA), nullptr);
     ASSERT_NE(scene->AddComponent(b, transformB), nullptr);
     ASSERT_NE(scene->AddComponent(c, controllerC), nullptr);
-    ASSERT_NE(scene->AddComponent(b, quadB), nullptr);
-    ASSERT_NE(scene->AddComponent(c, quadC), nullptr);
+    ASSERT_NE(scene->AddComponent(b, meshB), nullptr);
+    ASSERT_NE(scene->AddComponent(c, meshC), nullptr);
     ASSERT_TRUE(scene->SetActiveCamera(c));
 
     auto const path = directory / "components.scene";
 
     ASSERT_TRUE(Save(path));
 
-    auto* loaded = SceneManager::LoadScene(path.string());
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
 
     ASSERT_NE(loaded, nullptr);
     EXPECT_EQ(loaded->activeCamera.index, 3U);
@@ -476,8 +455,36 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInDfsOrder)
         ExpectRestoredComponent<CameraComponent>(*scene, original, *loaded, restored);
         ExpectRestoredComponent<TransformComponent>(*scene, original, *loaded, restored);
         ExpectRestoredComponent<EditorCameraControllerComponent>(*scene, original, *loaded, restored);
-        ExpectRestoredComponent<QuadRendererComponent>(*scene, original, *loaded, restored);
+        ExpectRestoredComponent<MeshRendererComponent>(*scene, original, *loaded, restored);
     }
+}
+
+TEST_F(SceneSerializationTest, LegacyQuadLoadsAsDefaultMesh)
+{
+    auto const entity = scene->NewEntity(scene->sceneRoot, "LegacyQuad"_sid);
+    ASSERT_NE(scene->AddComponent(entity, TransformComponent{}), nullptr);
+    auto const path = directory / "legacy-quad.scene";
+    ASSERT_TRUE(Save(path));
+
+    {
+        std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+        constexpr auto entityOffset = sizeof(Header) + sizeof(utils::string_id) + sizeof(EntityIndex) +
+                                      sizeof(SerializedEntity);
+        file.seekg(entityOffset);
+        SerializedEntity record{};
+        ASSERT_TRUE(static_cast<bool>(file.read(reinterpret_cast<char*>(&record), sizeof(record))));
+        record.componentTypes |= std::uint32_t{1} << 6U;
+        ++record.componentCount;
+        record.componentIndices[6U] = 0U;
+        file.seekp(entityOffset);
+        ASSERT_TRUE(static_cast<bool>(file.write(reinterpret_cast<char const*>(&record), sizeof(record))));
+    }
+
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
+    ASSERT_NE(loaded, nullptr);
+    auto const* mesh = loaded->GetComponent<MeshRendererComponent>(loaded->GetChild(loaded->sceneRoot));
+    ASSERT_NE(mesh, nullptr);
+    EXPECT_EQ(mesh->meshHandle, rendering::kPolosDefaultQuad);
 }
 
 TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
@@ -496,7 +503,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
     auto const path = directory / "view-lifecycle.scene";
     ASSERT_TRUE(Save(path));
 
-    auto* loaded = SceneManager::LoadScene(path.string());
+    auto* loaded = SceneManager::Get().LoadScene(path.string());
     ASSERT_NE(loaded, nullptr);
     auto const         loadedSurvivor = loaded->GetChild(loaded->sceneRoot);
     auto const         loadedBranch   = loaded->GetNextSibling(loadedSurvivor);
@@ -555,7 +562,7 @@ TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
     ASSERT_TRUE(scene->SetActiveCamera(camera));
     auto const firstPath = directory / "original.scene";
     ASSERT_TRUE(Save(firstPath));
-    auto* loaded = SceneManager::LoadScene(firstPath.string());
+    auto* loaded = SceneManager::Get().LoadScene(firstPath.string());
     ASSERT_NE(loaded, nullptr);
 
     auto const loadedCamera    = loaded->activeCamera;
@@ -571,9 +578,9 @@ TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
     }
     auto const secondPath = directory / "edited.scene";
     loaded->name          = utils::RegisterString(secondPath.string());
-    ASSERT_TRUE(SceneManager::SaveScene(loaded->name));
+    ASSERT_TRUE(SceneManager::Get().SaveScene(loaded->name));
 
-    auto* reloaded = SceneManager::LoadScene(secondPath.string());
+    auto* reloaded = SceneManager::Get().LoadScene(secondPath.string());
 
     ASSERT_NE(reloaded, nullptr);
     auto const reloadedCamera = reloaded->activeCamera;

@@ -27,8 +27,8 @@ namespace sandbox
 
 namespace
 {
-constexpr std::size_t const kRowCount{1000U};
-constexpr std::size_t const kColumnCount{1000U};
+constexpr std::size_t const kRowCount{100U};
+constexpr std::size_t const kColumnCount{100U};
 }// namespace
 
 class SandboxApp final : public polos::core::BaseLiveLayer
@@ -48,7 +48,7 @@ auto SandboxApp::Create() -> void
 {
     using namespace polos;
 
-    auto* scene = ecs::SceneManager::CreateScene();
+    auto* scene = ecs::SceneManager::Get().CreateScene();
 
     constexpr float kApart = 2.0F;
     for (std::size_t i{0U}; i < kRowCount; ++i)
@@ -102,7 +102,8 @@ auto SandboxApp::drawFpsOverlay(float tDeltaTime) -> void
     if (gui::Begin("FpsOverlay", nullptr, flags))
     {
         gui::Text(mFps > 0.0F ? std::format("FPS: {:.1f}", mFps) : "FPS: --");
-        gui::Text(std::format("DrawCalls: {}", polos::rendering::RenderingApi::GetLastFrameStatistics().drawCalls));
+        gui::Text(
+            std::format("DrawCalls: {}", polos::rendering::RenderingApi::Get().GetLastFrameStatistics().drawCalls));
     }
     gui::End();
 }

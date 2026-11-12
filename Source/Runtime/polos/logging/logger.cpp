@@ -25,7 +25,7 @@ Logger::Logger()
     mAppLogger   = get_logger("APP");
 }
 
-Logger& Logger::Instance()
+Logger& Logger::Get()
 {
     static Logger sInstance;
     return sInstance;
@@ -44,7 +44,7 @@ void FlushLogger(quill::Logger* tLogger)
 {
     if (nullptr == tLogger)
     {
-        QUILL_LOG_ERROR(Logger::Instance().GetPolosLogger(), "Cannot flush a null logger!");
+        QUILL_LOG_ERROR(Logger::Get().GetPolosLogger(), "Cannot flush a null logger!");
         return;
     }
     tLogger->flush_log();

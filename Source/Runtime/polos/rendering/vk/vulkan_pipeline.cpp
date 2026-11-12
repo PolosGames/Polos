@@ -5,7 +5,6 @@
 
 #include "polos/rendering/vk/vulkan_pipeline.hpp"
 
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 
 #include <utility>
@@ -26,7 +25,7 @@ auto VulkanPipeline::Create(
 
 auto VulkanPipeline::Reset(VulkanPipeline& tPipeline) -> void
 {
-    VkDevice device = RenderContext::GetVulkanDevice().logiDevice;
+    VkDevice device = VulkanDevice::Get().logiDevice;
 
     if (tPipeline.pipeline != VK_NULL_HANDLE)
     {

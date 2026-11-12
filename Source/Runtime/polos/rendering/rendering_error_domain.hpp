@@ -67,7 +67,7 @@ public:
               "Failed to create Depth Target for the frame! Exiting...",
               "Failed to create the Vulkan instance!",
               "Failed to load or create a shader module!",
-              "Failed to create the default white texture!",
+              "Failed to create the default texture!",
               "Failed to initialize the GUI renderer!",
           })
     {}

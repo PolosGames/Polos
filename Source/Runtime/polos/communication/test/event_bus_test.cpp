@@ -30,7 +30,7 @@ protected:
 private:
     static auto ResetEventBus() -> void
     {
-        auto& eventBus = EventBus::Instance();
+        auto& eventBus = EventBus::Get();
         eventBus.mCallbacks.clear();
         eventBus.mDeferredEvents.clear();
     }
