@@ -20,6 +20,9 @@ namespace polos::rendering
 class DescriptorSet
 {
 public:
+    [[nodiscard]] static auto CreateSingle(
+        VkDescriptorPool tPool, VkDescriptorSetLayout tLayout, void const* tNext = nullptr) -> DescriptorSet;
+
     [[nodiscard]] static auto Create(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout)
         -> std::array<DescriptorSet, Settings::kMaxFramesInFlight>;
 

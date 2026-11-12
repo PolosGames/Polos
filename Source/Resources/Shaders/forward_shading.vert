@@ -3,8 +3,23 @@
 struct VertexOutput
 {
     vec4 color;
+    vec2 texCoord;
 };
 
+struct Instance
+{
+    vec3  position;
+    uint  parentId;
+    vec4  rotation;
+    float scale;
+    uint  meshId;
+    uint  textureIdx;
+};
+
+layout(std430, set = 1, binding = 0) readonly buffer InputInstances
+{
+    Instance instances[];
+};
 layout(std430, set = 2, binding = 0) readonly buffer VisibleMatrixIndices
 {
     uint visibleMatrixIndices[];
@@ -27,12 +42,17 @@ layout(location = 2) in vec4 iTangent;
 layout(location = 3) in vec2 iTexCoord;
 layout(location = 4) in vec4 iColor;
 layout(location = 0) out VertexOutput oVertOut;
+layout(location = 2) out flat uint oTexIndex;
 
 void main()
 {
-    mat4 worldMatrix = worldMatrices[visibleMatrixIndices[gl_InstanceIndex]];
+    uint     entityIdx   = visibleMatrixIndices[gl_InstanceIndex];
+    mat4     worldMatrix = worldMatrices[entityIdx];
+    Instance inst        = instances[entityIdx];
 
     gl_Position = ubo.viewProj * worldMatrix * vec4(iPosition, 1.0);
 
-    oVertOut.color = iColor;
+    oVertOut.color    = iColor;
+    oVertOut.texCoord = iTexCoord;
+    oTexIndex         = inst.textureIdx;
 }

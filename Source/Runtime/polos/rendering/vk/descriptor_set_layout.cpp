@@ -12,21 +12,24 @@
 namespace polos::rendering
 {
 
-auto DescriptorSetLayout::Create(std::span<VkDescriptorSetLayoutBinding const> tBindings)
+auto DescriptorSetLayout::Create(
+    std::span<VkDescriptorSetLayoutBinding const> tBindings,
+    VkDescriptorSetLayoutCreateFlags tFlags,
+    void const* tNext)
     -> std::shared_ptr<DescriptorSetLayout>
 {
-    VkDescriptorSetLayoutCreateInfo dslci{
+    VkDescriptorSetLayoutCreateInfo const layoutInfo{
         .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .pNext        = nullptr,
-        .flags        = 0U,
+        .pNext        = tNext,
+        .flags        = tFlags,
         .bindingCount = ToVkSize(tBindings.size()),
         .pBindings    = tBindings.data(),
     };
 
     VkDescriptorSetLayout dsl{VK_NULL_HANDLE};
     PL_ASSERT(
-        VK_SUCCESS == vkCreateDescriptorSetLayout(VulkanDevice::Get().logiDevice, &dslci, nullptr, &dsl),
-        "Failed to create Descriptor set layout for ForwardShadingPass");
+        VK_SUCCESS == vkCreateDescriptorSetLayout(VulkanDevice::Get().logiDevice, &layoutInfo, nullptr, &dsl),
+        "Failed to create descriptor set layout");
 
     return {new DescriptorSetLayout{.layout = dsl}, [](DescriptorSetLayout* tPtr) {
                 vkDestroyDescriptorSetLayout(VulkanDevice::Get().logiDevice, tPtr->layout, nullptr);

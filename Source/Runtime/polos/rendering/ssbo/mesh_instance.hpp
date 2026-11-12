@@ -23,7 +23,6 @@ struct alignas(16) MeshInstance
     float        scale{1.0F};
     MeshIndex    meshId{kInvalidMeshId};
     TextureIndex texID{kDefaultTextureIndex};
-    float        tilingFactor{kDefaultTilingFactor};
 };
 }// namespace polos::rendering
 

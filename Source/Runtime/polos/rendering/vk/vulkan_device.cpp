@@ -6,10 +6,10 @@
 #define VMA_IMPLEMENTATION
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/resources/image.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/queue_family_indices.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
@@ -85,16 +85,16 @@ auto DecodeDriverVersion(std::uint32_t tVendorId, std::uint32_t tDriverVersion) 
 }
 
 auto QueryDeviceFeatures(
-    VkPhysicalDevice                          tDevice,
-    VkPhysicalDeviceSynchronization2Features& tSynchronization2,
-    VkPhysicalDeviceVulkan12Features&         tVulkan12) -> VkPhysicalDeviceFeatures2
+    VkPhysicalDevice                  tDevice,
+    VkPhysicalDeviceVulkan13Features& tVulkan13,
+    VkPhysicalDeviceVulkan12Features& tVulkan12) -> VkPhysicalDeviceFeatures2
 {
-    tVulkan12.pNext         = nullptr;
-    tSynchronization2.pNext = &tVulkan12;
+    tVulkan12.pNext = nullptr;
+    tVulkan13.pNext = &tVulkan12;
 
     VkPhysicalDeviceFeatures2 features{
         .sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-        .pNext    = &tSynchronization2,
+        .pNext    = &tVulkan13,
         .features = {},
     };
     vkGetPhysicalDeviceFeatures2(tDevice, &features);
@@ -163,21 +163,17 @@ auto SelectPhysicalDevice(VkInstance tInstance, VkSurfaceKHR tSurface, std::span
         VkPhysicalDeviceVulkan12Features vulkan12{};
         vulkan12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 
-        VkPhysicalDeviceSynchronization2Features synchronization2{
-            .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-            .pNext            = &vulkan12,
-            .synchronization2 = VK_FALSE,
-        };
-        auto const features    = QueryDeviceFeatures(device, synchronization2, vulkan12).features;
+        VkPhysicalDeviceVulkan13Features vulkan13{};
+        vulkan13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+        auto const features    = QueryDeviceFeatures(device, vulkan13, vulkan12).features;
         bool const hasBindless = vulkan12.descriptorIndexing && vulkan12.shaderSampledImageArrayNonUniformIndexing &&
                                  vulkan12.descriptorBindingSampledImageUpdateAfterBind &&
                                  vulkan12.descriptorBindingPartiallyBound && vulkan12.runtimeDescriptorArray;
-        if (!synchronization2.synchronization2 || !features.multiDrawIndirect || !features.drawIndirectFirstInstance ||
-            !hasBindless)
+        if (!vulkan13.synchronization2 || !vulkan13.shaderTerminateInvocation || !features.multiDrawIndirect ||
+            !features.drawIndirectFirstInstance || !hasBindless)
         {
-            LogInfo(
-                "Skipping GPU '{}' because it lacks required synchronization, indirect draw, or bindless features.",
-                properties.deviceName);
+            LogInfo("Skipping GPU '{}' because it lacks required feature support.", properties.deviceName);
             continue;
         }
         if (!SupportsDeviceExtensions(device, tExtensions))
@@ -280,12 +276,10 @@ auto VulkanDevice::Create(CreationDetails const& tInfo) -> Result<void>
     VkPhysicalDeviceVulkan12Features vulkan12_features{};
     vulkan12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 
-    VkPhysicalDeviceSynchronization2Features synchronization2_features{
-        .sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
-        .pNext            = &vulkan12_features,
-        .synchronization2 = VK_FALSE,
-    };
-    auto const device_features = QueryDeviceFeatures(physDevice, synchronization2_features, vulkan12_features);
+    VkPhysicalDeviceVulkan13Features vulkan13_features{};
+    vulkan13_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+    auto const device_features = QueryDeviceFeatures(physDevice, vulkan13_features, vulkan12_features);
 
     constexpr float const         kQueuePrio{1.0F};
     VkDeviceQueueCreateInfo const queue_info{

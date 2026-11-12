@@ -169,8 +169,8 @@ TEST_F(GltfLoaderTest, LoadsSeparatePositionsAndInterleavedNormalsAndUvsWithOffs
     EXPECT_EQ(vertices[0].normal, glm::vec3(0, 0, 1));
     EXPECT_EQ(vertices[1].normal, glm::vec3(0, 1, 0));
     EXPECT_EQ(vertices[2].normal, glm::vec3(1, 0, 0));
-    EXPECT_EQ(vertices[1].texCoord, glm::vec2(1, 0));
-    EXPECT_EQ(vertices[2].texCoord, glm::vec2(0, 1));
+    EXPECT_EQ(vertices[1].texCoord, glm::vec2(1, 1));
+    EXPECT_EQ(vertices[2].texCoord, glm::vec2(0, 0));
     EXPECT_EQ(vertices[1].tangent, glm::vec4(0, 1, 0, -1));
     EXPECT_FLOAT_EQ(vertices[2].position.y, 1);
 }
@@ -227,9 +227,9 @@ TEST_F(GltfLoaderTest, DecodesNormalizedShortRgbaAndUvs)
     EXPECT_FLOAT_EQ(vertices[0].color.g, 32768.0F / 65535.0F);
     EXPECT_FLOAT_EQ(vertices[0].color.a, 16384.0F / 65535.0F);
     EXPECT_FLOAT_EQ(vertices[2].color.a, 0);
-    EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 1));
+    EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 0));
     EXPECT_FLOAT_EQ(vertices[1].texCoord.x, 32768.0F / 65535.0F);
-    EXPECT_FLOAT_EQ(vertices[1].texCoord.y, 16384.0F / 65535.0F);
+    EXPECT_FLOAT_EQ(vertices[1].texCoord.y, 1.0F - 16384.0F / 65535.0F);
 }
 
 TEST_F(GltfLoaderTest, LoadsAllUnsignedIndexWidths)
@@ -302,7 +302,7 @@ TEST_F(GltfLoaderTest, KeepsIndexedQuadVerticesInAccessorOrder)
     for (std::size_t i{0}; i < vertices.size(); ++i)
     {
         EXPECT_EQ(vertices[i].position, glm::vec3(expectedUvs[i], 0));
-        EXPECT_EQ(vertices[i].texCoord, expectedUvs[i]);
+        EXPECT_EQ(vertices[i].texCoord, glm::vec2(expectedUvs[i].x, 1.0F - expectedUvs[i].y));
         EXPECT_EQ(vertices[i].color, expectedColors[i]);
         EXPECT_EQ(vertices[i].normal, glm::vec3(0, 0, 1));
         EXPECT_FLOAT_EQ(vertices[i].tangent.w, 1);
@@ -320,7 +320,7 @@ TEST_F(GltfLoaderTest, DecodesNormalizedByteUvsAndFloatRgb)
     ASSERT_TRUE(result);
     auto const& vertices = result->meshes[0].parts[0].primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
-    EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 1));
+    EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 0));
     EXPECT_FLOAT_EQ(vertices[1].texCoord.x, 128.0F / 255.0F);
     EXPECT_EQ(vertices[0].color, glm::vec4(1, 0.5F, 0, 1));
     EXPECT_EQ(vertices[1].color, glm::vec4(0, 1, 0.25F, 1));

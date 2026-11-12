@@ -28,7 +28,10 @@ public:
     using Pool = VkDescriptorPool;
 
     DescriptorPool() = default;
-    explicit DescriptorPool(std::span<VkDescriptorPoolSize> tPoolSizes, uint32_t tMaxSets);
+    explicit DescriptorPool(
+        std::span<VkDescriptorPoolSize const> tPoolSizes,
+        uint32_t                              tMaxSets,
+        VkDescriptorPoolCreateFlags           tFlags = 0U);
     DescriptorPool(DescriptorPool const&) = delete;
     DescriptorPool(DescriptorPool&& tOther);
 
@@ -36,9 +39,10 @@ public:
     DescriptorPool& operator=(DescriptorPool&& tOther);
     ~DescriptorPool();
 
-    auto CreateSet(std::shared_ptr<DescriptorSetLayout>& tLayout) -> uint32_t;
-    auto GetSetForFrameSlotAtIndex(uint32_t tSetIndex, uint32_t tFrameSlot) -> DescriptorSet&;
-    auto GetSetLayoutAtIndex(uint32_t tSetIndex) -> VkDescriptorSetLayout;
+    [[nodiscard]] auto AllocateSet(VkDescriptorSetLayout tLayout, void const* tNext = nullptr) const -> DescriptorSet;
+    auto               CreateSet(std::shared_ptr<DescriptorSetLayout>& tLayout) -> uint32_t;
+    auto               GetSetForFrameSlotAtIndex(uint32_t tSetIndex, uint32_t tFrameSlot) -> DescriptorSet&;
+    auto               GetSetLayoutAtIndex(uint32_t tSetIndex) -> VkDescriptorSetLayout;
 
     Pool                  pool{VK_NULL_HANDLE};
     std::vector<SetEntry> descriptorSets;
