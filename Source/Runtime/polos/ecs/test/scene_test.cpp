@@ -4,7 +4,7 @@
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
 #include "polos/ecs/scene.hpp"
-#include "polos/ecs/systems/dirty_transform_system.hpp"
+#include "polos/ecs/systems/mesh_instance_sync_system.hpp"
 
 #include <gtest/gtest.h>
 
@@ -144,10 +144,10 @@ TEST(SceneTest, RemovingDirtyEntriesKeepsLookupValidForSurvivorsAndRecycledSlots
 
 TEST(SceneTest, MeshInstancesFollowComponentRemovalAndRecycledEntitySlots)
 {
-    auto                 scene = std::make_unique<Scene>();
-    DirtyTransformSystem system;
-    auto const           parent = scene->NewEntity();
-    auto const           child  = scene->NewEntity(parent);
+    auto                   scene = std::make_unique<Scene>();
+    MeshInstanceSyncSystem system;
+    auto const             parent = scene->NewEntity();
+    auto const             child  = scene->NewEntity(parent);
 
     ASSERT_NE(scene->AddComponent(child, TransformComponent{.position = {1.0F, 2.0F, 3.0F}}), nullptr);
     system.Update(scene.get());

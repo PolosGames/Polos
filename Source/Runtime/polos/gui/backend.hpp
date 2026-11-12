@@ -12,12 +12,17 @@
 
 #include <cstdint>
 
+namespace polos::rendering
+{
+class CommandBuffer;
+}
+
 namespace polos::gui::backend
 {
 auto Initialize(VkRenderPass tRenderPass) -> bool;
 auto Shutdown() -> void;
 auto BeginFrame() -> void;
-auto RecordDrawData(VkCommandBuffer tCommandBuffer) -> void;
+auto RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void;
 auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t;
 }// namespace polos::gui::backend
 

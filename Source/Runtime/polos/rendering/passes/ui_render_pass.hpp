@@ -7,6 +7,7 @@
 #define POLOS_RENDERING_UI_RENDER_PASS_HPP
 
 #include "polos/rendering/settings.hpp"
+#include "polos/rendering/vk/vulkan_render_pass.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -22,7 +23,7 @@ public:
     struct Inputs
     {
         std::uint32_t   frameSlot;
-        VkCommandBuffer cmdBuf;
+        CommandBuffer& cmdBuf;
         VkImageView     colorView;
         VkExtent2D      extent;
     };
@@ -31,13 +32,15 @@ public:
     ~UiRenderPass();
 
     UiRenderPass(UiRenderPass const&)                    = delete;
+    UiRenderPass(UiRenderPass&&)                         = delete;
     auto operator=(UiRenderPass const&) -> UiRenderPass& = delete;
+    auto operator=(UiRenderPass&&) -> UiRenderPass&      = delete;
 
     auto Create(VkFormat tColorFormat) -> bool;
     auto ReleaseFramebuffers() -> void;
     auto Record(Inputs const& tInputs) -> void;
 private:
-    VkRenderPass                                            mRenderPass{VK_NULL_HANDLE};
+    VulkanRenderPass                                        mRenderPass;
     std::array<VkFramebuffer, Settings::kMaxFramesInFlight> mFramebuffers{};
 };
 

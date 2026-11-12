@@ -9,13 +9,12 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
+#include "polos/rendering/vk/descriptor_pool_builder.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/resource/image.hpp"
 #include "polos/resource/resource_manager.hpp"
-#include "polos/utils/string_map.hpp"
 
 #include <algorithm>
-#include <array>
 #include <limits>
 #include <utility>
 
@@ -24,7 +23,8 @@ namespace polos::rendering
 
 namespace
 {
-inline constexpr uint32_t kMaxBindlessTextures{4096U};
+inline constexpr uint32_t      kMaxBindlessTextures{4096U};
+inline constexpr std::uint32_t kBindlessSetIndex{0U};
 }// namespace
 
 TextureCache* TextureCache::sInstance{nullptr};
@@ -46,38 +46,35 @@ TextureCache::~TextureCache()
 
 auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    VkDescriptorBindingFlags const bindingFlags =
-        VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+    {
+        VkDescriptorBindingFlags const bindingFlags =
+            VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 
-    VkDescriptorSetLayoutBindingFlagsCreateInfo const bindingFlagsInfo{
-        .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
-        .pNext         = nullptr,
-        .bindingCount  = 1U,
-        .pBindingFlags = &bindingFlags,
-    };
+        VkDescriptorSetLayoutBindingFlagsCreateInfo const bindingFlagsInfo{
+            .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+            .pNext         = nullptr,
+            .bindingCount  = 1U,
+            .pBindingFlags = &bindingFlags,
+        };
 
-    VkDescriptorSetLayoutBinding const bindlessBinding{
-        .binding            = 0U,
-        .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        .descriptorCount    = kMaxBindlessTextures,
-        .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .pImmutableSamplers = nullptr,
-    };
+        VkDescriptorSetLayoutBinding const bindlessBinding{
+            .binding            = 0U,
+            .descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount    = kMaxBindlessTextures,
+            .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .pImmutableSamplers = nullptr,
+        };
 
-    mBindlessSetLayout = DescriptorSetLayout::Create(
-        std::span{&bindlessBinding, 1U},
-        VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-        &bindingFlagsInfo);
+        DescriptorPoolBuilder builder;
+        builder.SetFlags(VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT);
+        builder.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, kMaxBindlessTextures);
+        builder.AddSet(1U)
+            .AddBinding(bindlessBinding)
+            .SetLayoutFlags(VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT)
+            .SetLayoutNext(&bindingFlagsInfo);
 
-    std::array const poolSizes{
-        VkDescriptorPoolSize{
-            .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .descriptorCount = kMaxBindlessTextures,
-        },
-    };
-
-    mBindlessPool = DescriptorPool{poolSizes, 1U, VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT};
-    mBindlessSet  = mBindlessPool.AllocateSet(mBindlessSetLayout->layout);
+        mBindlessPool = builder.Finalize();
+    }
 
     // Source-style magenta fallback.
     auto image = Image::Create(
@@ -89,8 +86,7 @@ auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
             .arrayLayers = 1U,
             .samples     = VK_SAMPLE_COUNT_1_BIT,
         },
-        VK_FORMAT_R8G8B8A8_SRGB,
-        kDefaultTextureRgba);
+        VK_FORMAT_R8G8B8A8_SRGB, kDefaultTextureRgba);
 
     if (nullptr == image)
     {
@@ -137,8 +133,7 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, TextureDe
             .arrayLayers = 1U,
             .samples     = VK_SAMPLE_COUNT_1_BIT,
         },
-        format,
-        image->data);
+        format, image->data);
 
     if (nullptr == gpuImage)
     {
@@ -212,12 +207,12 @@ auto TextureCache::GetTextureAtIndex(std::size_t tIndex) -> Texture const*
 
 auto TextureCache::GetBindlessSetLayout() -> VkDescriptorSetLayout
 {
-    return mBindlessSetLayout ? mBindlessSetLayout->layout : VK_NULL_HANDLE;
+    return mBindlessPool.GetSetLayoutAtIndex(kBindlessSetIndex);
 }
 
 auto TextureCache::GetBindlessDescriptorSet() -> VkDescriptorSet
 {
-    return mBindlessSet.set;
+    return mBindlessPool.GetSetHandle(kBindlessSetIndex);
 }
 
 auto TextureCache::writeBindlessDescriptor(TextureIndex const tIndex, Texture const& tTexture) -> void
@@ -228,29 +223,14 @@ auto TextureCache::writeBindlessDescriptor(TextureIndex const tIndex, Texture co
         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     };
 
-    VkWriteDescriptorSet write{
-        .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .pNext            = nullptr,
-        .dstSet           = VK_NULL_HANDLE,
-        .dstBinding       = 0U,
-        .dstArrayElement  = tIndex,
-        .descriptorCount  = 1U,
-        .descriptorType   = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        .pImageInfo       = &imageInfo,
-        .pBufferInfo      = nullptr,
-        .pTexelBufferView = nullptr,
-    };
-
-    mBindlessSet.Update(std::span{&write, 1U});
+    mBindlessPool.UpdateImage(kBindlessSetIndex, 0U, tIndex, imageInfo);
 }
 
 auto TextureCache::Destroy() -> void
 {
-    mBindlessSet  = {};
     mBindlessPool = DescriptorPool{};
-    mBindlessSetLayout.reset();
 
-    VkDevice const device = VulkanDevice::Get().logiDevice;
+    VkDevice device = VulkanDevice::Get().logiDevice;
     for (std::size_t i{0U}; i < mTextures.size(); ++i)
     {
         vkDestroyImageView(device, mTextures[i]->view, nullptr);

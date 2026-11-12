@@ -6,6 +6,7 @@
 #include "polos/rendering/resources/buffer.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/vk/command_buffer.hpp"
 #include "polos/rendering/vk/render_context.hpp"
 #include "polos/utils/assert.hpp"
 
@@ -25,8 +26,8 @@ auto CopyBuffer(
     VkDeviceSize tSrcOffset = 0U,
     VkDeviceSize tDstOffset = 0U) -> bool
 {
-    VkCommandBuffer cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
-    if (cmdBuf == VK_NULL_HANDLE)
+    auto cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
+    if (!cmdBuf)
     {
         return false;
     }
@@ -42,24 +43,15 @@ auto CopyBuffer(
         .offset              = tSrcOffset,
         .size                = tSize,
     };
-    vkCmdPipelineBarrier(
-        cmdBuf,
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0U,
-        0U,
-        nullptr,
-        1U,
-        &sourceBarrier,
-        0U,
-        nullptr);
+    cmdBuf.PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, std::span{&sourceBarrier, 1U});
 
     VkBufferCopy const copy{
         .srcOffset = tSrcOffset,
         .dstOffset = tDstOffset,
         .size      = tSize,
     };
-    vkCmdCopyBuffer(cmdBuf, tSource, tDestination, 1U, &copy);
+    cmdBuf.CopyBuffer(tSource, tDestination, copy);
 
     VkBufferMemoryBarrier const barrier{
         .sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
@@ -72,17 +64,9 @@ auto CopyBuffer(
         .offset              = tDstOffset,
         .size                = tSize,
     };
-    vkCmdPipelineBarrier(
-        cmdBuf,
-        VK_PIPELINE_STAGE_TRANSFER_BIT,
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT | VK_PIPELINE_STAGE_HOST_BIT,
-        0U,
-        0U,
-        nullptr,
-        1U,
-        &barrier,
-        0U,
-        nullptr);
+    cmdBuf.PipelineBarrier(
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT | VK_PIPELINE_STAGE_HOST_BIT,
+        std::span{&barrier, 1U});
 
     return RenderContext::Get().EndSingleTimeCommands(cmdBuf);
 }
@@ -142,7 +126,9 @@ auto Buffer::Create(BufferDescription const& tDesc) -> std::unique_ptr<Buffer>
     VmaAllocationCreateInfo const allocInfo{
         .flags          = static_cast<VmaAllocationCreateFlags>(tDesc.hostAccess),
         .usage          = static_cast<VmaMemoryUsage>(tDesc.residence),
-        .requiredFlags  = tDesc.hostAccess & HostAccessFlags::kSeqWrite ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT : 0U,
+        .requiredFlags  = (tDesc.hostAccess & HostAccessFlags::kSeqWrite)
+                            ? VkMemoryPropertyFlags{VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT}
+                            : VkMemoryPropertyFlags{0U},
         .preferredFlags = 0U,
         .memoryTypeBits = 0U,
         .pool           = VK_NULL_HANDLE,

@@ -75,10 +75,14 @@ public:
     virtual ~RenderingErrorDomain() = default;
 
     [[nodiscard]] constexpr auto Name() const -> std::string_view override
-    { return "Rendering"; }
+    {
+        return "Rendering";
+    }
 
     [[nodiscard]] constexpr auto Message(CodeType tCode) const -> std::string_view override
-    { return mMessages[static_cast<std::size_t>(tCode)]; }
+    {
+        return mMessages[static_cast<std::size_t>(tCode)];
+    }
 private:
     std::array<std::string_view const, static_cast<std::size_t>(RenderingErrc::kRenderingErrcCount)> const mMessages;
 };
@@ -91,7 +95,9 @@ constexpr RenderingErrorDomain g_error_domain;
 }// namespace internal
 
 constexpr utils::ErrorCode MakeErrorCode(RenderingErrorDomain::Errc tErr)
-{ return utils::ErrorCode{static_cast<utils::ErrorDomain::CodeType>(tErr), internal::g_error_domain}; }
+{
+    return utils::ErrorCode{static_cast<utils::ErrorDomain::CodeType>(tErr), internal::g_error_domain};
+}
 
 }// namespace polos::rendering
 

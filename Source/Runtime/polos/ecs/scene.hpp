@@ -153,7 +153,7 @@ public:
 private:
     friend class SceneManager;
 
-    friend class DirtyTransformSystem;
+    friend class MeshInstanceSyncSystem;
 
     // Deserialization restores the saved cameras instead of creating another editor camera.
     Scene(utils::string_id tName, bool tCreateEditorCamera);

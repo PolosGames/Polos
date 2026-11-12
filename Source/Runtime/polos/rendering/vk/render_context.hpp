@@ -68,13 +68,13 @@ public:
     auto Initialize(platform::IWindowSurface& tSurface) -> Result<void> override;
     auto Shutdown() -> Result<void> override;
 
-    auto BeginFrame() -> VkCommandBuffer override;
+    auto BeginFrame() -> CommandBuffer* override;
     auto EndFrame() -> FrameStatistics override;
 
     [[nodiscard]] auto IsInitialized() -> bool;
 
-    [[nodiscard]] auto BeginSingleTimeCommands() -> VkCommandBuffer;
-    [[nodiscard]] auto EndSingleTimeCommands(VkCommandBuffer tCommandBuffer) -> bool;
+    [[nodiscard]] auto BeginSingleTimeCommands() -> CommandBuffer;
+    [[nodiscard]] auto EndSingleTimeCommands(CommandBuffer& tCmdBuf) -> bool;
 
 #if defined(ENABLE_PROFILING)
     auto GetGpuProfileContext() -> tracy::VkCtx*;
@@ -101,7 +101,6 @@ private:
     std::array<VkFence, Settings::kMaxFramesInFlight>         mFrameFences{};
     std::array<VkSemaphore, Settings::kMaxFramesInFlight>     mAcqSemaphores{};
     std::vector<VkSemaphore>                                  mSubmitSemaphores;
-    std::array<VkCommandBuffer, Settings::kMaxFramesInFlight> mFrameCommandBuffers{};
     std::uint32_t                                             mCurrentFrameIndex{0U};
     std::uint32_t                                             mSwapchainImageIndex{0U};
 

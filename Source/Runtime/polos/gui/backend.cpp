@@ -6,9 +6,10 @@
 #include "polos/gui/backend.hpp"
 
 #include "polos/platform/platform_manager.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/settings.hpp"
+#include "polos/rendering/vk/command_buffer.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/utils/assert.hpp"
@@ -60,21 +61,31 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
         return false;
     }
 
-    ImGui_ImplVulkan_InitInfo info{};
-    info.ApiVersion     = VK_API_VERSION_1_3;
-    info.Instance       = rendering::VulkanContext::Get().mInstance;
-    info.PhysicalDevice = device.physDevice;
-    info.Device         = device.logiDevice;
-    info.QueueFamily    = device.GetGraphicsQueueFamily();
-    info.Queue          = device.gfxQueue;
-    info.RenderPass     = tRenderPass;
-    // Backend upload buffers rotate by render submission, independently of swapchain images.
-    info.MinImageCount      = 2U;
-    info.ImageCount         = static_cast<std::uint32_t>(rendering::Settings::kMaxFramesInFlight);
-    info.MSAASamples        = rendering::kSceneSampleCount;
-    info.DescriptorPoolSize = kImageCapacity + IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE;
-    info.CheckVkResultFn    = [](VkResult tResult) {
-        PL_ASSERT(tResult >= VK_SUCCESS, "Dear ImGui Vulkan backend failed ({})", static_cast<int>(tResult));
+    ImGui_ImplVulkan_InitInfo info{
+        .ApiVersion          = rendering::kVulkanApiVersion,
+        .Instance            = rendering::VulkanContext::Get().mInstance,
+        .PhysicalDevice      = device.physDevice,
+        .Device              = device.logiDevice,
+        .QueueFamily         = device.GetGraphicsQueueFamily(),
+        .Queue               = device.gfxQueue,
+        .DescriptorPool      = VK_NULL_HANDLE,
+        .RenderPass          = tRenderPass,
+        .MinImageCount       = 2U,
+        .ImageCount          = static_cast<std::uint32_t>(rendering::Settings::kMaxFramesInFlight),
+        .MSAASamples         = rendering::kSceneSampleCount,
+        .PipelineCache       = VK_NULL_HANDLE,
+        .Subpass             = 0U,
+        .DescriptorPoolSize  = kImageCapacity + IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE,
+        .UseDynamicRendering = false,
+#if defined(IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING)// fking annoying imgui, why enable this by default?!
+        .PipelineRenderingCreateInfo = {},
+#endif
+        .Allocator = nullptr,
+        .CheckVkResultFn =
+            [](VkResult tResult) {
+                PL_ASSERT(tResult >= VK_SUCCESS, "Dear ImGui Vulkan backend failed ({})", static_cast<int>(tResult));
+            },
+        .MinAllocationSize = 1024ULL * 1024ULL,
     };
 
     if (!ImGui_ImplVulkan_Init(&info))
@@ -110,16 +121,16 @@ auto BeginFrame() -> void
     ImGui::NewFrame();
 }
 
-auto RecordDrawData(VkCommandBuffer tCommandBuffer) -> void
+auto RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void
 {
     ImGui::Render();
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), tCommandBuffer);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), tCmdBuf.GetHandle());
 }
 
 auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
 {
-    auto it = gImageDescriptors.find(tTexture);
-    if (it == gImageDescriptors.end())
+    auto itr = gImageDescriptors.find(tTexture);
+    if (itr == gImageDescriptors.end())
     {
         if (gImageDescriptors.size() >= kImageCapacity)
         {
@@ -137,16 +148,16 @@ auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
             texture = rendering::TextureCache::Get().GetTextureAtIndex(index);
         }
 
-        auto const descriptor =
+        auto* const descriptor =
             ImGui_ImplVulkan_AddTexture(texture->sampler, texture->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         if (descriptor == VK_NULL_HANDLE)
         {
             return 0U;
         }
-        it = gImageDescriptors.emplace(tTexture, descriptor).first;
+        itr = gImageDescriptors.emplace(tTexture, descriptor).first;
     }
 
-    return ToTextureId(it->second);
+    return ToTextureId(itr->second);
 }
 
 }// namespace polos::gui::backend

@@ -20,6 +20,8 @@ class Engine;
 namespace polos::rendering
 {
 
+class CommandBuffer;
+
 class IRenderContext;
 
 class POLOS_API RenderingApi
@@ -37,7 +39,7 @@ public:
 
     auto Shutdown() -> void;
 
-    auto BeginFrame() -> VkCommandBuffer;
+    auto BeginFrame() -> CommandBuffer*;
     auto EndFrame() -> void;
 
     auto GetLastFrameStatistics() -> FrameStatistics const&;

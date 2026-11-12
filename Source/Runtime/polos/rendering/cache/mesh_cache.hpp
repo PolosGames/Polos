@@ -52,6 +52,7 @@ public:
     [[nodiscard]] auto GetVertexBuffer() -> VkBuffer;
     [[nodiscard]] auto GetIndexBuffer() -> VkBuffer;
     [[nodiscard]] auto GetMeshBoundsBuffer() -> VkBuffer;
+    [[nodiscard]] auto GetMeshBoundsBufferSize() const -> VkDeviceSize;
     [[nodiscard]] auto GetMeshCount() -> uint32_t;
     [[nodiscard]] auto GetIndirectCommandBufferByFrameSlot(uint32_t tFrameSlot) -> VkBuffer;
 

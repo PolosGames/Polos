@@ -83,4 +83,4 @@ The script stages the Windows executable, DLLs, and resources in
 
 ## AI Usage
 
-This repository's AI tool usage is limited to create Unit/Component tests, README files, CI units and Scripts.
+This repository's AI tool usage is limited to create Unit/Component tests, README files, CI units, Scripts and some CMake files.

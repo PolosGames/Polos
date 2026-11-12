@@ -15,7 +15,7 @@
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/ecs/system_registry.hpp"
-#include "polos/ecs/systems/dirty_transform_system.hpp"
+#include "polos/ecs/systems/mesh_instance_sync_system.hpp"
 #include "polos/ecs/systems/editor_camera_system.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/platform/platform_manager.hpp"
@@ -61,7 +61,7 @@ void MainLoop::Run() const
     systems.Register([&editorCameraSystem](ecs::Scene* tScene, float tDeltaTime) {
         editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Get().GetMainWindow());
     });
-    systems.Register([system = ecs::DirtyTransformSystem{}](ecs::Scene* tScene, float) mutable {
+    systems.Register([system = ecs::MeshInstanceSyncSystem{}](ecs::Scene* tScene, float) mutable {
         system.Update(tScene);
     });
 
@@ -90,7 +90,7 @@ void MainLoop::Run() const
             }
         }
 
-        if (VK_NULL_HANDLE != rendering::RenderingApi::Get().BeginFrame())
+        if (rendering::RenderingApi::Get().BeginFrame() != nullptr)
         {
             {
                 POLOS_PROFILE_ZONE("Render update callbacks");

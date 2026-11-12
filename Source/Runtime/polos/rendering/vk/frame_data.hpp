@@ -6,6 +6,8 @@
 #ifndef POLOS_RENDERING_FRAME_DATA_HPP
 #define POLOS_RENDERING_FRAME_DATA_HPP
 
+#include "polos/rendering/vk/command_buffer.hpp"
+
 #include <vulkan/vulkan.h>
 
 #include <cstdint>
@@ -20,7 +22,7 @@ struct FrameData
 {
     std::uint32_t          frameSlot{0U};
     std::uint32_t          scImageIndex{0U};// To test if we got a sc image
-    VkCommandBuffer        currentCmdBuf{VK_NULL_HANDLE};
+    CommandBuffer          currentCmdBuf;
     std::shared_ptr<Image> scImage{nullptr};
     VkImageView            scImageView{VK_NULL_HANDLE};
 };

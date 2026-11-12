@@ -17,6 +17,8 @@
 namespace polos::rendering
 {
 
+class CommandBuffer;
+
 struct ImageDescription
 {
     VkExtent3D            extent{.width = 0U, .height = 0U, .depth = 1U};
@@ -71,18 +73,18 @@ public:
 
     /// @brief Records a image barrier outside
     /// Callers must submit that order on the same queue.
-    /// @param tCmdBuf VkCommandBuffer to use
+    /// @param tCmdBuf Command buffer to record into
     /// @param tNewUse Precise image usage in the new layout
-    auto ChangeLayout(VkCommandBuffer tCmdBuf, ImageUse tNewUse) -> void;
+    auto ChangeLayout(CommandBuffer& tCmdBuf, ImageUse tNewUse) -> void;
 
     /// @brief Records a image barrier outside
     /// Callers must submit that order on the same queue.
-    /// @param tCmdBuf VkCommandBuffer to use
+    /// @param tCmdBuf Command buffer to record into
     /// @param tNewLayout Assume correct pipeline stage and access masks for the layout
-    auto ChangeLayout(VkCommandBuffer tCmdBuf, VkImageLayout tNewLayout) -> void;
+    auto ChangeLayout(CommandBuffer& tCmdBuf, VkImageLayout tNewLayout) -> void;
 
-    auto BlitFrom(VkCommandBuffer tCmdBuf, Image& tBlitSrc) -> void;
-    auto BlitFrom(VkCommandBuffer tCmdBuf, Buffer& tBlitSrc) -> void;
+    auto BlitFrom(CommandBuffer& tCmdBuf, Image& tBlitSrc) -> void;
+    auto BlitFrom(CommandBuffer& tCmdBuf, Buffer& tBlitSrc) -> void;
 
     /// Track an implicit render-pass transition or externally recorded image use. No barrier.
     auto               SetUse(ImageUse tUse) -> void;

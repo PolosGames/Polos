@@ -7,8 +7,8 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/resources/buffer.hpp"
+#include "polos/rendering/vk/command_buffer.hpp"
 #include "polos/rendering/vk/render_context.hpp"
-#include "polos/rendering/vk/vulkan_device.hpp"
 
 #include <utility>
 
@@ -215,8 +215,8 @@ auto Image::Create(ImageDescription const& tDesc, VkFormat const tFormat, std::s
         return nullptr;
     }
 
-    VkCommandBuffer cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
-    if (VK_NULL_HANDLE == cmdBuf)
+    auto cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
+    if (!cmdBuf)
     {
         return nullptr;
     }
@@ -256,12 +256,12 @@ auto Image::Create(ImageDescription const& tDesc, VkImage tImg, ImageUse tInitia
     return image;
 }
 
-auto Image::ChangeLayout(VkCommandBuffer tCmdBuf, VkImageLayout tNewLayout) -> void
+auto Image::ChangeLayout(CommandBuffer& tCmdBuf, VkImageLayout tNewLayout) -> void
 {
     ChangeLayout(tCmdBuf, ImageUse::ForLayout(tNewLayout));
 }
 
-auto Image::ChangeLayout(VkCommandBuffer tCmdBuf, ImageUse tNewUse) -> void
+auto Image::ChangeLayout(CommandBuffer& tCmdBuf, ImageUse tNewUse) -> void
 {
     VkImageMemoryBarrier const barrier{
         .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -277,11 +277,11 @@ auto Image::ChangeLayout(VkCommandBuffer tCmdBuf, ImageUse tNewUse) -> void
     };
 
     // Equal layouts can still require a memory dependency (e.g. two storage-image uses).
-    vkCmdPipelineBarrier(tCmdBuf, mCurrentUse.stages, tNewUse.stages, 0U, 0U, nullptr, 0U, nullptr, 1U, &barrier);
+    tCmdBuf.PipelineBarrier(mCurrentUse.stages, tNewUse.stages, {}, std::span{&barrier, 1U});
     mCurrentUse = tNewUse;
 }
 
-auto Image::BlitFrom(VkCommandBuffer tCmdBuf, Image& tBlitSrc) -> void
+auto Image::BlitFrom(CommandBuffer& tCmdBuf, Image& tBlitSrc) -> void
 {
     if (this == &tBlitSrc)
     {
@@ -353,10 +353,10 @@ auto Image::BlitFrom(VkCommandBuffer tCmdBuf, Image& tBlitSrc) -> void
         .filter         = VK_FILTER_LINEAR,
     };
 
-    vkCmdBlitImage2(tCmdBuf, &blit_info);
+    tCmdBuf.BlitImage2(blit_info);
 }
 
-auto Image::BlitFrom(VkCommandBuffer tCmdBuf, Buffer& tBlitSrc) -> void
+auto Image::BlitFrom(CommandBuffer& tCmdBuf, Buffer& tBlitSrc) -> void
 {
     VkBufferImageCopy const copy_region{
         .bufferOffset      = 0U,
@@ -373,7 +373,7 @@ auto Image::BlitFrom(VkCommandBuffer tCmdBuf, Buffer& tBlitSrc) -> void
         .imageExtent = extent,
     };
 
-    vkCmdCopyBufferToImage(tCmdBuf, tBlitSrc.buffer, img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1U, &copy_region);
+    tCmdBuf.CopyBufferToImage(tBlitSrc.buffer, img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, copy_region);
 }
 
 auto Image::SetUse(ImageUse tUse) -> void

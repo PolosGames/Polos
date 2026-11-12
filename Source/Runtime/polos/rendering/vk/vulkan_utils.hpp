@@ -6,31 +6,15 @@
 #ifndef POLOS_RENDERING_VULKAN_UTILS_HPP
 #define POLOS_RENDERING_VULKAN_UTILS_HPP
 
-#include "polos/rendering/resources/image.hpp"
-#include "polos/rendering/vk/vulkan_pipeline.hpp"
-
 #include <vulkan/vulkan.h>
 
 #include <cstdint>
-#include <memory>
 #include <span>
 #include <type_traits>
 
-namespace polos::rendering
+
+namespace polos::rendering::util
 {
-struct GraphicsPipelineInfo;
-class VulkanSwapchain;
-struct Shader;
-
-namespace util
-{
-
-[[nodiscard]] auto CreateGraphicsPipeline(GraphicsPipelineInfo const& tPipelineInfo) -> VulkanPipeline;
-
-[[nodiscard]] auto CreateComputePipeline(
-    Shader const*                        tShader,
-    std::span<VkDescriptorSetLayout>     tSetLayouts,
-    std::span<VkPushConstantRange const> tPushConstantRanges = {}) -> VulkanPipeline;
 
 auto CreateImageView(VkImage tImage, VkFormat tFormat, VkImageAspectFlags tAspectFlags) -> VkImageView;
 
@@ -42,8 +26,8 @@ inline auto To3DExtent(VkExtent2D const& tExtent) -> VkExtent3D
     return VkExtent3D{.width = tExtent.width, .height = tExtent.height, .depth = 1U};
 }
 
-}// namespace util
-}// namespace polos::rendering
+}// namespace polos::rendering::util
+
 
 template<typename T>
     requires std::is_integral_v<T>

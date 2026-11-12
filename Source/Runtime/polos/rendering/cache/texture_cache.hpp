@@ -65,9 +65,7 @@ private:
 
     std::vector<std::unique_ptr<Texture>> mTextures;
 
-    std::shared_ptr<DescriptorSetLayout> mBindlessSetLayout;
-    DescriptorPool                       mBindlessPool;
-    DescriptorSet                        mBindlessSet;
+    DescriptorPool mBindlessPool;
 };
 
 }// namespace polos::rendering

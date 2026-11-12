@@ -20,6 +20,8 @@ struct SceneData;
 namespace polos::rendering
 {
 
+class CommandBuffer;
+
 class IRenderContext
 {
 public:
@@ -28,7 +30,7 @@ public:
     virtual auto Initialize(platform::IWindowSurface&) -> Result<void> = 0;
     virtual auto Shutdown() -> Result<void>                            = 0;
 
-    virtual auto BeginFrame() -> VkCommandBuffer = 0;
+    virtual auto BeginFrame() -> CommandBuffer* = 0;
     virtual auto EndFrame() -> FrameStatistics   = 0;
 };
 

@@ -3,7 +3,7 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/ecs/systems/dirty_transform_system.hpp"
+#include "polos/ecs/systems/mesh_instance_sync_system.hpp"
 
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/scene.hpp"
@@ -20,9 +20,9 @@ constexpr auto kTransformBit    = static_cast<std::size_t>(ComponentType::kTrans
 constexpr auto kMeshRendererBit = static_cast<std::size_t>(ComponentType::kMeshRenderer);
 }// namespace
 
-void DirtyTransformSystem::Update(Scene* tScene)
+void MeshInstanceSyncSystem::Update(Scene* tScene)
 {
-    POLOS_PROFILE_ZONE("Dirty transforms and mesh instances");
+    POLOS_PROFILE_ZONE("Sync mesh instances");
     if (tScene == nullptr)
     {
         return;
@@ -58,7 +58,7 @@ void DirtyTransformSystem::Update(Scene* tScene)
     }
 }
 
-void DirtyTransformSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
+void MeshInstanceSyncSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
 {
     auto const&             mask = tScene.mEntities[tEntity.index].componentMask;
     rendering::MeshInstance instance{
@@ -74,8 +74,8 @@ void DirtyTransformSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
     }
     if (mask.test(kMeshRendererBit))
     {
-        auto const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index);
-        instance.meshId = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh->meshHandle);
+        auto* const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index);
+        instance.meshId  = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh->meshHandle);
 
         if (auto const* material = rendering::MaterialCache::Get().GetMaterial(mesh->matHandle))
         {
