@@ -15,7 +15,7 @@
 
 #    define POLOS_PROFILE_GPU_ZONE(CommandBuffer, Name)                \
         auto* const TracyConcat(polosGpuContext, __LINE__) =           \
-            ::polos::rendering::RenderContext::GetGpuProfileContext(); \
+            ::polos::rendering::RenderContext::Get().GetGpuProfileContext(); \
         TracyVkNamedZone(                                              \
             TracyConcat(polosGpuContext, __LINE__),                    \
             TracyConcat(polosGpuZone, __LINE__),                       \

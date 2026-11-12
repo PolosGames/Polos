@@ -96,7 +96,7 @@ ResourceManager::ResourceManager(std::filesystem::path const& tResourceRoot)
 
 ResourceManager::~ResourceManager() = default;
 
-auto ResourceManager::Instance() -> ResourceManager&
+auto ResourceManager::Get() -> ResourceManager&
 {
     static ResourceManager instance;
     return instance;

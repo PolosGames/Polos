@@ -55,6 +55,8 @@ class MeshCache;
 class POLOS_API RenderContext : public IRenderContext
 {
 public:
+    [[nodiscard]] static auto Get() -> RenderContext&;
+
     RenderContext();
     ~RenderContext() override;
     RenderContext(RenderContext&&)            = delete;
@@ -68,16 +70,13 @@ public:
     auto BeginFrame() -> VkCommandBuffer override;
     auto EndFrame() -> FrameStatistics override;
 
-    [[nodiscard]] static auto IsInitialized() -> bool;
+    [[nodiscard]] auto IsInitialized() -> bool;
 
-    [[nodiscard]] static auto BeginSingleTimeCommands() -> VkCommandBuffer;
-    [[nodiscard]] static auto EndSingleTimeCommands(VkCommandBuffer tCommandBuffer) -> bool;
+    [[nodiscard]] auto BeginSingleTimeCommands() -> VkCommandBuffer;
+    [[nodiscard]] auto EndSingleTimeCommands(VkCommandBuffer tCommandBuffer) -> bool;
 
-    static auto GetVulkanContext() -> VulkanContext&;
-    static auto GetVulkanDevice() -> VulkanDevice&;
-    static auto GetSwapchain() -> VulkanSwapchain&;
 #if defined(ENABLE_PROFILING)
-    static auto GetGpuProfileContext() -> tracy::VkCtx*;
+    auto GetGpuProfileContext() -> tracy::VkCtx*;
 #endif
 private:
     friend class platform::PlatformManager;

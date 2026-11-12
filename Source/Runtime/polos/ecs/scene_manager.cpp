@@ -85,19 +85,23 @@ constexpr std::array kComponentLoaders{
     &LoadComponentSection<ComponentType::kCamera>,
     &LoadComponentSection<ComponentType::kTransform>,
     &LoadComponentSection<ComponentType::kEditorCameraController>,
-    &LoadComponentSection<ComponentType::kQuadRenderer>,
+    &LoadComponentSection<ComponentType::kMeshRenderer>,
 };
 }// namespace
 
 SceneManager* SceneManager::sInstance     = nullptr;
-Scene*        SceneManager::sCurrentScene = nullptr;
+
+auto SceneManager::Get() -> SceneManager&
+{
+    return *sInstance;
+}
 
 SceneManager::SceneManager() = default;
 SceneManager::~SceneManager() = default;
 
 auto SceneManager::CreateScene(utils::string_id const tName) -> Scene*
 {
-    auto& scene = sInstance->mScenes.emplace_back(std::make_unique<Scene>(tName));
+    auto& scene = mScenes.emplace_back(std::make_unique<Scene>(tName));
     MakeCurrentScene(scene->name);
     return scene.get();
 }
@@ -106,7 +110,7 @@ auto SceneManager::MakeCurrentScene(utils::string_id const tName) -> bool
 {
     if (auto result = QueryScene(tName); result.second)
     {
-        sCurrentScene = result.first;
+        mCurrentScene = result.first;
         return true;
     }
 
@@ -115,8 +119,8 @@ auto SceneManager::MakeCurrentScene(utils::string_id const tName) -> bool
 
 auto SceneManager::QueryScene(utils::string_id const tName) -> utils::Pair<Scene*, bool>
 {
-    auto itr = std::ranges::find(sInstance->mScenes, tName, &Scene::name);
-    if (itr == sInstance->mScenes.end())
+    auto itr = std::ranges::find(mScenes, tName, &Scene::name);
+    if (itr == mScenes.end())
     {
         LogError("Failed to find requested scene in scene library.");
         return {.first = nullptr, .second = false};
@@ -127,17 +131,13 @@ auto SceneManager::QueryScene(utils::string_id const tName) -> utils::Pair<Scene
 
 auto SceneManager::GetCurrentScene() -> Scene*
 {
-    return sCurrentScene;
+    return mCurrentScene;
 }
 
 auto SceneManager::SaveScene(utils::string_id const tName) -> bool
 {
-    if (sInstance == nullptr)
-    {
-        return false;
-    }
-    auto itr = std::ranges::find(sInstance->mScenes, tName, &Scene::name);
-    if (itr == sInstance->mScenes.end())
+    auto itr = std::ranges::find(mScenes, tName, &Scene::name);
+    if (itr == mScenes.end())
     {
         return false;
     }
@@ -378,8 +378,21 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         }
     }
 
-    sInstance->mScenes.push_back(std::move(owned));
-    sCurrentScene = scene;
+    // Older scenes stored a separate quad payload in slot 6.
+    constexpr auto legacyQuadMask = std::uint32_t{1} << 6U;
+    constexpr auto meshMask = std::uint32_t{1} << static_cast<std::uint8_t>(ComponentType::kMeshRenderer);
+    for (EntityIndex index{1U}; index < serializedEntities.size(); ++index)
+    {
+        if ((serializedEntities[index].componentTypes & (legacyQuadMask | meshMask)) == legacyQuadMask &&
+            scene->AddComponent(scene->GetEntityAtIndex(index), MeshRendererComponent{rendering::kPolosDefaultQuad}) ==
+                nullptr)
+        {
+            return nullptr;
+        }
+    }
+
+    mScenes.push_back(std::move(owned));
+    mCurrentScene = scene;
     return scene;
 }
 

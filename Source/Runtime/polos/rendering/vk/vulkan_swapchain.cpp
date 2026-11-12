@@ -6,10 +6,9 @@
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
-#include "polos/rendering/vk/common.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/utils/error_code.hpp"
@@ -23,17 +22,30 @@
 namespace polos::rendering
 {
 
-VulkanSwapchain::VulkanSwapchain() = default;
+VulkanSwapchain* VulkanSwapchain::sInstance{nullptr};
 
-VulkanSwapchain::~VulkanSwapchain() = default;
+auto VulkanSwapchain::Get() -> VulkanSwapchain&
+{
+    return *sInstance;
+}
+
+VulkanSwapchain::VulkanSwapchain()
+{
+    sInstance = this;
+}
+
+VulkanSwapchain::~VulkanSwapchain()
+{
+    sInstance = nullptr;
+}
 
 auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
 {
-    mSurface  = RenderContext::GetVulkanContext().surface;
-    mGfxQueue = RenderContext::GetVulkanDevice().gfxQueue;
-    mDevice   = RenderContext::GetVulkanDevice().logiDevice;
+    mSurface  = VulkanContext::Get().surface;
+    mGfxQueue = VulkanDevice::Get().gfxQueue;
+    mDevice   = VulkanDevice::Get().logiDevice;
 
-    setupExtentAndViewport(RenderContext::GetVulkanDevice().physDevice, tDetails.fremebufferSize);
+    setupExtentAndViewport(VulkanDevice::Get().physDevice, tDetails.fremebufferSize);
 
     if (!selectFormatAndMode(tDetails.preferredSurfaceFormats, tDetails.preferredPresentModes))
     {
@@ -46,7 +58,7 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
         return ErrorType{RenderingErrc::kGenericError};
     }
 
-    LogInfo("Swapchain object created, receiving images for it...");
+    LogDebug("Swapchain object created, receiving images for it...");
 
     if (auto res = createImageViews(); !res.has_value())
     {
@@ -54,7 +66,7 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
         return ErrorType{res.error()};
     }
 
-    LogInfo("Swapchain creation done!");
+    LogDebug("Swapchain creation done!");
 
     return {};
 }
@@ -98,11 +110,11 @@ auto VulkanSwapchain::selectFormatAndMode(
     std::vector<VkPresentModeKHR> const&   tModes) -> bool
 {
     auto const format = std::ranges::find_if(tFormats, [](VkSurfaceFormatKHR const& tFormat) {
-        return RenderContext::GetVulkanDevice().CheckSurfaceFormatSupport(tFormat);
+        return VulkanDevice::Get().CheckSurfaceFormatSupport(tFormat);
     });
 
     auto const mode = std::ranges::find_if(tModes, [](VkPresentModeKHR tMode) {
-        return RenderContext::GetVulkanDevice().CheckPresentModeSupport(tMode);
+        return VulkanDevice::Get().CheckPresentModeSupport(tMode);
     });
 
     if (format == tFormats.end() || mode == tModes.end())
@@ -159,7 +171,7 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
     mImageViews.resize(static_cast<std::size_t>(mImgCount));
     mImageResources.resize(static_cast<std::size_t>(mImgCount));
 
-    LogInfo("Received {} swapchain images.", mImgCount);
+    LogDebug("Received {} swapchain images.", mImgCount);
 
     auto const img_count = static_cast<std::size_t>(mImgCount);
 
@@ -199,14 +211,14 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
             RenderingErrc::kFailedCreateSwapchainImageViews);
     }
 
-    LogInfo("Created {} image views.", mImageViews.size());
+    LogDebug("Created {} image views.", mImageViews.size());
 
     return {};
 }
 
 auto VulkanSwapchain::Destroy() -> void
 {
-    LogInfo("Destroying VulkanSwapchain and associated images...");
+    LogDebug("Destroying VulkanSwapchain and associated images...");
 
     std::ranges::for_each(mImageViews, [this](VkImageView& tView) {
         vkDestroyImageView(mDevice, tView, nullptr);

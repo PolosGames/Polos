@@ -25,6 +25,8 @@ class IRenderContext;
 class POLOS_API RenderingApi
 {
 public:
+    [[nodiscard]] static auto Get() -> RenderingApi&;
+
     explicit RenderingApi(platform::IWindowSurface& tSurface);
     ~RenderingApi();
 
@@ -35,10 +37,10 @@ public:
 
     auto Shutdown() -> void;
 
-    static auto BeginFrame() -> VkCommandBuffer;
-    static auto EndFrame() -> void;
+    auto BeginFrame() -> VkCommandBuffer;
+    auto EndFrame() -> void;
 
-    static auto GetLastFrameStatistics() -> FrameStatistics const&;
+    auto GetLastFrameStatistics() -> FrameStatistics const&;
 private:
     friend class core::Engine;
 

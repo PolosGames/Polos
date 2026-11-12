@@ -505,7 +505,7 @@ TEST_F(ResourceManagerTest, EmptyCatalogReplacesRegistryAndReleasesManagerOwners
 
 TEST_F(ResourceManagerTest, SingletonGettersUseThePreloadedCacheFromAnyWorkingDirectory)
 {
-    auto& manager = ResourceManager::Instance();
+    auto& manager = ResourceManager::Get();
     std::filesystem::create_directories(manager.Root());
     auto const        catalogPath = manager.Root() / "resources.json";
     std::ifstream     previous(catalogPath);

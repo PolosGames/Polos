@@ -7,7 +7,6 @@
 
 #include "polos/filesystem/file.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/assert.hpp"
@@ -21,7 +20,7 @@ namespace polos::rendering
 
 auto Shader::Create(utils::string_id tResourceId, ShaderStage tStage) -> std::shared_ptr<Shader>
 {
-    auto file = resource::ResourceManager::Instance().GetFile(tResourceId);
+    auto file = resource::ResourceManager::Get().GetFile(tResourceId);
     if (!file)
     {
         LogError("Could not get preloaded shader resource '{}'.", tResourceId);
@@ -44,7 +43,7 @@ auto Shader::Create(utils::string_id tResourceId, ShaderStage tStage) -> std::sh
         .pCode    = code.data(),
     };
 
-    VkDevice const device = RenderContext::GetVulkanDevice().logiDevice;
+    VkDevice const device = VulkanDevice::Get().logiDevice;
     auto shader = std::shared_ptr<Shader>{new Shader{.name = tResourceId, .stage = tStage}, [device](Shader* tShader) {
                                               vkDestroyShaderModule(device, tShader->module, nullptr);
                                               delete tShader;

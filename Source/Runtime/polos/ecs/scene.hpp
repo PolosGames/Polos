@@ -210,8 +210,8 @@ private:
     std::vector<std::uint32_t> mFreeIndices;
 
     std::unique_ptr<rendering::MeshInstance[]> mInstanceBuffer;
-    std::vector<EntityHandle>                 mInstanceChanges;
-    std::unordered_set<EntityIndex>           mPendingInstanceUploads;
+    std::vector<EntityHandle>                  mInstanceChanges;
+    std::unordered_set<EntityIndex>            mPendingInstanceUploads;
 
     SceneGraph mSceneGraph;
 };

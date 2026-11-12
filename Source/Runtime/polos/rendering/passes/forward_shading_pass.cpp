@@ -9,9 +9,8 @@
 #include "polos/rendering/compositor/frame_targets.hpp"
 #include "polos/rendering/push_constants/compute_push_constants.hpp"
 #include "polos/rendering/vertex/primitive_vertex.hpp"
-#include "polos/rendering/vk/common.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/graphics_pipeline_info.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
@@ -71,8 +70,8 @@ auto CreateRenderPass()
             .sType          = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext          = nullptr,
             .flags          = 0U,
-            .format         = VK_FORMAT_R16G16B16A16_SFLOAT,
-            .samples        = VK_SAMPLE_COUNT_1_BIT,
+            .format         = kSceneColorFormat,
+            .samples        = kSceneSampleCount,
             .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -84,8 +83,8 @@ auto CreateRenderPass()
             .sType          = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2,
             .pNext          = nullptr,
             .flags          = 0U,
-            .format         = VK_FORMAT_D32_SFLOAT,
-            .samples        = VK_SAMPLE_COUNT_1_BIT,
+            .format         = kSceneDepthFormat,
+            .samples        = kSceneSampleCount,
             .loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -196,7 +195,7 @@ auto CreateRenderPass()
 
     VkRenderPass pass{VK_NULL_HANDLE};
     PL_ASSERT(
-        VK_SUCCESS == vkCreateRenderPass2(RenderContext::GetVulkanDevice().logiDevice, &rpci, nullptr, &pass),
+        VK_SUCCESS == vkCreateRenderPass2(VulkanDevice::Get().logiDevice, &rpci, nullptr, &pass),
         "Failed to create render pass for ForwardShadingPass");
     return pass;
 }
@@ -244,6 +243,7 @@ auto CreatePBR(VkRenderPass tPass, std::span<VkDescriptorSetLayout> tSetLayouts,
         .shaders               = tShaders,
         .vertexInput           = PrimitiveVertex::CreateVertexInputDescription(),
         .frontFace             = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+        .multisampling         = kSceneSampleCount,
         .colorBlendAttachments = colorBlendAttachments,
         .dynamicStates         = dynamicStates,
         .renderPass            = tPass,
@@ -391,7 +391,6 @@ auto UpdateSet2(VkBuffer tVisibleMatrixIndicesSsbo, VkBuffer tWorldMatricesSsbo,
     tSet2.Update(wdss);
 }
 
-constexpr uint32_t const kComputeWorkgroupSize{256U};
 
 auto RecordPreComputeBarriers(
     VkCommandBuffer tCmdBuf,
@@ -712,7 +711,7 @@ ForwardShadingPass::~ForwardShadingPass()
     VulkanPipeline::Reset(mPbrPipeline);
     VulkanPipeline::Reset(mComputeMainPipeline);
 
-    VkDevice device = RenderContext::GetVulkanDevice().logiDevice;
+    VkDevice device = VulkanDevice::Get().logiDevice;
     vkDestroyRenderPass(device, mRenderPass, nullptr);
 }
 
@@ -733,7 +732,7 @@ auto ForwardShadingPass::ReleaseFramebuffers() -> void
         if (VK_NULL_HANDLE != framebuffer)
         {
             vkDestroyFramebuffer(
-                RenderContext::GetVulkanDevice().logiDevice,
+                VulkanDevice::Get().logiDevice,
                 std::exchange(framebuffer, VK_NULL_HANDLE),
                 nullptr);
         }
@@ -746,8 +745,8 @@ auto ForwardShadingPass::Prepare(uint32_t const tFrameSlot, VkBuffer tInstanceBu
     {
         UpdateSet1(
             tInstanceBuffer,
-            MeshCache::GetIndirectCommandBufferByFrameSlot(tFrameSlot),
-            MeshCache::GetMeshBoundsBuffer(),
+            MeshCache::Get().GetIndirectCommandBufferByFrameSlot(tFrameSlot),
+            MeshCache::Get().GetMeshBoundsBuffer(),
             mDescPool.GetSetForFrameSlotAtIndex(kSet1, tFrameSlot));
     }
 }
@@ -765,10 +764,10 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
 
     mCameraUniforms[tInputs.frameSlot]->Write(&tInputs.cameraUbo, sizeof(CameraUniform));
 
-    MeshCache::FlushMeshUses(tInputs.frameSlot);
+    MeshCache::Get().FlushMeshUses(tInputs.frameSlot);
 
-    VkBuffer const indirectBuffer = MeshCache::GetIndirectCommandBufferByFrameSlot(tInputs.frameSlot);
-    uint32_t const meshCount      = MeshCache::GetMeshCount();
+    VkBuffer const indirectBuffer = MeshCache::Get().GetIndirectCommandBufferByFrameSlot(tInputs.frameSlot);
+    uint32_t const meshCount      = MeshCache::Get().GetMeshCount();
     bool const     hasWork        = meshCount > 0U && tInputs.slotCount > 1U && tInputs.instanceBuffer != nullptr;
 
     VkCommandBuffer const cmdBuf = tInputs.cmdBuf;
@@ -783,7 +782,7 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
             cmdBuf,
             indirectBuffer,
             tInputs.instanceBuffer->buffer,
-            MeshCache::GetMeshBoundsBuffer(),
+            MeshCache::Get().GetMeshBoundsBuffer(),
             mVisibleMatrixIndicesBuffer->buffer,
             mWorldMatrices->buffer);
 
@@ -849,8 +848,8 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
             vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.pipelineLayout, 0U, ToVkSize(descriptorSets.size()), descriptorSets.data(), 0U, nullptr);
 
             VkDeviceSize const offset{0U};
-            VkBuffer const     vertBuf = MeshCache::GetVertexBuffer();
-            VkBuffer const     indBuf  = MeshCache::GetIndexBuffer();
+            VkBuffer const     vertBuf = MeshCache::Get().GetVertexBuffer();
+            VkBuffer const     indBuf  = MeshCache::Get().GetIndexBuffer();
             vkCmdBindVertexBuffers(cmdBuf, 0U, 1U, &vertBuf, &offset);
             vkCmdBindIndexBuffer(cmdBuf, indBuf, 0ULL, VK_INDEX_TYPE_UINT32);
             vkCmdDrawIndexedIndirect(cmdBuf, indirectBuffer, offset, meshCount, sizeof(VkDrawIndexedIndirectCommand));

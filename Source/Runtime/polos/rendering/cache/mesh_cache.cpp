@@ -63,6 +63,7 @@ constexpr std::array<uint16_t, 6UL * 6UL> kCubeIndices{
     6, 5, 4, 4, 7, 6,
     6, 2, 5, 5, 2, 1,
 };
+
 // clang-format on
 
 constexpr std::size_t kIndicesPerFace = 6U;
@@ -106,6 +107,11 @@ auto CreateCubeVertices() -> std::vector<PrimitiveVertex>
 }// namespace
 
 MeshCache* MeshCache::sInstance = nullptr;
+
+auto MeshCache::Get() -> MeshCache&
+{
+    return *sInstance;
+}
 
 MeshCache::MeshCache()
 {
@@ -179,6 +185,32 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
         std::ignore = AddMesh(cubeMesh);
     }
 
+    {
+        resource::model::MeshPart quadMesh{
+            .name              = kPolosDefaultQuad,
+            .primitiveVertices = {},
+            .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
+            .material          = {},
+        };
+        constexpr std::array corners{
+            glm::vec2{0.0F, 0.0F},
+            glm::vec2{1.0F, 0.0F},
+            glm::vec2{1.0F, 1.0F},
+            glm::vec2{0.0F, 1.0F},
+        };
+        quadMesh.primitiveVertices.reserve(corners.size());
+        for (auto const& uv : corners)
+        {
+            quadMesh.primitiveVertices.push_back({
+                .position = glm::vec3(uv - glm::vec2(0.5F), 0.0F),
+                .normal   = {0.0F, 0.0F, 1.0F},
+                .tangent  = {1.0F, 0.0F, 0.0F, 1.0F},
+                .texCoord = uv,
+            });
+        }
+        std::ignore = AddMesh(quadMesh);
+    }
+
     return {};
 }
 
@@ -203,7 +235,7 @@ auto MeshCache::Destroy() -> void
 
 auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
 {
-    if (sInstance->mMeshes.contains(tMesh.name))
+    if (mMeshes.contains(tMesh.name))
     {
         return tMesh.name;
     }
@@ -216,37 +248,37 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
 
     entry.name = tMesh.name;
 
-    while (sInstance->mVertexHead + vertData.size_bytes() > sInstance->mVertexBuffer->size)
+    while (mVertexHead + vertData.size_bytes() > mVertexBuffer->size)
     {
         PL_ASSERT(
-            sInstance->mVertexBuffer->Resize(sInstance->mVertexBuffer->size + kGrowthAmount),
+            mVertexBuffer->Resize(mVertexBuffer->size + kGrowthAmount),
             "Unable to resize mesh vertices");
     }
 
-    while (sInstance->mIndexHead + indData.size_bytes() > sInstance->mIndexBuffer->size)
+    while (mIndexHead + indData.size_bytes() > mIndexBuffer->size)
     {
         PL_ASSERT(
-            sInstance->mIndexBuffer->Resize(sInstance->mIndexBuffer->size + kGrowthAmount),
+            mIndexBuffer->Resize(mIndexBuffer->size + kGrowthAmount),
             "Unable to resize mesh indices");
     }
 
-    entry.vertexOffset = sInstance->mVertexHead;
-    entry.indexOffset  = sInstance->mIndexHead;
+    entry.vertexOffset = mVertexHead;
+    entry.indexOffset  = mIndexHead;
 
     PL_ASSERT(
-        sInstance->mVertexBuffer->Upload(std::as_bytes(vertData), entry.vertexOffset),
+        mVertexBuffer->Upload(std::as_bytes(vertData), entry.vertexOffset),
         "Unable to upload mesh vertices to mega buffer");
     PL_ASSERT(
-        sInstance->mIndexBuffer->Upload(std::as_bytes(indData), entry.indexOffset),
+        mIndexBuffer->Upload(std::as_bytes(indData), entry.indexOffset),
         "Unable to upload mesh indices to mega buffer");
 
-    sInstance->mVertexHead += vertData.size_bytes();
-    sInstance->mIndexHead += indData.size_bytes();
+    mVertexHead += vertData.size_bytes();
+    mIndexHead += indData.size_bytes();
 
     entry.vertexCount = ToVkSize(tMesh.primitiveVertices.size());
     entry.indexCount  = ToVkSize(tMesh.primitiveIndices.size());
 
-    sInstance->mMeshInfos.push_back(
+    mMeshInfos.push_back(
         VkDrawIndexedIndirectCommand{
             .indexCount    = ToVkSize(entry.indexCount),
             .instanceCount = 0U,
@@ -255,7 +287,7 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
             .firstInstance = 0U,
         });
 
-    sInstance->mMeshInstances.push_back(0U);
+    mMeshInstances.push_back(0U);
 
     glm::vec3 minPos{std::numeric_limits<float>::max()};
     glm::vec3 maxPos{std::numeric_limits<float>::lowest()};
@@ -272,30 +304,29 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
         maxRadiusSq          = std::max(maxRadiusSq, glm::dot(diff, diff));
     }
     glm::vec4 const boundingSphere{localCenter, std::sqrt(maxRadiusSq)};
-    sInstance->mMeshBounds.push_back(boundingSphere);
+    mMeshBounds.push_back(boundingSphere);
 
-    entry.meshIndex = sInstance->mMeshCount++;
+    entry.meshIndex = mMeshCount++;
 
     auto const boundsOffset = entry.meshIndex * sizeof(glm::vec4);
-    while (boundsOffset + sizeof(glm::vec4) > sInstance->mMeshBoundsBuffer->size)
+    while (boundsOffset + sizeof(glm::vec4) > mMeshBoundsBuffer->size)
     {
         PL_ASSERT(
-            sInstance->mMeshBoundsBuffer->Resize(sInstance->mMeshBoundsBuffer->size * 2ULL),
+            mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL),
             "Unable to resize mesh bounds buffer");
     }
-    sInstance->mMeshBoundsBuffer->Write(&sInstance->mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
-
-    sInstance->mMeshes[tMesh.name] = entry;
+    mMeshBoundsBuffer->Write(&mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
+    mMeshes[tMesh.name] = entry;
 
     return entry.name;
 }
 
 auto MeshCache::HasMesh(MeshHandle const tHandle) -> bool
 {
-    return sInstance->mMeshes.contains(tHandle);
+    return mMeshes.contains(tHandle);
 }
 
-auto MeshCache::GetMeshIndexByHandle(MeshHandle const tHandle) -> uint32_t
+auto MeshCache::GetMeshIndexByHandle(MeshHandle const tHandle) -> MeshIndex
 {
     if (!HasMesh(tHandle))
     {
@@ -303,32 +334,32 @@ auto MeshCache::GetMeshIndexByHandle(MeshHandle const tHandle) -> uint32_t
         return std::numeric_limits<uint32_t>::max();
     }
 
-    return sInstance->mMeshes[tHandle].meshIndex;
+    return mMeshes[tHandle].meshIndex;
 }
 
 auto MeshCache::GetVertexBuffer() -> VkBuffer
 {
-    return sInstance->mVertexBuffer->buffer;
+    return mVertexBuffer->buffer;
 }
 
 auto MeshCache::GetIndexBuffer() -> VkBuffer
 {
-    return sInstance->mIndexBuffer->buffer;
+    return mIndexBuffer->buffer;
 }
 
 auto MeshCache::GetMeshBoundsBuffer() -> VkBuffer
 {
-    return sInstance->mMeshBoundsBuffer->buffer;
+    return mMeshBoundsBuffer->buffer;
 }
 
 auto MeshCache::GetMeshCount() -> uint32_t
 {
-    return sInstance->mMeshCount;
+    return mMeshCount;
 }
 
 auto MeshCache::GetIndirectCommandBufferByFrameSlot(uint32_t const tFrameSlot) -> VkBuffer
 {
-    return sInstance->mMeshInfoBuffer[tFrameSlot]->buffer;
+    return mMeshInfoBuffer[tFrameSlot]->buffer;
 }
 
 auto MeshCache::IncreaseMeshUse(MeshHandle const tHandle) -> void
@@ -339,7 +370,7 @@ auto MeshCache::IncreaseMeshUse(MeshHandle const tHandle) -> void
         return;
     }
 
-    IncreaseMeshUseByIndex(sInstance->mMeshes[tHandle].meshIndex);
+    IncreaseMeshUseByIndex(mMeshes[tHandle].meshIndex);
 }
 
 auto MeshCache::DecreaseMeshUse(MeshHandle const tHandle) -> void
@@ -350,75 +381,75 @@ auto MeshCache::DecreaseMeshUse(MeshHandle const tHandle) -> void
         return;
     }
 
-    DecreaseMeshUseByIndex(sInstance->mMeshes[tHandle].meshIndex);
+    DecreaseMeshUseByIndex(mMeshes[tHandle].meshIndex);
 }
 
-auto MeshCache::IncreaseMeshUseByIndex(uint32_t const tMeshIndex) -> void
+auto MeshCache::IncreaseMeshUseByIndex(MeshIndex const tMeshIndex) -> void
 {
-    if (tMeshIndex >= sInstance->mMeshCount)
+    if (tMeshIndex >= mMeshCount)
     {
         return;
     }
 
-    auto itr = std::ranges::find(sInstance->mMeshUses, tMeshIndex, &utils::Pair<uint32_t, int32_t>::first);
-    if (itr != sInstance->mMeshUses.end())
+    auto itr = std::ranges::find(mMeshUses, tMeshIndex, &utils::Pair<MeshIndex, int32_t>::first);
+    if (itr != mMeshUses.end())
     {
         ++itr->second;
     }
     else
     {
-        sInstance->mMeshUses.push_back({.first = tMeshIndex, .second = 1});
+        mMeshUses.push_back({.first = tMeshIndex, .second = 1});
     }
 }
 
-auto MeshCache::DecreaseMeshUseByIndex(uint32_t const tMeshIndex) -> void
+auto MeshCache::DecreaseMeshUseByIndex(MeshIndex const tMeshIndex) -> void
 {
-    if (tMeshIndex >= sInstance->mMeshCount)
+    if (tMeshIndex >= mMeshCount)
     {
         return;
     }
 
-    auto itr = std::ranges::find(sInstance->mMeshUses, tMeshIndex, &utils::Pair<uint32_t, int32_t>::first);
-    if (itr != sInstance->mMeshUses.end())
+    auto itr = std::ranges::find(mMeshUses, tMeshIndex, &utils::Pair<MeshIndex, int32_t>::first);
+    if (itr != mMeshUses.end())
     {
         --itr->second;
     }
     else
     {
-        sInstance->mMeshUses.push_back({.first = tMeshIndex, .second = -1});
+        mMeshUses.push_back({.first = tMeshIndex, .second = -1});
     }
 }
 
 auto MeshCache::FlushMeshUses(uint32_t const tFrameSlot) -> void
 {
     POLOS_PROFILE_ZONE("Update indirect draw commands");
-    if (!sInstance->mMeshUses.empty())
+    if (!mMeshUses.empty())
     {
-        for (auto const& meshUse : sInstance->mMeshUses)
+        for (auto const& meshUse : mMeshUses)
         {
             int32_t const totalUse =
-                std::max(static_cast<int32_t>(sInstance->mMeshInstances[meshUse.first]) + meshUse.second, 0);
-            sInstance->mMeshInstances[meshUse.first] = static_cast<uint32_t>(totalUse);
+                std::max(static_cast<int32_t>(mMeshInstances[meshUse.first]) + meshUse.second, 0);
+            mMeshInstances[meshUse.first] = static_cast<uint32_t>(totalUse);
         }
 
         uint32_t runningOffset{0U};
-        for (size_t i{0U}; i < sInstance->mMeshInfos.size(); ++i)
+        for (size_t i{0U}; i < mMeshInfos.size(); ++i)
         {
-            sInstance->mMeshInfos[i].instanceCount = 0U;
-            sInstance->mMeshInfos[i].firstInstance = runningOffset;
-            runningOffset += sInstance->mMeshInstances[i];
+            mMeshInfos[i].instanceCount = 0U;
+            mMeshInfos[i].firstInstance = runningOffset;
+            runningOffset += mMeshInstances[i];
         }
 
-        sInstance->mMeshUses.clear();
+        mMeshUses.clear();
     }
 
-    if (sInstance->mMeshCount > 0U)
+    if (mMeshCount > 0U)
     {
-        auto const requiredBytes = sInstance->mMeshCount * sizeof(VkDrawIndexedIndirectCommand);
+        auto const requiredBytes = mMeshCount * sizeof(VkDrawIndexedIndirectCommand);
         PL_ASSERT(
-            requiredBytes <= sInstance->mMeshInfoBuffer[tFrameSlot]->size,
+            requiredBytes <= mMeshInfoBuffer[tFrameSlot]->size,
             "Exceeded indirect command buffer capacity");
-        sInstance->mMeshInfoBuffer[tFrameSlot]->Write(sInstance->mMeshInfos.data(), requiredBytes);
+        mMeshInfoBuffer[tFrameSlot]->Write(mMeshInfos.data(), requiredBytes);
     }
 }
 

@@ -5,7 +5,6 @@
 
 #include "polos/rendering/vk/descriptor_pool.hpp"
 
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
@@ -25,7 +24,7 @@ DescriptorPool::DescriptorPool(std::span<VkDescriptorPoolSize> tPoolSizes, uint3
     };
 
     PL_ASSERT(
-        VK_SUCCESS == vkCreateDescriptorPool(RenderContext::GetVulkanDevice().logiDevice, &dpci, nullptr, &pool),
+        VK_SUCCESS == vkCreateDescriptorPool(VulkanDevice::Get().logiDevice, &dpci, nullptr, &pool),
         "Failed to create DescriptorPool for ForwardShadingPass");
 }
 
@@ -43,7 +42,7 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& tOther)
 
     if (VK_NULL_HANDLE != pool)
     {
-        vkDestroyDescriptorPool(RenderContext::GetVulkanDevice().logiDevice, pool, nullptr);
+        vkDestroyDescriptorPool(VulkanDevice::Get().logiDevice, pool, nullptr);
     }
 
     pool           = std::exchange(tOther.pool, VK_NULL_HANDLE);
@@ -56,7 +55,7 @@ DescriptorPool::~DescriptorPool()
 {
     if (nullptr != pool)
     {
-        vkDestroyDescriptorPool(RenderContext::GetVulkanDevice().logiDevice, pool, nullptr);
+        vkDestroyDescriptorPool(VulkanDevice::Get().logiDevice, pool, nullptr);
     }
 }
 

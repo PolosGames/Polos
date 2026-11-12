@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_CACHE_TEXTURE_CACHE_HPP
 #define POLOS_RENDERING_CACHE_TEXTURE_CACHE_HPP
 
+#include "polos/polos_api.hpp"
 #include "polos/rendering/resources/texture.hpp"
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/error_code.hpp"
@@ -17,15 +18,22 @@
 namespace polos::rendering
 {
 
-class TextureCache
+class POLOS_API TextureCache
 {
 public:
+    [[nodiscard]] static auto Get() -> TextureCache&;
+
     struct CreationDetails
     {
     };
 
     TextureCache();
     ~TextureCache();
+
+    TextureCache(TextureCache const&) = delete;
+    auto operator=(TextureCache const&) -> TextureCache& = delete;
+    TextureCache(TextureCache&&) = delete;
+    auto operator=(TextureCache&&) -> TextureCache& = delete;
 
     auto Create(CreationDetails const&) -> Result<void>;
     auto Destroy() -> void;
@@ -34,21 +42,31 @@ public:
     /// @param tResource ResourceId of the texture that is already in resource catalogue
     /// @param tDetails info that'll be used when creating the sampler
     /// @return Index of the texure inside the cache.
-    [[nodiscard]] static auto CreateTexture(resource::ResourceId tResource, TextureDetails const& tDetails)
-        -> std::size_t;
+    [[nodiscard]] auto CreateTexture(resource::ResourceId tResource, TextureDetails const& tDetails) -> std::size_t;
 
-    [[nodiscard]] static auto GetTexture(resource::ResourceId tResource) -> Texture const*;
+    [[nodiscard]] auto GetOrCreateTextureIndex(resource::ResourceId tResource, TextureDetails const& tDetails = {})
+        -> TextureIndex;
 
-    [[nodiscard]] static auto GetTextureAtIndex(std::size_t tIndex) -> Texture const*;
+    [[nodiscard]] auto GetTexture(resource::ResourceId tResource) -> Texture const*;
+
+    [[nodiscard]] auto GetTextureAtIndex(std::size_t tIndex) -> Texture const*;
+
+    [[nodiscard]] auto GetBindlessSetLayout() -> VkDescriptorSetLayout;
+    [[nodiscard]] auto GetBindlessDescriptorSet() -> VkDescriptorSet;
 private:
     friend class RenderCompositor;
 
     auto createTexture() -> bool;
     auto loadTexturesFromResources() -> bool;
+    auto writeBindlessDescriptor(TextureIndex tIndex, Texture const& tTexture) -> void;
 
     static TextureCache* sInstance;
 
     std::vector<std::unique_ptr<Texture>> mTextures;
+
+    VkDescriptorPool      mBindlessPool{VK_NULL_HANDLE};
+    VkDescriptorSetLayout mBindlessSetLayout{VK_NULL_HANDLE};
+    VkDescriptorSet       mBindlessSet{VK_NULL_HANDLE};
 };
 
 }// namespace polos::rendering

@@ -11,10 +11,10 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/render_compositor.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/buffer.hpp"
-#include "polos/rendering/vk/common.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_profiling.hpp"
@@ -31,6 +31,11 @@ namespace polos::rendering
 {
 
 RenderContext* RenderContext::sRenderContext{nullptr};
+
+auto RenderContext::Get() -> RenderContext&
+{
+    return *sRenderContext;
+}
 
 RenderContext::RenderContext()
 {
@@ -343,7 +348,6 @@ auto RenderContext::EndFrame() -> FrameStatistics
     if (!mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]) || mHasFramebufferResized)
     {
         mHasFramebufferResized = false;
-        LogWarn("Failed to present the image to the presentation queue. Recreating the swapchain.");
         onFramebufferResize();
     }
 
@@ -357,13 +361,13 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
     VkCommandBufferAllocateInfo const alloc_info{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext              = nullptr,
-        .commandPool        = RenderContext::GetVulkanDevice().commandPool,
+        .commandPool        = mDevice->commandPool,
         .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1U,
     };
 
     VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    if (VK_SUCCESS != vkAllocateCommandBuffers(sRenderContext->mDevice->logiDevice, &alloc_info, &command_buffer))
+    if (VK_SUCCESS != vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, &command_buffer))
     {
         LogError("Could not allocate command buffer for single time commands!");
         return VK_NULL_HANDLE;
@@ -380,8 +384,8 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
     {
         LogError("Could not begin command buffer for single time commands!");
         vkFreeCommandBuffers(
-            sRenderContext->mDevice->logiDevice,
-            RenderContext::GetVulkanDevice().commandPool,
+            mDevice->logiDevice,
+            mDevice->commandPool,
             1U,
             &command_buffer);
         return VK_NULL_HANDLE;
@@ -396,8 +400,8 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
     {
         LogError("Could not end single-time command buffer!");
         vkFreeCommandBuffers(
-            sRenderContext->mDevice->logiDevice,
-            RenderContext::GetVulkanDevice().commandPool,
+            mDevice->logiDevice,
+            mDevice->commandPool,
             1U,
             &tCommandBuffer);
         return false;
@@ -415,21 +419,21 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
         .pSignalSemaphores    = nullptr,
     };
 
-    if (VK_SUCCESS != vkQueueSubmit(RenderContext::GetVulkanDevice().gfxQueue, 1U, &submit_info, VK_NULL_HANDLE))
+    if (VK_SUCCESS != vkQueueSubmit(mDevice->gfxQueue, 1U, &submit_info, VK_NULL_HANDLE))
     {
         LogError("Could not submit single-time command buffer to queue!");
         vkFreeCommandBuffers(
-            sRenderContext->mDevice->logiDevice,
-            RenderContext::GetVulkanDevice().commandPool,
+            mDevice->logiDevice,
+            mDevice->commandPool,
             1U,
             &tCommandBuffer);
         return false;
     }
-    auto const waitResult = vkQueueWaitIdle(RenderContext::GetVulkanDevice().gfxQueue);
+    auto const waitResult = vkQueueWaitIdle(mDevice->gfxQueue);
 
     vkFreeCommandBuffers(
-        sRenderContext->mDevice->logiDevice,
-        RenderContext::GetVulkanDevice().commandPool,
+        mDevice->logiDevice,
+        mDevice->commandPool,
         1U,
         &tCommandBuffer);
     if (waitResult != VK_SUCCESS)
@@ -442,29 +446,14 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
 
 auto RenderContext::IsInitialized() -> bool
 {
-    return sRenderContext->mIsInitialized;
-}
-
-auto RenderContext::GetVulkanContext() -> VulkanContext&
-{
-    return *sRenderContext->mContext;
-}
-
-auto RenderContext::GetVulkanDevice() -> VulkanDevice&
-{
-    return *sRenderContext->mDevice;
-}
-
-auto RenderContext::GetSwapchain() -> VulkanSwapchain&
-{
-    return *sRenderContext->mSwapchain;
+    return mIsInitialized;
 }
 
 
 #if defined(ENABLE_PROFILING)
 auto RenderContext::GetGpuProfileContext() -> tracy::VkCtx*
 {
-    return sRenderContext->mGpuProfileContext;
+    return mGpuProfileContext;
 }
 #endif
 
@@ -472,7 +461,7 @@ void RenderContext::onFramebufferResize()
 {
     POLOS_PROFILE_ZONE("Recreate swapchain");
     vkDeviceWaitIdle(mDevice->logiDevice);
-    LogInfo("Recreating swapchain due to framebuffer resize...");
+    LogDebug("Recreating swapchain due to framebuffer resize...");
 
     mSwapchain->Destroy();
     vkDeviceWaitIdle(mDevice->logiDevice);

@@ -6,6 +6,7 @@
 #ifndef POLOS_RENDERING_VULKAN_CONTEXT_HPP
 #define POLOS_RENDERING_VULKAN_CONTEXT_HPP
 
+#include "polos/polos_api.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -23,6 +24,8 @@ namespace polos::rendering
 class VulkanContext
 {
 public:
+    [[nodiscard]] static auto POLOS_API Get() -> VulkanContext&;
+
     struct CreationDetails
     {
         platform::IWindowSurface* windowSurface;
@@ -43,6 +46,8 @@ public:
     VkInstance   mInstance{VK_NULL_HANDLE};
     VkSurfaceKHR surface{VK_NULL_HANDLE};
 private:
+    static VulkanContext* sInstance;
+
     auto enableValidationLayers() -> void;
 
     VkDebugUtilsMessengerEXT mDbgMessenger{VK_NULL_HANDLE};

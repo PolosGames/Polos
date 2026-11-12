@@ -6,19 +6,16 @@
 #include "polos/rendering/resources/texture.hpp"
 
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 
 namespace polos::rendering
 {
 
-auto Texture::Create(
-    utils::string_id const            tName,
-    std::unique_ptr<rendering::Image> tImg,
-    TextureDetails const&             tDetails) -> std::unique_ptr<Texture>
+auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image> tImg, TextureDetails const& tDetails)
+    -> std::unique_ptr<Texture>
 {
     // VkPhysicalDeviceProperties phys_dev_props{};
-    // vkGetPhysicalDeviceProperties(RenderContext::GetVulkanDevice().physDevice, &phys_dev_props);
+    // vkGetPhysicalDeviceProperties(VulkanDevice::Get().physDevice, &phys_dev_props);
 
     VkImageViewCreateInfo const viewInfo{
         .sType            = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -32,7 +29,7 @@ auto Texture::Create(
     };
 
     VkImageView view{VK_NULL_HANDLE};
-    if (VK_SUCCESS != vkCreateImageView(RenderContext::GetVulkanDevice().logiDevice, &viewInfo, nullptr, &view))
+    if (VK_SUCCESS != vkCreateImageView(VulkanDevice::Get().logiDevice, &viewInfo, nullptr, &view))
     {
         LogError("Could not create a image view for the texture.");
         return nullptr;
@@ -60,10 +57,10 @@ auto Texture::Create(
     };
 
     VkSampler sampler{VK_NULL_HANDLE};
-    if (VK_SUCCESS != vkCreateSampler(RenderContext::GetVulkanDevice().logiDevice, &sampler_info, nullptr, &sampler))
+    if (VK_SUCCESS != vkCreateSampler(VulkanDevice::Get().logiDevice, &sampler_info, nullptr, &sampler))
     {
         LogError("Could not create a sampler for the texture");
-        vkDestroyImageView(RenderContext::GetVulkanDevice().logiDevice, view, nullptr);
+        vkDestroyImageView(VulkanDevice::Get().logiDevice, view, nullptr);
         return nullptr;
     }
 

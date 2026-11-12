@@ -13,7 +13,7 @@
 
 #include <source_location>
 
-#define MAKE_LOGGER_TYPE(Name) PL_CONCAT(::polos::logging::Logger::Instance().Get, PL_CONCAT(Name, Logger))
+#define MAKE_LOGGER_TYPE(Name) PL_CONCAT(::polos::logging::Logger::Get().Get, PL_CONCAT(Name, Logger))
 
 #if defined(PL_LOGGER_TYPE)
 #    define LOGGER_TYPE MAKE_LOGGER_TYPE(PL_LOGGER_TYPE)()
@@ -29,9 +29,9 @@
 #define LogTrace(fmt, ...)    QUILL_LOG_TRACE_L1(LOGGER_TYPE, fmt __VA_OPT__(, ) __VA_ARGS__)
 
 // Logging macros with a explicit context for inline, constexpr, template functions in header files
-#define LOG_CTX_POLOS ::polos::logging::Logger::Instance().GetPolosLogger()
-#define LOG_CTX_POLLY ::polos::logging::Logger::Instance().GetPollyLogger()
-#define LOG_CTX_APP   ::polos::logging::Logger::Instance().GetAppLogger()
+#define LOG_CTX_POLOS ::polos::logging::Logger::Get().GetPolosLogger()
+#define LOG_CTX_POLLY ::polos::logging::Logger::Get().GetPollyLogger()
+#define LOG_CTX_APP   ::polos::logging::Logger::Get().GetAppLogger()
 
 #define LogCriticalCtx(LoggerType, fmt, ...) QUILL_LOG_CRITICAL(LoggerType, fmt __VA_OPT__(, ) __VA_ARGS__)
 #define LogErroCtx(LoggerType, fmt, ...)     QUILL_LOG_ERROR(LoggerType, fmt __VA_OPT__(, ) __VA_ARGS__)

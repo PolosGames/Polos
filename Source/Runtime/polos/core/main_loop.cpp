@@ -59,7 +59,7 @@ void MainLoop::Run() const
     ecs::EditorCameraSystem editorCameraSystem;
     ecs::SystemRegistry     systems;
     systems.Register([&editorCameraSystem](ecs::Scene* tScene, float tDeltaTime) {
-        editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Instance().GetMainWindow());
+        editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Get().GetMainWindow());
     });
     systems.Register([system = ecs::DirtyTransformSystem{}](ecs::Scene* tScene, float) mutable {
         system.Update(tScene);
@@ -82,7 +82,7 @@ void MainLoop::Run() const
         }
         {
             POLOS_PROFILE_ZONE("ECS system updates");
-            auto* scene = ecs::SceneManager::GetCurrentScene();
+            auto* scene = ecs::SceneManager::Get().GetCurrentScene();
             systems.UpdateAll(scene, delta_time_in_secs);
             if (scene != nullptr)
             {
@@ -90,14 +90,14 @@ void MainLoop::Run() const
             }
         }
 
-        if (VK_NULL_HANDLE != rendering::RenderingApi::BeginFrame())
+        if (VK_NULL_HANDLE != rendering::RenderingApi::Get().BeginFrame())
         {
             {
                 POLOS_PROFILE_ZONE("Render update callbacks");
                 communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
             }
 
-            rendering::RenderingApi::EndFrame();
+            rendering::RenderingApi::Get().EndFrame();
             POLOS_PROFILE_FRAME();
             communication::DispatchNow<communication::EndFrame>();
         }

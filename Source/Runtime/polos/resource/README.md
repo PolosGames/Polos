@@ -20,7 +20,7 @@ identity; its `path` is used internally to load the file:
 #include <polos/resource/image.hpp>
 #include <polos/resource/resource_manager.hpp>
 
-auto const& resources = polos::resource::ResourceManager::Instance();
+auto const& resources = polos::resource::ResourceManager::Get();
 auto character = resources.GetImage("texture.character"_sid);
 auto icon = resources.GetImage("texture.icon"_sid);
 ```
@@ -41,7 +41,7 @@ without requiring a catalog entry. Each accepts either a `std::filesystem::path`
 or a `std::span<std::byte const>`:
 
 ```cpp
-auto& resources = polos::resource::ResourceManager::Instance();
+auto& resources = polos::resource::ResourceManager::Get();
 auto preview = resources.LoadImage("texture.preview"_sid, std::filesystem::path("preview.png"));
 auto file = resources.LoadFile("file.import"_sid, std::filesystem::path("import.bin"));
 auto embedded = resources.LoadImage("texture.embedded"_sid, std::as_bytes(std::span(encodedBytes)));
@@ -74,7 +74,7 @@ lists also store their original index order in `primitiveIndices` as 32-bit
 unsigned integers. Non-indexed triangle lists leave `primitiveIndices` empty.
 UVs and colors support float and normalized unsigned byte/short accessors. RGB
 colors retain alpha 1. The loader ignores unsupported attributes, uses material
-defaults for missing materials, and uses the default white texture for missing
+defaults for missing materials, and uses the default magenta texture for missing
 maps. Mesh parts support triangle lists.
 
 Add engine resources to `Source/Resources/resources.json` and sandbox resources to

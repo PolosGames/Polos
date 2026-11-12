@@ -33,6 +33,8 @@ struct alignas(32) AcquireNextImageDetails// NOLINT
 class VulkanSwapchain
 {
 public:
+    [[nodiscard]] static auto POLOS_API Get() -> VulkanSwapchain&;
+
     struct alignas(128) CreationDetails// NOLINT
     {
         platform::FramebufferSize const& fremebufferSize;
@@ -78,6 +80,8 @@ public:
     [[nodiscard]] auto GetImageView(std::uint32_t tIndex) const -> VkImageView;
     [[nodiscard]] auto GetImageCount() const -> std::uint32_t;
 private:
+    static VulkanSwapchain* sInstance;
+
     auto setupExtentAndViewport(VkPhysicalDevice tPhysDevice, platform::FramebufferSize const& tFrameBuffer) -> void;
     auto
     selectFormatAndMode(std::vector<VkSurfaceFormatKHR> const& tFormats, std::vector<VkPresentModeKHR> const& tModes)

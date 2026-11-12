@@ -12,7 +12,7 @@ namespace
 {
 TEST(LoggerTest, ContextsRouteToDistinctStableNamedLoggers)
 {
-    auto& logging = Logger::Instance();
+    auto& logging = Logger::Get();
 
     struct Context
     {
@@ -36,12 +36,12 @@ TEST(LoggerTest, ContextsRouteToDistinctStableNamedLoggers)
     EXPECT_NE(contexts[0].logger, contexts[1].logger);
     EXPECT_NE(contexts[0].logger, contexts[2].logger);
     EXPECT_NE(contexts[1].logger, contexts[2].logger);
-    EXPECT_EQ(Logger::Instance().GetAppLogger(), contexts[2].logger);
+    EXPECT_EQ(Logger::Get().GetAppLogger(), contexts[2].logger);
 }
 
 TEST(LoggerTest, FlushMakesQueuedFormattedMessagesVisible)
 {
-    auto* logger = Logger::Instance().GetAppLogger();
+    auto* logger = Logger::Get().GetAppLogger();
     ASSERT_NE(logger, nullptr);
     FlushLogger(logger);
     ::testing::internal::CaptureStdout();
@@ -56,7 +56,7 @@ TEST(LoggerTest, FlushMakesQueuedFormattedMessagesVisible)
 
 TEST(LoggerTest, NullFlushReportsErrorWithoutCrashing)
 {
-    auto* logger = Logger::Instance().GetPolosLogger();
+    auto* logger = Logger::Get().GetPolosLogger();
     ASSERT_NE(logger, nullptr);
     FlushLogger(logger);
     ::testing::internal::CaptureStdout();

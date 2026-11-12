@@ -7,7 +7,7 @@
 #define POLOS_ECS_MESH_RENDERER_COMPONENT_HPP
 
 #include "polos/ecs/component.hpp"
-#include "polos/rendering/cache/mesh_cache.hpp"
+#include "polos/rendering/common.hpp"
 
 namespace polos::ecs
 {
@@ -16,6 +16,8 @@ struct MeshRendererComponent
     static constexpr ComponentType kType = ComponentType::kMeshRenderer;
 
     rendering::MeshHandle meshHandle;
+
+    rendering::TextureHandle baseColorTexture{rendering::kDefaultTexture};
 };
 }// namespace polos::ecs
 

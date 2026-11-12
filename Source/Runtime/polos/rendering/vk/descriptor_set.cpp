@@ -5,7 +5,6 @@
 
 #include "polos/rendering/vk/descriptor_set.hpp"
 
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
@@ -32,7 +31,7 @@ auto DescriptorSet::Create(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout
     std::array<VkDescriptorSet, Settings::kMaxFramesInFlight> handles;
     PL_ASSERT(
         VK_SUCCESS ==
-            vkAllocateDescriptorSets(RenderContext::GetVulkanDevice().logiDevice, &allocateInfo, handles.data()),
+            vkAllocateDescriptorSets(VulkanDevice::Get().logiDevice, &allocateInfo, handles.data()),
         "Failed to allocate descriptor sets");
 
     std::array<DescriptorSet, Settings::kMaxFramesInFlight> sets;
@@ -52,7 +51,7 @@ auto DescriptorSet::Update(std::span<VkWriteDescriptorSet> tWrites) const -> voi
     }
 
     vkUpdateDescriptorSets(
-        RenderContext::GetVulkanDevice().logiDevice,
+        VulkanDevice::Get().logiDevice,
         ToVkSize(tWrites.size()),
         tWrites.data(),
         0U,

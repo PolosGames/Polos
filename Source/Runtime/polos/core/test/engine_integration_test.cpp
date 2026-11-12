@@ -1,3 +1,4 @@
+#include "polos/rendering/common.hpp"
 #include "polos/communication/end_frame.hpp"
 #include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/engine_update.hpp"
@@ -6,6 +7,7 @@
 #include "polos/communication/key_release.hpp"
 #include "polos/communication/mouse_input.hpp"
 #include "polos/communication/render_update.hpp"
+#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/core/engine.hpp"
 #include "polos/core/i_live_layer.hpp"
 #include "polos/ecs/components/camera_component.hpp"
@@ -68,57 +70,56 @@ public:
     auto Create() -> void override
     {
         mState.lifecycle.push_back("create");
-        auto&      platform    = platform::PlatformManager::Instance();
+        auto&      platform    = platform::PlatformManager::Get();
         auto const framebuffer = platform.GetWindowSurface().GetFramebufferSize();
         mState.windowCreated   = platform.GetMainWindow() != nullptr && framebuffer.width > 0 && framebuffer.height > 0;
 
-        auto& resources      = resource::ResourceManager::Instance();
-        mState.shadersLoaded = resources.GetFile("shader.vert.quad"_sid) != nullptr &&
-                               resources.GetFile("shader.frag.quad"_sid) != nullptr;
+        auto& resources = resource::ResourceManager::Get();
+        mState.shadersLoaded = resources.GetFile("shader.vert.forward_shading"_sid) != nullptr &&
+                               resources.GetFile("shader.frag.forward_shading"_sid) != nullptr &&
+                               resources.GetFile("shader.comp.main_compute"_sid) != nullptr;
 
-        auto*      scene           = ecs::SceneManager::CreateScene();
+        auto*      scene           = ecs::SceneManager::Get().CreateScene();
         auto const camera          = scene->activeCamera;
         auto*      cameraTransform = scene->GetMutableComponent<ecs::TransformComponent>(camera);
         auto const cube            = scene->NewEntity(scene->sceneRoot, "SmokeCube"_sid);
-        auto const meshIndex       = rendering::MeshCache::GetMeshIndexByHandle(rendering::kPolosDefaultCube);
+        auto const meshIndex       = rendering::MeshCache::Get().GetMeshIndexByHandle(rendering::kPolosDefaultCube);
 
         if (cameraTransform == nullptr || !scene->HasComponent(camera, ecs::CameraComponent::kType) ||
             !scene->HasComponent(camera, ecs::EditorCameraControllerComponent::kType) ||
-            meshIndex == rendering::kInvalidMeshId ||
-            scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
+            meshIndex == rendering::kInvalidMeshId || scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
             scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kPolosDefaultCube}) == nullptr)
         {
             throw std::runtime_error{"Could not create the integration-test scene"};
         }
         cameraTransform->position = {0.0F, 0.0F, 2.0F};
 
-        communication::Subscribe<communication::EngineUpdate>(
-            [&state = mState, scene, cube](communication::EngineUpdate&) {
-                ++state.updates;
-                if (state.updates == 1U)
-                {
-                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
-                    communication::DispatchNow<communication::KeyPress>(GLFW_KEY_W);
-                }
-                if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
-                {
-                    EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
-                }
-                if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
-                {
-                    EXPECT_NE(
-                        scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kPolosDefaultCube}), nullptr);
-                }
-                if (state.updates == 3U)
-                {
-                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
-                    communication::DispatchNow<communication::KeyRelease>(GLFW_KEY_W);
-                }
-                if (state.updates >= 120U)
-                {
-                    communication::DispatchNow<communication::EngineTerminate>();
-                }
-            });
+        communication::Subscribe<communication::EngineUpdate>([&state = mState, scene, cube](
+                                                                  communication::EngineUpdate&) {
+            ++state.updates;
+            if (state.updates == 1U)
+            {
+                communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
+                communication::DispatchNow<communication::KeyPress>(GLFW_KEY_W);
+            }
+            if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            {
+                EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
+            }
+            if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            {
+                EXPECT_NE(scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kPolosDefaultCube}), nullptr);
+            }
+            if (state.updates == 3U)
+            {
+                communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
+                communication::DispatchNow<communication::KeyRelease>(GLFW_KEY_W);
+            }
+            if (state.updates >= 120U)
+            {
+                communication::DispatchNow<communication::EngineTerminate>();
+            }
+        });
         communication::Subscribe<communication::RenderUpdate>(
             [&state = mState, scene, cube, meshIndex, cameraTransform](communication::RenderUpdate&) {
                 auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
@@ -128,15 +129,16 @@ public:
                 state.lifecycle.push_back("render");
                 state.cameraMoved = state.cameraMoved || cameraTransform->position.z < 2.0F;
                 auto const cursorMode =
-                    glfwGetInputMode(platform::PlatformManager::Instance().GetMainWindow(), GLFW_CURSOR);
+                    glfwGetInputMode(platform::PlatformManager::Get().GetMainWindow(), GLFW_CURSOR);
                 state.cursorCaptured = state.cursorCaptured || cursorMode == GLFW_CURSOR_DISABLED;
-                state.cursorReleased = state.cursorReleased || (state.cursorCaptured && cursorMode == GLFW_CURSOR_NORMAL);
+                state.cursorReleased =
+                    state.cursorReleased || (state.cursorCaptured && cursorMode == GLFW_CURSOR_NORMAL);
 
                 gui::SetNextWindowSize({320.0F, 180.0F});
                 if (gui::Begin("Integration GUI"))
                 {
                     gui::Text("A scene and a GUI overlay.");
-                    if (gui::Image("texture.polos_default_white"_sid, {24.0F, 24.0F}))
+                    if (gui::Image(rendering::kDefaultTexture, {24.0F, 24.0F}))
                     {
                         ++state.guiFrames;
                     }
@@ -146,6 +148,14 @@ public:
         communication::Subscribe<communication::EndFrame>([&state = mState](communication::EndFrame&) {
             ++state.completedFrames;
             state.lifecycle.push_back("end-frame");
+            if (state.completedFrames == 1U)
+            {
+                // Exercise swapchain recreation before checking the remaining frames.
+                int width{};
+                int height{};
+                glfwGetFramebufferSize(platform::PlatformManager::Get().GetMainWindow(), &width, &height);
+                communication::DispatchNow<communication::WindowFramebufferResize>(width, height);
+            }
             if (state.completedFrames == kFrameCount)
             {
                 communication::DispatchNow<communication::EngineTerminate>();
@@ -191,8 +201,6 @@ TEST(EngineIntegrationTest, RendersSceneAndGuiAcrossFrameSlots)
     }
     expectedLifecycle.insert(expectedLifecycle.end(), {"destroy", "destruct"});
     EXPECT_EQ(state.lifecycle, expectedLifecycle);
-    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.vert.quad"_sid), nullptr);
-    EXPECT_EQ(resource::ResourceManager::Instance().GetFile("shader.frag.quad"_sid), nullptr);
 }
 
 }// namespace

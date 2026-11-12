@@ -52,7 +52,7 @@ public:
     ResourceManager(ResourceManager const&)                    = delete;
     auto operator=(ResourceManager const&) -> ResourceManager& = delete;
 
-    [[nodiscard]] static auto Instance() -> ResourceManager&;
+    [[nodiscard]] static auto Get() -> ResourceManager&;
     [[nodiscard]] auto        Root() const -> std::filesystem::path const&;
 
     /// @brief Reads Resources/resources.json and preloads every image, model, and raw file.

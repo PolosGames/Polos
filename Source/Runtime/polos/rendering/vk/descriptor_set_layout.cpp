@@ -5,7 +5,6 @@
 
 #include "polos/rendering/vk/descriptor_set_layout.hpp"
 
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
@@ -26,11 +25,11 @@ auto DescriptorSetLayout::Create(std::span<VkDescriptorSetLayoutBinding const> t
 
     VkDescriptorSetLayout dsl{VK_NULL_HANDLE};
     PL_ASSERT(
-        VK_SUCCESS == vkCreateDescriptorSetLayout(RenderContext::GetVulkanDevice().logiDevice, &dslci, nullptr, &dsl),
+        VK_SUCCESS == vkCreateDescriptorSetLayout(VulkanDevice::Get().logiDevice, &dslci, nullptr, &dsl),
         "Failed to create Descriptor set layout for ForwardShadingPass");
 
     return {new DescriptorSetLayout{.layout = dsl}, [](DescriptorSetLayout* tPtr) {
-                vkDestroyDescriptorSetLayout(RenderContext::GetVulkanDevice().logiDevice, tPtr->layout, nullptr);
+                vkDestroyDescriptorSetLayout(VulkanDevice::Get().logiDevice, tPtr->layout, nullptr);
                 delete tPtr;
             }};
 }

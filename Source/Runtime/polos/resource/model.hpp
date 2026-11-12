@@ -6,6 +6,7 @@
 #ifndef POLOS_RESOURCE_MODEL_HPP
 #define POLOS_RESOURCE_MODEL_HPP
 
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/texture.hpp"
 #include "polos/rendering/vertex/primitive_vertex.hpp"
 #include "polos/utils/string_id.hpp"
@@ -22,7 +23,7 @@ namespace polos::resource::model
 
 struct Texture
 {
-    utils::string_id          resourceId{"texture.polos_default_white"_sid};
+    utils::string_id          resourceId{rendering::kDefaultTexture};
     rendering::TextureDetails samplerDetails{};
 };
 

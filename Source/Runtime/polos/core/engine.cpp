@@ -44,7 +44,7 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
         platform_manager->CreateNewWindow(kWidth, kHeight, std::format("PolosEngine - {}", build)),
         "Could not create the engine window.");
 
-    auto& resources = resource::ResourceManager::Instance();
+    auto& resources = resource::ResourceManager::Get();
     {
         POLOS_PROFILE_ZONE("Preload resource catalog");
         resources.LoadCatalog();

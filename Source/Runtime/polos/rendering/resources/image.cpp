@@ -215,7 +215,7 @@ auto Image::Create(ImageDescription const& tDesc, VkFormat const tFormat, std::s
         return nullptr;
     }
 
-    VkCommandBuffer cmdBuf = RenderContext::BeginSingleTimeCommands();
+    VkCommandBuffer cmdBuf = RenderContext::Get().BeginSingleTimeCommands();
     if (VK_NULL_HANDLE == cmdBuf)
     {
         return nullptr;
@@ -226,7 +226,7 @@ auto Image::Create(ImageDescription const& tDesc, VkFormat const tFormat, std::s
     image->ChangeLayout(cmdBuf, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     // Keep both allocations alive until the submitted copy and barriers complete.
-    if (!RenderContext::EndSingleTimeCommands(cmdBuf))
+    if (!RenderContext::Get().EndSingleTimeCommands(cmdBuf))
     {
         return nullptr;
     }

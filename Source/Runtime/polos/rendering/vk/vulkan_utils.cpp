@@ -3,12 +3,12 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/resources/shader.hpp"
 #include "polos/rendering/vk/graphics_pipeline_info.hpp"
-#include "polos/rendering/vk/render_context.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
 #include "polos/utils/assert.hpp"
@@ -20,7 +20,7 @@ namespace polos::rendering::util
 
 auto CreateGraphicsPipeline(GraphicsPipelineInfo const& tPipelineInfo) -> VulkanPipeline
 {
-    auto&                               sc = RenderContext::GetSwapchain();
+    auto&                               sc = VulkanSwapchain::Get();
     VkPipelineRenderingCreateInfo const pipeline_rendering_info{
         .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
         .pNext                   = nullptr,
@@ -156,7 +156,7 @@ auto CreateGraphicsPipeline(GraphicsPipelineInfo const& tPipelineInfo) -> Vulkan
 
     VkPipelineLayout layout{VK_NULL_HANDLE};
     if (VK_SUCCESS !=
-        vkCreatePipelineLayout(RenderContext::GetVulkanDevice().logiDevice, &pipeline_layout_info, nullptr, &layout))
+        vkCreatePipelineLayout(VulkanDevice::Get().logiDevice, &pipeline_layout_info, nullptr, &layout))
     {
         LogError("Failed to create a pipeline layout for pipeline {}.", tPipelineInfo.name);
         return {};
@@ -187,7 +187,7 @@ auto CreateGraphicsPipeline(GraphicsPipelineInfo const& tPipelineInfo) -> Vulkan
     VkPipeline pipeline{VK_NULL_HANDLE};
     PL_ASSERT(
         VK_SUCCESS == vkCreateGraphicsPipelines(
-                          RenderContext::GetVulkanDevice().logiDevice,
+                          VulkanDevice::Get().logiDevice,
                           VK_NULL_HANDLE,
                           1U,
                           &pipeline_info,
@@ -210,8 +210,6 @@ auto CreateComputePipeline(
         return {};
     }
 
-    static constexpr uint32_t const kComputeThreadCount{256U};
-
     VkSpecializationMapEntry entry{
         .constantID = 0U,
         .offset     = 0U,
@@ -222,7 +220,7 @@ auto CreateComputePipeline(
         .mapEntryCount = 1,
         .pMapEntries   = &entry,
         .dataSize      = sizeof(uint32_t),
-        .pData         = &kComputeThreadCount,
+        .pData         = &kComputeWorkgroupSize,
     };
 
     VkPipelineShaderStageCreateInfo pssci{
@@ -247,7 +245,7 @@ auto CreateComputePipeline(
 
     VkPipelineLayout layout{VK_NULL_HANDLE};
     PL_ASSERT(
-        VK_SUCCESS == vkCreatePipelineLayout(RenderContext::GetVulkanDevice().logiDevice, &plci, nullptr, &layout),
+        VK_SUCCESS == vkCreatePipelineLayout(VulkanDevice::Get().logiDevice, &plci, nullptr, &layout),
         "Failed to create compute pipeline layout!");
 
     VkComputePipelineCreateInfo cpci{
@@ -263,7 +261,7 @@ auto CreateComputePipeline(
     VkPipeline pipeline{VK_NULL_HANDLE};
     PL_ASSERT(
         VK_SUCCESS == vkCreateComputePipelines(
-                          RenderContext::GetVulkanDevice().logiDevice,
+                          VulkanDevice::Get().logiDevice,
                           VK_NULL_HANDLE,
                           1U,
                           &cpci,
@@ -301,7 +299,7 @@ auto CreateImageView(VkImage tImage, VkFormat tFormat, VkImageAspectFlags tAspec
 
     VkImageView img_view{VK_NULL_HANDLE};
     if (VK_SUCCESS !=
-        vkCreateImageView(RenderContext::GetVulkanDevice().logiDevice, &img_view_info, nullptr, &img_view))
+        vkCreateImageView(VulkanDevice::Get().logiDevice, &img_view_info, nullptr, &img_view))
     {
         LogError("Could not create image view");
         return VK_NULL_HANDLE;
@@ -326,7 +324,7 @@ auto CreateFramebuffer(VkRenderPass tRPass, std::span<VkImageView> tAttachments,
     };
 
     VkFramebuffer framebuffer{VK_NULL_HANDLE};
-    if (VK_SUCCESS != vkCreateFramebuffer(RenderContext::GetVulkanDevice().logiDevice, &fb_info, nullptr, &framebuffer))
+    if (VK_SUCCESS != vkCreateFramebuffer(VulkanDevice::Get().logiDevice, &fb_info, nullptr, &framebuffer))
     {
         return VK_NULL_HANDLE;
     }

@@ -1,3 +1,4 @@
+#include "polos/rendering/common.hpp"
 #include "polos/resource/gltf/gltf_loader.hpp"
 #include "polos/resource/model.hpp"
 #include "polos/resource/resource_manager.hpp"
@@ -357,8 +358,8 @@ TEST_F(GltfLoaderTest, LoadsMultipleMeshesAndMaterialsWithoutTextures)
     EXPECT_FLOAT_EQ(material.baseColorFactor[1], 0.3F);
     EXPECT_FLOAT_EQ(material.metallicFactor, 0.25F);
     EXPECT_FLOAT_EQ(material.roughnessFactor, 0.75F);
-    EXPECT_EQ(material.normalTexture.resourceId, "texture.polos_default_white"_sid);
-    EXPECT_EQ(material.baseColorTexture.resourceId, "texture.polos_default_white"_sid);
+    EXPECT_EQ(material.normalTexture.resourceId, polos::rendering::kDefaultTexture);
+    EXPECT_EQ(material.baseColorTexture.resourceId, polos::rendering::kDefaultTexture);
     EXPECT_EQ(result->meshes[1].parts[0].primitiveVertices.size(), 3U);
 }
 
@@ -498,7 +499,7 @@ TEST_F(GltfLoaderTest, ResolvesRelativeImagesAndSharedSamplerIndices)
     auto result = resource::LoadGltf(Write());
     ASSERT_TRUE(result);
     auto const& texture = result->meshes[0].parts[0].material.baseColorTexture;
-    EXPECT_NE(polos::resource::ResourceManager::Instance().GetImage(texture.resourceId), nullptr);
+    EXPECT_NE(polos::resource::ResourceManager::Get().GetImage(texture.resourceId), nullptr);
     EXPECT_EQ(texture.samplerDetails.minFilter, VK_FILTER_NEAREST);
     EXPECT_EQ(texture.samplerDetails.magFilter, VK_FILTER_LINEAR);
     EXPECT_EQ(texture.samplerDetails.mipmap, VK_SAMPLER_MIPMAP_MODE_LINEAR);

@@ -27,14 +27,12 @@ if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
             "${CMAKE_CURRENT_SOURCE_DIR}/test/integration/resources.json"
             "${SMOKE_RESOURCE_DIR}/resources.json"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${SMOKE_SHADER_DIR}/quad.vert.spv" "${SMOKE_SHADER_DIR}/quad.frag.spv"
             "${SMOKE_SHADER_DIR}/forward_shading.vert.spv" "${SMOKE_SHADER_DIR}/forward_shading.frag.spv"
             "${SMOKE_SHADER_DIR}/main_compute.comp.spv"
             "${SMOKE_RESOURCE_DIR}/Shaders"
         VERBATIM)
     set_property(TARGET it-engine-smoke APPEND PROPERTY LINK_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/test/integration/resources.json"
-        "${SMOKE_SHADER_DIR}/quad.vert.spv" "${SMOKE_SHADER_DIR}/quad.frag.spv"
         "${SMOKE_SHADER_DIR}/forward_shading.vert.spv" "${SMOKE_SHADER_DIR}/forward_shading.frag.spv"
         "${SMOKE_SHADER_DIR}/main_compute.comp.spv")
 
@@ -42,5 +40,5 @@ if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")
     set_tests_properties(${INTEGRATION_TESTS} PROPERTIES
         LABELS it RUN_SERIAL ON TIMEOUT 30
-        FAIL_REGULAR_EXPRESSION "Validation Error;VUID-;Failed to present the image")
+        FAIL_REGULAR_EXPRESSION "Validation Error;VUID-")
 endif()

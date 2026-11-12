@@ -31,7 +31,7 @@ public:
     Logger& operator=(Logger const&) = delete;
     Logger& operator=(Logger&&)      = delete;
 
-    static auto Instance() -> Logger&;
+    static auto Get() -> Logger&;
 
     /// Get pointer for the quill logger that will be used for logging inside Polos framework
     /// @return Pointer to the logger with id "POLOS"

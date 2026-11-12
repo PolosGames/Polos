@@ -44,7 +44,7 @@ public:
     /// @brief Get EventBus singleton
     ///
     /// @return Instance of EventBus
-    static auto Instance() -> EventBus&;
+    static auto Get() -> EventBus&;
 
     ///
     /// @brief Subscribe to the specific event in the engine. Return type needs to be kept in order to unsubscribe.
@@ -125,15 +125,15 @@ auto EventBus::Dispatch(EventDeferOptions const tDefer, Args&&... tArgs) -> std:
 
 template<PolosEvent EventType>
 auto Subscribe(std::function<void(EventType&)> tCallback) -> std::int64_t
-{ return EventBus::Instance().Subscribe(std::move(tCallback)); }
+{ return EventBus::Get().Subscribe(std::move(tCallback)); }
 
 template<PolosEvent EventType, typename... Args>
 auto DispatchNow(Args&&... tArgs) -> std::size_t
-{ return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(tArgs)...); }
+{ return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(tArgs)...); }
 
 template<PolosEvent EventType, typename... Args>
 auto DispatchDefer(Args&&... tArgs) -> std::size_t
-{ return EventBus::Instance().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(tArgs)...); }
+{ return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(tArgs)...); }
 
 POLOS_API auto DispatchDeferredEvents() -> void;
 

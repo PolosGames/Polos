@@ -153,7 +153,7 @@ PlatformManager::PlatformManager()
 #endif// !NDEBUG
 }
 
-PlatformManager& PlatformManager::Instance()
+PlatformManager& PlatformManager::Get()
 {
     return *sInstance;
 }
