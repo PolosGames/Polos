@@ -37,6 +37,7 @@ TEST(StringHashTest, MatchesKnownFnv1aVectors)
         auto const actual = StrHash64(testCase.input);
 
         EXPECT_EQ(static_cast<std::uint64_t>(actual), testCase.expected);
+        EXPECT_EQ(StrHash64Runtime(testCase.input), actual);
     }
 }
 
@@ -51,10 +52,18 @@ TEST(StringHashTest, HashesTheEntireViewIncludingEmbeddedNulls)
     EXPECT_NE(fullHash, "ab"_sid);
 }
 
+TEST(StringRegistryTest, LooksUpBuiltInIdsWithoutExplicitRegistration)
+{
+    EXPECT_EQ(GetStringFromID("Scene.slop"_sid), "Scene.slop");
+    EXPECT_EQ(GetStringFromID("mesh.PolosDefaultQuad.part.0"_sid), "mesh.PolosDefaultQuad.part.0");
+    EXPECT_EQ(GetStringFromID("shader.vert.forward_shading"_sid), "shader.vert.forward_shading");
+    EXPECT_EQ(GetStringFromID("WindowFramebufferResize"_sid), "WindowFramebufferResize");
+}
+
 TEST(StringRegistryTest, OwnsInputAndKeepsIdentityOnRepeatedRegistration)
 {
     std::string input = "utils.registry.owned";
-    auto const  id    = RegisterString(input);
+    auto const  id    = StrHash64Runtime(input);
 
     input.assign("overwritten source");
     auto const repeated = RegisterString("utils.registry.owned");

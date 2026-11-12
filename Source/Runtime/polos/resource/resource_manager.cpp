@@ -252,7 +252,7 @@ auto ResourceManager::registerResource(std::string_view tId, std::string_view tP
     auto const registered = utils::GetStringFromID(strid);
     PL_ASSERT(registered.empty() || registered == tId, "Resource ID hash collision: {}", tId);
 
-    std::ignore = utils::RegisterString(tId);
+    std::ignore = utils::StrHash64Runtime(tId);
     mResources.emplace(strid, Resource{std::move(path)});
     return strid;
 }
@@ -270,7 +270,28 @@ auto ResourceManager::loadResources(ResourceManager& tStaged) -> void
         if (extension == ".gltf" || extension == ".glb")
         {
             std::shared_ptr<model::Model> model = model::LoadGltf(resourcePath);
-            loaded                              = model && tStaged.mModels.Add(resourceId, std::move(model));
+            if (model)
+            {
+                bool texturesLoaded = true;
+                for (auto const& texture : model->textures)
+                {
+                    if (texture.resourceId == rendering::kDefaultTexture)
+                    {
+                        continue;
+                    }
+
+                    if (!tStaged.LoadImage(texture.resourceId, texture.path))
+                    {
+                        texturesLoaded = false;
+                        break;
+                    }
+                }
+
+                if (texturesLoaded)
+                {
+                    loaded = tStaged.mModels.Add(resourceId, std::move(model));
+                }
+            }
         }
         else if (
             extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".bmp" ||

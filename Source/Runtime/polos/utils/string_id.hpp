@@ -6,6 +6,8 @@
 #ifndef POLOS_UTILS_STRING_ID_HPP
 #define POLOS_UTILS_STRING_ID_HPP
 
+#include "polos/polos_api.hpp"
+
 #include <cstdint>
 #include <string_view>
 
@@ -37,9 +39,14 @@ constexpr auto StrHash64(std::string_view const tStr) -> string_id
     return static_cast<string_id>(hash);
 }
 
+/// @brief Register an owned copy of the string and return its StrHash64 ID.
+[[nodiscard]] POLOS_API auto StrHash64Runtime(std::string_view tString) -> string_id;
+
 }// namespace polos::utils
 
 consteval auto operator""_sid(char const* tStr, std::size_t tSize) -> polos::utils::string_id
-{ return polos::utils::StrHash64(std::string_view{tStr, tSize}); }
+{
+    return polos::utils::StrHash64(std::string_view{tStr, tSize});
+}
 
 #endif// POLOS_UTILS_STRING_ID_HPP

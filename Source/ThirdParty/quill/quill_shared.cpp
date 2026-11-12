@@ -77,17 +77,19 @@ void setup_quill()
         "%H:%M:%S.%Qms"                                                       // TIME
     };
 
-    auto const std_sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
-    // auto pl_sink  = quill::Frontend::create_or_get_sink<quill::FileSink>("polos.log", []() {
+    std::shared_ptr<quill::Sink> sink;
+
+    sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("pl_std_sink");
+    // sink = quill::Frontend::create_or_get_sink<quill::FileSink>("polos.log", []() {
     //     quill::FileSinkConfig config;
     //     config.set_open_mode('a');
     //     config.set_filename_append_option(quill::FilenameAppendOption::StartDateTime);
     //     return config;
     // }());
 
-    auto* const polos_logger = quill::Frontend::create_or_get_logger("POLOS", std_sink, formatter_options);
-    auto* const polly_logger = quill::Frontend::create_or_get_logger("POLLY", std_sink, formatter_options);
-    auto* const app_logger   = quill::Frontend::create_or_get_logger("APP", std_sink, formatter_options);
+    auto* const polos_logger = quill::Frontend::create_or_get_logger("POLOS", sink, formatter_options);
+    auto* const polly_logger = quill::Frontend::create_or_get_logger("POLLY", sink, formatter_options);
+    auto* const app_logger   = quill::Frontend::create_or_get_logger("APP", sink, formatter_options);
 
     polos_logger->set_log_level(log_level);
     polly_logger->set_log_level(log_level);

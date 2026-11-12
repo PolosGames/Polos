@@ -9,6 +9,10 @@
 #include "polos/utils/error_code.hpp"
 #include "polos/utils/error_domain.hpp"
 
+#include <array>
+#include <cstddef>
+#include <string_view>
+
 namespace polos::utils
 {
 // TODO(sorbatdev): Auto generate error codes and messages from a JSON or XML file

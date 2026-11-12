@@ -1,7 +1,6 @@
 #include "polos/rendering/common.hpp"
 #include "polos/resource/gltf/gltf_loader.hpp"
 #include "polos/resource/model.hpp"
-#include "polos/resource/resource_manager.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
@@ -358,8 +357,8 @@ TEST_F(GltfLoaderTest, LoadsMultipleMeshesAndMaterialsWithoutTextures)
     EXPECT_FLOAT_EQ(material.baseColorFactor[1], 0.3F);
     EXPECT_FLOAT_EQ(material.metallicFactor, 0.25F);
     EXPECT_FLOAT_EQ(material.roughnessFactor, 0.75F);
-    EXPECT_EQ(material.normalTexture.resourceId, polos::rendering::kDefaultTexture);
-    EXPECT_EQ(material.baseColorTexture.resourceId, polos::rendering::kDefaultTexture);
+    EXPECT_EQ(material.normalTexture, resource::kNoTextureIndex);
+    EXPECT_EQ(material.baseColorTexture, resource::kNoTextureIndex);
     EXPECT_EQ(result->meshes[1].parts[0].primitiveVertices.size(), 3U);
 }
 
@@ -394,11 +393,14 @@ TEST_F(GltfLoaderTest, RejectsMissingPositionsAndUnsupportedModes)
     }
 }
 
-TEST_F(GltfLoaderTest, PropagatesTextureFailuresAndRejectsInvalidMaterials)
+TEST_F(GltfLoaderTest, RecordsExternalTexturePathsAndRejectsInvalidMaterials)
 {
     document["images"]   = Json::array({{{"uri", "missing.png"}}});
     document["textures"] = Json::array({{{"source", 0}}});
-    EXPECT_FALSE(resource::LoadGltf(Write()));
+    auto result = resource::LoadGltf(Write());
+    ASSERT_TRUE(result);
+    ASSERT_EQ(result->textures.size(), 1U);
+    EXPECT_EQ(result->textures.front().path, directory / "missing.png");
 
     document.erase("images");
     document.erase("textures");
@@ -498,8 +500,11 @@ TEST_F(GltfLoaderTest, ResolvesRelativeImagesAndSharedSamplerIndices)
 
     auto result = resource::LoadGltf(Write());
     ASSERT_TRUE(result);
-    auto const& texture = result->meshes[0].parts[0].material.baseColorTexture;
-    EXPECT_NE(polos::resource::ResourceManager::Get().GetImage(texture.resourceId), nullptr);
+    auto const index = result->meshes[0].parts[0].material.baseColorTexture;
+    ASSERT_EQ(index, 1U);
+    ASSERT_LT(index, result->textures.size());
+    auto const& texture = result->textures[index];
+    EXPECT_EQ(texture.path, directory / "textures" / filename);
     EXPECT_EQ(texture.samplerDetails.minFilter, VK_FILTER_NEAREST);
     EXPECT_EQ(texture.samplerDetails.magFilter, VK_FILTER_LINEAR);
     EXPECT_EQ(texture.samplerDetails.mipmap, VK_SAMPLER_MIPMAP_MODE_LINEAR);

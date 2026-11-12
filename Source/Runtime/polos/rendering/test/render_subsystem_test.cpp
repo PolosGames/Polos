@@ -3,8 +3,9 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/rendering/compositor/render_compositor.hpp"
+#include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/compositor/render_compositor.hpp"
 #include "polos/rendering/render_subsystem.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/vk/vulkan_context.hpp"
@@ -21,6 +22,7 @@ namespace polos::rendering
 {
 namespace
 {
+static_assert(RenderSubsystem<MaterialCache>);
 static_assert(RenderSubsystem<VulkanContext>);
 static_assert(RenderSubsystem<VulkanDevice>);
 static_assert(RenderSubsystem<VulkanSwapchain>);
@@ -97,6 +99,34 @@ auto ExpectedRollbackEvents(std::size_t tFailureIndex) -> std::vector<int>
     }
 
     return events;
+}
+
+TEST(MaterialCacheTest, StoresMaterialPropertiesAndUsesDefaultTextureForMissingSlots)
+{
+    MaterialCache cache;
+    resource::model::Material input{
+        .name = "test.material",
+        .alphaMode = resource::model::AlphaMode::kMask,
+        .alphaCutoff = 0.25F,
+        .baseColorTexture = 4U,
+    };
+
+    auto const handle = cache.CreateMaterial(input);
+    auto const* material = cache.GetMaterial(handle);
+    ASSERT_NE(material, nullptr);
+    EXPECT_EQ(material->name, handle);
+    EXPECT_EQ(material->alphaMode, AlphaMode::kMask);
+    EXPECT_FLOAT_EQ(material->alphaCutoff, 0.25F);
+    EXPECT_EQ(material->baseColorTexture, kDefaultTextureIndex);
+    EXPECT_EQ(material->normalTexture, kDefaultTextureIndex);
+    EXPECT_EQ(cache.CreateMaterial(input), handle);
+
+    input.alphaCutoff = 0.75F;
+    EXPECT_NE(cache.CreateMaterial(input), handle);
+    EXPECT_FLOAT_EQ(material->alphaCutoff, 0.25F);
+
+    cache.Destroy();
+    EXPECT_EQ(cache.GetMaterial(handle), nullptr);
 }
 
 TEST(RenderSubsystemTest, DetailsAreBuiltWhenDependenciesAreReady)

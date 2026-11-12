@@ -51,6 +51,7 @@ class VulkanSwapchain;
 class RenderCompositor;
 class TextureCache;
 class MeshCache;
+class MaterialCache;
 
 class POLOS_API RenderContext : public IRenderContext
 {
@@ -95,6 +96,7 @@ private:
     std::unique_ptr<TextureCache>     mTextureCache;
     std::unique_ptr<RenderCompositor> mRenderCompositor;
     std::unique_ptr<MeshCache>        mMeshCache;
+    std::unique_ptr<MaterialCache>    mMaterialCache;
 
     std::array<VkFence, Settings::kMaxFramesInFlight>         mFrameFences{};
     std::array<VkSemaphore, Settings::kMaxFramesInFlight>     mAcqSemaphores{};
@@ -105,7 +107,7 @@ private:
 
     std::array<FrameData, Settings::kMaxFramesInFlight> mFrameData;
 
-    std::array<SubsystemEntry, 7U> mSubsystems{};
+    std::array<SubsystemEntry, 8U> mSubsystems{};
     std::size_t                    mInitializedSubsystems{0U};
 
 #if defined(ENABLE_PROFILING)

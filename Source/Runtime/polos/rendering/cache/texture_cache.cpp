@@ -3,16 +3,17 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/resource/image.hpp"
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/assert.hpp"
+#include "polos/utils/string_map.hpp"
 
 #include <algorithm>
 #include <array>
@@ -149,12 +150,12 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, TextureDe
     auto image = resource::ResourceManager::Get().GetImage(tResource);
     if (nullptr == image)
     {
-        LogError("Image not found in registry");
+        LogError("Image not found in resouce registry");
         return std::numeric_limits<std::size_t>::max();
     }
-    auto const width  = static_cast<std::uint32_t>(image->width);
-    auto const height = static_cast<std::uint32_t>(image->height);
-    // Resource images are decoded to RGBA8 by the image loader.
+
+    auto const         width  = static_cast<std::uint32_t>(image->width);
+    auto const         height = static_cast<std::uint32_t>(image->height);
     constexpr VkFormat format{VK_FORMAT_R8G8B8A8_SRGB};
 
     auto gpuImage = Image::Create(

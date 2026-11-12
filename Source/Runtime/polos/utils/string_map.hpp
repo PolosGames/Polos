@@ -14,11 +14,7 @@
 namespace polos::utils
 {
 
-/// Store an owned copy of the string and return its StrHash64 ID.
 [[nodiscard]] POLOS_API auto RegisterString(std::string_view tString) -> string_id;
-
-/// Return the registered string, or an empty view if the ID is unknown.
-/// Returned views remain valid until program shutdown.
 [[nodiscard]] POLOS_API auto GetStringFromID(string_id tID) -> std::string_view;
 
 }// namespace polos::utils
