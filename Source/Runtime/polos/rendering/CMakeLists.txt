@@ -15,13 +15,18 @@ polos_sources(
     uniforms/camera_uniform.cpp
     vertex/primitive_vertex.cpp
     vertex/quad_vertex.cpp
+    vk/command_buffer.cpp
+    vk/compute_pipeline_builder.cpp
+    vk/dependency_info_builder.cpp
     vk/descriptor_pool.cpp
-    vk/descriptor_set.cpp
-    vk/descriptor_set_layout.cpp
+    vk/descriptor_pool_builder.cpp
+    vk/graphics_pipeline_builder.cpp
     vk/render_context.cpp
+    vk/render_pass_builder.cpp
     vk/vulkan_context.cpp
     vk/vulkan_device.cpp
     vk/vulkan_pipeline.cpp
+    vk/vulkan_render_pass.cpp
     vk/vulkan_swapchain.cpp
     vk/vulkan_utils.cpp
     vulkan_rendering_api.cpp

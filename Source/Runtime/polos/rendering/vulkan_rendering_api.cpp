@@ -3,9 +3,6 @@
 // Permission is hereby granted under the MIT License - see LICENSE for details.
 //
 
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/event_bus.hpp"
-#include "polos/ecs/scene_data.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/rendering_api.hpp"
 #include "polos/rendering/vk/render_context.hpp"
@@ -37,11 +34,11 @@ auto RenderingApi::Shutdown() -> void
     }
 }
 
-auto RenderingApi::BeginFrame() -> VkCommandBuffer
+auto RenderingApi::BeginFrame() -> CommandBuffer*
 {
     if (nullptr == mRenderContext)
     {
-        return VK_NULL_HANDLE;
+        return nullptr;
     }
     return mRenderContext->BeginFrame();
 }

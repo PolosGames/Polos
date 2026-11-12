@@ -29,11 +29,10 @@ Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
     sceneRoot = newEntity();
 
     addComponent(
-        sceneRoot.index,
-        InfoComponent{
-            .debugName   = "SceneRoot"_sid,
-            .graphHandle = SceneGraphHandle{0U},
-        });
+        sceneRoot.index, InfoComponent{
+                             .debugName   = "SceneRoot"_sid,
+                             .graphHandle = SceneGraphHandle{0U},
+                         });
 
     if (tCreateEditorCamera)
     {
@@ -73,11 +72,10 @@ auto Scene::NewEntity(EntityHandle tParent, utils::string_id const tName) -> Ent
         return kInvalidEntityHandle;
     }
     addComponent(
-        child.index,
-        InfoComponent{
-            .debugName   = tName,
-            .graphHandle = graphHandle,
-        });
+        child.index, InfoComponent{
+                         .debugName   = tName,
+                         .graphHandle = graphHandle,
+                     });
 
     ++parentInfo->childCount;
     mInstanceChanges.push_back(child);

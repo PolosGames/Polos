@@ -3,7 +3,6 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/render_compositor.hpp"
 
 #include "polos/ecs/components/camera_component.hpp"
@@ -12,6 +11,7 @@
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/resources/shader.hpp"
@@ -96,30 +96,28 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
     // Always at least 1 camera, no need to check if activeCamera exists
     mCameraUbo = GetCameraUniform(
         scene->GetComponent<ecs::CameraComponent>(scene->activeCamera),
-        scene->GetComponent<ecs::TransformComponent>(scene->activeCamera),
-        tFrameData.scImage->extent.width,
+        scene->GetComponent<ecs::TransformComponent>(scene->activeCamera), tFrameData.scImage->extent.width,
         tFrameData.scImage->extent.height);
 
     {
         POLOS_PROFILE_ZONE("Upload changed mesh instances");
         auto const changes = scene->ConsumeInstanceChanges();
         POLOS_PROFILE_PLOT("Changed mesh instances", static_cast<std::int64_t>(changes.size()));
+
         for (auto const index : changes)
         {
             mInstanceBuffer->Write(
-                &scene->GetMeshInstances()[index],
-                sizeof(MeshInstance),
-                index * sizeof(MeshInstance));
+                &scene->GetMeshInstances()[index], sizeof(MeshInstance), index * sizeof(MeshInstance));
         }
     }
 
     mForwardShadingPass->Prepare(tFrameData.frameSlot, mInstanceBuffer->buffer);
 }
 
-auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
+auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
 {
     POLOS_PROFILE_ZONE("Record render compositor");
-    POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU frame");
+    POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf.GetHandle(), "GPU frame");
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
 
     ecs::Scene const* scene = ecs::SceneManager::Get().GetCurrentScene();
@@ -134,7 +132,6 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
             .scissor        = VulkanSwapchain::Get().GetScissor(),
             .viewport       = VulkanSwapchain::Get().GetViewport(),
             .cameraUbo      = mCameraUbo,
-            .instanceBuffer = mInstanceBuffer.get(),
             .slotCount      = scene != nullptr ? scene->GetEntityPoolSize() : 0U,
         });
 
@@ -146,7 +143,7 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
 
     {
         POLOS_PROFILE_ZONE("Record ImGui");
-        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU ImGui");
+        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf.GetHandle(), "GPU ImGui");
         mUiRenderPass->Record({
             .frameSlot = tFrameData.frameSlot,
             .cmdBuf    = tFrameData.currentCmdBuf,
@@ -163,7 +160,7 @@ auto RenderCompositor::Record(FrameData const& tFrameData) -> int32_t
 
     {
         POLOS_PROFILE_ZONE("Record blit to swapchain");
-        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf, "GPU blit to swapchain");
+        POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf.GetHandle(), "GPU blit to swapchain");
         tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         tFrameData.scImage->BlitFrom(tFrameData.currentCmdBuf, *targets.colorImg);
         tFrameData.scImage->ChangeLayout(tFrameData.currentCmdBuf, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
@@ -269,9 +266,8 @@ auto RenderCompositor::createDepthTarget() -> bool
             return false;
         }
 
-        target.depthImg = std::move(idxRes);
-        target.depthImgView =
-            util::CreateImageView(target.depthImg->img, kSceneDepthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        target.depthImg     = std::move(idxRes);
+        target.depthImgView = util::CreateImageView(target.depthImg->img, kSceneDepthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         if (VK_NULL_HANDLE == target.depthImgView)
         {

@@ -6,30 +6,25 @@
 #ifndef POLOS_RENDERING_VK_DESCRIPTOR_SET_HPP
 #define POLOS_RENDERING_VK_DESCRIPTOR_SET_HPP
 
-#include "polos/rendering/settings.hpp"
-
 #include <vulkan/vulkan.h>
 
-#include <array>
-#include <span>
+#include <cstddef>
+#include <vector>
 
 namespace polos::rendering
 {
 
-// The Vulkan descriptor pool owns the handles.
 class DescriptorSet
 {
-public:
-    [[nodiscard]] static auto CreateSingle(
-        VkDescriptorPool tPool, VkDescriptorSetLayout tLayout, void const* tNext = nullptr) -> DescriptorSet;
+    friend class DescriptorPool;
 
-    [[nodiscard]] static auto Create(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout)
-        -> std::array<DescriptorSet, Settings::kMaxFramesInFlight>;
+    DescriptorSet(VkDescriptorSet tHandle, std::size_t tBindingCount)
+        : mHandle{tHandle},
+          mBufferBindings(tBindingCount)
+    {}
 
-    // Sets dstSet on each write before submitting the batch.
-    auto Update(std::span<VkWriteDescriptorSet> tWrites) const -> void;
-
-    VkDescriptorSet set{VK_NULL_HANDLE};
+    VkDescriptorSet                     mHandle{VK_NULL_HANDLE};
+    std::vector<VkDescriptorBufferInfo> mBufferBindings;
 };
 
 }// namespace polos::rendering

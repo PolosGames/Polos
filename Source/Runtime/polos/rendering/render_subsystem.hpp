@@ -31,7 +31,6 @@ struct SubsystemEntry
     std::move_only_function<void()>         destroyFunc;
 };
 
-/// The subsystem must outlive its entry. Details are constructed immediately before Create.
 template<RenderSubsystem T, typename MakeDetails>
     requires std::invocable<MakeDetails&> &&
              std::same_as<std::invoke_result_t<MakeDetails&>, typename T::CreationDetails>
@@ -51,10 +50,12 @@ auto RegisterSubsystem(T& tSubsystem, MakeDetails tMakeDetails) -> SubsystemEntr
 
 inline auto DestroySubsystems(std::span<SubsystemEntry> tSubsystems, std::size_t& tInitializedCount) -> void
 {
-    while (tInitializedCount > 0U) { tSubsystems[--tInitializedCount].destroyFunc(); }
+    while (tInitializedCount > 0U)
+    {
+        tSubsystems[--tInitializedCount].destroyFunc();
+    }
 }
 
-/// Destroy must also accept partially created or already destroyed state.
 inline auto CreateSubsystems(std::span<SubsystemEntry> tSubsystems, std::size_t& tInitializedCount) -> Result<void>
 {
     while (tInitializedCount < tSubsystems.size())

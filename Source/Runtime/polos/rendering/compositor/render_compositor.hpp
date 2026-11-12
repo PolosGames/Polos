@@ -52,7 +52,7 @@ public:
     auto RecreateTargets() -> Result<void>;
 
     auto Prepare(FrameData const& tFrameData) -> void;
-    auto Record(FrameData const& tFrameData) -> int32_t;
+    auto Record(FrameData& tFrameData) -> int32_t;
 private:
     auto createTargets() -> Result<void>;
     auto releaseTargets() -> void;

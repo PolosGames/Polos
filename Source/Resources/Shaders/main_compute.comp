@@ -6,7 +6,7 @@
 const uint kRootParentId  = 0u;
 const uint kInvalidMeshId = 0xFFFFFFFFu;
 
-struct Instance
+struct MeshInstance
 {
     vec3  position;
     uint  parentId;
@@ -38,9 +38,9 @@ layout(std140, set = 0, binding = 0) uniform CameraUniform
 }
 camera;
 
-layout(std430, set = 1, binding = 0) readonly buffer InputInstances
+layout(std430, set = 1, binding = 0) readonly buffer MeshInstances
 {
-    Instance instances[];
+    MeshInstance instances[];
 };
 
 layout(std430, set = 1, binding = 1) buffer IndirectCommands
@@ -126,7 +126,7 @@ void main()
     if (gIdx == kRootParentId || gIdx >= pc.slotCount)
         return;
 
-    Instance obj = instances[gIdx];
+    MeshInstance obj = instances[gIdx];
 
     if (obj.meshId == kInvalidMeshId)
         return;
@@ -138,7 +138,7 @@ void main()
 
     while (curParent != kRootParentId)
     {
-        Instance p = instances[curParent];
+        MeshInstance p = instances[curParent];
         accPos     = p.position + p.scale * rotate_quat(p.rotation, accPos);
         accRot     = mul_quat(p.rotation, accRot);
         accScale *= p.scale;

@@ -250,16 +250,12 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
 
     while (mVertexHead + vertData.size_bytes() > mVertexBuffer->size)
     {
-        PL_ASSERT(
-            mVertexBuffer->Resize(mVertexBuffer->size + kGrowthAmount),
-            "Unable to resize mesh vertices");
+        PL_ASSERT(mVertexBuffer->Resize(mVertexBuffer->size + kGrowthAmount), "Unable to resize mesh vertices");
     }
 
     while (mIndexHead + indData.size_bytes() > mIndexBuffer->size)
     {
-        PL_ASSERT(
-            mIndexBuffer->Resize(mIndexBuffer->size + kGrowthAmount),
-            "Unable to resize mesh indices");
+        PL_ASSERT(mIndexBuffer->Resize(mIndexBuffer->size + kGrowthAmount), "Unable to resize mesh indices");
     }
 
     entry.vertexOffset = mVertexHead;
@@ -311,9 +307,7 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
     auto const boundsOffset = entry.meshIndex * sizeof(glm::vec4);
     while (boundsOffset + sizeof(glm::vec4) > mMeshBoundsBuffer->size)
     {
-        PL_ASSERT(
-            mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL),
-            "Unable to resize mesh bounds buffer");
+        PL_ASSERT(mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL), "Unable to resize mesh bounds buffer");
     }
     mMeshBoundsBuffer->Write(&mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
     mMeshes[tMesh.name] = entry;
@@ -350,6 +344,11 @@ auto MeshCache::GetIndexBuffer() -> VkBuffer
 auto MeshCache::GetMeshBoundsBuffer() -> VkBuffer
 {
     return mMeshBoundsBuffer->buffer;
+}
+
+auto MeshCache::GetMeshBoundsBufferSize() const -> VkDeviceSize
+{
+    return mMeshBoundsBuffer->size;
 }
 
 auto MeshCache::GetMeshCount() -> uint32_t
@@ -427,8 +426,7 @@ auto MeshCache::FlushMeshUses(uint32_t const tFrameSlot) -> void
     {
         for (auto const& meshUse : mMeshUses)
         {
-            int32_t const totalUse =
-                std::max(static_cast<int32_t>(mMeshInstances[meshUse.first]) + meshUse.second, 0);
+            int32_t const totalUse = std::max(static_cast<int32_t>(mMeshInstances[meshUse.first]) + meshUse.second, 0);
             mMeshInstances[meshUse.first] = static_cast<uint32_t>(totalUse);
         }
 
@@ -446,9 +444,7 @@ auto MeshCache::FlushMeshUses(uint32_t const tFrameSlot) -> void
     if (mMeshCount > 0U)
     {
         auto const requiredBytes = mMeshCount * sizeof(VkDrawIndexedIndirectCommand);
-        PL_ASSERT(
-            requiredBytes <= mMeshInfoBuffer[tFrameSlot]->size,
-            "Exceeded indirect command buffer capacity");
+        PL_ASSERT(requiredBytes <= mMeshInfoBuffer[tFrameSlot]->size, "Exceeded indirect command buffer capacity");
         mMeshInfoBuffer[tFrameSlot]->Write(mMeshInfos.data(), requiredBytes);
     }
 }

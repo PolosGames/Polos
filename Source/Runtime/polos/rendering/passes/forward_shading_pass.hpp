@@ -6,13 +6,14 @@
 #ifndef POLOS_RENDERING_PASSES_FORWARD_SHADING_PASS_HPP
 #define POLOS_RENDERING_PASSES_FORWARD_SHADING_PASS_HPP
 
-#include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/settings.hpp"
 #include "polos/rendering/uniforms/camera_uniform.hpp"
+#include "polos/rendering/vk/dependency_info_builder.hpp"
 #include "polos/rendering/vk/descriptor_pool.hpp"
 #include "polos/rendering/vk/vulkan_pipeline.hpp"
+#include "polos/rendering/vk/vulkan_render_pass.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -30,7 +31,7 @@ public:
     struct Inputs
     {
         uint32_t        frameSlot;
-        VkCommandBuffer cmdBuf;
+        CommandBuffer& cmdBuf;
 
         VkRect2D const&   renderArea;
         VkExtent2D const& extent;
@@ -39,8 +40,7 @@ public:
 
         CameraUniform const& cameraUbo;
 
-        Buffer const* instanceBuffer;
-        uint32_t      slotCount{0U};
+        uint32_t slotCount{0U};
     };
 
     ForwardShadingPass(
@@ -52,19 +52,23 @@ public:
     auto CreateFramebuffers(std::span<FrameTargets const> tTargets, VkExtent2D const& tScExtent) -> void;
     auto ReleaseFramebuffers() -> void;
 
-    auto Prepare(uint32_t tFrameSlot, VkBuffer tInstanceBuffer = VK_NULL_HANDLE) -> void;
+    auto Prepare(uint32_t tFrameSlot, VkBuffer tInstanceBuffer) -> void;
     auto Record(Inputs const& tInputs) -> int32_t;
 private:
-    std::shared_ptr<Shader const> mVertexShader;
-    std::shared_ptr<Shader const> mFragmentShader;
-    std::shared_ptr<Shader const> mMainComputeShader;
-
-    VkRenderPass                                            mRenderPass{VK_NULL_HANDLE};
+    VulkanRenderPass                                        mRenderPass;
     std::array<VkFramebuffer, Settings::kMaxFramesInFlight> mFramebuffers{};
     DescriptorPool                                          mDescPool;
 
-    VulkanPipeline mComputeMainPipeline;
-    VulkanPipeline mPbrPipeline;
+    struct ComputeDependencies
+    {
+        DependencyInfo beforeDispatch;
+        DependencyInfo afterDispatch;
+    };
+
+    std::array<ComputeDependencies, Settings::kMaxFramesInFlight> mComputeDependencies;
+
+    VulkanPipeline mComputeMainPipeline{};
+    VulkanPipeline mPbrPipeline{};
 
     std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mCameraUniforms;
 

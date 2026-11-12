@@ -140,7 +140,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     {
         char const* contextName = "Vulkan graphics queue";
         mGpuProfileContext =
-            TracyVkContext(mDevice->physDevice, mDevice->logiDevice, mDevice->gfxQueue, mFrameCommandBuffers.front());
+            TracyVkContext(mDevice->physDevice, mDevice->logiDevice, mDevice->gfxQueue, mFrameData.front().currentCmdBuf.GetHandle());
         TracyVkContextName(mGpuProfileContext, contextName, std::strlen(contextName));
     }
     else
@@ -189,9 +189,15 @@ auto RenderContext::createFrameResources() -> Result<void>
         .commandBufferCount = Settings::kMaxFramesInFlight,
     };
 
+    std::array<VkCommandBuffer, Settings::kMaxFramesInFlight> handles{};
     CHECK_VK_SUCCESS_OR_ERR(
-        vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, mFrameCommandBuffers.data()),
+        vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, handles.data()),
         RenderingErrc::kFailedCmdBufAlloc);
+
+    for (std::size_t i{0U}; i < handles.size(); ++i)
+    {
+        mFrameData[i].currentCmdBuf = CommandBuffer{handles[i]};
+    }
 
     // --- Synchronization objects creation ---
     VkSemaphoreCreateInfo const semaphore_info{
@@ -242,10 +248,9 @@ auto RenderContext::destroyFrameResources() -> void
     }
     mAcqSemaphores.fill(VK_NULL_HANDLE);
     mFrameFences.fill(VK_NULL_HANDLE);
-    mFrameCommandBuffers.fill(VK_NULL_HANDLE);
 }
 
-auto RenderContext::BeginFrame() -> VkCommandBuffer
+auto RenderContext::BeginFrame() -> CommandBuffer*
 {
     POLOS_PROFILE_ZONE("Begin frame");
     {
@@ -278,7 +283,10 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
 
     mSwapchainImageIndex = mSwapchain->GetCurrentImageIndex();
 
-    VkCommandBuffer                cur_cmd_buf = mFrameCommandBuffers[mCurrentFrameIndex];
+    auto& frame  = mFrameData[mCurrentFrameIndex];
+    auto& cmdBuf = frame.currentCmdBuf;
+
+    VkCommandBuffer handle = cmdBuf.GetHandle();
     VkCommandBufferBeginInfo const begin_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext            = nullptr,
@@ -286,35 +294,32 @@ auto RenderContext::BeginFrame() -> VkCommandBuffer
         .pInheritanceInfo = nullptr,
     };
 
-    vkResetCommandBuffer(cur_cmd_buf, 0U);
+    vkResetCommandBuffer(handle, 0U);
     PL_ASSERT(
-        vkBeginCommandBuffer(cur_cmd_buf, &begin_info) == VK_SUCCESS,
+        vkBeginCommandBuffer(handle, &begin_info) == VK_SUCCESS,
         "Could not begin recording the frame command buffer.");
 
 #if defined(ENABLE_PROFILING)
     if (mGpuProfileContext != nullptr)
     {
-        TracyVkCollect(mGpuProfileContext, cur_cmd_buf);
+        TracyVkCollect(mGpuProfileContext, handle);
     }
 #endif
 
     mIsRecording = true;
 
-    mFrameData[mCurrentFrameIndex] = FrameData{
-        .frameSlot     = mCurrentFrameIndex,
-        .scImageIndex  = mSwapchainImageIndex,
-        .currentCmdBuf = cur_cmd_buf,
-        .scImage       = mSwapchain->GetCurrentImageResource(),
-        .scImageView   = mSwapchain->GetCurrentImageView(),
-    };
+    frame.frameSlot    = mCurrentFrameIndex;
+    frame.scImageIndex = mSwapchainImageIndex;
+    frame.scImage      = mSwapchain->GetCurrentImageResource();
+    frame.scImageView  = mSwapchain->GetCurrentImageView();
 
-    mRenderCompositor->Prepare(mFrameData[mCurrentFrameIndex]);
+    mRenderCompositor->Prepare(frame);
     {
         POLOS_PROFILE_ZONE("Prepare ImGui frame");
         gui::backend::BeginFrame();
     }
 
-    return cur_cmd_buf;
+    return &cmdBuf;
 }
 
 auto RenderContext::EndFrame() -> FrameStatistics
@@ -323,8 +328,9 @@ auto RenderContext::EndFrame() -> FrameStatistics
     FrameStatistics statistics;
     statistics.drawCalls = mRenderCompositor->Record(mFrameData[mCurrentFrameIndex]);
 
+    VkCommandBuffer handle = mFrameData[mCurrentFrameIndex].currentCmdBuf.GetHandle();
     PL_ASSERT(
-        vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex]) == VK_SUCCESS,
+        vkEndCommandBuffer(handle) == VK_SUCCESS,
         "Could not finish recording the frame command buffer.");
 
     std::array<VkPipelineStageFlags, 1> const wait_stages = {VK_PIPELINE_STAGE_TRANSFER_BIT};
@@ -336,7 +342,7 @@ auto RenderContext::EndFrame() -> FrameStatistics
         .pWaitSemaphores      = &mAcqSemaphores[mCurrentFrameIndex],
         .pWaitDstStageMask    = wait_stages.data(),
         .commandBufferCount   = 1U,
-        .pCommandBuffers      = &mFrameCommandBuffers[mCurrentFrameIndex],
+        .pCommandBuffers      = &handle,
         .signalSemaphoreCount = 1U,
         .pSignalSemaphores    = &mSubmitSemaphores[mSwapchainImageIndex],
     };
@@ -361,7 +367,7 @@ auto RenderContext::EndFrame() -> FrameStatistics
     return statistics;
 }
 
-VkCommandBuffer RenderContext::BeginSingleTimeCommands()
+auto RenderContext::BeginSingleTimeCommands() -> CommandBuffer
 {
     VkCommandBufferAllocateInfo const alloc_info{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -371,11 +377,11 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
         .commandBufferCount = 1U,
     };
 
-    VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    if (VK_SUCCESS != vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, &command_buffer))
+    VkCommandBuffer handle{VK_NULL_HANDLE};
+    if (VK_SUCCESS != vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, &handle))
     {
         LogError("Could not allocate command buffer for single time commands!");
-        return VK_NULL_HANDLE;
+        return {};
     }
 
     VkCommandBufferBeginInfo const begin_info{
@@ -385,30 +391,33 @@ VkCommandBuffer RenderContext::BeginSingleTimeCommands()
         .pInheritanceInfo = nullptr,
     };
 
-    if (VK_SUCCESS != vkBeginCommandBuffer(command_buffer, &begin_info))
+    if (VK_SUCCESS != vkBeginCommandBuffer(handle, &begin_info))
     {
         LogError("Could not begin command buffer for single time commands!");
         vkFreeCommandBuffers(
             mDevice->logiDevice,
             mDevice->commandPool,
             1U,
-            &command_buffer);
-        return VK_NULL_HANDLE;
+            &handle);
+        return {};
     }
 
-    return command_buffer;
+    return CommandBuffer{handle};
 }
 
-bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
+auto RenderContext::EndSingleTimeCommands(CommandBuffer& tCmdBuf) -> bool
 {
-    if (VK_SUCCESS != vkEndCommandBuffer(tCommandBuffer))
+    VkCommandBuffer handle = tCmdBuf.GetHandle();
+    tCmdBuf = {};
+
+    if (VK_SUCCESS != vkEndCommandBuffer(handle))
     {
         LogError("Could not end single-time command buffer!");
         vkFreeCommandBuffers(
             mDevice->logiDevice,
             mDevice->commandPool,
             1U,
-            &tCommandBuffer);
+            &handle);
         return false;
     }
 
@@ -419,7 +428,7 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
         .pWaitSemaphores      = nullptr,
         .pWaitDstStageMask    = nullptr,
         .commandBufferCount   = 1U,
-        .pCommandBuffers      = &tCommandBuffer,
+        .pCommandBuffers      = &handle,
         .signalSemaphoreCount = 0U,
         .pSignalSemaphores    = nullptr,
     };
@@ -431,7 +440,7 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
             mDevice->logiDevice,
             mDevice->commandPool,
             1U,
-            &tCommandBuffer);
+            &handle);
         return false;
     }
     auto const waitResult = vkQueueWaitIdle(mDevice->gfxQueue);
@@ -440,7 +449,7 @@ bool RenderContext::EndSingleTimeCommands(VkCommandBuffer tCommandBuffer)
         mDevice->logiDevice,
         mDevice->commandPool,
         1U,
-        &tCommandBuffer);
+        &handle);
     if (waitResult != VK_SUCCESS)
     {
         LogError("Could not wait for single-time commands to complete!");
@@ -492,7 +501,7 @@ auto RenderContext::Shutdown() -> Result<void>
 
     if (mIsRecording)
     {
-        vkEndCommandBuffer(mFrameCommandBuffers[mCurrentFrameIndex]);
+        vkEndCommandBuffer(mFrameData[mCurrentFrameIndex].currentCmdBuf.GetHandle());
         mIsRecording = false;
     }
 
@@ -500,10 +509,10 @@ auto RenderContext::Shutdown() -> Result<void>
     if (mGpuProfileContext != nullptr)
     {
         // The device is idle here, so all remaining timestamp results can be sent to Tracy.
-        if (auto const commands = BeginSingleTimeCommands(); commands != VK_NULL_HANDLE)
+        if (auto cmdBuf = BeginSingleTimeCommands(); cmdBuf)
         {
-            TracyVkCollect(mGpuProfileContext, commands);
-            std::ignore = EndSingleTimeCommands(commands);
+            TracyVkCollect(mGpuProfileContext, cmdBuf.GetHandle());
+            std::ignore = EndSingleTimeCommands(cmdBuf);
         }
         TracyVkDestroy(mGpuProfileContext);
         mGpuProfileContext = nullptr;

@@ -6,7 +6,7 @@ struct VertexOutput
     vec2 texCoord;
 };
 
-struct Instance
+struct MeshInstance
 {
     vec3  position;
     uint  parentId;
@@ -16,9 +16,9 @@ struct Instance
     uint  textureIdx;
 };
 
-layout(std430, set = 1, binding = 0) readonly buffer InputInstances
+layout(std430, set = 1, binding = 0) readonly buffer MeshInstances
 {
-    Instance instances[];
+    MeshInstance instances[];
 };
 layout(std430, set = 2, binding = 0) readonly buffer VisibleMatrixIndices
 {
@@ -48,7 +48,7 @@ void main()
 {
     uint     entityIdx   = visibleMatrixIndices[gl_InstanceIndex];
     mat4     worldMatrix = worldMatrices[entityIdx];
-    Instance inst        = instances[entityIdx];
+    MeshInstance inst        = instances[entityIdx];
 
     gl_Position = ubo.viewProj * worldMatrix * vec4(iPosition, 1.0);
 

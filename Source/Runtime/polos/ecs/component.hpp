@@ -20,9 +20,9 @@ enum class ComponentType : std::uint8_t
     kTransform,
     kEditorCameraController,
     kMeshRenderer,
+    kLight,
 
-    // Slot 6 is reserved to preserve the binary scene layout.
-    kMaxComponents = 7,
+    kMaxComponents,
 };
 
 template<typename T>
