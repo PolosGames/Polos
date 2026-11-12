@@ -17,8 +17,10 @@ struct DescriptorSetLayout
 {
     VkDescriptorSetLayout layout;
 
-    [[nodiscard]] static auto Create(std::span<VkDescriptorSetLayoutBinding const> tBindings)
-        -> std::shared_ptr<DescriptorSetLayout>;
+    [[nodiscard]] static auto Create(
+        std::span<VkDescriptorSetLayoutBinding const> tBindings,
+        VkDescriptorSetLayoutCreateFlags              tFlags = 0U,
+        void const*                                   tNext  = nullptr) -> std::shared_ptr<DescriptorSetLayout>;
 };
 }// namespace polos::rendering
 

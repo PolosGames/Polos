@@ -29,16 +29,15 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
         tScene->AddComponent(meshEntity, ecs::TransformComponent{});
         for (auto& part : mesh.parts)
         {
-            auto& materials = rendering::MaterialCache::Get();
-            auto const handle = materials.CreateMaterial(part.material, model->textures);
-            auto const* material = materials.GetMaterial(handle);
-            auto partEntity = tScene->NewEntity(meshEntity);
+            auto&      materials  = rendering::MaterialCache::Get();
+            auto const handle     = materials.CreateMaterial(part.material, model->textures);
+            auto       partEntity = tScene->NewEntity(meshEntity);
             tScene->AddComponent(partEntity, ecs::TransformComponent{});
             tScene->AddComponent(
                 partEntity,
                 ecs::MeshRendererComponent{
-                    .meshHandle       = rendering::MeshCache::Get().AddMesh(part),
-                    .baseColorTexture = material->baseColorTexture,
+                    .meshHandle = rendering::MeshCache::Get().AddMesh(part),
+                    .matHandle  = handle,
                 });
         }
     }

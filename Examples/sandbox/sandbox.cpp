@@ -50,16 +50,8 @@ auto SandboxApp::Create() -> void
 
     auto* scene = ecs::SceneManager::Get().CreateScene();
 
-    constexpr float kApart = 2.0F;
-    for (std::size_t i{0U}; i < kRowCount; ++i)
-    {
-        for (std::size_t j{0U}; j < kColumnCount; ++j)
-        {
-            auto const entity    = CreateEntityFromModel("model.suzanne"_sid, scene);
-            auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
-            transform->position  = glm::vec3(static_cast<float>(j) * kApart, static_cast<float>(i), 0.0F);
-        }
-    }
+    auto const entity = CreateEntityFromModel("model.suzanne"_sid, scene);
+    // auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
 
     communication::Subscribe<communication::RenderUpdate>([this](communication::RenderUpdate& tEvent) {
         drawFpsOverlay(tEvent.deltaTime);

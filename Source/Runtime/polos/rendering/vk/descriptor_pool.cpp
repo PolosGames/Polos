@@ -12,20 +12,23 @@
 namespace polos::rendering
 {
 
-DescriptorPool::DescriptorPool(std::span<VkDescriptorPoolSize> tPoolSizes, uint32_t const tMaxSets)
+DescriptorPool::DescriptorPool(
+    std::span<VkDescriptorPoolSize const> tPoolSizes,
+    uint32_t const                        tMaxSets,
+    VkDescriptorPoolCreateFlags const     tFlags)
 {
-    VkDescriptorPoolCreateInfo dpci{
+    VkDescriptorPoolCreateInfo const poolInfo{
         .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext         = nullptr,
-        .flags         = 0U,
+        .flags         = tFlags,
         .maxSets       = tMaxSets,
         .poolSizeCount = ToVkSize(tPoolSizes.size()),
         .pPoolSizes    = tPoolSizes.data(),
     };
 
     PL_ASSERT(
-        VK_SUCCESS == vkCreateDescriptorPool(VulkanDevice::Get().logiDevice, &dpci, nullptr, &pool),
-        "Failed to create DescriptorPool for ForwardShadingPass");
+        VK_SUCCESS == vkCreateDescriptorPool(VulkanDevice::Get().logiDevice, &poolInfo, nullptr, &pool),
+        "Failed to create descriptor pool");
 }
 
 DescriptorPool::DescriptorPool(DescriptorPool&& tOther)
@@ -53,10 +56,15 @@ DescriptorPool& DescriptorPool::operator=(DescriptorPool&& tOther)
 
 DescriptorPool::~DescriptorPool()
 {
-    if (nullptr != pool)
+    if (VK_NULL_HANDLE != pool)
     {
         vkDestroyDescriptorPool(VulkanDevice::Get().logiDevice, pool, nullptr);
     }
+}
+
+auto DescriptorPool::AllocateSet(VkDescriptorSetLayout tLayout, void const* tNext) const -> DescriptorSet
+{
+    return DescriptorSet::CreateSingle(pool, tLayout, tNext);
 }
 
 auto DescriptorPool::CreateSet(std::shared_ptr<DescriptorSetLayout>& tLayout) -> uint32_t

@@ -8,6 +8,7 @@
 
 #include "polos/polos_api.hpp"
 #include "polos/rendering/resources/texture.hpp"
+#include "polos/rendering/vk/descriptor_pool.hpp"
 #include "polos/resource/resource_manager.hpp"
 #include "polos/utils/error_code.hpp"
 
@@ -64,9 +65,9 @@ private:
 
     std::vector<std::unique_ptr<Texture>> mTextures;
 
-    VkDescriptorPool      mBindlessPool{VK_NULL_HANDLE};
-    VkDescriptorSetLayout mBindlessSetLayout{VK_NULL_HANDLE};
-    VkDescriptorSet       mBindlessSet{VK_NULL_HANDLE};
+    std::shared_ptr<DescriptorSetLayout> mBindlessSetLayout;
+    DescriptorPool                       mBindlessPool;
+    DescriptorSet                        mBindlessSet;
 };
 
 }// namespace polos::rendering

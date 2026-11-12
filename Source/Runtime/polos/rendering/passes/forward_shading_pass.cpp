@@ -6,10 +6,11 @@
 #include "polos/rendering/passes/forward_shading_pass.hpp"
 
 #include "polos/ecs/settings.hpp"
+#include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/frame_targets.hpp"
 #include "polos/rendering/push_constants/compute_push_constants.hpp"
 #include "polos/rendering/vertex/primitive_vertex.hpp"
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/vk/graphics_pipeline_info.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/rendering/vk/vulkan_profiling.hpp"
@@ -616,7 +617,7 @@ ForwardShadingPass::ForwardShadingPass(
                 .binding            = kBinding_Ssbo_MeshInstance.binding,
                 .descriptorType     = kBinding_Ssbo_MeshInstance.type,
                 .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
+                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
                 .pImmutableSamplers = nullptr,
             },
             VkDescriptorSetLayoutBinding{
@@ -663,15 +664,17 @@ ForwardShadingPass::ForwardShadingPass(
         mDescPool.CreateSet(set2Layout);
     }
 
-    std::array<VkDescriptorSetLayout, 3U> setLayouts{
+    std::array<VkDescriptorSetLayout, 4U> graphicsSetLayouts{
         mDescPool.GetSetLayoutAtIndex(kSet0),
         mDescPool.GetSetLayoutAtIndex(kSet1),
         mDescPool.GetSetLayoutAtIndex(kSet2),
+        TextureCache::Get().GetBindlessSetLayout(),
     };
+    auto const computeSetLayouts = std::span{graphicsSetLayouts}.first<3U>();
 
     std::array shaders{mVertexShader.get(), mFragmentShader.get()};
-    mPbrPipeline         = CreatePBR(mRenderPass, setLayouts, shaders);
-    mComputeMainPipeline = CreateCompute(mMainComputeShader.get(), setLayouts);
+    mPbrPipeline         = CreatePBR(mRenderPass, graphicsSetLayouts, shaders);
+    mComputeMainPipeline = CreateCompute(mMainComputeShader.get(), computeSetLayouts);
 
     mVisibleMatrixIndicesBuffer = Buffer::Create(
         BufferDescription{
@@ -731,10 +734,7 @@ auto ForwardShadingPass::ReleaseFramebuffers() -> void
     {
         if (VK_NULL_HANDLE != framebuffer)
         {
-            vkDestroyFramebuffer(
-                VulkanDevice::Get().logiDevice,
-                std::exchange(framebuffer, VK_NULL_HANDLE),
-                nullptr);
+            vkDestroyFramebuffer(VulkanDevice::Get().logiDevice, std::exchange(framebuffer, VK_NULL_HANDLE), nullptr);
         }
     }
 }
@@ -756,11 +756,13 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
     POLOS_PROFILE_ZONE("Record forward shading");
     VkFramebuffer const fbuf = mFramebuffers[tInputs.frameSlot];
 
-    std::array<VkDescriptorSet const, 3U> const descriptorSets{
+    std::array<VkDescriptorSet, 4U> const graphicsSets{
         mDescPool.GetSetForFrameSlotAtIndex(kSet0, tInputs.frameSlot).set,
         mDescPool.GetSetForFrameSlotAtIndex(kSet1, tInputs.frameSlot).set,
         mDescPool.GetSetForFrameSlotAtIndex(kSet2, tInputs.frameSlot).set,
+        TextureCache::Get().GetBindlessDescriptorSet(),
     };
+    auto const computeSets = std::span{graphicsSets}.first<3U>();
 
     mCameraUniforms[tInputs.frameSlot]->Write(&tInputs.cameraUbo, sizeof(CameraUniform));
 
@@ -792,8 +794,8 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
             VK_PIPELINE_BIND_POINT_COMPUTE,
             mComputeMainPipeline.pipelineLayout,
             0U,
-            ToVkSize(descriptorSets.size()),
-            descriptorSets.data(),
+            ToVkSize(computeSets.size()),
+            computeSets.data(),
             0U,
             nullptr);
 
@@ -845,7 +847,7 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
         if (hasWork)
         {
             vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.pipeline);
-            vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.pipelineLayout, 0U, ToVkSize(descriptorSets.size()), descriptorSets.data(), 0U, nullptr);
+            vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.pipelineLayout, 0U, ToVkSize(graphicsSets.size()), graphicsSets.data(), 0U, nullptr);
 
             VkDeviceSize const offset{0U};
             VkBuffer const     vertBuf = MeshCache::Get().GetVertexBuffer();

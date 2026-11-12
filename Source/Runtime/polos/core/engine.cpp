@@ -27,8 +27,8 @@ namespace polos::core
 namespace
 {
 
-constexpr std::int32_t const kWidth{1280};
-constexpr std::int32_t const kHeight{720};
+constexpr std::int32_t const kWidth{2160};
+constexpr std::int32_t const kHeight{1280};
 
 }// namespace
 

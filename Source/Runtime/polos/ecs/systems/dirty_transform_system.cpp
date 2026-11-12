@@ -7,6 +7,7 @@
 
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/scene.hpp"
+#include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/utils/profiling.hpp"
 
@@ -73,8 +74,13 @@ void DirtyTransformSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
     }
     if (mask.test(kMeshRendererBit))
     {
-        auto const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index)->meshHandle;
-        instance.meshId = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh);
+        auto const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index);
+        instance.meshId = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh->meshHandle);
+
+        if (auto const* material = rendering::MaterialCache::Get().GetMaterial(mesh->matHandle))
+        {
+            instance.texID = material->baseColorTexture;
+        }
     }
 
     rendering::MeshIndex const oldMeshId = tScene.mInstanceBuffer[tEntity.index].meshId;

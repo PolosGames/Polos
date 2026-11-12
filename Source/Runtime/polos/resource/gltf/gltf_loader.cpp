@@ -274,9 +274,20 @@ auto LoadVertices(
         return LoadAttribute(tGltf, FindAttribute(tGltf, attributes, tName), tVertices, tMember);
     };
 
-    return LoadAttribute(tGltf, position, tVertices, &PrimitiveVertex::position) &&
-           loadAttribute("NORMAL", &PrimitiveVertex::normal) && loadAttribute("TANGENT", &PrimitiveVertex::tangent) &&
-           loadAttribute("TEXCOORD_0", &PrimitiveVertex::texCoord) && loadAttribute("COLOR_0", &PrimitiveVertex::color);
+    if (!LoadAttribute(tGltf, position, tVertices, &PrimitiveVertex::position) ||
+        !loadAttribute("NORMAL", &PrimitiveVertex::normal) || !loadAttribute("TANGENT", &PrimitiveVertex::tangent) ||
+        !loadAttribute("TEXCOORD_0", &PrimitiveVertex::texCoord) || !loadAttribute("COLOR_0", &PrimitiveVertex::color))
+    {
+        return false;
+    }
+
+    // stbi_set_flip_vertically_on_load_thread
+    for (auto& vertex : tVertices)
+    {
+        vertex.texCoord.y = 1.0F - vertex.texCoord.y;
+    }
+
+    return true;
 }
 
 auto LoadIndices(tg3_model const& tGltf, tg3_accessor const& tAccessor, std::vector<std::uint32_t>& tIndices) -> void

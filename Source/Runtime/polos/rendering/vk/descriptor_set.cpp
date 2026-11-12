@@ -14,25 +14,46 @@
 namespace polos::rendering
 {
 
+namespace
+{
+
+auto AllocateSets(
+    VkDescriptorPool                       tPool,
+    std::span<VkDescriptorSetLayout const> tLayouts,
+    VkDescriptorSet*                       tHandles,
+    void const*                            tNext) -> void
+{
+    VkDescriptorSetAllocateInfo const allocateInfo{
+        .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext              = tNext,
+        .descriptorPool     = tPool,
+        .descriptorSetCount = ToVkSize(tLayouts.size()),
+        .pSetLayouts        = tLayouts.data(),
+    };
+
+    PL_ASSERT(
+        VK_SUCCESS == vkAllocateDescriptorSets(VulkanDevice::Get().logiDevice, &allocateInfo, tHandles),
+        "Failed to allocate descriptor sets");
+}
+
+}// namespace
+
+auto DescriptorSet::CreateSingle(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout, void const* tNext)
+    -> DescriptorSet
+{
+    DescriptorSet descriptorSet;
+    AllocateSets(tPool, std::span{&tLayout, 1U}, &descriptorSet.set, tNext);
+    return descriptorSet;
+}
+
 auto DescriptorSet::Create(VkDescriptorPool tPool, VkDescriptorSetLayout tLayout)
     -> std::array<DescriptorSet, Settings::kMaxFramesInFlight>
 {
     std::array<VkDescriptorSetLayout, Settings::kMaxFramesInFlight> layouts;
     layouts.fill(tLayout);
 
-    VkDescriptorSetAllocateInfo const allocateInfo{
-        .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-        .pNext              = nullptr,
-        .descriptorPool     = tPool,
-        .descriptorSetCount = ToVkSize(layouts.size()),
-        .pSetLayouts        = layouts.data(),
-    };
-
     std::array<VkDescriptorSet, Settings::kMaxFramesInFlight> handles;
-    PL_ASSERT(
-        VK_SUCCESS ==
-            vkAllocateDescriptorSets(VulkanDevice::Get().logiDevice, &allocateInfo, handles.data()),
-        "Failed to allocate descriptor sets");
+    AllocateSets(tPool, layouts, handles.data(), nullptr);
 
     std::array<DescriptorSet, Settings::kMaxFramesInFlight> sets;
     for (std::size_t slot{0U}; slot < sets.size(); ++slot)
@@ -50,12 +71,7 @@ auto DescriptorSet::Update(std::span<VkWriteDescriptorSet> tWrites) const -> voi
         write.dstSet = set;
     }
 
-    vkUpdateDescriptorSets(
-        VulkanDevice::Get().logiDevice,
-        ToVkSize(tWrites.size()),
-        tWrites.data(),
-        0U,
-        nullptr);
+    vkUpdateDescriptorSets(VulkanDevice::Get().logiDevice, ToVkSize(tWrites.size()), tWrites.data(), 0U, nullptr);
 }
 
 }// namespace polos::rendering
