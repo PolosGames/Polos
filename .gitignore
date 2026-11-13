@@ -54,5 +54,9 @@ ptp.cpp
 **.code-workspace
 Source/Config/include/polos/polos_config.hpp
 Source/Config/include/polos/polos_api.hpp
+!license.txt
+!License.txt
+!LICENSE.txt
+!LICENSE
 
 internal/
