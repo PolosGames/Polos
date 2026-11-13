@@ -21,7 +21,6 @@
 
 namespace polos::ecs
 {
-struct SceneData;
 }// namespace polos::ecs
 
 namespace polos::rendering
@@ -65,6 +64,7 @@ private:
     std::shared_ptr<Shader const>                          mMainComputeShader;
 
     std::unique_ptr<Buffer> mInstanceBuffer;
+    std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mLightInstances;
 
     std::unique_ptr<ForwardShadingPass> mForwardShadingPass;
     std::unique_ptr<UiRenderPass>       mUiRenderPass;

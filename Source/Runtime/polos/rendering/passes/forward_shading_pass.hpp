@@ -22,15 +22,17 @@
 
 namespace polos::rendering
 {
-
+struct SceneLightInfo;
+struct LightInstance;
 struct FrameTargets;
 struct Shader;
+
 class ForwardShadingPass
 {
 public:
     struct Inputs
     {
-        uint32_t        frameSlot;
+        uint32_t       frameSlot;
         CommandBuffer& cmdBuf;
 
         VkRect2D const&   renderArea;
@@ -41,6 +43,8 @@ public:
         CameraUniform const& cameraUbo;
 
         uint32_t slotCount{0U};
+
+        SceneLightInfo const& lightInfo;
     };
 
     ForwardShadingPass(
@@ -52,7 +56,7 @@ public:
     auto CreateFramebuffers(std::span<FrameTargets const> tTargets, VkExtent2D const& tScExtent) -> void;
     auto ReleaseFramebuffers() -> void;
 
-    auto Prepare(uint32_t tFrameSlot, VkBuffer tInstanceBuffer) -> void;
+    auto Prepare(uint32_t tFrameSlot, VkBuffer tInstanceBuffer, VkBuffer tLightBuffer) -> void;
     auto Record(Inputs const& tInputs) -> int32_t;
 private:
     VulkanRenderPass                                        mRenderPass;

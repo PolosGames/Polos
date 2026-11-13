@@ -391,6 +391,18 @@ auto InputTextMultiline(char const* tLabel, std::span<char> tBuffer, Vec2 tSize)
     return !tBuffer.empty() && ImGui::InputTextMultiline(tLabel, tBuffer.data(), tBuffer.size(), ToImGui(tSize));
 }
 
+auto ColorEditRgb(char const* tLabel, Color& tColor) -> bool
+{
+    float channels[]{tColor.r, tColor.g, tColor.b};
+    if (!ImGui::ColorEdit3(tLabel, channels))
+    {
+        return false;
+    }
+
+    tColor = {channels[0], channels[1], channels[2], tColor.a};
+    return true;
+}
+
 auto ColorEdit(char const* tLabel, Color& tColor) -> bool
 {
     float channels[]{tColor.r, tColor.g, tColor.b, tColor.a};

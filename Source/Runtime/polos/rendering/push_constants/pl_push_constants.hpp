@@ -8,8 +8,6 @@
 
 #include "polos/rendering/push_constants/compute_cull_data.hpp"
 
-#include <cstdint>
-
 namespace polos::rendering
 {
 template<typename T>

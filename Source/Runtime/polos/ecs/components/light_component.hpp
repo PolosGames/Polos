@@ -17,7 +17,8 @@ struct LightComponent
     static constexpr ComponentType kType = ComponentType::kLight;
 
     glm::vec3 color{1.0F};
-    float     ambientStrength{1.0F};
+    float     ambientFactor{1.0F};
+    float     specularFactor{1.0F};
 };
 }// namespace polos::ecs
 

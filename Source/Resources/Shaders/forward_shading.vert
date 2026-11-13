@@ -41,18 +41,21 @@ layout(location = 1) in vec3 iNormal;
 layout(location = 2) in vec4 iTangent;
 layout(location = 3) in vec2 iTexCoord;
 layout(location = 4) in vec4 iColor;
+
 layout(location = 0) out VertexOutput oVertOut;
 layout(location = 2) out flat uint oTexIndex;
+layout(location = 3) out vec3 oNormal;
 
 void main()
 {
-    uint     entityIdx   = visibleMatrixIndices[gl_InstanceIndex];
-    mat4     worldMatrix = worldMatrices[entityIdx];
+    uint         entityIdx   = visibleMatrixIndices[gl_InstanceIndex];
+    mat4         worldMatrix = worldMatrices[entityIdx];
     MeshInstance inst        = instances[entityIdx];
 
     gl_Position = ubo.viewProj * worldMatrix * vec4(iPosition, 1.0);
 
     oVertOut.color    = iColor;
     oVertOut.texCoord = iTexCoord;
+    oNormal           = iNormal;
     oTexIndex         = inst.textureIdx;
 }

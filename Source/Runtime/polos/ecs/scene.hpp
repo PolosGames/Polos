@@ -10,10 +10,10 @@
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/entity.hpp"
+#include "polos/ecs/scene_data.hpp"
 #include "polos/ecs/scene_graph.hpp"
 #include "polos/ecs/settings.hpp"
 #include "polos/polos_api.hpp"
-#include "polos/rendering/ssbo/mesh_instance.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <glm/glm.hpp>
@@ -24,7 +24,6 @@
 #include <memory>
 #include <span>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace polos::ecs
@@ -77,7 +76,7 @@ public:
         {
             if (component != nullptr)
             {
-                mInstanceChanges.push_back(tHandle);
+                mRenderData.meshInstanceChanges.push_back(tHandle);
             }
         }
         return component;
@@ -125,11 +124,17 @@ public:
         return getComponent<T>(tHandle.index);
     }
 
+    template<typename T>
+    auto HasComponent(EntityHandle const tHandle)
+    {
+        return HasComponent(tHandle, T::kType);
+    }
+
     [[nodiscard]] auto GetDirtyEntities() const -> std::span<DirtyEntity const>;
     auto               ClearDirtyEntities() -> void;
 
-    [[nodiscard]] auto GetMeshInstances() const -> std::span<rendering::MeshInstance const>;
-    [[nodiscard]] auto ConsumeInstanceChanges() -> std::vector<EntityIndex>;
+    [[nodiscard]] auto GetRenderData() -> SceneRenderData&;
+    [[nodiscard]] auto GetRenderData() const -> SceneRenderData const&;
 
     auto HasComponent(EntityHandle tHandle, ComponentType tCompType) -> bool;
     auto RemoveComponent(EntityHandle tHandle, ComponentType tCompType) -> bool;
@@ -153,6 +158,7 @@ public:
 private:
     friend class SceneManager;
 
+    friend class LightCollectionSystem;
     friend class MeshInstanceSyncSystem;
 
     // Deserialization restores the saved cameras instead of creating another editor camera.
@@ -209,9 +215,7 @@ private:
     std::uint32_t              mEntitiesHead{0U};
     std::vector<std::uint32_t> mFreeIndices;
 
-    std::unique_ptr<rendering::MeshInstance[]> mInstanceBuffer;
-    std::vector<EntityHandle>                  mInstanceChanges;
-    std::unordered_set<EntityIndex>            mPendingInstanceUploads;
+    SceneRenderData mRenderData;
 
     SceneGraph mSceneGraph;
 };

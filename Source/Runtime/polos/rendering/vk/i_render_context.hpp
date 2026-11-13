@@ -14,7 +14,6 @@
 
 namespace polos::ecs
 {
-struct SceneData;
 }// namespace polos::ecs
 
 namespace polos::rendering

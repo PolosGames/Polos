@@ -32,6 +32,7 @@ using TextureIndex   = std::uint32_t;
 
 inline constexpr MeshHandle                   kPolosDefaultCube = "mesh.PolosDefaultCube.part.0"_sid;
 inline constexpr MeshHandle                   kPolosDefaultQuad = "mesh.PolosDefaultQuad.part.0"_sid;
+inline constexpr MaterialHandle               kDefaultMaterial  = "material.polos_default"_sid;
 inline constexpr TextureHandle                kDefaultTexture   = "texture.polos_default"_sid;
 inline constexpr TextureIndex                 kDefaultTextureIndex{0U};
 inline constexpr std::uint32_t                kRootParentId{0U};

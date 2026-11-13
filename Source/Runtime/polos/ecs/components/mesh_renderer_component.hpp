@@ -16,7 +16,7 @@ struct MeshRendererComponent
     static constexpr ComponentType kType = ComponentType::kMeshRenderer;
 
     rendering::MeshHandle     meshHandle;
-    rendering::MaterialHandle matHandle;
+    rendering::MaterialHandle matHandle{rendering::kDefaultMaterial};
 };
 }// namespace polos::ecs
 

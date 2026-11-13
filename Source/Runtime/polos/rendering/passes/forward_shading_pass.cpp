@@ -11,6 +11,8 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/frame_targets.hpp"
 #include "polos/rendering/push_constants/pl_push_constants.hpp"
+#include "polos/rendering/push_constants/scene_light_info.hpp"
+#include "polos/rendering/ssbo/light_instance.hpp"
 #include "polos/rendering/vertex/primitive_vertex.hpp"
 #include "polos/rendering/vk/command_buffer.hpp"
 #include "polos/rendering/vk/compute_pipeline_builder.hpp"
@@ -46,13 +48,13 @@ struct DescriptorBinding
 
 // Set0
 constexpr uint32_t const kSet0{0U};
-constexpr size_t const   kSet0BindingCount{1U};
 
 constexpr DescriptorBinding const kBinding_Ubo_Camera{
     .type    = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
     .set     = 0U,
     .binding = 0U,
 };
+constexpr DescriptorBinding const kBinding_Ssbo_LightInstances{.set = 0U, .binding = 1U};
 
 // Set 1
 constexpr uint32_t const kSet1{1U};
@@ -126,6 +128,71 @@ auto CreateRenderPass() -> VulkanRenderPass
     return pass;
 }
 
+auto BuildDescriptorPool(DescriptorPool& tPool)
+{
+    DescriptorPoolBuilder builder;
+    builder.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Settings::kMaxFramesInFlight);
+    builder.AddPoolSize(
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, (1U + kSet1BindingCount + kSet2BindingCount) * Settings::kMaxFramesInFlight);
+
+    builder.AddSet(Settings::kMaxFramesInFlight)
+        .AddBinding({
+            .binding            = kBinding_Ubo_Camera.binding,
+            .descriptorType     = kBinding_Ubo_Camera.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_COMPUTE_BIT,
+            .pImmutableSamplers = nullptr,
+        })
+        .AddBinding({
+            .binding            = kBinding_Ssbo_LightInstances.binding,
+            .descriptorType     = kBinding_Ssbo_LightInstances.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .pImmutableSamplers = nullptr,
+        });
+
+    builder.AddSet(Settings::kMaxFramesInFlight)
+        .AddBinding({
+            .binding            = kBinding_Ssbo_MeshInstance.binding,
+            .descriptorType     = kBinding_Ssbo_MeshInstance.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+            .pImmutableSamplers = nullptr,
+        })
+        .AddBinding({
+            .binding            = kBinding_Ssbo_IndirectCommands.binding,
+            .descriptorType     = kBinding_Ssbo_IndirectCommands.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
+            .pImmutableSamplers = nullptr,
+        })
+        .AddBinding({
+            .binding            = kBinding_Ssbo_MeshBounds.binding,
+            .descriptorType     = kBinding_Ssbo_MeshBounds.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
+            .pImmutableSamplers = nullptr,
+        });
+
+    builder.AddSet(Settings::kMaxFramesInFlight)
+        .AddBinding({
+            .binding            = kBinding_Ssbo_VisibleMatrixIndices.binding,
+            .descriptorType     = kBinding_Ssbo_VisibleMatrixIndices.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+            .pImmutableSamplers = nullptr,
+        })
+        .AddBinding({
+            .binding            = kBinding_Ssbo_WorldMatrices.binding,
+            .descriptorType     = kBinding_Ssbo_WorldMatrices.type,
+            .descriptorCount    = 1U,
+            .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
+            .pImmutableSamplers = nullptr,
+        });
+
+    tPool = builder.Finalize();
+}
+
 }// namespace
 
 ForwardShadingPass::ForwardShadingPass(
@@ -135,62 +202,7 @@ ForwardShadingPass::ForwardShadingPass(
     : mRenderPass(CreateRenderPass()),
       mCameraUniforms(std::array{CreateCameraUniformBuffer(), CreateCameraUniformBuffer(), CreateCameraUniformBuffer()})
 {
-    {
-        DescriptorPoolBuilder builder;
-        builder.AddPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Settings::kMaxFramesInFlight);
-        builder.AddPoolSize(
-            VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, (kSet1BindingCount + kSet2BindingCount) * Settings::kMaxFramesInFlight);
-
-        builder.AddSet(Settings::kMaxFramesInFlight)
-            .AddBinding({
-                .binding            = kBinding_Ubo_Camera.binding,
-                .descriptorType     = kBinding_Ubo_Camera.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_COMPUTE_BIT,
-                .pImmutableSamplers = nullptr,
-            });
-
-        builder.AddSet(Settings::kMaxFramesInFlight)
-            .AddBinding({
-                .binding            = kBinding_Ssbo_MeshInstance.binding,
-                .descriptorType     = kBinding_Ssbo_MeshInstance.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr,
-            })
-            .AddBinding({
-                .binding            = kBinding_Ssbo_IndirectCommands.binding,
-                .descriptorType     = kBinding_Ssbo_IndirectCommands.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
-                .pImmutableSamplers = nullptr,
-            })
-            .AddBinding({
-                .binding            = kBinding_Ssbo_MeshBounds.binding,
-                .descriptorType     = kBinding_Ssbo_MeshBounds.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT,
-                .pImmutableSamplers = nullptr,
-            });
-
-        builder.AddSet(Settings::kMaxFramesInFlight)
-            .AddBinding({
-                .binding            = kBinding_Ssbo_VisibleMatrixIndices.binding,
-                .descriptorType     = kBinding_Ssbo_VisibleMatrixIndices.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr,
-            })
-            .AddBinding({
-                .binding            = kBinding_Ssbo_WorldMatrices.binding,
-                .descriptorType     = kBinding_Ssbo_WorldMatrices.type,
-                .descriptorCount    = 1U,
-                .stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT,
-                .pImmutableSamplers = nullptr,
-            });
-
-        mDescPool = builder.Finalize();
-    }
+    BuildDescriptorPool(mDescPool);
 
     std::array<VkDescriptorSetLayout, 4U> graphicsSetLayouts{
         mDescPool.GetSetLayoutAtIndex(kSet0),
@@ -222,6 +234,12 @@ ForwardShadingPass::ForwardShadingPass(
             .colorWriteMask      = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
                                    VK_COLOR_COMPONENT_A_BIT,
         });
+        builder.AddPushConstantRange(
+            VkPushConstantRange{
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset     = 0U,
+                .size       = sizeof(SceneLightInfo),
+            });
 
         for (auto* const layout : graphicsSetLayouts)
         {
@@ -374,11 +392,14 @@ auto ForwardShadingPass::ReleaseFramebuffers() -> void
     }
 }
 
-auto ForwardShadingPass::Prepare(uint32_t const tFrameSlot, VkBuffer tInstanceBuffer) -> void
+auto ForwardShadingPass::Prepare(uint32_t const tFrameSlot, VkBuffer tInstanceBuffer, VkBuffer tLightBuffer) -> void
 {
     auto& meshCache        = MeshCache::Get();
     auto* indirectBuffer   = meshCache.GetIndirectCommandBufferByFrameSlot(tFrameSlot);
     auto* meshBoundsBuffer = meshCache.GetMeshBoundsBuffer();
+
+    mDescPool.UpdateBuffers(
+        kSet0, tFrameSlot, {{.binding = kBinding_Ssbo_LightInstances.binding, .buffer = tLightBuffer}});
 
     mDescPool.UpdateBuffers(
         kSet1, tFrameSlot,
@@ -470,6 +491,9 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
     if (hasWork)
     {
         cmdBuf.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.pipeline);
+
+        cmdBuf.PushConstants(
+            mPbrPipeline.layout, VK_SHADER_STAGE_FRAGMENT_BIT, 0U, std::as_bytes(std::span{&tInputs.lightInfo, 1U}));
         cmdBuf.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, mPbrPipeline.layout, 0U, graphicsSets);
 
         VkDeviceSize const offset{0U};

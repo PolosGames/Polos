@@ -104,6 +104,13 @@ auto ExpectedRollbackEvents(std::size_t tFailureIndex) -> std::vector<int>
 TEST(MaterialCacheTest, StoresMaterialPropertiesAndUsesDefaultTextureForMissingSlots)
 {
     MaterialCache cache;
+    ASSERT_TRUE(cache.Create({}).has_value());
+
+    auto const* defaultMaterial = cache.GetMaterial(kDefaultMaterial);
+    ASSERT_NE(defaultMaterial, nullptr);
+    EXPECT_EQ(defaultMaterial->name, kDefaultMaterial);
+    EXPECT_EQ(defaultMaterial->baseColorTexture, kDefaultTextureIndex);
+
     resource::model::Material input{
         .name = "test.material",
         .alphaMode = resource::model::AlphaMode::kMask,

@@ -145,6 +145,7 @@ auto POLOS_API InputFloat(char const* tLabel, float& tValue) -> bool;
 // The text buffer is writable, NUL-terminated, and includes space for the terminator.
 auto POLOS_API InputText(char const* tLabel, std::span<char> tBuffer) -> bool;
 auto POLOS_API InputTextMultiline(char const* tLabel, std::span<char> tBuffer, Vec2 tSize = {}) -> bool;
+auto POLOS_API ColorEditRgb(char const* tLabel, Color& tColor) -> bool;
 auto POLOS_API ColorEdit(char const* tLabel, Color& tColor) -> bool;
 auto POLOS_API ProgressBar(float tFraction, Vec2 tSize = {.x = -1.0F, .y = 0.0F}, char const* tOverlay = nullptr)
     -> void;
