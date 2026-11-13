@@ -28,7 +28,7 @@ void MeshInstanceSyncSystem::Update(Scene* tScene)
         return;
     }
 
-    for (auto const handle : tScene->mInstanceChanges)
+    for (auto const handle : tScene->mRenderData.meshInstanceChanges)
     {
         if (tScene->isEntityValid(handle))
         {
@@ -37,17 +37,17 @@ void MeshInstanceSyncSystem::Update(Scene* tScene)
         else if (!IsEntityValid(tScene->GetEntityAtIndex(handle.index)))
         {
             // A replacement entity has its own creation record for this slot.
-            rendering::MeshIndex const oldMeshId = tScene->mInstanceBuffer[handle.index].meshId;
+            rendering::MeshIndex const oldMeshId = tScene->mRenderData.meshInstances[handle.index].meshId;
             if (oldMeshId != rendering::kInvalidMeshId)
             {
                 rendering::MeshCache::Get().DecreaseMeshUseByIndex(oldMeshId);
             }
-            tScene->mInstanceBuffer[handle.index] = {};
-            tScene->mPendingInstanceUploads.insert(handle.index);
+            tScene->mRenderData.meshInstances[handle.index] = {};
+            tScene->mRenderData.pendingMeshUploads.insert(handle.index);
         }
     }
 
-    tScene->mInstanceChanges.clear();
+    tScene->mRenderData.meshInstanceChanges.clear();
 
     for (auto const& dirty : tScene->GetDirtyEntities())
     {
@@ -77,13 +77,17 @@ void MeshInstanceSyncSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
         auto* const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index);
         instance.meshId  = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh->meshHandle);
 
-        if (auto const* material = rendering::MaterialCache::Get().GetMaterial(mesh->matHandle))
+        auto const& materials = rendering::MaterialCache::Get();
+        auto const* material  = materials.GetMaterial(mesh->matHandle);
+        if (material == nullptr)
         {
-            instance.texID = material->baseColorTexture;
+            material = materials.GetMaterial(rendering::kDefaultMaterial);
         }
+
+        instance.texID = material->baseColorTexture;
     }
 
-    rendering::MeshIndex const oldMeshId = tScene.mInstanceBuffer[tEntity.index].meshId;
+    rendering::MeshIndex const oldMeshId = tScene.mRenderData.meshInstances[tEntity.index].meshId;
     if (oldMeshId != instance.meshId)
     {
         if (oldMeshId != rendering::kInvalidMeshId)
@@ -96,8 +100,8 @@ void MeshInstanceSyncSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
         }
     }
 
-    tScene.mInstanceBuffer[tEntity.index] = instance;
-    tScene.mPendingInstanceUploads.insert(tEntity.index);
+    tScene.mRenderData.meshInstances[tEntity.index] = instance;
+    tScene.mRenderData.pendingMeshUploads.insert(tEntity.index);
 }
 
 }// namespace polos::ecs

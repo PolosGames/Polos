@@ -46,6 +46,8 @@ MaterialCache::~MaterialCache()
 
 auto MaterialCache::Create(CreationDetails const&) -> Result<void>
 {
+    mMaterials.try_emplace(
+        kDefaultMaterial, Material{.name = kDefaultMaterial, .baseColorTexture = kDefaultTextureIndex});
     return {};
 }
 
@@ -88,6 +90,26 @@ auto MaterialCache::CreateMaterial(
 
     material.name = handle;
     mMaterials.emplace(handle, material);
+    return handle;
+}
+
+auto MaterialCache::CreateMaterial(std::string_view const tName, Material& tMaterial) -> MaterialHandle
+{
+    std::string const name(tName);
+    auto              handle = utils::StrHash64Runtime(name);
+    tMaterial.name           = handle;
+    if (auto const* existing = GetMaterial(tMaterial.name); existing != nullptr && *existing == tMaterial)
+    {
+        return handle;
+    }
+
+    while (mMaterials.contains(handle))
+    {
+        handle = utils::StrHash64Runtime(name + "." + std::to_string(mNextSuffix++));
+    }
+
+    tMaterial.name = handle;
+    mMaterials.emplace(handle, tMaterial);
     return handle;
 }
 

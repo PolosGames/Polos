@@ -23,9 +23,10 @@ Scene::Scene(utils::string_id const tName)
 {}
 
 Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
-    : name(tName),
-      mInstanceBuffer(std::make_unique<rendering::MeshInstance[]>(Settings::kMaxEntities))
+    : name(tName)
 {
+    mRenderData.meshInstances.resize(Settings::kMaxEntities);
+
     sceneRoot = newEntity();
 
     addComponent(
@@ -78,7 +79,7 @@ auto Scene::NewEntity(EntityHandle tParent, utils::string_id const tName) -> Ent
                      });
 
     ++parentInfo->childCount;
-    mInstanceChanges.push_back(child);
+    mRenderData.meshInstanceChanges.push_back(child);
 
     return child;
 }
@@ -105,7 +106,7 @@ auto Scene::RetireEntity(EntityHandle const tHandle) -> bool
         auto const  handle = node.entity;
         auto&       entity = mEntities[handle.index];
 
-        mInstanceChanges.push_back(handle);
+        mRenderData.meshInstanceChanges.push_back(handle);
         discardDirtyEntity(handle.index);
         entity.handle.index = kInvalidEntityIndex;
         for (std::size_t i{0}; i < kMaxComponents; ++i)
@@ -204,7 +205,7 @@ auto Scene::RemoveComponent(EntityHandle const tHandle, ComponentType tCompType)
     --mComponentPools[componentIndex].mTotalComponents;
     if (tCompType == ComponentType::kTransform || tCompType == ComponentType::kMeshRenderer)
     {
-        mInstanceChanges.push_back(tHandle);
+        mRenderData.meshInstanceChanges.push_back(tHandle);
     }
 
     auto const dirtyIndex = mDirtyIndexByEntity[tHandle.index];
@@ -221,17 +222,16 @@ auto Scene::GetDirtyEntities() const -> std::span<DirtyEntity const>
     return mDirtyEntities;
 }
 
-auto Scene::GetMeshInstances() const -> std::span<rendering::MeshInstance const>
+auto Scene::GetRenderData() -> SceneRenderData&
 {
-    return {mInstanceBuffer.get(), mEntitiesHead};
+    return mRenderData;
 }
 
-auto Scene::ConsumeInstanceChanges() -> std::vector<EntityIndex>
+auto Scene::GetRenderData() const -> SceneRenderData const&
 {
-    std::vector<EntityIndex> changes(mPendingInstanceUploads.begin(), mPendingInstanceUploads.end());
-    mPendingInstanceUploads.clear();
-    return changes;
+    return mRenderData;
 }
+
 
 auto Scene::ClearDirtyEntities() -> void
 {

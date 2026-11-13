@@ -14,5 +14,9 @@
   {
     "id": "model.suzanne",
     "path": "Models/Suzanne/Suzanne.gltf"
+  },
+  {
+    "id": "texture.ground",
+    "path": "Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_BaseColor.jpg"
   }
 ]

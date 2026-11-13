@@ -151,7 +151,9 @@ TEST(SceneTest, MeshInstancesFollowComponentRemovalAndRecycledEntitySlots)
 
     ASSERT_NE(scene->AddComponent(child, TransformComponent{.position = {1.0F, 2.0F, 3.0F}}), nullptr);
     system.Update(scene.get());
-    auto const first = scene->GetMeshInstances()[child.index];
+    auto& renderData      = scene->GetRenderData();
+    auto const& instances = renderData.meshInstances;
+    auto const first      = instances[child.index];
     EXPECT_EQ(first.parentId, parent.index);
     EXPECT_EQ(first.position, (glm::vec3{1.0F, 2.0F, 3.0F}));
 
@@ -160,14 +162,15 @@ TEST(SceneTest, MeshInstancesFollowComponentRemovalAndRecycledEntitySlots)
     transform->position.x = 4.0F;
     system.Update(scene.get());
     scene->ClearDirtyEntities();
-    EXPECT_EQ(scene->GetMeshInstances()[child.index].position.x, 4.0F);
-    auto const initialUploads = scene->ConsumeInstanceChanges();
-    EXPECT_EQ(std::ranges::count(initialUploads, child.index), 1);
+    EXPECT_EQ(instances[child.index].position.x, 4.0F);
+    auto& pendingUploads = renderData.pendingMeshUploads;
+    EXPECT_EQ(pendingUploads.count(child.index), 1U);
+    pendingUploads.clear();
 
     ASSERT_TRUE(scene->RemoveComponent(child, ComponentType::kTransform));
     system.Update(scene.get());
-    EXPECT_EQ(scene->GetMeshInstances()[child.index].position, glm::vec3{0.0F});
-    EXPECT_EQ(scene->GetMeshInstances()[child.index].parentId, parent.index);
+    EXPECT_EQ(instances[child.index].position, glm::vec3{0.0F});
+    EXPECT_EQ(instances[child.index].parentId, parent.index);
 
     ASSERT_TRUE(scene->RetireEntity(parent));
     auto const replacement = scene->NewEntity();
@@ -175,16 +178,14 @@ TEST(SceneTest, MeshInstancesFollowComponentRemovalAndRecycledEntitySlots)
     ASSERT_NE(replacement.version, child.version);
     ASSERT_NE(scene->AddComponent(replacement, TransformComponent{.position = {5.0F, 0.0F, 0.0F}}), nullptr);
     system.Update(scene.get());
-    EXPECT_EQ(scene->GetMeshInstances()[parent.index].parentId, rendering::kRootParentId);
-    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].position.x, 5.0F);
-    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].parentId, scene->sceneRoot.index);
+    EXPECT_EQ(instances[parent.index].parentId, rendering::kRootParentId);
+    EXPECT_EQ(instances[replacement.index].position.x, 5.0F);
+    EXPECT_EQ(instances[replacement.index].parentId, scene->sceneRoot.index);
 
     ASSERT_TRUE(scene->RetireEntity(replacement));
     system.Update(scene.get());
-    EXPECT_EQ(scene->GetMeshInstances()[replacement.index].position, glm::vec3{0.0F});
-    auto const finalUploads = scene->ConsumeInstanceChanges();
-    EXPECT_EQ(std::ranges::count(finalUploads, replacement.index), 1);
-    EXPECT_TRUE(scene->ConsumeInstanceChanges().empty());
+    EXPECT_EQ(instances[replacement.index].position, glm::vec3{0.0F});
+    EXPECT_EQ(pendingUploads.count(replacement.index), 1U);
 }
 
 TEST(SceneTest, ActiveCameraSelectionRejectsEntitiesWithoutCameraComponents)

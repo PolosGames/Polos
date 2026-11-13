@@ -6,6 +6,7 @@ polos_sources(
     scene_manager.cpp
     scene_graph.cpp
     scene.cpp
+    systems/light_collection_system.cpp
     systems/mesh_instance_sync_system.cpp
     systems/editor_camera_system.cpp
 )

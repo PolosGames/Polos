@@ -123,7 +123,7 @@ public:
         communication::Subscribe<communication::RenderUpdate>(
             [&state = mState, scene, cube, meshIndex, cameraTransform](communication::RenderUpdate&) {
                 auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
-                EXPECT_EQ(scene->GetMeshInstances()[cube.index].meshId, expectedMesh)
+                EXPECT_EQ(scene->GetRenderData().meshInstances[cube.index].meshId, expectedMesh)
                     << "Frame " << state.completedFrames;
                 ++state.renderUpdates;
                 state.lifecycle.push_back("render");

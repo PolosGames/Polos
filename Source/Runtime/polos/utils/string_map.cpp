@@ -32,6 +32,7 @@ constexpr ConstexprMap kKnownStrings{std::array{
     StringEntry("mesh.PolosDefaultCube.part.0"),
     StringEntry("mesh.PolosDefaultQuad.part.0"),
     StringEntry("texture.polos_default"),
+    StringEntry("material.polos_default"),
     StringEntry("shader.vert.forward_shading"),
     StringEntry("shader.frag.forward_shading"),
     StringEntry("shader.comp.main_compute"),

@@ -48,11 +48,24 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
             .persistentlyMapped = true,
             .resizable          = false,
         });
-
     PL_ASSERT(nullptr != mInstanceBuffer, "Instance buffer could not be created");
 
-    mForwardShadingPass =
-        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    for (auto& buffer : mLightInstances)
+    {
+        buffer = Buffer::Create(
+            BufferDescription{
+                .size               = ecs::Settings::kMaxLights * sizeof(LightInstance),
+                .usage              = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                .residence          = MemoryResidence::kDevice,
+                .hostAccess         = HostAccessFlags::kSeqWrite,
+                .persistentlyMapped = true,
+                .resizable          = false,
+            });
+        PL_ASSERT(nullptr != buffer, "Light instance buffer could not be created");
+    }
+
+    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
+        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
 
     mUiRenderPass = std::make_unique<UiRenderPass>();
@@ -69,6 +82,10 @@ auto RenderCompositor::Destroy() -> void
     mUiRenderPass.reset();
     mForwardShadingPass.reset();
     mInstanceBuffer.reset();
+    for (auto& buffer : mLightInstances)
+    {
+        buffer.reset();
+    }
     mMainComputeShader.reset();
     mForwardFragmentShader.reset();
     mForwardVertexShader.reset();
@@ -82,8 +99,8 @@ auto RenderCompositor::RecreateTargets() -> Result<void>
     releaseTargets();
     PL_ASSERT(createTargets().has_value(), "Failed to recreate render compositor");
 
-    mForwardShadingPass =
-        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
+        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
     return {};
 }
@@ -101,17 +118,27 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
 
     {
         POLOS_PROFILE_ZONE("Upload changed mesh instances");
-        auto const changes = scene->ConsumeInstanceChanges();
+        auto& renderData = scene->GetRenderData();
+        auto& changes    = renderData.pendingMeshUploads;
         POLOS_PROFILE_PLOT("Changed mesh instances", static_cast<std::int64_t>(changes.size()));
 
         for (auto const index : changes)
         {
             mInstanceBuffer->Write(
-                &scene->GetMeshInstances()[index], sizeof(MeshInstance), index * sizeof(MeshInstance));
+                &renderData.meshInstances[index], sizeof(MeshInstance), index * sizeof(MeshInstance));
         }
+
+        changes.clear();
     }
 
-    mForwardShadingPass->Prepare(tFrameData.frameSlot, mInstanceBuffer->buffer);
+    auto const& renderData = scene->GetRenderData();
+    auto& lightBuffer     = *mLightInstances[tFrameData.frameSlot];
+    if (renderData.lightInfo.lightCount != 0U)
+    {
+        lightBuffer.Write(renderData.lightInstances.data(), renderData.lightInfo.lightCount * sizeof(LightInstance));
+    }
+
+    mForwardShadingPass->Prepare(tFrameData.frameSlot, mInstanceBuffer->buffer, lightBuffer.buffer);
 }
 
 auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
@@ -120,19 +147,20 @@ auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
     POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf.GetHandle(), "GPU frame");
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
 
-    ecs::Scene const* scene = ecs::SceneManager::Get().GetCurrentScene();
+    ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
 
     int32_t drawCalls{0};
     drawCalls += mForwardShadingPass->Record(
         ForwardShadingPass::Inputs{
-            .frameSlot      = tFrameData.frameSlot,
-            .cmdBuf         = tFrameData.currentCmdBuf,
-            .renderArea     = VulkanSwapchain::Get().GetRenderArea(),
-            .extent         = ToExtent2D(tFrameData.scImage->extent),
-            .scissor        = VulkanSwapchain::Get().GetScissor(),
-            .viewport       = VulkanSwapchain::Get().GetViewport(),
-            .cameraUbo      = mCameraUbo,
-            .slotCount      = scene != nullptr ? scene->GetEntityPoolSize() : 0U,
+            .frameSlot  = tFrameData.frameSlot,
+            .cmdBuf     = tFrameData.currentCmdBuf,
+            .renderArea = VulkanSwapchain::Get().GetRenderArea(),
+            .extent     = ToExtent2D(tFrameData.scImage->extent),
+            .scissor    = VulkanSwapchain::Get().GetScissor(),
+            .viewport   = VulkanSwapchain::Get().GetViewport(),
+            .cameraUbo  = mCameraUbo,
+            .slotCount  = scene->GetEntityPoolSize(),
+            .lightInfo  = scene->GetRenderData().lightInfo,
         });
 
     targets.colorImg->SetUse({

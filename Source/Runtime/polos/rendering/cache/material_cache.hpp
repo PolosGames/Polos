@@ -37,9 +37,11 @@ public:
     MaterialCache& operator=(MaterialCache const&) = delete;
     MaterialCache& operator=(MaterialCache&&)      = delete;
 
-    [[nodiscard]] auto
-    CreateMaterial(resource::model::Material const& tMaterial, std::span<resource::model::Texture const> tTextures = {})
-        -> MaterialHandle;
+    [[nodiscard]] auto CreateMaterial(
+        resource::model::Material const&          tMaterial,
+        std::span<resource::model::Texture const> tTextures = {}) -> MaterialHandle;
+
+    [[nodiscard]] auto CreateMaterial(std::string_view tName, Material& tMaterial) -> MaterialHandle;
 
     [[nodiscard]] auto GetMaterial(MaterialHandle tHandle) const -> Material const*;
 private:

@@ -37,6 +37,7 @@ public:
     auto               Create() -> void override;
     [[nodiscard]] auto Name() const -> char const* override;
 private:
+    void drawLightEditor(polos::ecs::Scene& tScene, polos::ecs::EntityHandle tLight);
     auto drawFpsOverlay(float tDeltaTime) -> void;
 
     float         mFps{0.0F};
@@ -50,11 +51,15 @@ auto SandboxApp::Create() -> void
 
     auto* scene = ecs::SceneManager::Get().CreateScene();
 
-    auto const entity = CreateEntityFromModel("model.suzanne"_sid, scene);
+    auto groundMat = CreateMaterialFromTexture("GroundMaterial", "texture.ground"_sid);
+    CreateEntityFromModel("model.suzanne"_sid, scene);
     // auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
+    CreateQuad(scene, {0.F, -1.F, 0.F}, {-90.F, 0.F, 0.F}, 10.F, groundMat);
 
-    communication::Subscribe<communication::RenderUpdate>([this](communication::RenderUpdate& tEvent) {
+    auto const light = CreateLightSource(scene);
+    communication::Subscribe<communication::RenderUpdate>([this, scene, light](communication::RenderUpdate& tEvent) {
         drawFpsOverlay(tEvent.deltaTime);
+        drawLightEditor(*scene, light);
     });
     communication::Subscribe<communication::KeyPress>([](communication::KeyPress& tEvent) {
         if (tEvent.key == GLFW_KEY_ESCAPE)
@@ -67,6 +72,29 @@ auto SandboxApp::Create() -> void
 auto SandboxApp::Name() const -> char const*
 {
     return "SandboxApp";
+}
+
+void SandboxApp::drawLightEditor(polos::ecs::Scene& tScene, polos::ecs::EntityHandle const tLight)
+{
+    namespace ecs = polos::ecs;
+    namespace gui = polos::gui;
+
+    if (gui::Begin("Light Source"))
+    {
+        auto const& light = *tScene.GetComponent<ecs::LightComponent>(tLight);
+        gui::Color  color{.r = light.color.r, .g = light.color.g, .b = light.color.b};
+        float       strength = light.ambientFactor;
+
+        bool const colorChanged    = gui::ColorEditRgb("Color", color);
+        bool const strengthChanged = gui::SliderFloat("Ambient strength", strength, 0.0F, 2.0F);
+        if (colorChanged || strengthChanged)
+        {
+            auto& editedLight         = *tScene.GetMutableComponent<ecs::LightComponent>(tLight);
+            editedLight.color         = {color.r, color.g, color.b};
+            editedLight.ambientFactor = strength;
+        }
+    }
+    gui::End();
 }
 
 auto SandboxApp::drawFpsOverlay(float tDeltaTime) -> void
