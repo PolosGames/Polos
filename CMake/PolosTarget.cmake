@@ -82,8 +82,14 @@ macro (define_polos_app)
 
     add_executable(${app_NAME} ${app_SOURCES})
 
+    if (WIN32)
+        set_target_properties(${app_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+        if (MSVC)
+            target_link_options(${app_NAME} PRIVATE /ENTRY:mainCRTStartup)
+        endif()
+    endif()
+
     target_link_libraries(${app_NAME} PUBLIC polos::polos)
-    polos_stage_resources(${app_NAME})
 
     target_include_directories(${app_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

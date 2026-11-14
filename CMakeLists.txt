@@ -75,7 +75,9 @@ if (BUILD_TESTS)
     enable_testing()
 endif()
 
+add_subdirectory(ThirdParty)
 add_subdirectory(Source)
+add_subdirectory(Tools)
 
 if (BUILD_EXAMPLES)
     add_subdirectory(Examples)
@@ -85,3 +87,5 @@ add_custom_target(
     copy-compile-commands ALL
     ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_CURRENT_LIST_DIR}
 )
+
+add_dependencies(ResourcePreprocessor copy-compile-commands)
