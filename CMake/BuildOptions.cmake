@@ -28,7 +28,7 @@ function(build_options target warnings)
     endif()
 
     # THANKS FOR SOME OF THE WARNINGS, JASON! (@lefticus)
-    if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(
             ${target}
                 PRIVATE
@@ -91,7 +91,7 @@ function(build_options target warnings)
         )
 
         # GCC only warnings
-        if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             target_compile_options(
                 ${target}
                     PRIVATE

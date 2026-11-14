@@ -1,5 +1,3 @@
-# Pin the validation-capable v3 runtime; the registry's v3.0.0 alpha does not
-# implement its strictness option or validate accessor/index ranges.
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO syoyo/tinygltf

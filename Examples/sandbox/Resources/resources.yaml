@@ -1,0 +1,225 @@
+textures:
+  - id: texture.10381718147657362067
+    path: Models/Sponza/10381718147657362067.jpg
+  - id: texture.10388182081421875623
+    path: Models/Sponza/10388182081421875623.jpg
+  - id: texture.11474523244911310074
+    path: Models/Sponza/11474523244911310074.jpg
+  - id: texture.11490520546946913238
+    path: Models/Sponza/11490520546946913238.jpg
+  - id: texture.11872827283454512094
+    path: Models/Sponza/11872827283454512094.jpg
+  - id: texture.11968150294050148237
+    path: Models/Sponza/11968150294050148237.jpg
+  - id: texture.1219024358953944284
+    path: Models/Sponza/1219024358953944284.jpg
+  - id: texture.12501374198249454378
+    path: Models/Sponza/12501374198249454378.jpg
+  - id: texture.13196865903111448057
+    path: Models/Sponza/13196865903111448057.jpg
+  - id: texture.13824894030729245199
+    path: Models/Sponza/13824894030729245199.jpg
+  - id: texture.13982482287905699490
+    path: Models/Sponza/13982482287905699490.jpg
+  - id: texture.14118779221266351425
+    path: Models/Sponza/14118779221266351425.jpg
+  - id: texture.14170708867020035030
+    path: Models/Sponza/14170708867020035030.jpg
+  - id: texture.14267839433702832875
+    path: Models/Sponza/14267839433702832875.jpg
+  - id: texture.14650633544276105767
+    path: Models/Sponza/14650633544276105767.jpg
+  - id: texture.15295713303328085182
+    path: Models/Sponza/15295713303328085182.jpg
+  - id: texture.15722799267630235092
+    path: Models/Sponza/15722799267630235092.jpg
+  - id: texture.16275776544635328252
+    path: Models/Sponza/16275776544635328252.png
+  - id: texture.16299174074766089871
+    path: Models/Sponza/16299174074766089871.jpg
+  - id: texture.16885566240357350108
+    path: Models/Sponza/16885566240357350108.jpg
+  - id: texture.17556969131407844942
+    path: Models/Sponza/17556969131407844942.jpg
+  - id: texture.17876391417123941155
+    path: Models/Sponza/17876391417123941155.jpg
+  - id: texture.2051777328469649772
+    path: Models/Sponza/2051777328469649772.jpg
+  - id: texture.2185409758123873465
+    path: Models/Sponza/2185409758123873465.jpg
+  - id: texture.2299742237651021498
+    path: Models/Sponza/2299742237651021498.jpg
+  - id: texture.2374361008830720677
+    path: Models/Sponza/2374361008830720677.jpg
+  - id: texture.2411100444841994089
+    path: Models/Sponza/2411100444841994089.jpg
+  - id: texture.2775690330959970771
+    path: Models/Sponza/2775690330959970771.jpg
+  - id: texture.2969916736137545357
+    path: Models/Sponza/2969916736137545357.jpg
+  - id: texture.332936164838540657
+    path: Models/Sponza/332936164838540657.jpg
+  - id: texture.3371964815757888145
+    path: Models/Sponza/3371964815757888145.jpg
+  - id: texture.3455394979645218238
+    path: Models/Sponza/3455394979645218238.jpg
+  - id: texture.3628158980083700836
+    path: Models/Sponza/3628158980083700836.jpg
+  - id: texture.3827035219084910048
+    path: Models/Sponza/3827035219084910048.jpg
+  - id: texture.4477655471536070370
+    path: Models/Sponza/4477655471536070370.jpg
+  - id: texture.4601176305987539675
+    path: Models/Sponza/4601176305987539675.jpg
+  - id: texture.466164707995436622
+    path: Models/Sponza/466164707995436622.jpg
+  - id: texture.4675343432951571524
+    path: Models/Sponza/4675343432951571524.jpg
+  - id: texture.4871783166746854860
+    path: Models/Sponza/4871783166746854860.jpg
+  - id: texture.4910669866631290573
+    path: Models/Sponza/4910669866631290573.jpg
+  - id: texture.4975155472559461469
+    path: Models/Sponza/4975155472559461469.jpg
+  - id: texture.5061699253647017043
+    path: Models/Sponza/5061699253647017043.png
+  - id: texture.5792855332885324923
+    path: Models/Sponza/5792855332885324923.jpg
+  - id: texture.5823059166183034438
+    path: Models/Sponza/5823059166183034438.jpg
+  - id: texture.6047387724914829168
+    path: Models/Sponza/6047387724914829168.jpg
+  - id: texture.6151467286084645207
+    path: Models/Sponza/6151467286084645207.jpg
+  - id: texture.6593109234861095314
+    path: Models/Sponza/6593109234861095314.jpg
+  - id: texture.6667038893015345571
+    path: Models/Sponza/6667038893015345571.jpg
+  - id: texture.6772804448157695701
+    path: Models/Sponza/6772804448157695701.jpg
+  - id: texture.7056944414013900257
+    path: Models/Sponza/7056944414013900257.jpg
+  - id: texture.715093869573992647
+    path: Models/Sponza/715093869573992647.jpg
+  - id: texture.7268504077753552595
+    path: Models/Sponza/7268504077753552595.jpg
+  - id: texture.7441062115984513793
+    path: Models/Sponza/7441062115984513793.jpg
+  - id: texture.755318871556304029
+    path: Models/Sponza/755318871556304029.jpg
+  - id: texture.759203620573749278
+    path: Models/Sponza/759203620573749278.jpg
+  - id: texture.7645212358685992005
+    path: Models/Sponza/7645212358685992005.jpg
+  - id: texture.7815564343179553343
+    path: Models/Sponza/7815564343179553343.jpg
+  - id: texture.8006627369776289000
+    path: Models/Sponza/8006627369776289000.png
+  - id: texture.8051790464816141987
+    path: Models/Sponza/8051790464816141987.jpg
+  - id: texture.8114461559286000061
+    path: Models/Sponza/8114461559286000061.jpg
+  - id: texture.8481240838833932244
+    path: Models/Sponza/8481240838833932244.jpg
+  - id: texture.8503262930880235456
+    path: Models/Sponza/8503262930880235456.jpg
+  - id: texture.8747919177698443163
+    path: Models/Sponza/8747919177698443163.jpg
+  - id: texture.8750083169368950601
+    path: Models/Sponza/8750083169368950601.jpg
+  - id: texture.8773302468495022225
+    path: Models/Sponza/8773302468495022225.jpg
+  - id: texture.8783994986360286082
+    path: Models/Sponza/8783994986360286082.jpg
+  - id: texture.9288698199695299068
+    path: Models/Sponza/9288698199695299068.jpg
+  - id: texture.9916269861720640319
+    path: Models/Sponza/9916269861720640319.jpg
+  - id: texture.white
+    path: Models/Sponza/white.png
+  - id: texture.Suzanne_BaseColor
+    path: Models/Suzanne/Suzanne_BaseColor.png
+  - id: texture.Suzanne_MetallicRoughness
+    path: Models/Suzanne/Suzanne_MetallicRoughness.png
+  - id: texture.polos_icon
+    path: Textures/polos_icon.png
+  - id: texture.polos_icon_white
+    path: Textures/polos_icon_white.png
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_AO
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_AO.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_BaseColor
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_BaseColor.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Bump
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Bump.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Cavity
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Cavity.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Displacement
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Displacement.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Gloss
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Gloss.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Normal
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Normal.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Roughness
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Roughness.jpg
+  - id: texture.River_Bank_Rocks_tcnjehgs_1K_Specular
+    path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Specular.jpg
+  - id: texture.tux
+    path: Textures/tux.png
+materials:
+  - id: material.Sponza_Unnamed_0
+    path: Materials/Sponza_Unnamed_0.yaml
+  - id: material.Sponza_Unnamed_1
+    path: Materials/Sponza_Unnamed_1.yaml
+  - id: material.Sponza_Unnamed_2
+    path: Materials/Sponza_Unnamed_2.yaml
+  - id: material.Sponza_Unnamed_3
+    path: Materials/Sponza_Unnamed_3.yaml
+  - id: material.Sponza_Unnamed_4
+    path: Materials/Sponza_Unnamed_4.yaml
+  - id: material.Sponza_Unnamed_5
+    path: Materials/Sponza_Unnamed_5.yaml
+  - id: material.Sponza_Unnamed_6
+    path: Materials/Sponza_Unnamed_6.yaml
+  - id: material.Sponza_Unnamed_7
+    path: Materials/Sponza_Unnamed_7.yaml
+  - id: material.Sponza_Unnamed_8
+    path: Materials/Sponza_Unnamed_8.yaml
+  - id: material.Sponza_Unnamed_9
+    path: Materials/Sponza_Unnamed_9.yaml
+  - id: material.Sponza_Unnamed_10
+    path: Materials/Sponza_Unnamed_10.yaml
+  - id: material.Sponza_Unnamed_11
+    path: Materials/Sponza_Unnamed_11.yaml
+  - id: material.Sponza_Unnamed_12
+    path: Materials/Sponza_Unnamed_12.yaml
+  - id: material.Sponza_Unnamed_13
+    path: Materials/Sponza_Unnamed_13.yaml
+  - id: material.Sponza_Unnamed_14
+    path: Materials/Sponza_Unnamed_14.yaml
+  - id: material.Sponza_Unnamed_15
+    path: Materials/Sponza_Unnamed_15.yaml
+  - id: material.Sponza_Unnamed_16
+    path: Materials/Sponza_Unnamed_16.yaml
+  - id: material.Sponza_Unnamed_17
+    path: Materials/Sponza_Unnamed_17.yaml
+  - id: material.Sponza_Unnamed_18
+    path: Materials/Sponza_Unnamed_18.yaml
+  - id: material.Sponza_Unnamed_19
+    path: Materials/Sponza_Unnamed_19.yaml
+  - id: material.Sponza_Unnamed_20
+    path: Materials/Sponza_Unnamed_20.yaml
+  - id: material.Sponza_Unnamed_21
+    path: Materials/Sponza_Unnamed_21.yaml
+  - id: material.Sponza_Unnamed_22
+    path: Materials/Sponza_Unnamed_22.yaml
+  - id: material.Sponza_Unnamed_23
+    path: Materials/Sponza_Unnamed_23.yaml
+  - id: material.Sponza_Unnamed_24
+    path: Materials/Sponza_Unnamed_24.yaml
+  - id: material.Suzanne
+    path: Materials/Suzanne.yaml
+models:
+  - id: model.Sponza
+    path: Sponza/Sponza.gltf
+  - id: model.Suzanne
+    path: Suzanne/Suzanne.gltf

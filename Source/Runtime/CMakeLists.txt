@@ -21,7 +21,7 @@ target_sources(polos
                 "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_api.hpp"
                 "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp"
 )
-# Pair headers with the SDK loader instead of vcpkg's transitive Vulkan headers.
+
 if (DEFINED ENV{VULKAN_SDK})
     target_include_directories(polos BEFORE PUBLIC "${Vulkan_INCLUDE_DIR}")
 endif()
@@ -35,7 +35,7 @@ target_link_libraries(polos PUBLIC
     quill::quill_shared
     stb_image::stb_image
     stb_textedit::stb_textedit
-    tinygltf::tinygltf
+    fastgltf::fastgltf
 )
 if (ENABLE_PROFILING)
     target_link_libraries(polos PUBLIC Tracy::TracyClient)
@@ -91,7 +91,6 @@ endif()
 install(FILES "${CMAKE_SOURCE_DIR}/VERSION" "${CMAKE_SOURCE_DIR}/LICENSE"
     DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime)
 
-# Headers included by the installed engine headers and by sample applications.
 set(POLOS_VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
 install(DIRECTORY
     "${POLOS_VCPKG_INCLUDE_DIR}/glm"
@@ -107,7 +106,6 @@ find_path(POLOS_VMA_INCLUDE_DIR vk_mem_alloc.h
 install(FILES "${POLOS_VMA_INCLUDE_DIR}/vk_mem_alloc.h"
     DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
 
-# Vulkan's loader is provided by the target system.
 foreach(DEPENDENCY glfw glm::glm imgui::imgui)
     get_target_property(DEPENDENCY_TYPE ${DEPENDENCY} TYPE)
     if (DEPENDENCY_TYPE STREQUAL "SHARED_LIBRARY")
