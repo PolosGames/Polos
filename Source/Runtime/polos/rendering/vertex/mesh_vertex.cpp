@@ -3,12 +3,12 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/rendering/vertex/primitive_vertex.hpp"
+#include "polos/rendering/vertex/mesh_vertex.hpp"
 
 namespace polos::rendering
 {
 
-auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
+auto MeshVertex::CreateVertexInputDescription() -> VertexInputDescription
 {
     VertexInputDescription description;
 
@@ -16,7 +16,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
 
     VkVertexInputBindingDescription const main_binding{
         .binding   = 0U,
-        .stride    = sizeof(PrimitiveVertex),
+        .stride    = sizeof(MeshVertex),
         .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
     };
     description.bindings.push_back(main_binding);
@@ -26,7 +26,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
             .location = 0U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(PrimitiveVertex, position),
+            .offset   = offsetof(MeshVertex, position),
         };
         description.attributes.push_back(attr);
     }
@@ -36,7 +36,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
             .location = 1U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset   = offsetof(PrimitiveVertex, normal),
+            .offset   = offsetof(MeshVertex, normal),
         };
         description.attributes.push_back(attr);
     }
@@ -46,7 +46,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
             .location = 2U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32A32_SFLOAT,
-            .offset   = offsetof(PrimitiveVertex, tangent),
+            .offset   = offsetof(MeshVertex, tangent),
         };
         description.attributes.push_back(attr);
     }
@@ -56,7 +56,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
             .location = 3U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32_SFLOAT,
-            .offset   = offsetof(PrimitiveVertex, texCoord),
+            .offset   = offsetof(MeshVertex, texCoord),
         };
         description.attributes.push_back(attr);
     }
@@ -66,7 +66,7 @@ auto PrimitiveVertex::CreateVertexInputDescription() -> VertexInputDescription
             .location = 4U,
             .binding  = 0U,
             .format   = VK_FORMAT_R32G32B32A32_SFLOAT,
-            .offset   = offsetof(PrimitiveVertex, color),
+            .offset   = offsetof(MeshVertex, color),
         };
         description.attributes.push_back(attr);
     }

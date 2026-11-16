@@ -3,8 +3,8 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#ifndef POLOS_RENDERING_VERTEX_PRIMITIVE_VERTEX_HPP
-#define POLOS_RENDERING_VERTEX_PRIMITIVE_VERTEX_HPP
+#ifndef POLOS_RENDERING_VERTEX_MESH_VERTEX_HPP
+#define POLOS_RENDERING_VERTEX_MESH_VERTEX_HPP
 
 #include "polos/rendering/vertex/vertex_input_description.hpp"
 
@@ -13,7 +13,7 @@
 namespace polos::rendering
 {
 
-struct PrimitiveVertex
+struct MeshVertex
 {
     glm::vec3 position{0.0F, 0.0F, 0.0F};
     glm::vec3 normal{0.0F, 0.0F, 0.0F};
@@ -26,4 +26,4 @@ struct PrimitiveVertex
 
 }// namespace polos::rendering
 
-#endif// POLOS_RENDERING_VERTEX_PRIMITIVE_VERTEX_HPP
+#endif// POLOS_RENDERING_VERTEX_MESH_VERTEX_HPP

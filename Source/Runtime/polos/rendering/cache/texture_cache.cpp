@@ -13,6 +13,7 @@
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/resource/image.hpp"
 #include "polos/resource/resource_manager.hpp"
+#include "polos/utils/assert.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -104,21 +105,16 @@ auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
     return {};
 }
 
-auto TextureCache::CreateTexture(resource::ResourceId const tResource, TextureDetails const& tDetails) -> std::size_t
+auto TextureCache::CreateTexture(resource::ResourceId const tResource, SamplerDetails const& tDetails) -> uint32_t
 {
     auto& textures = mTextures;
     if (textures.size() >= kMaxBindlessTextures)
     {
         LogError("Bindless texture cache capacity ({}) exceeded", kMaxBindlessTextures);
-        return std::numeric_limits<std::size_t>::max();
+        return std::numeric_limits<uint32_t>::max();
     }
 
     auto image = resource::ResourceManager::Get().GetImage(tResource);
-    if (nullptr == image)
-    {
-        LogError("Image not found in resouce registry");
-        return std::numeric_limits<std::size_t>::max();
-    }
 
     auto const         width  = static_cast<std::uint32_t>(image->width);
     auto const         height = static_cast<std::uint32_t>(image->height);
@@ -135,18 +131,14 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, TextureDe
         },
         format, image->data);
 
-    if (nullptr == gpuImage)
-    {
-        LogError("Image could not be created from the resource");
-        return std::numeric_limits<std::size_t>::max();
-    }
+    PL_ASSERT(nullptr != gpuImage, "Image could not be created from the resource");
 
-    auto const index   = textures.size();
+    auto const index   = static_cast<uint32_t>(textures.size());
     auto       texture = Texture::Create(tResource, std::move(gpuImage), tDetails);
     if (nullptr == texture)
     {
         LogError("Texture could not be created from the image");
-        return std::numeric_limits<std::size_t>::max();
+        return std::numeric_limits<uint32_t>::max();
     }
 
     textures.push_back(std::move(texture));
@@ -155,7 +147,7 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, TextureDe
     return index;
 }
 
-auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource, TextureDetails const& tDetails)
+auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource, SamplerDetails const& tDetails)
     -> TextureIndex
 {
     if (tResource == 0 || tResource == kDefaultTexture)
@@ -172,7 +164,7 @@ auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource,
     }
 
     auto const created = CreateTexture(tResource, tDetails);
-    if (created == std::numeric_limits<std::size_t>::max())
+    if (created == std::numeric_limits<uint32_t>::max())
     {
         return kDefaultTextureIndex;
     }

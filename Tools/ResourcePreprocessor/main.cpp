@@ -25,6 +25,7 @@ struct ModelEntry
 {
     std::string              id;
     std::string              path;
+    std::string              yamlPath;
     std::vector<std::string> materials;
 };
 
@@ -57,6 +58,8 @@ auto AddTextureEntry(fs::path const& tPath)
 
 auto ProcessModel(fs::path const& tPath) -> bool
 {
+    fs::path const modelsPath = resourcesDir.stem() / "Models";
+
     auto data = fastgltf::GltfDataBuffer::FromPath(tPath);
     if (!data.has_value())
     {
@@ -98,12 +101,13 @@ auto ProcessModel(fs::path const& tPath) -> bool
         modelMaterials.push_back(mat.id);
     }
 
-    fs::path const relativeToModels = tPath.string().substr(tPath.string().find("Models") + 7U, std::string::npos);
+    fs::path const relativeToModels = tPath.string().substr(tPath.string().find("Models"), std::string::npos);
 
     gModels.push_back(
         ModelEntry{
             .id        = "model." + tPath.stem().string(),
             .path      = relativeToModels.string(),
+            .yamlPath  = (modelsPath / tPath.stem()).string() + ".yaml",
             .materials = modelMaterials,
         });
 
@@ -144,37 +148,31 @@ auto RecurseResources() -> bool
 
 auto CreateYamlFiles() -> bool
 {
-    constexpr std::string_view texturesCatalogue  = "textures:";
-    constexpr std::string_view materialsCatalogue = "materials:";
-    constexpr std::string_view modelsCatalogue    = "models:";
-
     constexpr std::string_view entry = "  - id: {}\n    path: {}";
 
     constexpr std::string_view materialFile  = "id: {}\nbaseColorFactor: [{}, {}, {}, {}]\nbaseColorTexture: {}\n";
     constexpr std::string_view materialEntry = "  - id: {}";
-    constexpr std::string_view modelFile     = "id: {}\nmaterials:\n{}";
+    constexpr std::string_view modelFile     = "id: {}\npath: {}\nmaterials:\n{}";
 
-    std::string fileOutput;
-    std::format_to(std::back_inserter(fileOutput), "{}\n", texturesCatalogue);
-
-    for (auto const& texture : gTextures)
     {
-        std::format_to(std::back_inserter(fileOutput), entry, texture.id, texture.path);
-        std::format_to(std::back_inserter(fileOutput), "\n");
-    }
-
-    std::format_to(std::back_inserter(fileOutput), "{}\n", materialsCatalogue);
-    for (auto const& material : gMaterials)
-    {
-        std::format_to(std::back_inserter(fileOutput), entry, material.id, material.path);
-        std::format_to(std::back_inserter(fileOutput), "\n");
-    }
-
-    std::format_to(std::back_inserter(fileOutput), "{}\n", modelsCatalogue);
-    for (auto const& model : gModels)
-    {
-        std::format_to(std::back_inserter(fileOutput), entry, model.id, model.path);
-        std::format_to(std::back_inserter(fileOutput), "\n");
+        std::string fileOutput;
+        std::format_to(std::back_inserter(fileOutput), "resources:\n");
+        for (auto const& texture : gTextures)
+        {
+            std::format_to(std::back_inserter(fileOutput), entry, texture.id, texture.path);
+            std::format_to(std::back_inserter(fileOutput), "\n");
+        }
+        for (auto const& material : gMaterials)
+        {
+            std::format_to(std::back_inserter(fileOutput), entry, material.id, material.path);
+            std::format_to(std::back_inserter(fileOutput), "\n");
+        }
+        for (auto const& model : gModels)
+        {
+            std::format_to(std::back_inserter(fileOutput), entry, model.id, model.yamlPath);
+            std::format_to(std::back_inserter(fileOutput), "\n");
+        }
+        std::ofstream(resourcesDir / "resources.yaml", std::ios::trunc) << fileOutput;
     }
 
     {
@@ -184,7 +182,7 @@ auto CreateYamlFiles() -> bool
             std::error_code err;
             fs::create_directory(modelsDir, err);
 
-            if (!err)
+            if (err)
             {
                 std::println("Failed to create Resources/Models directory.");
                 return false;
@@ -201,14 +199,35 @@ auto CreateYamlFiles() -> bool
             }
 
             std::string modelOut;
-            std::format_to(std::back_inserter(modelOut), modelFile, model.id, materialList);
+            std::format_to(std::back_inserter(modelOut), modelFile, model.id, model.path, materialList);
 
-            std::ofstream(modelsDir / model.id / ".yaml", std::ios::trunc) << modelOut;
+            fs::path const modelPath = modelsDir / (model.id.substr(model.id.find('.') + 1) + ".yaml");
+
+            std::println("Writing to: {}", modelPath.string());
+            std::ofstream(modelPath, std::ios::trunc) << modelOut;
         }
     }
 
     {
-        std::ofstream(resourcesDir / "resources.yaml", std::ios::trunc) << fileOutput;
+        fs::path materialsDir = resourcesDir / "Materials";
+        if (!gMaterials.empty() && !fs::exists(materialsDir))
+        {
+            std::error_code err;
+            fs::create_directory(materialsDir, err);
+
+            if (err)
+            {
+                std::println("Failed to create Resources/Materials directory.");
+                return false;
+            }
+        }
+
+        for (auto const& material : gMaterials)
+        {
+            std::ofstream(materialsDir / (material.id.substr(material.id.find('.') + 1) + ".yaml")) << std::format(
+                materialFile, material.id, material.baseColorFactor[0], material.baseColorFactor[1],
+                material.baseColorFactor[2], material.baseColorFactor[3], material.baseColorTexture);
+        }
     }
 
     return true;
@@ -258,5 +277,8 @@ auto main(int32_t const tArgc, char** tArgv) -> int32_t
         return 1;
     }
 
-    return ProcessResources();
+    if (auto res = ProcessResources(); res != 0)
+    {
+        return res;
+    }
 }

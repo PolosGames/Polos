@@ -16,7 +16,7 @@
 namespace polos::rendering
 {
 
-struct TextureDetails
+struct SamplerDetails
 {
     VkFilter             minFilter{VK_FILTER_LINEAR};
     VkFilter             magFilter{VK_FILTER_LINEAR};
@@ -27,15 +27,15 @@ struct TextureDetails
 
 struct Texture
 {
-    TextureHandle         name;// Also the ResourceId
+    TextureHandle  name;// Also the ResourceId
+    SamplerDetails details;
+
     std::unique_ptr<Image> image;
     VkImageView            view{VK_NULL_HANDLE};
     VkSampler              sampler{VK_NULL_HANDLE};
 
-    TextureDetails details;
-
     [[nodiscard]] static auto
-    Create(TextureHandle tName, std::unique_ptr<rendering::Image> tImg, TextureDetails const& tDetails)
+    Create(TextureHandle tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails)
         -> std::unique_ptr<Texture>;
 };
 

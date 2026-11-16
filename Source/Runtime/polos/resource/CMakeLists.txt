@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 polos_sources(
     gltf/gltf_loader.cpp
     image/image_loader.cpp
+    material/material_loader.cpp
     resource_manager.cpp
 )
 

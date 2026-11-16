@@ -31,10 +31,10 @@ public:
     TextureCache();
     ~TextureCache();
 
-    TextureCache(TextureCache const&) = delete;
+    TextureCache(TextureCache const&)                    = delete;
     auto operator=(TextureCache const&) -> TextureCache& = delete;
-    TextureCache(TextureCache&&) = delete;
-    auto operator=(TextureCache&&) -> TextureCache& = delete;
+    TextureCache(TextureCache&&)                         = delete;
+    auto operator=(TextureCache&&) -> TextureCache&      = delete;
 
     auto Create(CreationDetails const&) -> Result<void>;
     auto Destroy() -> void;
@@ -43,9 +43,9 @@ public:
     /// @param tResource ResourceId of the texture that is already in resource catalogue
     /// @param tDetails info that'll be used when creating the sampler
     /// @return Index of the texure inside the cache.
-    [[nodiscard]] auto CreateTexture(resource::ResourceId tResource, TextureDetails const& tDetails) -> std::size_t;
+    [[nodiscard]] auto CreateTexture(resource::ResourceId tResource, SamplerDetails const& tDetails) -> uint32_t;
 
-    [[nodiscard]] auto GetOrCreateTextureIndex(resource::ResourceId tResource, TextureDetails const& tDetails = {})
+    [[nodiscard]] auto GetOrCreateTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails = {})
         -> TextureIndex;
 
     [[nodiscard]] auto GetTexture(resource::ResourceId tResource) -> Texture const*;

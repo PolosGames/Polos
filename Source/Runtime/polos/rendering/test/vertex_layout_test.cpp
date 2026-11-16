@@ -1,4 +1,4 @@
-#include "polos/rendering/vertex/primitive_vertex.hpp"
+#include "polos/rendering/vertex/mesh_vertex.hpp"
 #include "polos/rendering/vertex/quad_vertex.hpp"
 
 #include <gtest/gtest.h>
@@ -57,16 +57,16 @@ TEST(VertexLayoutTest, QuadInputsMatchShaderLocationsAndCpuMemberOffsets)
 TEST(VertexLayoutTest, PrimitiveInputsUseExpectedFormatsAndCpuMemberOffsets)
 {
     std::array const expected{
-        ExpectedAttribute{0U, VK_FORMAT_R32G32B32_SFLOAT, offsetof(PrimitiveVertex, position)},
-        ExpectedAttribute{1U, VK_FORMAT_R32G32B32_SFLOAT, offsetof(PrimitiveVertex, normal)},
-        ExpectedAttribute{2U, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(PrimitiveVertex, tangent)},
-        ExpectedAttribute{3U, VK_FORMAT_R32G32_SFLOAT, offsetof(PrimitiveVertex, texCoord)},
-        ExpectedAttribute{4U, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(PrimitiveVertex, color)},
+        ExpectedAttribute{0U, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MeshVertex, position)},
+        ExpectedAttribute{1U, VK_FORMAT_R32G32B32_SFLOAT, offsetof(MeshVertex, normal)},
+        ExpectedAttribute{2U, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(MeshVertex, tangent)},
+        ExpectedAttribute{3U, VK_FORMAT_R32G32_SFLOAT, offsetof(MeshVertex, texCoord)},
+        ExpectedAttribute{4U, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(MeshVertex, color)},
     };
 
-    auto const layout = PrimitiveVertex::CreateVertexInputDescription();
+    auto const layout = MeshVertex::CreateVertexInputDescription();
 
-    ExpectVertexLayout(layout, sizeof(PrimitiveVertex), expected);
+    ExpectVertexLayout(layout, sizeof(MeshVertex), expected);
 }
 
 }// namespace

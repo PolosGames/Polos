@@ -30,6 +30,10 @@
             "name": "quill",
             "version>=": "9.0.0#0"
         },
+        {
+            "name": "yaml-cpp",
+            "version>=": "0.9.0#1"
+        },
         "vulkan-memory-allocator"
     ],
     "builtin-baseline": "83956e89e656f1b95af0a03506dc7214a7d67716",

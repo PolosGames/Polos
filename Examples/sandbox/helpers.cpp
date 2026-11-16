@@ -27,14 +27,12 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
         tScene->AddComponent(meshEntity, ecs::TransformComponent{});
         for (auto& part : mesh.parts)
         {
-            auto&      materials  = rendering::MaterialCache::Get();
-            auto const handle     = materials.CreateMaterial(part.material, model->textures);
-            auto       partEntity = tScene->NewEntity(meshEntity);
+            auto partEntity = tScene->NewEntity(meshEntity);
             tScene->AddComponent(partEntity, ecs::TransformComponent{});
             tScene->AddComponent(
                 partEntity, ecs::MeshRendererComponent{
                                 .meshHandle = rendering::MeshCache::Get().AddMesh(part),
-                                .matHandle  = handle,
+                                .matHandle  = part.material,
                             });
         }
     }
@@ -42,8 +40,7 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
     return parent;
 }
 
-auto CreateLightSource(polos::ecs::Scene* tScene, polos::ecs::LightComponent const& tLight)
-    -> polos::ecs::EntityHandle
+auto CreateLightSource(polos::ecs::Scene* tScene, polos::ecs::LightComponent const& tLight) -> polos::ecs::EntityHandle
 {
     auto const name   = polos::utils::StrHash64Runtime("Light Source");
     auto const entity = tScene->NewEntity(tScene->sceneRoot, name);
@@ -70,21 +67,9 @@ void CreateQuad(
 
     tScene->AddComponent(
         quad, ecs::MeshRendererComponent{
-                  .meshHandle = rendering::kPolosDefaultQuad,
+                  .meshHandle = rendering::kDefaultQuad,
                   .matHandle  = tMaterial,
               });
-}
-
-auto CreateMaterialFromTexture(std::string_view const tName, polos::rendering::TextureHandle tHandle)
-    -> polos::rendering::MaterialHandle
-{
-    using namespace polos;
-
-    auto material = rendering::Material{
-        .baseColorTexture = rendering::TextureCache::Get().GetOrCreateTextureIndex(tHandle),
-    };
-
-    return rendering::MaterialCache::Get().CreateMaterial(tName, material);
 }
 
 }// namespace sandbox

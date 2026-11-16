@@ -13,7 +13,7 @@
 #include "polos/rendering/push_constants/pl_push_constants.hpp"
 #include "polos/rendering/push_constants/scene_light_info.hpp"
 #include "polos/rendering/ssbo/light_instance.hpp"
-#include "polos/rendering/vertex/primitive_vertex.hpp"
+#include "polos/rendering/vertex/mesh_vertex.hpp"
 #include "polos/rendering/vk/command_buffer.hpp"
 #include "polos/rendering/vk/compute_pipeline_builder.hpp"
 #include "polos/rendering/vk/descriptor_pool_builder.hpp"
@@ -218,7 +218,7 @@ ForwardShadingPass::ForwardShadingPass(
         builder.AddShader(std::move(tVertexShader));
         builder.AddShader(std::move(tFragmentShader));
 
-        builder.SetVertexInput(PrimitiveVertex::CreateVertexInputDescription());
+        builder.SetVertexInput(MeshVertex::CreateVertexInputDescription());
         builder.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         builder.SetMultisampling(kSceneSampleCount);
 

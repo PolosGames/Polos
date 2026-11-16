@@ -28,8 +28,6 @@ void CreateQuad(
     glm::vec3                        tRotation,
     float                            tScale,
     polos::rendering::MaterialHandle tMaterial);
-auto CreateMaterialFromTexture(std::string_view tName, polos::rendering::TextureHandle tHandle)
-    -> polos::rendering::MaterialHandle;
 
 }// namespace sandbox
 

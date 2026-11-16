@@ -1,1 +1,2 @@
 add_subdirectory(ResourcePreprocessor)
+add_subdirectory(YamlReader)

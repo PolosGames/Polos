@@ -130,4 +130,6 @@ macro (define_polos_app)
         TARGETS ${app_NAME}
         RUNTIME DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime
     )
+
+    install(DIRECTORY Resources/ DESTINATION Resources COMPONENT Runtime)
 endmacro ()

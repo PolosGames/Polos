@@ -11,7 +11,7 @@
 namespace polos::rendering
 {
 
-auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image> tImg, TextureDetails const& tDetails)
+auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails)
     -> std::unique_ptr<Texture>
 {
     // VkPhysicalDeviceProperties phys_dev_props{};
@@ -64,7 +64,7 @@ auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image
         return nullptr;
     }
 
-    return std::make_unique<Texture>(tName, std::move(tImg), view, sampler, tDetails);
+    return std::make_unique<Texture>(tName, tDetails, std::move(tImg), view, sampler);
 }
 
 }// namespace polos::rendering

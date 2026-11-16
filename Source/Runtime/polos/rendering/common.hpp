@@ -27,13 +27,14 @@ namespace polos::rendering
 using MeshHandle     = utils::string_id;
 using TextureHandle  = utils::string_id;
 using MaterialHandle = utils::string_id;
-using MeshIndex      = std::uint32_t;
-using TextureIndex   = std::uint32_t;
 
-inline constexpr MeshHandle                   kPolosDefaultCube = "mesh.PolosDefaultCube.part.0"_sid;
-inline constexpr MeshHandle                   kPolosDefaultQuad = "mesh.PolosDefaultQuad.part.0"_sid;
-inline constexpr MaterialHandle               kDefaultMaterial  = "material.polos_default"_sid;
-inline constexpr TextureHandle                kDefaultTexture   = "texture.polos_default"_sid;
+using MeshIndex    = std::uint32_t;
+using TextureIndex = std::uint32_t;
+
+inline constexpr MeshHandle                   kDefaultCube     = "mesh.DefaultCube"_sid;
+inline constexpr MeshHandle                   kDefaultQuad     = "mesh.DefaultQuad"_sid;
+inline constexpr MaterialHandle               kDefaultMaterial = "material.Default"_sid;
+inline constexpr TextureHandle                kDefaultTexture  = "texture.Default"_sid;
 inline constexpr TextureIndex                 kDefaultTextureIndex{0U};
 inline constexpr std::uint32_t                kRootParentId{0U};
 inline constexpr MeshIndex                    kInvalidMeshId{std::numeric_limits<MeshIndex>::max()};

@@ -42,20 +42,19 @@ public:
     auto operator=(Storage const&) -> Storage& = delete;
     auto operator=(Storage&&) -> Storage&      = delete;
 
-    [[nodiscard]] auto Add(utils::string_id tKey, Pointer tResource) -> bool
+    [[nodiscard]] auto Add(utils::string_id const tKey, Pointer tResource) -> bool
     {
         return nullptr != tResource && mResources.emplace(tKey, std::move(tResource)).second;
     }
 
-    [[nodiscard]] auto Get(utils::string_id tKey) const -> Pointer
+    [[nodiscard]] auto Get(utils::string_id const tKey) const -> Pointer
     {
-        auto itr = mResources.find(tKey);
-        if (itr == mResources.end())
-        {
-            return nullptr;
-        }
+        return Exists(tKey) ? mResources.at(tKey) : nullptr;
+    }
 
-        return itr->second;
+    [[nodiscard]] auto Exists(utils::string_id const tKey) const -> bool
+    {
+        return mResources.contains(tKey);
     }
 
     auto Swap(Storage& tOther) -> void
@@ -68,6 +67,8 @@ public:
         mResources.clear();
     }
 private:
+    friend class ResourceManager;
+
     std::unordered_map<utils::string_id, Pointer> mResources;
 };
 }// namespace polos::resource

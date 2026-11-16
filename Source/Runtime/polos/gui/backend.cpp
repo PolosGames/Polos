@@ -141,7 +141,7 @@ auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
         if (texture == nullptr)
         {
             auto const index = rendering::TextureCache::Get().CreateTexture(tTexture, {});
-            if (index == std::numeric_limits<std::size_t>::max())
+            if (index == std::numeric_limits<std::uint32_t>::max())
             {
                 return 0U;
             }
