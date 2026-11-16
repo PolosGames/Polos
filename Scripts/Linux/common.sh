@@ -3,7 +3,7 @@
 polos_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 
 configure_polos() {
-    local build_dir=$1 install_dir=$2 examples=$3
+    local preset=$1 build_dir=$2 install_dir=$3 examples=$4
     local sdk_default="$HOME/VulkanSDK/1.4.363.0/x86_64"
     local options=()
     if [[ -z ${VULKAN_SDK:-} && -d "$sdk_default" ]]; then

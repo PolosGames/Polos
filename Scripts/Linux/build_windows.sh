@@ -22,6 +22,9 @@ fi
 build_dir="$polos_root/out/build/linux-to-win-mingw-release"
 bin_dir="$polos_root/out/bin/linux-to-win-mingw-release"
 
+# Generate the catalog with the native tool before building the Windows executable.
+bash "$polos_root/Scripts/Linux/resource_preprocess.sh" "$polos_root/Examples/sandbox"
+
 # Use the Windows Vulkan import library and headers installed by vcpkg.
 unset VULKAN_SDK
 cmake -S "$polos_root" -B "$build_dir" -G Ninja \
@@ -34,8 +37,7 @@ cmake -S "$polos_root" -B "$build_dir" -G Ninja \
     -DVCPKG_APPLOCAL_DEPS=OFF \
     -DCMAKE_BUILD_TYPE=Release "-DCMAKE_INSTALL_PREFIX=$bin_dir" \
     -DPOLOS_INSTALL_DIR:STRING=. -DBUILD_EXAMPLES=ON -DBUILD_TESTS=OFF -DENABLE_PROFILING=OFF
-cmake --build "$build_dir" --target sandbox
-cmake --install "$build_dir" --component Runtime
+cmake --build "$build_dir" --target install-runtime
 
 target_bin=$(dirname -- "$(x86_64-w64-mingw32-g++ -print-prog-name=ld)")
 for dll in libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll; do

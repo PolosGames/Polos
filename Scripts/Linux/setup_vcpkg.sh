@@ -2,7 +2,7 @@
 
 set -e
 
-VCPKG_DIR="$HOME/vcpkg"
+VCPKG_DIR=${VCPKG_ROOT:-${VCPKG_INSTALLATION_ROOT:-"$HOME/vcpkg"}}
 
 echo "=== vcpkg Setup Script ==="
 echo "Installing vcpkg to: $VCPKG_DIR"
@@ -18,7 +18,7 @@ if [ -d "$VCPKG_DIR" ]; then
     else
         echo "Keeping existing vcpkg. Checking for updates..."
         cd "$VCPKG_DIR"
-        git pull
+        git pull --ff-only
         ./bootstrap-vcpkg.sh -disableMetrics
         echo "vcpkg updated successfully!"
         exit 0

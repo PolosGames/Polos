@@ -1,6 +1,6 @@
 param(
-    [ValidateSet('win-debug', 'win-release', 'win-relwithdebinfo')]
-    [string]$Preset = 'win-debug'
+    [ValidateSet('debug-runtime', 'release-runtime', 'win-debug', 'win-release', 'win-relwithdebinfo')]
+    [string]$Preset = 'debug-runtime'
 )
 
 . "$PSScriptRoot/common.ps1"

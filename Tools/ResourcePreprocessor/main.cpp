@@ -52,7 +52,6 @@ std::vector<ShaderEntry>   gShaders;
 
 fastgltf::Parser gParser;
 
-fs::path projectDir;
 fs::path resourcesDir;
 
 auto AddShaderEntry(fs::path const& tPath, std::string_view tStage) -> void
@@ -66,11 +65,10 @@ auto AddShaderEntry(fs::path const& tPath, std::string_view tStage) -> void
 
 auto AddTextureEntry(fs::path const& tPath) -> void
 {
-    std::string const& pathStr = tPath.string();
     gTextures.push_back(
         TextureEntry{
             .id   = "texture." + tPath.stem().string(),
-            .path = pathStr.substr(pathStr.find("Resources") + 10U, std::string::npos),
+            .path = tPath.lexically_relative(resourcesDir).generic_string(),
         });
 }
 
@@ -119,13 +117,13 @@ auto ProcessModel(fs::path const& tPath) -> bool
         modelMaterials.push_back(mat.id);
     }
 
-    fs::path const relativeToModels = tPath.string().substr(tPath.string().find("Models"), std::string::npos);
+    fs::path const relativeToModels = tPath.lexically_relative(resourcesDir);
 
     gModels.push_back(
         ModelEntry{
             .id        = "model." + tPath.stem().string(),
-            .path      = relativeToModels.string(),
-            .yamlPath  = (modelsPath / tPath.stem()).string() + ".yaml",
+            .path      = relativeToModels.generic_string(),
+            .yamlPath  = (modelsPath / tPath.stem()).generic_string() + ".yaml",
             .materials = modelMaterials,
         });
 
@@ -282,16 +280,7 @@ auto main(int32_t const tArgc, char** tArgv) -> int32_t
         return 1;
     }
 
-    std::error_code error;
-    fs::path        path = fs::read_symlink("/proc/self/exe", error);
-
-    std::string pathStr = path.string();
-    std::ranges::replace(pathStr, '\\', '/');
-
-    size_t polosDirIndex = pathStr.find("Polos");
-    pathStr              = pathStr.substr(0, polosDirIndex + 6U);
-
-    projectDir = pathStr + tArgv[1];
+    fs::path const projectDir = tArgv[1];
     if (!fs::exists(projectDir))
     {
         std::println("Project path doesn't exist: {}", projectDir.string());

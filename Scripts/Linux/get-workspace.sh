@@ -1,19 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
-link='https://gist.github.com/sorbatdev/83973b1d409ce5270200c6f6398b0770'
-output='Polos.code-workspace'
+url='https://gist.githubusercontent.com/sorbatdev/83973b1d409ce5270200c6f6398b0770/raw'
+output="$polos_root/Polos.code-workspace"
+download=$(mktemp "$polos_root/.Polos.code-workspace.XXXXXX")
+trap 'rm -f -- "$download"' EXIT
 
-if command -v curl > /dev/null 2>&1
-then
-    curl -o $output $link
-    exit 0
+if command -v curl >/dev/null; then
+    curl --fail --show-error --location --output "$download" "$url"
+elif command -v wget >/dev/null; then
+    wget -O "$download" "$url"
+else
+    printf 'Install curl or wget to download the workspace file.\n' >&2
+    exit 1
 fi
 
-if command -v wget > /dev/null 2>&1
-then
-    wget -O $output $link
-    exit 0
-fi
-
-echo "wget or curl not found, aborting"
-exit 1
+mv -- "$download" "$output"

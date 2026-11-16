@@ -51,6 +51,8 @@ auto SandboxApp::Create() -> void
 
     auto* scene = ecs::SceneManager::Get().LoadScene("Scene");
 
+    CreateEntityFromModel("model.Sponza"_sid, scene);
+
     auto [light, _] = *ecs::View<ecs::EntityHandle, ecs::Write<ecs::LightComponent>>(scene).begin();
 
     communication::Subscribe<communication::RenderUpdate>([this, scene, light](communication::RenderUpdate& tEvent) {
