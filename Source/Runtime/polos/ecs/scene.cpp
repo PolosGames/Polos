@@ -39,7 +39,7 @@ Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
     {
         auto const camera = NewEntity(sceneRoot, "Editor Camera"_sid);
         AddComponent(camera, TransformComponent{.position = {0.0F, 0.0F, 5.0F}});
-        AddComponent(camera, CameraComponent{.nearZ = 0.1F, .farZ = 1000.0F});
+        AddComponent(camera, CameraComponent{.nearZ = 0.1F, .farZ = 10000.0F});
         AddComponent(camera, EditorCameraControllerComponent{});
         SetActiveCamera(camera);
     }

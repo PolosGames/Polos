@@ -6,7 +6,7 @@ preset=${1:-debug-runtime}
 build_dir="$polos_root/out/build/$preset"
 bin_dir="$polos_root/out/bin/$preset"
 
-configure_polos "$build_dir" "$bin_dir" ON
+configure_polos "$preset" "$build_dir" "$bin_dir" ON
 cmake --build "$build_dir" --target ResourcePreprocessor
-"$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" Examples/sandbox
+"$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" "$polos_root/Examples/sandbox"
 cmake --build "$build_dir" --target install-runtime

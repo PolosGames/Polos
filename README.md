@@ -19,7 +19,7 @@ You need:
 - CMake 3.25 or newer
 - vcpkg (Need to set `VCPKG_ROOT` environment variable to the installation of the vcpkg)
 - [OPTIONAL]
-    - Workspace file can be obtained by running `./get-workspace.sh`
+    - Workspace file can be obtained by running `bash Scripts/Linux/get-workspace.sh`
     - Either curl or wget is required
 
 ### Runtime and versions
@@ -58,10 +58,10 @@ install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK
 
 | Task | Linux | Windows |
 | --- | --- | --- |
-| Build and stage Sandbox | `./Scripts/Linux/build_sandbox.sh linux-release` | `./Scripts/Windows/build_sandbox.ps1 -Preset win-release` |
-| Build and run Sandbox | `./Scripts/Linux/run_sandbox.sh` | `./Scripts/Windows/run_sandbox.ps1` |
-| Build and debug with LLDB | `./Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
-| Export the SDK | `bash Scripts/Linux/export_sdk.sh linux-release` | `./Scripts/Windows/export_sdk.ps1` |
+| Build and stage Sandbox | `bash Scripts/Linux/build_sandbox.sh release-runtime` | `./Scripts/Windows/build_sandbox.ps1 -Preset release-runtime` |
+| Build and run Sandbox | `bash Scripts/Linux/run_sandbox.sh` | `./Scripts/Windows/run_sandbox.ps1` |
+| Build and debug with LLDB | `bash Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
+| Export the SDK | `bash Scripts/Linux/export_sdk.sh release-sdk` | `./Scripts/Windows/export_sdk.ps1` |
 
 Sandbox is staged in `out/bin/<preset>` with the engine shared libraries and
 resources. Run and debug default to the Debug preset. The SDK defaults to Release
@@ -75,7 +75,7 @@ driver and the x64 MSVC runtime on the destination machine.
 
 ### Windows Sandbox from Linux
 
-Run `./Scripts/Linux/build_windows.sh` with Ninja, glslang, vcpkg, and an
+Run `bash Scripts/Linux/build_windows.sh` with Ninja, glslang, vcpkg, and an
 x86_64 MinGW-w64 GCC toolchain with C++23 support. If the compiler is outside
 `PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
 The script stages the Windows executable, DLLs, and resources in

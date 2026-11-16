@@ -1,6 +1,6 @@
 param(
-    [ValidateSet('win-debug', 'win-release', 'win-relwithdebinfo')]
-    [string]$Preset = 'win-release'
+    [ValidateSet('debug-sdk', 'release-sdk', 'win-debug', 'win-release', 'win-relwithdebinfo')]
+    [string]$Preset = 'release-sdk'
 )
 
 . "$PSScriptRoot/common.ps1"
@@ -11,12 +11,10 @@ $Version = (Get-Content (Join-Path $PolosRoot 'VERSION') -Raw).Trim()
 $ArchiveDir = Join-Path $PolosRoot 'out/packages'
 $Archive = Join-Path $ArchiveDir "polos-sdk-$Version-$Preset.zip"
 
-Initialize-PolosBuild $Preset $BuildDir (Join-Path $PolosRoot "out/sdk/$Preset") 'OFF'
-Invoke-CMake --build $BuildDir --target polos
 New-Item -ItemType Directory -Path $PackageDir, $ArchiveDir -Force | Out-Null
 try {
-    Invoke-CMake --install $BuildDir --prefix $PackageDir --component Runtime
-    Invoke-CMake --install $BuildDir --prefix $PackageDir --component SDK
+    Initialize-PolosBuild $Preset $BuildDir $PackageDir 'OFF'
+    Invoke-CMake --build $BuildDir --target install-sdk
     Push-Location $PackageDir
     try {
         Invoke-CMake -E tar cf $Archive --format=zip .
