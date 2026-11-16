@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,7 @@ struct MeshPrimitive
     std::vector<rendering::MeshVertex> primitiveVertices;
     std::vector<uint32_t>              primitiveIndices;
     ResourceId                         material;
+    std::optional<AABB>                bounds{};
 };
 
 struct Mesh

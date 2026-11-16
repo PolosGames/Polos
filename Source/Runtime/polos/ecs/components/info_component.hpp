@@ -17,7 +17,6 @@ struct InfoComponent
     static constexpr ComponentType kType = ComponentType::kInfo;
 
     utils::string_id debugName{0U};
-
     SceneGraphHandle graphHandle{0U};
     std::uint32_t    childCount{0U};
 };

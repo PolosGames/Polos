@@ -43,7 +43,7 @@ public:
 
     auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
 
-    [[nodiscard]] auto SaveScene(utils::string_id tName = "Scene.slop"_sid) -> bool;
+    [[nodiscard]] auto SaveCurrentScene(utils::string_id tSceneName) -> bool;
     auto               LoadScene(std::string_view tScene) -> Scene*;
 private:
     auto serializeEntity();

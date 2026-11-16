@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <limits>
 #include <numeric>
@@ -27,6 +26,24 @@ namespace
 {
 
 constexpr VkDeviceSize const kGrowthAmount{64ULL * 1024ULL * 1024ULL};
+
+struct alignas(16) GpuMeshBounds
+{
+    glm::vec4 min;
+    glm::vec4 max;
+};
+
+auto ComputeBounds(std::span<MeshVertex const> tVertices) -> resource::model::AABB
+{
+    auto const            initial = tVertices.front().position;
+    resource::model::AABB bounds{.max = initial, .min = initial};
+    for (auto const& vertex : tVertices.subspan(1))
+    {
+        bounds.max = glm::max(bounds.max, vertex.position);
+        bounds.min = glm::min(bounds.min, vertex.position);
+    }
+    return bounds;
+}
 
 constexpr std::array<MeshVertex, 8U> kCubeVertices{
     MeshVertex{
@@ -150,7 +167,7 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
 
     mMeshBoundsBuffer = Buffer::Create(
         BufferDescription{
-            .size               = 4096ULL * sizeof(glm::vec4),
+            .size               = 4096ULL * sizeof(GpuMeshBounds),
             .usage              = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
             .residence          = MemoryResidence::kDevice,
             .hostAccess         = HostAccessFlags::kSeqWrite,
@@ -226,7 +243,6 @@ auto MeshCache::Destroy() -> void
     }
     mMeshInstances.clear();
     mMeshInfos.clear();
-    mMeshBounds.clear();
     mMeshUses.clear();
     mMeshes.clear();
     mVertexHead = 0U;
@@ -287,31 +303,18 @@ auto MeshCache::AddMesh(resource::model::MeshPrimitive& tMesh) -> MeshHandle
 
     mMeshInstances.push_back(0U);
 
-    glm::vec3 minPos{std::numeric_limits<float>::max()};
-    glm::vec3 maxPos{std::numeric_limits<float>::lowest()};
-    for (auto const& vertex : vertData)
-    {
-        minPos = glm::min(minPos, vertex.position);
-        maxPos = glm::max(maxPos, vertex.position);
-    }
-    glm::vec3 const localCenter = 0.5F * (minPos + maxPos);
-    float           maxRadiusSq = 0.0F;
-    for (auto const& vertex : vertData)
-    {
-        glm::vec3 const diff = vertex.position - localCenter;
-        maxRadiusSq          = std::max(maxRadiusSq, glm::dot(diff, diff));
-    }
-    glm::vec4 const boundingSphere{localCenter, std::sqrt(maxRadiusSq)};
-    mMeshBounds.push_back(boundingSphere);
+    auto const          bounds = tMesh.bounds ? *tMesh.bounds : ComputeBounds(vertData);
+    GpuMeshBounds const gpuBounds{.min = glm::vec4(bounds.min, 0.0F), .max = glm::vec4(bounds.max, 0.0F)};
 
     entry.meshIndex = mMeshCount++;
+    entry.material  = tMesh.material;
 
-    auto const boundsOffset = entry.meshIndex * sizeof(glm::vec4);
-    while (boundsOffset + sizeof(glm::vec4) > mMeshBoundsBuffer->size)
+    auto const boundsOffset = entry.meshIndex * sizeof(GpuMeshBounds);
+    while (boundsOffset + sizeof(GpuMeshBounds) > mMeshBoundsBuffer->size)
     {
         PL_ASSERT(mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL), "Unable to resize mesh bounds buffer");
     }
-    mMeshBoundsBuffer->Write(&mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
+    mMeshBoundsBuffer->Write(&gpuBounds, sizeof(GpuMeshBounds), boundsOffset);
     mMeshes[meshId] = entry;
 
     return entry.name;
@@ -331,6 +334,17 @@ auto MeshCache::GetMeshIndexByHandle(MeshHandle const tHandle) -> MeshIndex
     }
 
     return mMeshes[tHandle].meshIndex;
+}
+
+auto MeshCache::GetMaterialByHandle(MeshHandle tHandle) -> MaterialHandle
+{
+    if (!HasMesh(tHandle))
+    {
+        LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tHandle));
+        return std::numeric_limits<uint32_t>::max();
+    }
+
+    return mMeshes[tHandle].material;
 }
 
 auto MeshCache::GetVertexBuffer() -> VkBuffer

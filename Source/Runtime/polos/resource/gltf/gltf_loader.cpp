@@ -6,126 +6,318 @@
 #include "polos/resource/gltf/gltf_loader.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/resource/model.hpp"
-#include "polos/utils/assert.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
 
 #include <fastgltf/core.hpp>
+#include <fastgltf/glm_element_traits.hpp>
 #include <yaml-cpp/yaml.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <fstream>
+#include <limits>
+#include <span>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <variant>
+#include <vector>
 
 namespace polos::resource::model
 {
 
 namespace
 {
+// Reuse the parser across loads on the same worker. Its parse state is thread-local.
 thread_local fastgltf::Parser gParser;
 
-struct AttribInfo
-{
-    size_t offset{0U};
-    size_t size{0U};
-};
-
+using fastgltf::AccessorType;
+using fastgltf::ComponentType;
+using rendering::MeshVertex;
 using namespace std::string_view_literals;
-// inline constexpr std::array kAttribInfo{
-// };
 
-inline constexpr utils::ConstexprMap kAttribInfos(
+auto HasAccessorData(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor) -> bool
+{
+    if (!tAccessor.bufferViewIndex)
+    {
+        return false;
+    }
+    if (tAccessor.sparse)
+    {
+        return false;
+    }
+    if (fastgltf::validateAccessorBounds(tAsset, tAccessor) != fastgltf::Error::None)
+    {
+        return false;
+    }
+
+    auto const& view = tAsset.bufferViews[*tAccessor.bufferViewIndex];
+    auto const& data = tAsset.buffers[view.bufferIndex].data;
+    return std::holds_alternative<fastgltf::sources::Array>(data) ||
+           std::holds_alternative<fastgltf::sources::Vector>(data) ||
+           std::holds_alternative<fastgltf::sources::ByteView>(data);
+}
+
+template<auto Member>
+using VertexMember = std::integral_constant<decltype(Member), Member>;
+
+template<auto Member, typename Element>
+auto ReadAttribute(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices)
+    -> bool
+{
+    if (tAccessor.type != fastgltf::ElementTraits<Element>::type)
+    {
+        return false;
+    }
+
+    constexpr bool isTexCoord = std::is_same_v<VertexMember<Member>, VertexMember<&MeshVertex::texCoord>>;
+    constexpr bool isColor    = std::is_same_v<VertexMember<Member>, VertexMember<&MeshVertex::color>>;
+    if (tAccessor.normalized)
+    {
+        constexpr bool supportsNormalized = isTexCoord || isColor;
+        if (!supportsNormalized)
+        {
+            return false;
+        }
+
+        bool const isUnsigned = tAccessor.componentType == ComponentType::UnsignedByte ||
+                                tAccessor.componentType == ComponentType::UnsignedShort;
+        if (!isUnsigned)
+        {
+            return false;
+        }
+    }
+    else if (tAccessor.componentType != ComponentType::Float)
+    {
+        return false;
+    }
+
+    fastgltf::iterateAccessorWithIndex<Element>(tAsset, tAccessor, [&](Element tValue, size_t tIndex) {
+        if constexpr (isTexCoord)
+        {
+            tVertices[tIndex].texCoord = {tValue.x, 1.0F - tValue.y};
+        }
+        else if constexpr (isColor && std::is_same_v<Element, glm::vec3>)
+        {
+            tVertices[tIndex].color = glm::vec4(tValue, 1.0F);
+        }
+        else
+        {
+            tVertices[tIndex].*Member = tValue;
+        }
+    });
+    return true;
+}
+
+auto ReadColor(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices)
+    -> bool
+{
+    if (tAccessor.type == AccessorType::Vec3)
+    {
+        return ReadAttribute<&MeshVertex::color, glm::vec3>(tAsset, tAccessor, tVertices);
+    }
+    return ReadAttribute<&MeshVertex::color, glm::vec4>(tAsset, tAccessor, tVertices);
+}
+
+inline constexpr utils::ConstexprMap kAttribReaders(
     std::array{
-        utils::Pair(
-            "POSITION"sv,
-            AttribInfo{
-                .offset = offsetof(rendering::MeshVertex, position),
-                .size   = sizeof(rendering::MeshVertex::position),
-            }),
-        utils::Pair(
-            "NORMAL"sv,
-            AttribInfo{
-                .offset = offsetof(rendering::MeshVertex, normal),
-                .size   = sizeof(rendering::MeshVertex::normal),
-            }),
-        utils::Pair(
-            "TANGENT"sv,
-            AttribInfo{
-                .offset = offsetof(rendering::MeshVertex, tangent),
-                .size   = sizeof(rendering::MeshVertex::tangent),
-            }),
-        utils::Pair(
-            "TEXCOORD_0"sv,
-            AttribInfo{
-                .offset = offsetof(rendering::MeshVertex, texCoord),
-                .size   = sizeof(rendering::MeshVertex::texCoord),
-            }),
-        utils::Pair(
-            "COLOR_0"sv,
-            AttribInfo{
-                .offset = offsetof(rendering::MeshVertex, color),
-                .size   = sizeof(rendering::MeshVertex::color),
-            }),
+        utils::Pair("POSITION"sv, &ReadAttribute<&MeshVertex::position, glm::vec3>),
+        utils::Pair("NORMAL"sv, &ReadAttribute<&MeshVertex::normal, glm::vec3>),
+        utils::Pair("TANGENT"sv, &ReadAttribute<&MeshVertex::tangent, glm::vec4>),
+        utils::Pair("TEXCOORD_0"sv, &ReadAttribute<&MeshVertex::texCoord, glm::vec2>),
+        utils::Pair("COLOR_0"sv, &ReadColor),
     });
 
-}// namespace
-
-// MeshPrimitive(s) == Primitive(s)
-auto ProcessMesh(
-    fastgltf::Asset const& tAsset,
-    Mesh&                  tTarget,
-    fastgltf::Mesh const&  tInput,
-    std::span<ResourceId>  tMaterials) -> bool
+auto ReadIndices(fastgltf::Asset const& tAsset, fastgltf::Primitive const& tPrimitive, MeshPrimitive& tTarget) -> bool
 {
+    if (!tPrimitive.indicesAccessor)
+    {
+        return false;
+    }
+    if (*tPrimitive.indicesAccessor >= tAsset.accessors.size())
+    {
+        return false;
+    }
+
+    auto const& accessor = tAsset.accessors[*tPrimitive.indicesAccessor];
+    if (accessor.type != AccessorType::Scalar)
+    {
+        return false;
+    }
+    if (accessor.normalized)
+    {
+        return false;
+    }
+    if (accessor.count % 3U != 0)
+    {
+        return false;
+    }
+
+    bool const isUnsigned = accessor.componentType == ComponentType::UnsignedByte ||
+                            accessor.componentType == ComponentType::UnsignedShort ||
+                            accessor.componentType == ComponentType::UnsignedInt;
+    if (!isUnsigned)
+    {
+        return false;
+    }
+    if (!HasAccessorData(tAsset, accessor))
+    {
+        return false;
+    }
+
+    auto const& view = tAsset.bufferViews[*accessor.bufferViewIndex];
+    if (view.byteStride)
+    {
+        return false;
+    }
+
+    tTarget.primitiveIndices.resize(accessor.count);
+    fastgltf::copyFromAccessor<std::uint32_t>(tAsset, accessor, tTarget.primitiveIndices.data());
+    return std::ranges::all_of(tTarget.primitiveIndices, [&](std::uint32_t tIndex) {
+        return tIndex < tTarget.primitiveVertices.size();
+    });
+}
+
+auto ReadPositionBound(fastgltf::AccessorBoundsArray const& tBound) -> glm::vec3
+{
+    auto const* values = tBound.data<double>();
+    return glm::vec3(static_cast<float>(values[0]), static_cast<float>(values[1]), static_cast<float>(values[2]));
+}
+
+auto ProcessMesh(
+    fastgltf::Asset const&      tAsset,
+    Mesh&                       tTarget,
+    fastgltf::Mesh const&       tInput,
+    std::span<ResourceId const> tMaterials) -> bool
+{
+    if (tInput.primitives.empty())
+    {
+        return false;
+    }
+
     tTarget.parts.resize(tInput.primitives.size());
+    tTarget.bounds.min = glm::vec3(std::numeric_limits<float>::infinity());
+    tTarget.bounds.max = -tTarget.bounds.min;
 
     for (size_t i{0U}; i < tInput.primitives.size(); ++i)
     {
         MeshPrimitive&             meshPrim  = tTarget.parts[i];
         fastgltf::Primitive const& primitive = tInput.primitives[i];
 
-        if (primitive.materialIndex.has_value())
+        if (primitive.type != fastgltf::PrimitiveType::Triangles)
         {
-            // Material order will be in the same order they'll be declared in the gltf file,
-            // Because we pre-process them in the same order they appear.
-            meshPrim.material = tMaterials[primitive.materialIndex.value()];
+            return false;
         }
 
+        auto const position = primitive.findAttribute("POSITION");
+        if (position == primitive.attributes.end())
+        {
+            return false;
+        }
+        if (position->accessorIndex >= tAsset.accessors.size())
+        {
+            return false;
+        }
+
+        auto const& positions = tAsset.accessors[position->accessorIndex];
+        if (!HasAccessorData(tAsset, positions))
+        {
+            return false;
+        }
+        if (!positions.min || !positions.max)
+        {
+            LogError("Missing POSITION bounds for {}", tTarget.name);
+            return false;
+        }
+
+        meshPrim.name     = tTarget.name + "." + std::to_string(i);
+        meshPrim.material = rendering::kDefaultMaterial;
+        if (primitive.materialIndex)
+        {
+            // The preprocessor writes the material IDs in glTF material order.
+            meshPrim.material = tMaterials[*primitive.materialIndex];
+        }
+
+        meshPrim.primitiveVertices.resize(positions.count);
         for (auto const& attribute : primitive.attributes)
         {
-            // TODO(sorbatdev): Sparse accessors
-            auto const& accessor = tAsset.accessors[attribute.accessorIndex];
-
-            auto attribRes = kAttribInfos[std::string_view(attribute.name)];
-            if (!attribRes.has_value())
+            auto const reader = kAttribReaders[std::string_view(attribute.name)];
+            if (!reader)
             {
-                LogDebug("Unsupported attribute: {}", attribute.name);
                 continue;
             }
+            if (attribute.accessorIndex >= tAsset.accessors.size())
+            {
+                return false;
+            }
 
-            size_t const vertexOffset      = attribRes->offset;
-            size_t const supportedCompSize = attribRes->size;
+            auto const& accessor = tAsset.accessors[attribute.accessorIndex];
+            if (accessor.count != positions.count)
+            {
+                LogError("{} vertex count differs from POSITION for {}", attribute.name, meshPrim.name);
+                return false;
+            }
+            if (!HasAccessorData(tAsset, accessor))
+            {
+                LogError("Invalid {} accessor data for {}", attribute.name, meshPrim.name);
+                return false;
+            }
+            if (!(*reader)(tAsset, accessor, meshPrim.primitiveVertices))
+            {
+                LogError("Unsupported {} accessor format for {}", attribute.name, meshPrim.name);
+                return false;
+            }
         }
+
+        if (!ReadIndices(tAsset, primitive, meshPrim))
+        {
+            LogError("Invalid index accessor for {}", meshPrim.name);
+            return false;
+        }
+
+        meshPrim.bounds = AABB{
+            .max = ReadPositionBound(*positions.max),
+            .min = ReadPositionBound(*positions.min),
+        };
+        tTarget.bounds.min = glm::min(tTarget.bounds.min, meshPrim.bounds->min);
+        tTarget.bounds.max = glm::max(tTarget.bounds.max, meshPrim.bounds->max);
     }
 
     return true;
 }
+}// namespace
 
 auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 {
-    YAML::Node modelYaml = YAML::LoadFile(tPath.string());
+    std::ifstream file(tPath);
+    if (!file)
+    {
+        LogError("Could not open model descriptor: {}", tPath.string());
+        return nullptr;
+    }
 
-    auto const&                 modelName = modelYaml["id"].as<std::string>();
-    std::filesystem::path const path      = modelYaml["path"].as<std::string>();
+    YAML::Node const modelYaml = YAML::Load(file);
+    auto const       modelName = modelYaml["id"].as<std::string>();
+    // Model descriptors live in Resources/Models. Their paths are relative to Resources.
+    auto const path = tPath.parent_path().parent_path() / modelYaml["path"].as<std::string>();
 
     auto data = fastgltf::GltfDataBuffer::FromPath(path);
     if (data.has_error())
     {
-        LogError("Could not load model file: {}", modelName);
+        LogError("Could not read model file {}: {}", path.string(), fastgltf::getErrorMessage(data.error()));
         return nullptr;
     }
 
-    auto assetRes = gParser.loadGltf(data.get(), path.parent_path(), fastgltf::Options::GenerateMeshIndices);
+    auto assetRes = gParser.loadGltf(
+        data.get(), path.parent_path(),
+        fastgltf::Options::LoadExternalBuffers | fastgltf::Options::GenerateMeshIndices);
     if (assetRes.has_error())
     {
-        LogError("Could not load model file: {}", modelName);
+        LogError("Could not parse model file {}: {}", path.string(), fastgltf::getErrorMessage(assetRes.error()));
         return nullptr;
     }
 
@@ -134,32 +326,39 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 #if !defined(NDEBUG)
     if (auto res = fastgltf::validate(asset); res != fastgltf::Error::None)
     {
-        LogError("{}", fastgltf::getErrorMessage(res));
+        LogError("Invalid model {}: {}", modelName, fastgltf::getErrorMessage(res));
         return nullptr;
     }
 #endif
-    std::vector<ResourceId> materials;
-    auto const&             matSeq = modelYaml["materials"];
-    materials.reserve(matSeq.size());
 
-    for (size_t i{0U}; i < matSeq.size(); ++i)
+    std::vector<ResourceId> materials;
+    auto const              matSeq        = modelYaml["materials"];
+    auto const              materialCount = matSeq ? matSeq.size() : 0U;
+    materials.reserve(materialCount);
+    for (size_t i{0U}; i < materialCount; ++i)
     {
-        materials.push_back(utils::StrHash64Runtime(matSeq[i]["id"].as<std::string_view>()));
+        materials.push_back(utils::StrHash64Runtime(matSeq[i]["id"].Scalar()));
     }
 
-    auto* model = new Model();
+    auto model  = std::make_unique<Model>();
     model->name = modelName;
     model->meshes.resize(asset.meshes.size());
 
     for (size_t i{0U}; i < asset.meshes.size(); ++i)
     {
-        model->meshes[i].name =
-            !asset.meshes[i].name.empty() ? asset.meshes[i].name : modelName + "." + std::to_string(i);
-        PL_ASSERT(
-            ProcessMesh(asset, model->meshes[i], asset.meshes[i], materials), "Sum Tin Wong with mesh processing");
+        auto const& input = asset.meshes[i];
+        auto&       mesh  = model->meshes[i];
+        auto const  index = std::to_string(i);
+        mesh.name         = input.name.empty() ? modelName + "." + index : std::string(input.name);
+
+        if (!ProcessMesh(asset, mesh, input, materials))
+        {
+            LogError("Could not process mesh {} in {}", mesh.name, modelName);
+            return nullptr;
+        }
     }
 
-    return std::unique_ptr<Model>(model);
+    return model;
 }
 
 }// namespace polos::resource::model

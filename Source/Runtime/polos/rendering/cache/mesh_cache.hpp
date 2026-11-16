@@ -42,6 +42,7 @@ public:
     [[nodiscard]] auto HasMesh(MeshHandle tHandle) -> bool;
 
     [[nodiscard]] auto GetMeshIndexByHandle(MeshHandle tHandle) -> MeshIndex;
+    [[nodiscard]] auto GetMaterialByHandle(MeshHandle tHandle) -> MaterialHandle;
 
     [[nodiscard]] auto GetVertexBuffer() -> VkBuffer;
     [[nodiscard]] auto GetIndexBuffer() -> VkBuffer;
@@ -66,6 +67,7 @@ private:
         uint32_t         vertexCount{0};
         uint32_t         indexCount{0};
         MeshIndex        meshIndex{0U};
+        MaterialHandle   material{kDefaultMaterial};
     };
 
     std::unique_ptr<Buffer> mVertexBuffer;
@@ -73,7 +75,6 @@ private:
 
     std::vector<uint32_t>                                             mMeshInstances;
     std::vector<VkDrawIndexedIndirectCommand>                         mMeshInfos;
-    std::vector<glm::vec4>                                            mMeshBounds;
     std::unique_ptr<Buffer>                                           mMeshBoundsBuffer;
     std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mMeshInfoBuffer;
 
