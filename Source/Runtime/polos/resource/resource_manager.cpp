@@ -122,7 +122,7 @@ auto ResourceManager::LoadCatalog() -> void
             {
                 auto const& shaderPath = staged.mResources.at(resId).path;
                 auto const  shader     = staged.LoadFile(resId, shaderPath);
-                PL_ASSERT(shader != nullptr, "Failed to load shader {} from {}", resStr, shaderPath);
+                PL_ASSERT(shader != nullptr, "Failed to load shader {} from {}", resStr, shaderPath.string());
             }
         }
     }

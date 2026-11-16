@@ -441,11 +441,11 @@ TEST_F(SceneSerializationTest, LoadsNamedMeshAndMaterialFromYaml)
     EXPECT_FLOAT_EQ(transform->scale, 1.0F);
 }
 
-TEST_F(SceneSerializationTest, InvalidYamlOrHierarchyLeavesCurrentSceneUnchanged)
+TEST_F(SceneSerializationTest, InvalidSceneShapeOrHierarchyLeavesCurrentSceneUnchanged)
 {
     auto const path = directory / "invalid.yaml";
     for (auto const yaml : {
-             "scene: [",
+             "scene: {}",
              "scene: [{info: {debugName: Root, children: [1, 1]}}, {info: {debugName: Child}}]",
              "scene: [{info: {debugName: Root, children: [2]}}, {info: {debugName: Child}}]",
              "scene: [{info: {debugName: Root}}, {info: {debugName: Orphan}}]",

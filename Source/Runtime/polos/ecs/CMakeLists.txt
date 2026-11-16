@@ -11,11 +11,6 @@ polos_sources(
     systems/editor_camera_system.cpp
 )
 
-# yaml-cpp reports parse and conversion errors with exceptions.
-if (NOT MSVC)
-    set_property(SOURCE scene_manager.cpp TARGET_DIRECTORY polos APPEND PROPERTY COMPILE_OPTIONS -fexceptions)
-endif()
-
 polos_tests(scene-graph SOURCES test/scene_graph_test.cpp)
 
 polos_tests(scene-serialization SOURCES test/scene_serialization_test.cpp LABELS ct)

@@ -12,3 +12,18 @@ FetchContent_MakeAvailable(fastgltf)
 set_target_properties(fastgltf PROPERTIES
     FOLDER "ThirdParty"
     POSITION_INDEPENDENT_CODE ON)
+
+# Keep warnings from the bundled SIMD sources and headers scoped to those dependencies.
+foreach(simd_target IN ITEMS fastgltf_simdjson fastgltf_simdutf)
+    if(TARGET ${simd_target})
+        set_property(TARGET ${simd_target} PROPERTY SYSTEM ON)
+        target_compile_options(${simd_target} PRIVATE
+            "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-undef;-Wno-missing-declarations>")
+    endif()
+endforeach()
+
+# fastgltf enables only simdutf's Base64 feature, leaving some functions unused.
+if(TARGET fastgltf_simdutf)
+    target_compile_options(fastgltf_simdutf PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-unused-function>")
+endif()
