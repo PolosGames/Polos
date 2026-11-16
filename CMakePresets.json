@@ -25,6 +25,40 @@
             }
         },
         {
+            "name": "release-sdk",
+            "displayName": "Release SDK",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "BUILD_EXAMPLES": "OFF"
+            }
+        },
+        {
+            "name": "release-runtime",
+            "displayName": "Release Runtime",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "debug-sdk",
+            "displayName": "Debug SDK",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "BUILD_EXAMPLES": "OFF"
+            }
+        },
+        {
+            "name": "debug-runtime",
+            "displayName": "Debug Runtime",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
             "name": "linux-base",
             "inherits": "base",
             "condition": {
@@ -101,6 +135,42 @@
             ],
             "hidden": true,
             "verbose": false
+        },
+        {
+            "name": "release-sdk",
+            "displayName": "Release SDK",
+            "inherits": "base",
+            "configurePreset": "release-sdk",
+            "targets": [
+                "install-sdk"
+            ]
+        },
+        {
+            "name": "release-runtime",
+            "displayName": "Release Runtime",
+            "inherits": "base",
+            "configurePreset": "release-runtime",
+            "targets": [
+                "install-runtime"
+            ]
+        },
+        {
+            "name": "debug-sdk",
+            "displayName": "Debug SDK",
+            "inherits": "base",
+            "configurePreset": "debug-sdk",
+            "targets": [
+                "install-sdk"
+            ]
+        },
+        {
+            "name": "debug-runtime",
+            "displayName": "Debug Runtime",
+            "inherits": "base",
+            "configurePreset": "debug-runtime",
+            "targets": [
+                "install-runtime"
+            ]
         },
         {
             "name": "win-debug",

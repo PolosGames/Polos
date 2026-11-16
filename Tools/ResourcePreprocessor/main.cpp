@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
+#include <format>
+#include <string_view>
 #include <print>
 #include <vector>
 
@@ -37,16 +39,32 @@ struct MaterialEntry
     std::string           baseColorTexture;
 };
 
+struct ShaderEntry
+{
+    std::string id;
+    std::string path;
+};
+
 std::vector<TextureEntry>  gTextures;
 std::vector<MaterialEntry> gMaterials;
 std::vector<ModelEntry>    gModels;
+std::vector<ShaderEntry>   gShaders;
 
 fastgltf::Parser gParser;
 
 fs::path projectDir;
 fs::path resourcesDir;
 
-auto AddTextureEntry(fs::path const& tPath)
+auto AddShaderEntry(fs::path const& tPath, std::string_view tStage) -> void
+{
+    gShaders.push_back(
+        ShaderEntry{
+            .id   = std::format("shader.{}.{}", tStage, tPath.stem().string()),
+            .path = tPath.lexically_relative(resourcesDir).generic_string() + ".spv",
+        });
+}
+
+auto AddTextureEntry(fs::path const& tPath) -> void
 {
     std::string const& pathStr = tPath.string();
     gTextures.push_back(
@@ -58,7 +76,7 @@ auto AddTextureEntry(fs::path const& tPath)
 
 auto ProcessModel(fs::path const& tPath) -> bool
 {
-    fs::path const modelsPath = resourcesDir.stem() / "Models";
+    fs::path const modelsPath = "Models";
 
     auto data = fastgltf::GltfDataBuffer::FromPath(tPath);
     if (!data.has_value())
@@ -116,7 +134,7 @@ auto ProcessModel(fs::path const& tPath) -> bool
 
 auto RecurseResources() -> bool
 {
-    for (auto const& dirEntry : fs::recursive_directory_iterator(projectDir))
+    for (auto const& dirEntry : fs::recursive_directory_iterator(resourcesDir))
     {
         if (dirEntry.is_directory())
         {
@@ -131,15 +149,19 @@ auto RecurseResources() -> bool
         if (extension == ".png" || extension == ".jpg" || extension == ".jpeg")
         {
             AddTextureEntry(dirEntry.path());
-            continue;
         }
-
         if (extension == ".gltf")
         {
             if (!ProcessModel(dirEntry.path()))
             {
                 return false;
             }
+        }
+        auto const shaderExtension = dirEntry.path().extension();
+        if (shaderExtension == ".frag" || shaderExtension == ".vert" || shaderExtension == ".comp" ||
+            shaderExtension == ".tesc" || shaderExtension == ".tese" || shaderExtension == ".geom")
+        {
+            AddShaderEntry(dirEntry.path(), std::string_view(extension).substr(1));
         }
     }
 
@@ -170,6 +192,11 @@ auto CreateYamlFiles() -> bool
         for (auto const& model : gModels)
         {
             std::format_to(std::back_inserter(fileOutput), entry, model.id, model.yamlPath);
+            std::format_to(std::back_inserter(fileOutput), "\n");
+        }
+        for (auto const& shader : gShaders)
+        {
+            std::format_to(std::back_inserter(fileOutput), entry, shader.id, shader.path);
             std::format_to(std::back_inserter(fileOutput), "\n");
         }
         std::ofstream(resourcesDir / "resources.yaml", std::ios::trunc) << fileOutput;
@@ -277,8 +304,5 @@ auto main(int32_t const tArgc, char** tArgv) -> int32_t
         return 1;
     }
 
-    if (auto res = ProcessResources(); res != 0)
-    {
-        return res;
-    }
+    return ProcessResources();
 }

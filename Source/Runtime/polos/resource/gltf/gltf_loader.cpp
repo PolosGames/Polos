@@ -199,13 +199,13 @@ auto ProcessMesh(
         return false;
     }
 
-    tTarget.parts.resize(tInput.primitives.size());
+    tTarget.primitives.resize(tInput.primitives.size());
     tTarget.bounds.min = glm::vec3(std::numeric_limits<float>::infinity());
     tTarget.bounds.max = -tTarget.bounds.min;
 
     for (size_t i{0U}; i < tInput.primitives.size(); ++i)
     {
-        MeshPrimitive&             meshPrim  = tTarget.parts[i];
+        MeshPrimitive&             meshPrim  = tTarget.primitives[i];
         fastgltf::Primitive const& primitive = tInput.primitives[i];
 
         if (primitive.type != fastgltf::PrimitiveType::Triangles)

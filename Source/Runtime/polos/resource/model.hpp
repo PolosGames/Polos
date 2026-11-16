@@ -39,7 +39,7 @@ struct MeshPrimitive
 struct Mesh
 {
     std::string                name;
-    std::vector<MeshPrimitive> parts;
+    std::vector<MeshPrimitive> primitives;
     AABB                       bounds;
 };
 
