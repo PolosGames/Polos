@@ -95,7 +95,7 @@ auto ProcessModel(fs::path const& tPath) -> bool
         auto& uri = std::get<fastgltf::sources::URI>(img.data);
 
         std::string_view texturePath = uri.uri->path();
-        mat.baseColorTexture         = texturePath.substr(0, texturePath.find('.'));
+        mat.baseColorTexture         = "texture." + std::string(texturePath.substr(0, texturePath.find('.')));
         mat.path                     = "Materials/" + matName + ".yaml";
 
         modelMaterials.push_back(mat.id);

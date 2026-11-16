@@ -124,6 +124,7 @@ auto ResourceManager::LoadCatalog() -> void
     }
     mResources = std::move(staged.mResources);
     mImages.Swap(staged.mImages);
+    mMaterials.Swap(staged.mMaterials);
     mModels.Swap(staged.mModels);
     mFiles.Swap(staged.mFiles);
 }

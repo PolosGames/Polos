@@ -13,6 +13,8 @@
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
 
+#include <yaml-cpp/yaml.h>
+
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -132,6 +134,13 @@ auto SceneManager::QueryScene(utils::string_id const tName) -> utils::Pair<Scene
 auto SceneManager::GetCurrentScene() -> Scene*
 {
     return mCurrentScene;
+}
+
+auto SceneManager::SaveCurrentScene(utils::string_id const tSceneName) -> bool
+{
+
+
+    return true;
 }
 
 // auto SceneManager::SaveScene(utils::string_id const tName) -> bool

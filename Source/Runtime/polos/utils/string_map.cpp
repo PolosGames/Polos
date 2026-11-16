@@ -24,7 +24,6 @@ consteval auto StringEntry(std::string_view tString) -> Pair<string_id, std::str
 
 constexpr ConstexprMap kKnownStrings{std::array{
     StringEntry("Scene"),
-    StringEntry("Scene.slop"),
     StringEntry("SceneRoot"),
     StringEntry("New Entity"),
     StringEntry("Editor Camera"),

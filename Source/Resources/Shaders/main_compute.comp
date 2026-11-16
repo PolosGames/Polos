@@ -48,9 +48,15 @@ layout(std430, set = 1, binding = 1) buffer IndirectCommands
     IndirectCommand commands[];
 };
 
+struct BoundingBox
+{
+    vec4 min;
+    vec4 max;
+};
+
 layout(std430, set = 1, binding = 2) readonly buffer MeshBounds
 {
-    vec4 meshBounds[];
+    BoundingBox meshBounds[];
 };
 
 layout(std430, set = 2, binding = 0) writeonly buffer VisibleMatrixIndices
@@ -108,11 +114,19 @@ mat4 build_local_matrix(vec3 pos, vec4 q, float s)
     return m;
 }
 
-bool is_visible(vec3 pos, float radius)
+bool is_visible(BoundingBox bounds, mat4 world)
 {
+    vec3 localCenter = 0.5 * bounds.min.xyz + 0.5 * bounds.max.xyz;
+    vec3 halfExtents = 0.5 * bounds.max.xyz - 0.5 * bounds.min.xyz;
+    vec3 worldCenter = (world * vec4(localCenter, 1.0)).xyz;
+    mat3 linear      = mat3(world);
+
     for (int i = 0; i < 6; i++)
     {
-        if (dot(camera.frustumPlanes[i].xyz, pos) + camera.frustumPlanes[i].w < -radius)
+        vec4 plane = camera.frustumPlanes[i];
+        // Project the transformed box's half extents onto the plane normal.
+        float projectedExtent = dot(abs(plane.xyz * linear), halfExtents);
+        if (dot(plane.xyz, worldCenter) + plane.w < -projectedExtent)
         {
             return false;
         }
@@ -145,15 +159,13 @@ void main()
         curParent = p.parentId;
     }
 
-    uint  meshType    = obj.meshId;
-    vec4  localSphere = meshBounds[meshType];
-    vec3  worldCenter = accPos + accScale * rotate_quat(accRot, localSphere.xyz);
-    float worldRadius = localSphere.w * accScale;
+    uint meshType = obj.meshId;
+    mat4 world    = build_local_matrix(accPos, accRot, accScale);
 
-    if (!is_visible(worldCenter, worldRadius))
+    if (!is_visible(meshBounds[meshType], world))
         return;
 
-    worldMatrices[gIdx] = build_local_matrix(accPos, accRot, accScale);
+    worldMatrices[gIdx] = world;
 
     uint localInstanceIdx = 0u;
     // https://www.khronos.org/blog/vulkan-subgroup-tutorial
