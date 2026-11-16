@@ -43,7 +43,6 @@ public:
 
     auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
 
-    /// An empty path writes <scene ID>.scene in the working directory.
     [[nodiscard]] auto SaveScene(utils::string_id tName = "Scene.slop"_sid) -> bool;
     auto               LoadScene(std::string_view tScene) -> Scene*;
 private:
@@ -53,7 +52,7 @@ private:
     friend class SceneSerializationTest;
 
     static SceneManager* sInstance;
-    Scene* mCurrentScene{nullptr};
+    Scene*               mCurrentScene{nullptr};
 
     std::vector<std::unique_ptr<Scene>> mScenes;
 };

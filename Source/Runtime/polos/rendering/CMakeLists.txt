@@ -13,7 +13,7 @@ polos_sources(
     resources/texture.cpp
     ssbo/quad_instance.cpp
     uniforms/camera_uniform.cpp
-    vertex/primitive_vertex.cpp
+    vertex/mesh_vertex.cpp
     vertex/quad_vertex.cpp
     vk/command_buffer.cpp
     vk/compute_pipeline_builder.cpp
@@ -36,6 +36,6 @@ polos_tests(rendering SOURCES
     test/render_subsystem_test.cpp
     test/vertex_layout_test.cpp
     test/camera_uniform_test.cpp
-    vertex/primitive_vertex.cpp
+    vertex/mesh_vertex.cpp
     vertex/quad_vertex.cpp
 )

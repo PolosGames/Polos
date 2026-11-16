@@ -1,4 +1,4 @@
-textures:
+resources:
   - id: texture.10381718147657362067
     path: Models/Sponza/10381718147657362067.jpg
   - id: texture.10388182081421875623
@@ -165,7 +165,6 @@ textures:
     path: Textures/river_bank_rocks_tcnjehgs_1k/River_Bank_Rocks_tcnjehgs_1K_Specular.jpg
   - id: texture.tux
     path: Textures/tux.png
-materials:
   - id: material.Sponza_Unnamed_0
     path: Materials/Sponza_Unnamed_0.yaml
   - id: material.Sponza_Unnamed_1
@@ -218,8 +217,7 @@ materials:
     path: Materials/Sponza_Unnamed_24.yaml
   - id: material.Suzanne
     path: Materials/Suzanne.yaml
-models:
   - id: model.Sponza
-    path: Sponza/Sponza.gltf
+    path: Resources/Models/Sponza.yaml
   - id: model.Suzanne
-    path: Suzanne/Suzanne.gltf
+    path: Resources/Models/Suzanne.yaml

@@ -9,18 +9,16 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/resource/gltf/gltf_loader.hpp"
 #include "polos/resource/image/image_loader.hpp"
+#include "polos/resource/material/material_loader.hpp"
 #include "polos/resource/model.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
 
-#include <nlohmann/json.hpp>
+#include <yaml-cpp/yaml.h>
 
-#include <algorithm>
-#include <cctype>
 #include <cstdlib>
 #include <fstream>
 #include <system_error>
-#include <unordered_set>
 #include <utility>
 
 #if defined(_WIN32)
@@ -29,20 +27,14 @@
 #    endif
 #    include <windows.h>
 #    undef LoadImage
-#elif defined(__APPLE__)
-#    include <mach-o/dyld.h>
 #endif
 
 namespace polos::resource
 {
+using std::filesystem::path;
+
 namespace
 {
-[[noreturn]] auto AbortCatalog(std::string_view tReason, std::string_view tContext) -> void
-{
-    LogCritical("Cannot load resource catalog: {} [{}]", tReason, tContext);
-    logging::FlushLogger(LOG_CTX_POLOS);
-    std::abort();
-}
 
 auto ExecutableResourceRoot() -> std::filesystem::path
 {
@@ -64,19 +56,10 @@ auto ExecutableResourceRoot() -> std::filesystem::path
     {
         return path.parent_path() / "Resources";
     }
-// #elif defined(__APPLE__)
-//     std::uint32_t size = 0;
-//     _NSGetExecutablePath(nullptr, &size);
-//     std::string buffer(size, '\0');
-//     if (_NSGetExecutablePath(buffer.data(), &size) == 0)
-//     {
-//         std::error_code error;
-//         auto            path = std::filesystem::canonical(buffer.c_str(), error);
-//         if (!error)
-//             return path.parent_path() / "Resources";
-//     }
 #endif
-    AbortCatalog("Could not determine executable directory", "Resources");
+    LogCritical("Cannot load resource catalog: Could not determine executable directory");
+    logging::FlushLogger(LOG_CTX_POLOS);
+    std::abort();
 }
 }// namespace
 
@@ -84,15 +67,9 @@ ResourceManager::ResourceManager()
     : ResourceManager(ExecutableResourceRoot())
 {}
 
-ResourceManager::ResourceManager(std::filesystem::path const& tResourceRoot)
-{
-    if (!tResourceRoot.empty())
-    {
-        std::error_code error;
-        mRoot = std::filesystem::weakly_canonical(tResourceRoot, error);
-        PL_ASSERT(!error, "Could not resolve the Resources directory: {}", tResourceRoot.string());
-    }
-}
+ResourceManager::ResourceManager(path tResourceRoot)
+    : mRoot(std::move(tResourceRoot))
+{}
 
 ResourceManager::~ResourceManager() = default;
 
@@ -109,33 +86,42 @@ auto ResourceManager::Root() const -> std::filesystem::path const&
 
 auto ResourceManager::LoadCatalog() -> void
 {
-    auto          path = normalizePath("resources.json");
-    std::ifstream file(mRoot / path);
-    PL_ASSERT(static_cast<bool>(file), "Could not open resource catalog: {}", (mRoot / path).string());
+    PL_ASSERT(!mRoot.empty(), "Resources directory is unavailable.");
 
-    auto const catalog = nlohmann::json::parse(file, nullptr, false);
-    PL_ASSERT(catalog.is_array(), "Resource catalog must contain a valid JSON array: {}", (mRoot / path).string());
-
-    ResourceManager                 staged(mRoot);
-    std::unordered_set<std::string> paths;
-    for (auto const& resource : catalog)
+    enum class ResourceType : uint8_t
     {
-        PL_ASSERT(
-            resource.is_object() && resource.contains("id") && resource["id"].is_string() &&
-                resource.contains("path") && resource["path"].is_string(),
-            "Catalog entries must contain string id and path fields.");
+        kTexture,
+        kMaterial,
+        kModel,
+    };
 
-        auto resourceId = staged.registerResource(
-            resource["id"].get_ref<std::string const&>(),
-            resource["path"].get_ref<std::string const&>());
-        auto const& resourcePath = staged.mResources.at(resourceId).path;
-        PL_ASSERT(paths.insert(resourcePath).second, "Duplicate normalized resource path: {}", resourcePath);
+    ResourceManager staged(mRoot);
+    {
+        auto const path      = mRoot / "resources.yaml";
+        YAML::Node resources = YAML::LoadFile(path.string());
+
+        auto resSeq = resources["resources"];
+        for (uint32_t i{0U}; i < resSeq.size(); ++i)
+        {
+            auto const resStr = resSeq[i]["id"].as<std::string_view>();
+            ResourceId resId  = staged.registerResource(resStr, resSeq[i]["path"].as<std::string_view>());
+
+            LogInfo("{}", resStr);
+
+            if (resStr.contains("texture."))
+            {
+                staged.loadImage(resId);
+            }
+            if (resStr.contains("material."))
+            {
+                staged.loadMaterial(resId);
+            }
+            if (resStr.contains("model."))
+            {
+                staged.loadModel(resId);
+            }
+        }
     }
-
-    // Decode every catalog resource before publishing the new registry and caches.
-    // Unknown extensions, including SPIR-V shaders, are loaded as raw files.
-    loadResources(staged);
-
     mResources = std::move(staged.mResources);
     mImages.Swap(staged.mImages);
     mModels.Swap(staged.mModels);
@@ -153,16 +139,16 @@ auto ResourceManager::LoadImage(ResourceId tId, std::filesystem::path const& tPa
     return mImages.Add(tId, loaded) ? loaded : nullptr;
 }
 
-auto ResourceManager::LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>
-{
-    if (auto cached = mImages.Get(tId))
-    {
-        return cached;
-    }
+// auto ResourceManager::LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>
+// {
+//     if (auto cached = mImages.Get(tId))
+//     {
+//         return cached;
+//     }
 
-    auto loaded = image::LoadImage(tData);
-    return mImages.Add(tId, loaded) ? loaded : nullptr;
-}
+//     auto loaded = image::LoadImage(tData);
+//     return mImages.Add(tId, loaded) ? loaded : nullptr;
+// }
 
 auto ResourceManager::LoadFile(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<fs::File>
 {
@@ -181,132 +167,107 @@ auto ResourceManager::LoadFile(ResourceId tId, std::filesystem::path const& tPat
     return mFiles.Add(tId, loaded) ? loaded : nullptr;
 }
 
-auto ResourceManager::LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>
-{
-    if (auto cached = mFiles.Get(tId))
-    {
-        return cached;
-    }
+// auto ResourceManager::LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>
+// {
+//     if (auto cached = mFiles.Get(tId))
+//     {
+//         return cached;
+//     }
 
-    auto loaded              = std::make_shared<fs::File>();
-    loaded->uncompressedSize = tData.size();
-    loaded->size             = tData.size();
-    loaded->data.assign(tData.begin(), tData.end());
-    return mFiles.Add(tId, loaded) ? loaded : nullptr;
-}
+//     auto loaded              = std::make_shared<fs::File>();
+//     loaded->uncompressedSize = tData.size();
+//     loaded->size             = tData.size();
+//     loaded->data.assign(tData.begin(), tData.end());
+//     return mFiles.Add(tId, loaded) ? loaded : nullptr;
+// }
 
-auto ResourceManager::GetImage(ResourceId tId) const -> std::shared_ptr<image::Image>
+auto ResourceManager::GetImage(ResourceId const tId) const -> std::shared_ptr<image::Image>
 {
     return mImages.Get(tId);
 }
 
-auto ResourceManager::GetModel(ResourceId tId) const -> std::shared_ptr<model::Model>
+auto ResourceManager::GetModel(ResourceId const tId) const -> std::shared_ptr<model::Model>
 {
     return mModels.Get(tId);
 }
 
-auto ResourceManager::GetFile(ResourceId tId) const -> std::shared_ptr<fs::File>
+auto ResourceManager::GetMaterial(ResourceId const tId) const -> std::shared_ptr<material::Material>
+{
+    return mMaterials.Get(tId);
+}
+
+auto ResourceManager::GetFile(ResourceId const tId) const -> std::shared_ptr<fs::File>
 {
     return mFiles.Get(tId);
+}
+
+auto ResourceManager::FetchMaterials() -> std::vector<std::weak_ptr<material::Material>>
+{
+    std::vector<std::weak_ptr<material::Material>> mats;
+    mats.reserve(mMaterials.mResources.size());
+    for (auto const& [_, mat] : mMaterials.mResources)
+    {
+        mats.push_back(mat);
+    }
+
+    return mats;
 }
 
 auto ResourceManager::ClearCache() -> void
 {
     mImages.Clear();
     mModels.Clear();
+    mMaterials.Clear();
     mFiles.Clear();
 }
 
-auto ResourceManager::normalizePath(std::string_view tPath) const -> std::string
+auto ResourceManager::registerResource(std::string_view tId, std::filesystem::path const& tPath) -> ResourceId
 {
-    PL_ASSERT(!mRoot.empty(), "Resources directory is unavailable.");
-    std::string text(tPath);
-    std::ranges::replace(text, '\\', '/');
+    auto const resourceId = utils::StrHash64Runtime(tId);
+    PL_ASSERT(!mResources.contains(resourceId), "Duplicate resource ID or ID hash collision: {}", tId);
 
-    std::filesystem::path const input(text);
-    auto const                  path = input.lexically_normal();
+    std::filesystem::path const path = tPath.lexically_normal();
 
-    // Check real ancestors as well, so symlinks cannot escape Resources.
-    std::error_code error;
-    auto const      absolute = std::filesystem::weakly_canonical(mRoot / path, error);
-    PL_ASSERT(!error, "Invalid resource path: {}", tPath);
+    mResources.emplace(resourceId, Resource{.path = mRoot / path});
 
-    auto const relative = absolute.lexically_relative(mRoot);
-    PL_ASSERT(
-        !relative.empty() && relative != "." && *relative.begin() != "..",
-        "Resource path escapes the Resources directory: {}",
-        tPath);
-
-    return path.generic_string();
+    return resourceId;
 }
 
-auto ResourceManager::registerResource(std::string_view tId, std::string_view tPath) -> ResourceId
+
+void ResourceManager::loadImage(ResourceId const tResource)
 {
-    PL_ASSERT(!tId.empty() && !tId.contains('\0'), "Resource ID must be nonempty and contain no null characters.");
-    auto path = normalizePath(tPath);
-
-    auto const strid = utils::StrHash64(tId);
-    // Reject duplicate IDs and hash collisions.
-    PL_ASSERT(!mResources.contains(strid), "Duplicate resource ID or ID hash collision: {}", tId);
-
-    auto const registered = utils::GetStringFromID(strid);
-    PL_ASSERT(registered.empty() || registered == tId, "Resource ID hash collision: {}", tId);
-
-    std::ignore = utils::StrHash64Runtime(tId);
-    mResources.emplace(strid, Resource{std::move(path)});
-    return strid;
-}
-
-auto ResourceManager::loadResources(ResourceManager& tStaged) -> void
-{
-    for (auto const& [resourceId, resource] : tStaged.mResources)
+    if (mImages.Exists(tResource))
     {
-        auto extension = std::filesystem::path(resource.path).extension().string();
-        std::ranges::transform(extension, extension.begin(), [](unsigned char chr) {
-            return static_cast<char>(std::tolower(chr));
-        });
-        auto const resourcePath = tStaged.mRoot / tStaged.normalizePath(resource.path);
-        bool       loaded       = false;
-        if (extension == ".gltf" || extension == ".glb")
-        {
-            std::shared_ptr<model::Model> model = model::LoadGltf(resourcePath);
-            if (model)
-            {
-                bool texturesLoaded = true;
-                for (auto const& texture : model->textures)
-                {
-                    if (texture.resourceId == rendering::kDefaultTexture)
-                    {
-                        continue;
-                    }
-
-                    if (!tStaged.LoadImage(texture.resourceId, texture.path))
-                    {
-                        texturesLoaded = false;
-                        break;
-                    }
-                }
-
-                if (texturesLoaded)
-                {
-                    loaded = tStaged.mModels.Add(resourceId, std::move(model));
-                }
-            }
-        }
-        else if (
-            extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".bmp" ||
-            extension == ".tga" || extension == ".psd" || extension == ".gif" || extension == ".hdr" ||
-            extension == ".pic" || extension == ".pnm" || extension == ".ppm" || extension == ".pgm")
-        {
-            loaded = static_cast<bool>(tStaged.LoadImage(resourceId, resourcePath));
-        }
-        else
-        {
-            loaded = static_cast<bool>(tStaged.LoadFile(resourceId, resourcePath));
-        };
-
-        PL_ASSERT(loaded, "Could not preload resource {} from {}.", utils::GetStringFromID(resourceId), resource.path);
+        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
+        return;
     }
+
+    auto loaded = image::LoadImage(mResources[tResource].path);
+    PL_ASSERT(mImages.Add(tResource, loaded), "Failed to load image.");
+}
+
+void ResourceManager::loadMaterial(ResourceId const tResource)
+{
+    if (mMaterials.Exists(tResource))
+    {
+        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
+        return;
+    }
+
+    auto loaded = material::LoadMaterial(mResources[tResource].path);
+    PL_ASSERT(mMaterials.Add(tResource, loaded), "Failed to load image.");
+}
+
+void ResourceManager::loadModel(ResourceId const tResource)
+{
+    if (mModels.Exists(tResource))
+    {
+        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
+        return;
+    }
+
+    auto loaded = model::LoadGltf(mResources[tResource].path);
+    PL_ASSERT(mModels.Add(tResource, std::move(loaded)), "Failed to load image.");
 }
 
 

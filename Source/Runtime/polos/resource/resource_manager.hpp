@@ -7,8 +7,9 @@
 #define POLOS_RESOURCE_RESOURCE_MANAGER_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/resource/common.hpp"
+#include "polos/resource/material.hpp"
 #include "polos/resource/storage.hpp"
-#include "polos/utils/string_id.hpp"
 
 #include <cstddef>
 #include <filesystem>
@@ -35,8 +36,6 @@ namespace model
 struct Model;
 }// namespace model
 
-using ResourceId = utils::string_id;
-
 /// CPU resource registry and cache. Catalog resources are preloaded before rendering.
 /// Catalog paths are relative to "Resources" beside the executable.
 class POLOS_API ResourceManager
@@ -45,7 +44,7 @@ public:
     ResourceManager();
     ~ResourceManager();
     /// Explicit resource root for tools and isolated tests.
-    explicit ResourceManager(std::filesystem::path const& tResourceRoot);
+    explicit ResourceManager(std::filesystem::path tResourceRoot);
 
     ResourceManager(ResourceManager&&)                         = delete;
     auto operator=(ResourceManager&&) -> ResourceManager&      = delete;
@@ -61,26 +60,29 @@ public:
 
     /// @brief Load and cache under tId, or return the cached resource if already loaded.
     [[nodiscard]] auto LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<image::Image>;
-
-    [[nodiscard]] auto LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>;
+    // [[nodiscard]] auto LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>;
 
     /// @brief Load and cache under tId, or return the cached resource if already loaded.
     [[nodiscard]] auto LoadFile(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<fs::File>;
+    // [[nodiscard]] auto LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>;
 
-    [[nodiscard]] auto LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>;
-
-    /// Return the cached representation, or nullptr; never load or read the filesystem.
+    /// @brief Return the cached representation, or nullptr
     [[nodiscard]] auto GetImage(ResourceId tId) const -> std::shared_ptr<image::Image>;
     [[nodiscard]] auto GetModel(ResourceId tId) const -> std::shared_ptr<model::Model>;
+    [[nodiscard]] auto GetMaterial(ResourceId tId) const -> std::shared_ptr<material::Material>;
     [[nodiscard]] auto GetFile(ResourceId tId) const -> std::shared_ptr<fs::File>;
+
+    [[nodiscard]] auto FetchMaterials() -> std::vector<std::weak_ptr<material::Material>>;
 
     /// @brief Releases the manager's ownership.
     /// Getters return nullptr until resources are loaded again. Existing shared references remain valid.
     auto ClearCache() -> void;
 private:
-    [[nodiscard]] auto registerResource(std::string_view tId, std::string_view tPath) -> ResourceId;
-    [[nodiscard]] auto normalizePath(std::string_view tPath) const -> std::string;
-    auto               loadResources(ResourceManager& tStaged) -> void;
+    auto registerResource(std::string_view tId, std::filesystem::path const& tPath) -> ResourceId;
+
+    void loadImage(ResourceId tResource);
+    void loadMaterial(ResourceId tResource);
+    void loadModel(ResourceId tResource);
 
     struct Resource
     {
@@ -90,9 +92,10 @@ private:
     std::filesystem::path                    mRoot;
     std::unordered_map<ResourceId, Resource> mResources;
 
-    Storage<image::Image> mImages;
-    Storage<model::Model> mModels;
-    Storage<fs::File>     mFiles;
+    Storage<image::Image>       mImages;
+    Storage<model::Model>       mModels;
+    Storage<material::Material> mMaterials;
+    Storage<fs::File>           mFiles;
 };
 
 }// namespace polos::resource

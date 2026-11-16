@@ -6,6 +6,7 @@
 #include "polos/rendering/cache/material_cache.hpp"
 
 #include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/utils/assert.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <string>
@@ -15,15 +16,13 @@ namespace polos::rendering
 
 namespace
 {
-auto ResolveTexture(size_t tIndex, std::span<resource::model::Texture const> tTextures) -> TextureIndex
+auto ResolveTexture(resource::material::MaterialTexture const& tTexture) -> TextureIndex
 {
-    if (tIndex >= tTextures.size())
-    {
-        return kDefaultTextureIndex;
-    }
-
-    auto const& texture = tTextures[tIndex];
-    return TextureCache::Get().GetOrCreateTextureIndex(texture.resourceId, texture.samplerDetails);
+    auto index = TextureCache::Get().CreateTexture(tTexture.img, tTexture.textureDetails);
+    PL_ASSERT(
+        std::numeric_limits<uint32_t>::max() != index,
+        "Texture belonging to a material could not be created inside TextureCache");
+    return index;
 }
 }// namespace
 
@@ -44,10 +43,30 @@ MaterialCache::~MaterialCache()
     sInstance = nullptr;
 }
 
-auto MaterialCache::Create(CreationDetails const&) -> Result<void>
+auto MaterialCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    mMaterials.try_emplace(
-        kDefaultMaterial, Material{.name = kDefaultMaterial, .baseColorTexture = kDefaultTextureIndex});
+    mMaterials.try_emplace(kDefaultMaterial, Material{});
+
+    std::vector<std::weak_ptr<resource::material::Material>> materials =
+        resource::ResourceManager::Get().FetchMaterials();
+
+    for (auto& material : materials)
+    {
+        auto matPtr = material.lock();
+
+        glm::vec4 baseColorFactor;
+        for (uint32_t i{0U}; i < matPtr->baseColorFactor.size(); ++i)
+        {
+            baseColorFactor[static_cast<int32_t>(i)] = matPtr->baseColorFactor[i];
+        }
+
+        mMaterials.try_emplace(
+            matPtr->name, Material{
+                              .baseColorFactor  = baseColorFactor,
+                              .baseColorTexture = ResolveTexture(matPtr->baseColorTexture),
+                          });
+    }
+
     return {};
 }
 
@@ -57,63 +76,7 @@ auto MaterialCache::Destroy() -> void
     mNextSuffix = 1U;
 }
 
-auto MaterialCache::CreateMaterial(
-    resource::model::Material const&          tMaterial,
-    std::span<resource::model::Texture const> tTextures) -> MaterialHandle
-{
-    std::string const name   = tMaterial.name.empty() ? "material" : tMaterial.name;
-    auto              handle = utils::StrHash64Runtime(name);
-    Material          material{
-        .name                     = handle,
-        .emissiveFactor           = tMaterial.emissiveFactor,
-        .alphaMode                = static_cast<AlphaMode>(tMaterial.alphaMode),
-        .alphaCutoff              = tMaterial.alphaCutoff,
-        .baseColorFactor          = tMaterial.baseColorFactor,
-        .baseColorTexture         = ResolveTexture(tMaterial.baseColorTexture, tTextures),
-        .metallicFactor           = tMaterial.metallicFactor,
-        .roughnessFactor          = tMaterial.roughnessFactor,
-        .metallicRoughnessTexture = ResolveTexture(tMaterial.metallicRoughnessTexture, tTextures),
-        .normalTexture            = ResolveTexture(tMaterial.normalTexture, tTextures),
-        .occlusionTexture         = ResolveTexture(tMaterial.occlusionTexture, tTextures),
-        .emissiveTexture          = ResolveTexture(tMaterial.emissiveTexture, tTextures),
-    };
-
-    if (auto const* existing = GetMaterial(handle); existing != nullptr && *existing == material)
-    {
-        return handle;
-    }
-
-    while (mMaterials.contains(handle))
-    {
-        handle = utils::StrHash64Runtime(name + "." + std::to_string(mNextSuffix++));
-    }
-
-    material.name = handle;
-    mMaterials.emplace(handle, material);
-    return handle;
-}
-
-auto MaterialCache::CreateMaterial(std::string_view const tName, Material& tMaterial) -> MaterialHandle
-{
-    std::string const name(tName);
-    auto              handle = utils::StrHash64Runtime(name);
-    tMaterial.name           = handle;
-    if (auto const* existing = GetMaterial(tMaterial.name); existing != nullptr && *existing == tMaterial)
-    {
-        return handle;
-    }
-
-    while (mMaterials.contains(handle))
-    {
-        handle = utils::StrHash64Runtime(name + "." + std::to_string(mNextSuffix++));
-    }
-
-    tMaterial.name = handle;
-    mMaterials.emplace(handle, tMaterial);
-    return handle;
-}
-
-auto MaterialCache::GetMaterial(MaterialHandle tHandle) const -> Material const*
+auto MaterialCache::GetMaterial(MaterialHandle const tHandle) const -> Material const*
 {
     auto const found = mMaterials.find(tHandle);
     return found != mMaterials.end() ? &found->second : nullptr;

@@ -6,78 +6,45 @@
 #ifndef POLOS_RESOURCE_MODEL_HPP
 #define POLOS_RESOURCE_MODEL_HPP
 
-#include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/texture.hpp"
-#include "polos/rendering/vertex/primitive_vertex.hpp"
-#include "polos/utils/string_id.hpp"
+#include "polos/rendering/vertex/mesh_vertex.hpp"
+#include "polos/resource/common.hpp"
+#include "polos/utils/pair.hpp"
 
 #include <glm/glm.hpp>
 
-#include <array>
 #include <cstdint>
-#include <filesystem>
-#include <limits>
 #include <string>
 #include <vector>
 
 namespace polos::resource::model
 {
 
-struct Texture
+struct AABB
 {
-    utils::string_id          resourceId{rendering::kDefaultTexture};
-    rendering::TextureDetails samplerDetails{};
-    std::filesystem::path     path;
+    glm::vec3 max;
+    glm::vec3 min;
 };
 
-enum class AlphaMode : uint8_t
+struct MeshPrimitive
 {
-    kOpaque,
-    kMask,
-    kBlend,
-};
-
-inline constexpr std::size_t kNoTextureIndex{std::numeric_limits<std::size_t>::max()};
-
-// TODO(sorbatdev): Implement some kind of reference system for keeping these values at one place.
-struct Material
-{
-    // int32_t               doubleSided;                   /* 0 or 1 */
-    // const int32_t*        lods;
-    // uint32_t              lods_count;
-    std::string           name;
-    std::array<float, 3U> emissiveFactor{0.0F, 0.0F, 0.0F};
-    AlphaMode             alphaMode{AlphaMode::kOpaque};
-    float                 alphaCutoff{0.5F};
-    std::array<float, 4U> baseColorFactor{1.0F, 1.0F, 1.0F, 1.0F};
-    std::size_t           baseColorTexture{kNoTextureIndex};
-    float                 metallicFactor{1.0F};
-    float                 roughnessFactor{1.0F};
-    std::size_t           metallicRoughnessTexture{kNoTextureIndex};
-    std::size_t           normalTexture{kNoTextureIndex};
-    std::size_t           occlusionTexture{kNoTextureIndex};
-    std::size_t           emissiveTexture{kNoTextureIndex};
-};
-
-struct MeshPart
-{
-    utils::string_id                        name;
-    std::vector<rendering::PrimitiveVertex> primitiveVertices;
-    std::vector<uint32_t>                   primitiveIndices;
-    Material                                material;
+    std::string                        name;
+    std::vector<rendering::MeshVertex> primitiveVertices;
+    std::vector<uint32_t>              primitiveIndices;
+    ResourceId                         material;
 };
 
 struct Mesh
 {
-    std::string           name;
-    std::vector<MeshPart> parts;
+    std::string                name;
+    std::vector<MeshPrimitive> parts;
+    AABB                       bounds;
 };
 
 struct Model
 {
-    std::string          name;
-    std::vector<Mesh>    meshes;
-    std::vector<Texture> textures;
+    std::string       name;
+    std::vector<Mesh> meshes;
 };
 }// namespace polos::resource::model
 

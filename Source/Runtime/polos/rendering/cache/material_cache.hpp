@@ -9,10 +9,6 @@
 #include "polos/polos_api.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/material.hpp"
-#include "polos/resource/model.hpp"
-
-#include <span>
-#include <unordered_map>
 
 namespace polos::rendering
 {
@@ -36,12 +32,6 @@ public:
     MaterialCache(MaterialCache&&)                 = delete;
     MaterialCache& operator=(MaterialCache const&) = delete;
     MaterialCache& operator=(MaterialCache&&)      = delete;
-
-    [[nodiscard]] auto CreateMaterial(
-        resource::model::Material const&          tMaterial,
-        std::span<resource::model::Texture const> tTextures = {}) -> MaterialHandle;
-
-    [[nodiscard]] auto CreateMaterial(std::string_view tName, Material& tMaterial) -> MaterialHandle;
 
     [[nodiscard]] auto GetMaterial(MaterialHandle tHandle) const -> Material const*;
 private:

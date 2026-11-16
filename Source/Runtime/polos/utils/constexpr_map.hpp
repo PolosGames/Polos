@@ -39,6 +39,11 @@ public:
         return itr->second;
     }
 
+    [[nodiscard]] constexpr auto operator[](const Key& tKey) const -> Result<Value>
+    {
+        return at(tKey);
+    }
+
     std::array<Pair<Key, Value>, Size> data;
 };
 

@@ -419,7 +419,7 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInDfsOrder)
     EditorCameraControllerComponent const controllerC{.moveSpeed = 17.0F, .lookSensitivity = 0.75F};
 
     MeshRendererComponent const meshB{rendering::kPolosDefaultQuad};
-    MeshRendererComponent const meshC{rendering::kPolosDefaultCube};
+    MeshRendererComponent const meshC{rendering::kDefaultCube};
 
     ASSERT_NE(scene->AddComponent(a, VisibilityComponent{.isVisible = false}), nullptr);
     ASSERT_NE(scene->AddComponent(c, VisibilityComponent{.isVisible = true}), nullptr);
@@ -467,9 +467,9 @@ TEST_F(SceneSerializationTest, LegacyQuadLoadsAsDefaultMesh)
     ASSERT_TRUE(Save(path));
 
     {
-        std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
-        constexpr auto entityOffset = sizeof(Header) + sizeof(utils::string_id) + sizeof(EntityIndex) +
-                                      sizeof(SerializedEntity);
+        std::fstream   file(path, std::ios::binary | std::ios::in | std::ios::out);
+        constexpr auto entityOffset =
+            sizeof(Header) + sizeof(utils::string_id) + sizeof(EntityIndex) + sizeof(SerializedEntity);
         file.seekg(entityOffset);
         SerializedEntity record{};
         ASSERT_TRUE(static_cast<bool>(file.read(reinterpret_cast<char*>(&record), sizeof(record))));

@@ -1,12 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-find_package(ctre CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-find_package(Vulkan 1.3 REQUIRED)
-find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-
 add_library(polos SHARED)
 add_library(polos::polos ALIAS polos)
 target_compile_features(polos PUBLIC cxx_std_23)
@@ -36,6 +29,7 @@ target_link_libraries(polos PUBLIC
     stb_image::stb_image
     stb_textedit::stb_textedit
     fastgltf::fastgltf
+    yaml-cpp::yaml-cpp
 )
 if (ENABLE_PROFILING)
     target_link_libraries(polos PUBLIC Tracy::TracyClient)

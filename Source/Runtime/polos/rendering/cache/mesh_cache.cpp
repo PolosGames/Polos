@@ -6,6 +6,7 @@
 #include "polos/rendering/cache/mesh_cache.hpp"
 
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/resources/material.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/profiling.hpp"
@@ -27,29 +28,29 @@ namespace
 
 constexpr VkDeviceSize const kGrowthAmount{64ULL * 1024ULL * 1024ULL};
 
-constexpr std::array<PrimitiveVertex, 8U> kCubeVertices{
-    PrimitiveVertex{
+constexpr std::array<MeshVertex, 8U> kCubeVertices{
+    MeshVertex{
         .position = glm::vec3(-0.5F, -0.5F, 0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(0.5F, -0.5F, 0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(0.5F, 0.5F, 0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(-0.5F, 0.5F, 0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(-0.5F, -0.5F, -0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(0.5F, -0.5F, -0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(0.5F, 0.5F, -0.5F),
     },
-    PrimitiveVertex{
+    MeshVertex{
         .position = glm::vec3(-0.5F, 0.5F, -0.5F),
     },
 };
@@ -78,9 +79,9 @@ constexpr std::array kCubeFaceColors{
 };
 static_assert(kCubeFaceColors.size() * kIndicesPerFace == kCubeIndices.size());
 
-auto CreateCubeVertices() -> std::vector<PrimitiveVertex>
+auto CreateCubeVertices() -> std::vector<MeshVertex>
 {
-    std::vector<PrimitiveVertex> vertices;
+    std::vector<MeshVertex> vertices;
     vertices.reserve(kCubeIndices.size());
     for (std::size_t i{0}; i < kCubeIndices.size(); i += 3U)
     {
@@ -173,10 +174,10 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
     }
 
     {
-        resource::model::MeshPart cubeMesh;
+        resource::model::MeshPrimitive cubeMesh;
 
-        cubeMesh.name              = kPolosDefaultCube;
-        cubeMesh.material          = resource::model::Material{};
+        cubeMesh.name              = "mesh.DefaultCube";
+        cubeMesh.material          = kDefaultMaterial;
         cubeMesh.primitiveVertices = CreateCubeVertices();
         // The generated vertices are already in triangle order.
         cubeMesh.primitiveIndices.resize(cubeMesh.primitiveVertices.size());
@@ -186,8 +187,8 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
     }
 
     {
-        resource::model::MeshPart quadMesh{
-            .name              = kPolosDefaultQuad,
+        resource::model::MeshPrimitive quadMesh{
+            .name              = "mesh.DefaultQuad",
             .primitiveVertices = {},
             .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
             .material          = {},
@@ -233,20 +234,21 @@ auto MeshCache::Destroy() -> void
     mMeshCount  = 0U;
 }
 
-auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
+auto MeshCache::AddMesh(resource::model::MeshPrimitive& tMesh) -> MeshHandle
 {
-    if (mMeshes.contains(tMesh.name))
+    auto meshId = utils::StrHash64Runtime(tMesh.name);
+    if (mMeshes.contains(meshId))
     {
-        return tMesh.name;
+        return meshId;
     }
 
     auto const vertData = std::span(tMesh.primitiveVertices);
     auto const indData  = std::span(tMesh.primitiveIndices);
-    PL_ASSERT(!vertData.empty() && !indData.empty(), "MeshPart must contain non-empty vertices and indices");
+    PL_ASSERT(!vertData.empty() && !indData.empty(), "MeshPrimitive must contain non-empty vertices and indices");
 
     Entry entry;
 
-    entry.name = tMesh.name;
+    entry.name = meshId;
 
     while (mVertexHead + vertData.size_bytes() > mVertexBuffer->size)
     {
@@ -279,7 +281,7 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
             .indexCount    = ToVkSize(entry.indexCount),
             .instanceCount = 0U,
             .firstIndex    = ToVkSize(entry.indexOffset / sizeof(uint32_t)),
-            .vertexOffset  = static_cast<int32_t>(entry.vertexOffset / sizeof(PrimitiveVertex)),
+            .vertexOffset  = static_cast<int32_t>(entry.vertexOffset / sizeof(MeshVertex)),
             .firstInstance = 0U,
         });
 
@@ -310,7 +312,7 @@ auto MeshCache::AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle
         PL_ASSERT(mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL), "Unable to resize mesh bounds buffer");
     }
     mMeshBoundsBuffer->Write(&mMeshBounds.back(), sizeof(glm::vec4), boundsOffset);
-    mMeshes[tMesh.name] = entry;
+    mMeshes[meshId] = entry;
 
     return entry.name;
 }

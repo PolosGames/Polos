@@ -6,8 +6,8 @@
 #ifndef POLOS_RENDERING_CACHE_MESH_CACHE_HPP
 #define POLOS_RENDERING_CACHE_MESH_CACHE_HPP
 
-#include "polos/rendering/common.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/settings.hpp"
 #include "polos/resource/model.hpp"
@@ -20,12 +20,6 @@
 
 namespace polos::rendering
 {
-
-struct Mesh
-{
-    int64_t vertexCount{0};
-    int64_t indexCount{0};
-};
 
 class POLOS_API MeshCache
 {
@@ -42,7 +36,7 @@ public:
     auto Create(CreationDetails const& tDetails) -> Result<void>;
     auto Destroy() -> void;
 
-    [[nodiscard]] auto AddMesh(resource::model::MeshPart& tMesh) -> MeshHandle;
+    [[nodiscard]] auto AddMesh(resource::model::MeshPrimitive& tMesh) -> MeshHandle;
 
     /// @brief Check if we have a mesh with the handle
     [[nodiscard]] auto HasMesh(MeshHandle tHandle) -> bool;
@@ -71,7 +65,7 @@ private:
         VkDeviceSize     indexOffset{0U};
         uint32_t         vertexCount{0};
         uint32_t         indexCount{0};
-        MeshIndex         meshIndex{0U};
+        MeshIndex        meshIndex{0U};
     };
 
     std::unique_ptr<Buffer> mVertexBuffer;

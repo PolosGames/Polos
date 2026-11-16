@@ -89,14 +89,14 @@ constexpr std::array kComponentLoaders{
 };
 }// namespace
 
-SceneManager* SceneManager::sInstance     = nullptr;
+SceneManager* SceneManager::sInstance = nullptr;
 
 auto SceneManager::Get() -> SceneManager&
 {
     return *sInstance;
 }
 
-SceneManager::SceneManager() = default;
+SceneManager::SceneManager()  = default;
 SceneManager::~SceneManager() = default;
 
 auto SceneManager::CreateScene(utils::string_id const tName) -> Scene*
@@ -134,266 +134,267 @@ auto SceneManager::GetCurrentScene() -> Scene*
     return mCurrentScene;
 }
 
-auto SceneManager::SaveScene(utils::string_id const tName) -> bool
-{
-    auto itr = std::ranges::find(mScenes, tName, &Scene::name);
-    if (itr == mScenes.end())
-    {
-        return false;
-    }
+// auto SceneManager::SaveScene(utils::string_id const tName) -> bool
+// {
+//     auto itr = std::ranges::find(mScenes, tName, &Scene::name);
+//     if (itr == mScenes.end())
+//     {
+//         return false;
+//     }
 
-    Scene* scene = itr->get();
+//     Scene* scene = itr->get();
 
-    // First order entities on a DFS basis
-    std::vector<EntityIndex> dfsEntities;
-    dfsEntities.reserve(scene->mTotalEntities);
+//     // First order entities on a DFS basis
+//     std::vector<EntityIndex> dfsEntities;
+//     dfsEntities.reserve(scene->mTotalEntities);
 
-    {
-        EntityIndex currentIndex{0U};
-        auto&       sceneGraph = scene->mSceneGraph;
+//     {
+//         EntityIndex currentIndex{0U};
+//         auto&       sceneGraph = scene->mSceneGraph;
 
-        // Reorder entities with dfs
-        while (dfsEntities.size() < scene->mTotalEntities)
-        {
-            dfsEntities.push_back(currentIndex);
+//         // Reorder entities with dfs
+//         while (dfsEntities.size() < scene->mTotalEntities)
+//         {
+//             dfsEntities.push_back(currentIndex);
 
-            auto child = sceneGraph.GetChild(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
-            if (kInvalidEntityHandle != child)
-            {
-                currentIndex = child.index;
-                continue;
-            }
+//             auto child = sceneGraph.GetChild(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
+//             if (kInvalidEntityHandle != child)
+//             {
+//                 currentIndex = child.index;
+//                 continue;
+//             }
 
-            // traverse up to find another sibling
-            while (true)
-            {
-                auto sibling = sceneGraph.GetNextSibling(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
-                if (kInvalidEntityHandle != sibling)
-                {
-                    currentIndex = sibling.index;
-                    break;
-                }
+//             // traverse up to find another sibling
+//             while (true)
+//             {
+//                 auto sibling = sceneGraph.GetNextSibling(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
+//                 if (kInvalidEntityHandle != sibling)
+//                 {
+//                     currentIndex = sibling.index;
+//                     break;
+//                 }
 
-                auto parent = sceneGraph.GetParent(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
-                if (parent == kInvalidEntityHandle)// sceneRoot, also currentIndex == 0
-                {
-                    break;
-                }
+//                 auto parent = sceneGraph.GetParent(scene->getComponent<InfoComponent>(currentIndex)->graphHandle);
+//                 if (parent == kInvalidEntityHandle)// sceneRoot, also currentIndex == 0
+//                 {
+//                     break;
+//                 }
 
-                currentIndex = parent.index;
-            }
+//                 currentIndex = parent.index;
+//             }
 
-            if (currentIndex == 0)
-            {
-                break;
-            }
-        }
-    }
+//             if (currentIndex == 0)
+//             {
+//                 break;
+//             }
+//         }
+//     }
 
-    SceneHeader header{};
-    header.entitiesEnd = kSceneEnd + (sizeof(SerializedEntity) * dfsEntities.size());
+//     SceneHeader header{};
+//     header.entitiesEnd = kSceneEnd + (sizeof(SerializedEntity) * dfsEntities.size());
 
-    std::uint64_t componentEnd = header.entitiesEnd;
-    for (std::uint8_t i{0U}; i < kMaxComponents; ++i)
-    {
-        header.componentHeaders[i].type = i;
-        header.componentHeaders[i].end =
-            componentEnd + (static_cast<std::uint64_t>(scene->mComponentPools[i].GetTotalComponents()) *
-                            static_cast<std::uint64_t>(scene->mComponentPools[i].elemSize));
+//     std::uint64_t componentEnd = header.entitiesEnd;
+//     for (std::uint8_t i{0U}; i < kMaxComponents; ++i)
+//     {
+//         header.componentHeaders[i].type = i;
+//         header.componentHeaders[i].end =
+//             componentEnd + (static_cast<std::uint64_t>(scene->mComponentPools[i].GetTotalComponents()) *
+//                                static_cast<std::uint64_t>(scene->mComponentPools[i].elemSize));
 
-        componentEnd = header.componentHeaders[i].end;
-    }
+//         componentEnd = header.componentHeaders[i].end;
+//     }
 
-    std::vector<SerializedEntity> serializedEntities;
-    serializedEntities.reserve(dfsEntities.size());
+//     std::vector<SerializedEntity> serializedEntities;
+//     serializedEntities.reserve(dfsEntities.size());
 
-    std::array<std::uint32_t, kMaxComponents> componentCounts{};
-    for (std::size_t i{0U}; i < dfsEntities.size(); i++)
-    {
-        serializedEntities << scene->mEntities[dfsEntities[i]];
+//     std::array<std::uint32_t, kMaxComponents> componentCounts{};
+//     for (std::size_t i{0U}; i < dfsEntities.size(); i++)
+//     {
+//         serializedEntities << scene->mEntities[dfsEntities[i]];
 
-        for (std::uint8_t type{0U}; type < kMaxComponents; ++type)
-        {
-            if ((serializedEntities.back().componentTypes & (std::uint32_t{1} << type)) != 0U)
-            {
-                serializedEntities.back().componentIndices[type] = componentCounts[type]++;
-            }
-        }
-    }
+//         for (std::uint8_t type{0U}; type < kMaxComponents; ++type)
+//         {
+//             if ((serializedEntities.back().componentTypes & (std::uint32_t{1} << type)) != 0U)
+//             {
+//                 serializedEntities.back().componentIndices[type] = componentCounts[type]++;
+//             }
+//         }
+//     }
 
-    EntityIndex activeCamera{kInvalidEntityIndex};
-    if (scene->isEntityValid(scene->activeCamera))
-    {
-        auto const camera = std::ranges::find(dfsEntities, scene->activeCamera.index);
-        if (camera != dfsEntities.end())
-        {
-            activeCamera = static_cast<EntityIndex>(camera - dfsEntities.begin());
-        }
-    }
+//     EntityIndex activeCamera{kInvalidEntityIndex};
+//     if (scene->isEntityValid(scene->activeCamera))
+//     {
+//         auto const camera = std::ranges::find(dfsEntities, scene->activeCamera.index);
+//         if (camera != dfsEntities.end())
+//         {
+//             activeCamera = static_cast<EntityIndex>(camera - dfsEntities.begin());
+//         }
+//     }
 
-    auto const path = std::filesystem::path{utils::GetStringFromID(tName)};
+//     auto const path = std::filesystem::path{utils::GetStringFromID(tName)};
 
-    std::ofstream file{path, std::ios::binary | std::ios::trunc};
-    if (!file.is_open())
-    {
-        return false;
-    }
+//     std::ofstream file{path, std::ios::binary | std::ios::trunc};
+//     if (!file.is_open())
+//     {
+//         return false;
+//     }
 
-    file.write(reinterpret_cast<char const*>(&header), sizeof(SceneHeader));
-    file.write(reinterpret_cast<char const*>(&scene->name), sizeof(utils::string_id));
-    file.write(reinterpret_cast<char const*>(&activeCamera), sizeof(EntityIndex));
-    file.write(
-        reinterpret_cast<char const*>(serializedEntities.data()),
-        static_cast<std::streamsize>(serializedEntities.size() * sizeof(SerializedEntity)));
+//     file.write(reinterpret_cast<char const*>(&header), sizeof(SceneHeader));
+//     file.write(reinterpret_cast<char const*>(&scene->name), sizeof(utils::string_id));
+//     file.write(reinterpret_cast<char const*>(&activeCamera), sizeof(EntityIndex));
+//     file.write(
+//         reinterpret_cast<char const*>(serializedEntities.data()),
+//         static_cast<std::streamsize>(serializedEntities.size() * sizeof(SerializedEntity)));
 
-    for (std::uint8_t cType{0U}; cType < kMaxComponents; ++cType)
-    {
-        auto const&   pool          = scene->mComponentPools[cType];
-        auto const    componentSize = pool.elemSize;
-        std::uint32_t componentIndex{0U};
-        for (std::size_t e{0U}; e < serializedEntities.size(); ++e)
-        {
-            if ((serializedEntities[e].componentTypes & (std::uint32_t{1} << cType)) == 0U)
-            {
-                continue;
-            }
+//     for (std::uint8_t cType{0U}; cType < kMaxComponents; ++cType)
+//     {
+//         auto const&   pool          = scene->mComponentPools[cType];
+//         auto const    componentSize = pool.elemSize;
+//         std::uint32_t componentIndex{0U};
+//         for (std::size_t e{0U}; e < serializedEntities.size(); ++e)
+//         {
+//             if ((serializedEntities[e].componentTypes & (std::uint32_t{1} << cType)) == 0U)
+//             {
+//                 continue;
+//             }
 
-            auto const* source = static_cast<std::uint8_t const*>(pool.mData) + (dfsEntities[e] * componentSize);
-            file.write(reinterpret_cast<char const*>(source), static_cast<std::streamsize>(componentSize));
-            ++componentIndex;
-        }
-        if (componentIndex != pool.GetTotalComponents() ||
-            file.tellp() != static_cast<std::streamoff>(header.componentHeaders[cType].end))
-        {
-            return false;
-        }
-    }
+//             auto const* source = static_cast<std::uint8_t const*>(pool.mData) + (dfsEntities[e] * componentSize);
+//             file.write(reinterpret_cast<char const*>(source), static_cast<std::streamsize>(componentSize));
+//             ++componentIndex;
+//         }
+//         if (componentIndex != pool.GetTotalComponents() ||
+//             file.tellp() != static_cast<std::streamoff>(header.componentHeaders[cType].end))
+//         {
+//             return false;
+//         }
+//     }
 
-    file.close();
-    return !file.fail();
-}
+//     file.close();
+//     return !file.fail();
+// }
 
-auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
-{
-    std::unique_ptr<Scene> owned{new Scene{"Scene"_sid, false}};
-    auto*                  scene = owned.get();
+// auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
+// {
+//     std::unique_ptr<Scene> owned{new Scene{"Scene"_sid, false}};
+//     auto*                  scene = owned.get();
 
-    SceneHeader header{};
+//     SceneHeader header{};
 
-    std::filesystem::path const path = tScene;
+//     std::filesystem::path const path = tScene;
 
-    std::ifstream file(path, std::ios::binary);
-    if (!file.is_open())
-    {
-        LogError("Could not open scene {}!", path.filename().string());
-        return nullptr;
-    }
+//     std::ifstream file(path, std::ios::binary);
+//     if (!file.is_open())
+//     {
+//         LogError("Could not open scene {}!", path.filename().string());
+//         return nullptr;
+//     }
 
-    EntityIndex activeCamera{kInvalidEntityIndex};
-    file.read(reinterpret_cast<char*>(&header), sizeof(SceneHeader));
-    file.read(reinterpret_cast<char*>(&scene->name), sizeof(utils::string_id));
-    file.read(reinterpret_cast<char*>(&activeCamera), sizeof(EntityIndex));
-    scene->activeCamera = EntityHandle{.index = activeCamera, .version = 0U};
+//     EntityIndex activeCamera{kInvalidEntityIndex};
+//     file.read(reinterpret_cast<char*>(&header), sizeof(SceneHeader));
+//     file.read(reinterpret_cast<char*>(&scene->name), sizeof(utils::string_id));
+//     file.read(reinterpret_cast<char*>(&activeCamera), sizeof(EntityIndex));
+//     scene->activeCamera = EntityHandle{.index = activeCamera, .version = 0U};
 
-    auto const                    entitiesSize = header.entitiesEnd - kSceneEnd;
-    std::vector<SerializedEntity> serializedEntities(entitiesSize / sizeof(SerializedEntity));
-    file.read(reinterpret_cast<char*>(serializedEntities.data()), static_cast<std::streamsize>(entitiesSize));
+//     auto const                    entitiesSize = header.entitiesEnd - kSceneEnd;
+//     std::vector<SerializedEntity> serializedEntities(entitiesSize / sizeof(SerializedEntity));
+//     file.read(reinterpret_cast<char*>(serializedEntities.data()), static_cast<std::streamsize>(entitiesSize));
 
-    auto const infoCompStart = header.entitiesEnd;
-    auto const infoCompEnd   = header.componentHeaders[0U].end;
+//     auto const infoCompStart = header.entitiesEnd;
+//     auto const infoCompEnd   = header.componentHeaders[0U].end;
 
-    auto const infoCompSize  = infoCompEnd - infoCompStart;
-    auto const infoCompCount = infoCompSize / sizeof(InfoComponent);
+//     auto const infoCompSize  = infoCompEnd - infoCompStart;
+//     auto const infoCompCount = infoCompSize / sizeof(InfoComponent);
 
-    std::vector<InfoComponent> infoComponents(infoCompCount);
-    file.read(reinterpret_cast<char*>(infoComponents.data()), static_cast<std::streamsize>(infoCompSize));
+//     std::vector<InfoComponent> infoComponents(infoCompCount);
+//     file.read(reinterpret_cast<char*>(infoComponents.data()), static_cast<std::streamsize>(infoCompSize));
 
-    {
-        auto& sceneGraph = scene->mSceneGraph;
+//     {
+//         auto& sceneGraph = scene->mSceneGraph;
 
-        EntityHandle               currentEntity{scene->sceneRoot};
-        std::uint32_t              serializedEntitiesIdx{1U};
-        std::vector<std::uint32_t> childCounts;
-        childCounts.push_back(infoComponents[serializedEntities[0U].componentIndices[0U]].childCount);
+//         EntityHandle               currentEntity{scene->sceneRoot};
+//         std::uint32_t              serializedEntitiesIdx{1U};
+//         std::vector<std::uint32_t> childCounts;
+//         childCounts.push_back(infoComponents[serializedEntities[0U].componentIndices[0U]].childCount);
 
-        while (scene->mTotalEntities < serializedEntities.size())
-        {
-            currentEntity     = scene->NewEntity(EntityHandle{.index = currentEntity.index, .version = 0U});
-            auto* currentInfo = scene->getComponent<InfoComponent>(currentEntity.index);
+//         while (scene->mTotalEntities < serializedEntities.size())
+//         {
+//             currentEntity     = scene->NewEntity(EntityHandle{.index = currentEntity.index, .version = 0U});
+//             auto* currentInfo = scene->getComponent<InfoComponent>(currentEntity.index);
 
-            currentInfo->debugName =
-                infoComponents[serializedEntities[serializedEntitiesIdx].componentIndices[0U]].debugName;
+//             currentInfo->debugName =
+//                 infoComponents[serializedEntities[serializedEntitiesIdx].componentIndices[0U]].debugName;
 
-            childCounts.push_back(
-                infoComponents[serializedEntities[serializedEntitiesIdx].componentIndices[0U]].childCount);
+//             childCounts.push_back(
+//                 infoComponents[serializedEntities[serializedEntitiesIdx].componentIndices[0U]].childCount);
 
-            serializedEntitiesIdx++;
-            if (0 != childCounts.back())
-            {
-                continue;
-            }
+//             serializedEntitiesIdx++;
+//             if (0 != childCounts.back())
+//             {
+//                 continue;
+//             }
 
-            while (true)
-            {
-                currentEntity = scene->GetParent(currentEntity);
+//             while (true)
+//             {
+//                 currentEntity = scene->GetParent(currentEntity);
 
-                if (kInvalidEntityHandle == currentEntity)// no more children of sceneRoot
-                {
-                    break;
-                }
+//                 if (kInvalidEntityHandle == currentEntity)// no more children of sceneRoot
+//                 {
+//                     break;
+//                 }
 
-                childCounts.pop_back();
-                auto remainingSibling = childCounts.back() - 1;
-                if (0 != remainingSibling)
-                {
-                    --childCounts.back();
-                    break;
-                }
-            }
-        }
+//                 childCounts.pop_back();
+//                 auto remainingSibling = childCounts.back() - 1;
+//                 if (0 != remainingSibling)
+//                 {
+//                     --childCounts.back();
+//                     break;
+//                 }
+//             }
+//         }
 
-        // NewEntity prepends we reverse each list to restore DFS sibling order.
-        for (auto& parent : sceneGraph.mNodes)
-        {
-            auto previous = SceneGraph::kInvalidIndex;
-            auto current  = parent.leftChild;
-            while (current != SceneGraph::kInvalidIndex)
-            {
-                auto&      child      = sceneGraph.mNodes[current];
-                auto const next       = child.rightSibling;
-                child.rightSibling    = previous;
-                child.previousSibling = next;
-                previous              = current;
-                current               = next;
-            }
-            parent.leftChild = previous;
-        }
-    }
+//         // NewEntity prepends we reverse each list to restore DFS sibling order.
+//         for (auto& parent : sceneGraph.mNodes)
+//         {
+//             auto previous = SceneGraph::kInvalidIndex;
+//             auto current  = parent.leftChild;
+//             while (current != SceneGraph::kInvalidIndex)
+//             {
+//                 auto&      child      = sceneGraph.mNodes[current];
+//                 auto const next       = child.rightSibling;
+//                 child.rightSibling    = previous;
+//                 child.previousSibling = next;
+//                 previous              = current;
+//                 current               = next;
+//             }
+//             parent.leftChild = previous;
+//         }
+//     }
 
-    for (auto const load : kComponentLoaders)
-    {
-        if (!load(file, *scene, header, serializedEntities))
-        {
-            return nullptr;
-        }
-    }
+//     for (auto const load : kComponentLoaders)
+//     {
+//         if (!load(file, *scene, header, serializedEntities))
+//         {
+//             return nullptr;
+//         }
+//     }
 
-    // Older scenes stored a separate quad payload in slot 6.
-    constexpr auto legacyQuadMask = std::uint32_t{1} << 6U;
-    constexpr auto meshMask = std::uint32_t{1} << static_cast<std::uint8_t>(ComponentType::kMeshRenderer);
-    for (EntityIndex index{1U}; index < serializedEntities.size(); ++index)
-    {
-        if ((serializedEntities[index].componentTypes & (legacyQuadMask | meshMask)) == legacyQuadMask &&
-            scene->AddComponent(scene->GetEntityAtIndex(index), MeshRendererComponent{rendering::kPolosDefaultQuad}) ==
-                nullptr)
-        {
-            return nullptr;
-        }
-    }
+//     // Older scenes stored a separate quad payload in slot 6.
+//     constexpr auto legacyQuadMask = std::uint32_t{1} << 6U;
+//     constexpr auto meshMask       = std::uint32_t{1} << static_cast<std::uint8_t>(ComponentType::kMeshRenderer);
+//     for (EntityIndex index{1U}; index < serializedEntities.size(); ++index)
+//     {
+//         if ((serializedEntities[index].componentTypes & (legacyQuadMask | meshMask)) == legacyQuadMask &&
+//             scene->AddComponent(
+//                 scene->GetEntityAtIndex(index), MeshRendererComponent{.meshHandle = rendering::kDefaultQuad, .matHandle = }) ==
+//                 nullptr)
+//         {
+//             return nullptr;
+//         }
+//     }
 
-    mScenes.push_back(std::move(owned));
-    mCurrentScene = scene;
-    return scene;
-}
+//     mScenes.push_back(std::move(owned));
+//     mCurrentScene = scene;
+//     return scene;
+// }
 
 }// namespace polos::ecs

@@ -1,0 +1,28 @@
+id: model.Sponza
+path: Models/Sponza/Sponza.gltf
+materials:
+  - id: material.Sponza_Unnamed_0
+  - id: material.Sponza_Unnamed_1
+  - id: material.Sponza_Unnamed_2
+  - id: material.Sponza_Unnamed_3
+  - id: material.Sponza_Unnamed_4
+  - id: material.Sponza_Unnamed_5
+  - id: material.Sponza_Unnamed_6
+  - id: material.Sponza_Unnamed_7
+  - id: material.Sponza_Unnamed_8
+  - id: material.Sponza_Unnamed_9
+  - id: material.Sponza_Unnamed_10
+  - id: material.Sponza_Unnamed_11
+  - id: material.Sponza_Unnamed_12
+  - id: material.Sponza_Unnamed_13
+  - id: material.Sponza_Unnamed_14
+  - id: material.Sponza_Unnamed_15
+  - id: material.Sponza_Unnamed_16
+  - id: material.Sponza_Unnamed_17
+  - id: material.Sponza_Unnamed_18
+  - id: material.Sponza_Unnamed_19
+  - id: material.Sponza_Unnamed_20
+  - id: material.Sponza_Unnamed_21
+  - id: material.Sponza_Unnamed_22
+  - id: material.Sponza_Unnamed_23
+  - id: material.Sponza_Unnamed_24

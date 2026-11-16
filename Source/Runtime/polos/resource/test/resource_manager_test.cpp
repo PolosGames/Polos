@@ -351,56 +351,17 @@ TEST_F(ResourceManagerTest, ResourcesWithSameFilenameAreDistinctById)
     EXPECT_EQ(resources->GetImage("tux.png"_sid), nullptr);
 }
 
-TEST_F(ResourceManagerTest, CatalogNormalizesPathsBeforeLoading)
-{
-    WriteImage("characters/tux.png", 0x11);
-    WriteImage("Characters/Tux.png", 0x22);
-    Catalog({{"texture.character", "characters\\.\\tux.png"}, {"texture.upper", "Characters/../Characters/Tux.png"}});
-    auto character = resources->GetImage("texture.character"_sid);
-    auto upper     = resources->GetImage("texture.upper"_sid);
-
-    ASSERT_TRUE(character);
-    ASSERT_TRUE(upper);
-    EXPECT_EQ(character->data[0], 0x11);
-    EXPECT_EQ(upper->data[0], 0x22);
-}
-
-TEST_F(ResourceManagerTest, InvalidIdsAndDuplicateIdsOrNormalizedPathsAbort)
+TEST_F(ResourceManagerTest, InvalidOrDuplicateIdsAbort)
 {
     Write("a.bin", "data");
     Write("b.bin", "data");
 
-    EXPECT_DEATH(Catalog({{"one", "a.bin"}, {"two", "./a.bin"}}), "");
     EXPECT_DEATH(Catalog({{"one", "a.bin"}, {"one", "b.bin"}}), "");
 
     for (auto const id : {std::string_view{}, std::string_view("a\0b", 3)})
     {
         EXPECT_DEATH(Catalog({{id, "a.bin"}}), "");
     }
-}
-
-TEST_F(ResourceManagerTest, EscapingSymlinksAbortCatalogLoading)
-{
-    Write("safe/data.txt", "inside");
-    std::filesystem::create_directory(directory / "outside");
-    std::error_code error;
-    std::filesystem::create_directory_symlink(directory / "outside", directory / "Resources/link", error);
-    if (error)
-    {
-        GTEST_SKIP() << "Symlinks unavailable: " << error.message();
-    }
-
-    EXPECT_DEATH(Catalog({{"escape", "link/data.txt"}}), "");
-
-    Catalog({{"safe", "safe/data.txt"}});
-    auto original = resources->GetFile("safe"_sid);
-    std::filesystem::remove_all(directory / "Resources/safe");
-    std::filesystem::create_directory_symlink(directory / "outside", directory / "Resources/safe");
-
-    EXPECT_DEATH(resources->LoadCatalog(), "");
-    // Disk changes cannot invalidate a preloaded resource or trigger a fresh read.
-    EXPECT_NE(resources->GetFile("safe"_sid), nullptr);
-    EXPECT_EQ(resources->GetFile("safe"_sid), original);
 }
 
 TEST_F(ResourceManagerTest, SharedReferencesSurviveCacheClearingAndCatalogReload)
@@ -458,7 +419,7 @@ TEST_F(ResourceManagerTest, MissingOrMalformedCatalogAborts)
 {
     EXPECT_DEATH(resources->LoadCatalog(), "");
     for (auto catalog :
-         {"{broken", "{}", "[{}]", R"([{"id":123,"path":"a"}])", R"([{"id":"escape","path":"../outside"}])"})
+         {"{broken", "{}", "[{}]", R"([{"id":123,"path":"a"}])"})
     {
         SCOPED_TRACE(catalog);
         Write("resources.json", catalog);

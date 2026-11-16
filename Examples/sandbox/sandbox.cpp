@@ -18,18 +18,11 @@
 
 #include <GLFW/glfw3.h>
 
-#include <cstddef>
 #include <cstdint>
 #include <format>
 
 namespace sandbox
 {
-
-namespace
-{
-constexpr std::size_t const kRowCount{100U};
-constexpr std::size_t const kColumnCount{100U};
-}// namespace
 
 class SandboxApp final : public polos::core::BaseLiveLayer
 {
@@ -51,10 +44,8 @@ auto SandboxApp::Create() -> void
 
     auto* scene = ecs::SceneManager::Get().CreateScene();
 
-    auto groundMat = CreateMaterialFromTexture("GroundMaterial", "texture.ground"_sid);
     CreateEntityFromModel("model.suzanne"_sid, scene);
     // auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
-    CreateQuad(scene, {0.F, -1.F, 0.F}, {-90.F, 0.F, 0.F}, 10.F, groundMat);
 
     auto const light = CreateLightSource(scene);
     communication::Subscribe<communication::RenderUpdate>([this, scene, light](communication::RenderUpdate& tEvent) {
