@@ -25,11 +25,19 @@ bin_dir="$polos_root/out/bin/linux-to-win-mingw-release"
 # Generate the catalog with the native tool before building the Windows executable.
 bash "$polos_root/Scripts/Linux/resource_preprocess.sh" "$polos_root/Examples/sandbox"
 
-# Use the Windows Vulkan import library and headers installed by vcpkg.
+# glslang runs on Linux, while headers and libraries must come from the Windows target.
+if [[ -n ${VULKAN_SDK:-} && -d "$VULKAN_SDK/bin" ]]; then
+    export PATH="$VULKAN_SDK/bin:$PATH"
+fi
 unset VULKAN_SDK
 cmake -S "$polos_root" -B "$build_dir" -G Ninja \
     "-DCMAKE_TOOLCHAIN_FILE=$polos_root/CMake/Toolchain.cmake" \
     -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
+    -U simdjson_DIR -U simdutf_DIR \
     -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
     -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
     -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \

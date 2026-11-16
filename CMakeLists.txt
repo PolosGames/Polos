@@ -66,7 +66,8 @@ add_compile_options(
 )
 
 add_compile_definitions(
-        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+    $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+    SIMDJSON_DEVELOPMENT_CHECKS
 )
 
 if (BUILD_TESTS)

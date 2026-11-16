@@ -39,16 +39,16 @@ public:
     auto operator=(SceneManager const&) -> SceneManager& = delete;
     auto operator=(SceneManager&&) -> SceneManager&      = delete;
 
-    auto CreateScene(utils::string_id tName = "Scene"_sid) -> Scene*;
+    auto CreateScene(std::string_view tName = "Scene") -> Scene*;
     auto MakeCurrentScene(utils::string_id tName) -> bool;
     auto GetCurrentScene() -> Scene*;
 
     auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
 
-    [[nodiscard]] auto SaveCurrentScene() -> Result<bool>;
-    [[nodiscard]] auto TakeCurrentSceneSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>;
+    [[nodiscard]] auto        SaveCurrentScene() -> Result<bool>;
+    [[nodiscard]] auto        TakeCurrentSceneSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>;
     [[nodiscard]] static auto SaveSceneSnapshot(SceneSnapshot const& tSnapshot) -> Result<bool>;
-    auto               LoadScene(std::string_view tScene) -> Scene*;
+    auto                      LoadScene(std::string_view tScene) -> Scene*;
 private:
     auto serializeEntity();
 

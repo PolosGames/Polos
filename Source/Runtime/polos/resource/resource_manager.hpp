@@ -87,7 +87,7 @@ private:
 
     struct Resource
     {
-        std::string path;
+        std::filesystem::path path;
     };
 
     std::filesystem::path                    mRoot;
