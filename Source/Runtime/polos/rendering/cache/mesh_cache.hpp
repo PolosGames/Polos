@@ -36,7 +36,7 @@ public:
     auto Create(CreationDetails const& tDetails) -> Result<void>;
     auto Destroy() -> void;
 
-    [[nodiscard]] auto AddMesh(resource::model::MeshPrimitive& tMesh) -> MeshHandle;
+    [[nodiscard]] auto AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHandle;
 
     /// @brief Check if we have a mesh with the handle
     [[nodiscard]] auto HasMesh(MeshHandle tHandle) -> bool;

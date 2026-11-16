@@ -4,6 +4,8 @@
 ///
 #include "helpers.hpp"
 
+#include "polos/ecs/components/info_component.hpp"
+
 #include <polos/ecs/components/mesh_renderer_component.hpp>
 #include <polos/ecs/components/transform_component.hpp>
 #include <polos/ecs/scene.hpp>
@@ -19,12 +21,15 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
 
     auto parent = tScene->NewEntity();
     tScene->AddComponent(parent, ecs::TransformComponent{});
+    tScene->GetMutableComponent<ecs::InfoComponent>(parent)->debugName = tModel;
 
     auto model = resource::ResourceManager::Get().GetModel(tModel);
     for (auto& mesh : model->meshes)
     {
         auto meshEntity = tScene->NewEntity(parent);
         tScene->AddComponent(meshEntity, ecs::TransformComponent{});
+        tScene->GetMutableComponent<ecs::InfoComponent>(meshEntity)->debugName =
+            polos::utils::StrHash64Runtime(mesh.name);
         for (auto& primitive : mesh.primitives)
         {
             auto primitiveEntity = tScene->NewEntity(meshEntity);
@@ -34,6 +39,8 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
                                      .meshHandle = rendering::MeshCache::Get().AddMesh(primitive),
                                      .matHandle  = primitive.material,
                                  });
+            tScene->GetMutableComponent<ecs::InfoComponent>(primitiveEntity)->debugName =
+                polos::utils::StrHash64Runtime(primitive.name);
         }
     }
 

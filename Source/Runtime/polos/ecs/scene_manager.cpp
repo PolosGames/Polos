@@ -9,6 +9,7 @@
 #include "polos/ecs/component_types.hpp"
 #include "polos/ecs/components/info_component.hpp"
 #include "polos/ecs/components/light_component.hpp"
+#include "polos/ecs/ecs_error_domain.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/assert.hpp"
@@ -296,96 +297,133 @@ auto SceneManager::GetCurrentScene() -> Scene*
     return mCurrentScene;
 }
 
-auto SceneManager::SaveCurrentScene(utils::string_id const tSceneName) -> bool
+struct SceneSnapshot
 {
-    auto* const scene = mCurrentScene;
-    if (scene == nullptr)
-    {
-        return false;
-    }
+    std::filesystem::path destination;
+    YAML::Node document;
+};
 
-    auto const destination = utils::GetStringFromID(tSceneName);
+auto Scene::TakeSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>
+{
+    auto const destination = utils::GetStringFromID(name);
     if (destination.empty())
     {
-        return false;
+        return ErrorType{EcsErrc::kMissingScenePath};
     }
 
-    std::vector<EntityIndex>  indices(scene->mEntitiesHead, kInvalidEntityIndex);
-    std::vector<EntityHandle> handles;
-    handles.reserve(scene->mTotalEntities);
-    for (EntityIndex i{0U}; i < scene->mEntitiesHead; ++i)
+    try
     {
-        auto const handle = scene->mEntities[i].handle;
-        if (scene->isEntityValid(handle))
+        std::vector<EntityIndex>  indices(mEntitiesHead, kInvalidEntityIndex);
+        std::vector<EntityHandle> handles;
+        handles.reserve(mTotalEntities);
+        for (EntityIndex i{0U}; i < mEntitiesHead; ++i)
         {
-            indices[i] = static_cast<EntityIndex>(handles.size());
-            handles.push_back(handle);
+            auto const handle = mEntities[i].handle;
+            if (isEntityValid(handle))
+            {
+                indices[i] = static_cast<EntityIndex>(handles.size());
+                handles.push_back(handle);
+            }
         }
-    }
 
-    YAML::Node entities(YAML::NodeType::Sequence);
-    for (auto const handle : handles)
-    {
-        YAML::Node entity(YAML::NodeType::Map);
-        auto       info   = entity["info"];
-        info["debugName"] = WriteId(scene->getComponent<InfoComponent>(handle.index)->debugName);
-
-        YAML::Node children(YAML::NodeType::Sequence);
-        children.SetStyle(YAML::EmitterStyle::Flow);
-        for (auto child = scene->GetChild(handle); IsEntityValid(child); child = scene->GetNextSibling(child))
+        YAML::Node entities(YAML::NodeType::Sequence);
+        for (auto const handle : handles)
         {
-            children.push_back(indices[child.index]);
+            YAML::Node entity(YAML::NodeType::Map);
+            auto       info   = entity["info"];
+            info["debugName"] = WriteId(getComponent<InfoComponent>(handle.index)->debugName);
+
+            YAML::Node children(YAML::NodeType::Sequence);
+            children.SetStyle(YAML::EmitterStyle::Flow);
+            for (auto child = GetChild(handle); IsEntityValid(child); child = GetNextSibling(child))
+            {
+                children.push_back(indices[child.index]);
+            }
+            info["children"] = children;
+            WriteComponents(*this, handle, entity);
+            entities.push_back(entity);
         }
-        info["children"] = children;
-        WriteComponents(*scene, handle, entity);
-        entities.push_back(entity);
-    }
 
-    YAML::Node document;
-    document["scene"] = entities;
-    if (scene->isEntityValid(scene->activeCamera) && scene->HasComponent<CameraComponent>(scene->activeCamera))
-    {
-        document["activeCamera"] = indices[scene->activeCamera.index];
-    }
-    else
-    {
-        document["activeCamera"] = YAML::Null;
-    }
+        YAML::Node document;
+        document["scene"] = entities;
+        if (isEntityValid(activeCamera) && HasComponent<CameraComponent>(activeCamera))
+        {
+            document["activeCamera"] = indices[activeCamera.index];
+        }
+        else
+        {
+            document["activeCamera"] = YAML::Null;
+        }
 
+        return std::make_shared<SceneSnapshot const>(std::filesystem::path(destination), std::move(document));
+    }
+    catch (YAML::Exception const&)
+    {
+        return ErrorType{EcsErrc::kSceneSerializationFailed};
+    }
+}
+
+auto SceneManager::TakeCurrentSceneSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>
+{
+    if (mCurrentScene == nullptr)
+    {
+        return ErrorType{EcsErrc::kNoCurrentScene};
+    }
+    return mCurrentScene->TakeSnapshot();
+}
+
+auto SceneManager::SaveCurrentScene() -> Result<bool>
+{
+    auto snapshot = TakeCurrentSceneSnapshot();
+    if (!snapshot)
+    {
+        return ErrorType{snapshot.error()};
+    }
+    return SaveSceneSnapshot(**snapshot);
+}
+
+auto SceneManager::SaveSceneSnapshot(SceneSnapshot const& tSnapshot) -> Result<bool>
+{
     YAML::Emitter output;
-    output << document;
+    try
+    {
+        output << tSnapshot.document;
+    }
+    catch (YAML::Exception const&)
+    {
+        return ErrorType{EcsErrc::kSceneSerializationFailed};
+    }
     if (!output.good())
     {
-        return false;
+        return ErrorType{EcsErrc::kSceneSerializationFailed};
     }
 
-    std::filesystem::path const path(destination);
-    auto                        temporary = path;
+    auto temporary = tSnapshot.destination;
     temporary += ".tmp";
 
     std::ofstream file(temporary, std::ios::noreplace);
     if (!file)
     {
-        LogError("Could not open scene for writing: {}", temporary.string());
-        return false;
+        return ErrorType{EcsErrc::kSceneFileOpenFailed};
     }
 
     file << output.c_str() << '\n';
     file.close();
 
     std::error_code error;
-    if (file)
+    if (!file)
     {
-        std::filesystem::rename(temporary, path, error);
-        if (!error)
-        {
-            return true;
-        }
+        std::filesystem::remove(temporary, error);
+        return ErrorType{EcsErrc::kSceneFileWriteFailed};
     }
 
-    LogError("Could not save scene: {}", destination);
-    std::filesystem::remove(temporary, error);
-    return false;
+    std::filesystem::rename(temporary, tSnapshot.destination, error);
+    if (error)
+    {
+        std::filesystem::remove(temporary, error);
+        return ErrorType{EcsErrc::kSceneFileReplaceFailed};
+    }
+    return true;
 }
 
 auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*

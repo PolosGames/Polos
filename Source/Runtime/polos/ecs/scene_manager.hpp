@@ -7,6 +7,7 @@
 #define POLOS_ECS_SCENE_MANAGER_HPP
 
 #include "polos/polos_api.hpp"
+#include "polos/utils/error_code.hpp"
 #include "polos/utils/pair.hpp"
 #include "polos/utils/string_id.hpp"
 
@@ -23,6 +24,7 @@ namespace polos::ecs
 {
 
 class Scene;
+struct SceneSnapshot;
 
 class POLOS_API SceneManager
 {
@@ -43,7 +45,9 @@ public:
 
     auto QueryScene(utils::string_id tName) -> utils::Pair<Scene*, bool>;
 
-    [[nodiscard]] auto SaveCurrentScene(utils::string_id tSceneName) -> bool;
+    [[nodiscard]] auto SaveCurrentScene() -> Result<bool>;
+    [[nodiscard]] auto TakeCurrentSceneSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>;
+    [[nodiscard]] static auto SaveSceneSnapshot(SceneSnapshot const& tSnapshot) -> Result<bool>;
     auto               LoadScene(std::string_view tScene) -> Scene*;
 private:
     auto serializeEntity();

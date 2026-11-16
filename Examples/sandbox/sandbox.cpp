@@ -4,6 +4,7 @@
 ///
 
 #include "helpers.hpp"
+#include "polos/ecs/view.hpp"
 
 #include <polos/communication/engine_terminate.hpp>
 #include <polos/communication/event_bus.hpp>
@@ -14,12 +15,16 @@
 #include <polos/ecs/scene.hpp>
 #include <polos/ecs/scene_manager.hpp>
 #include <polos/gui/gui.hpp>
+#include <polos/logging/log_macros.hpp>
 #include <polos/rendering/rendering_api.hpp>
 
 #include <GLFW/glfw3.h>
 
+#include <chrono>
 #include <cstdint>
 #include <format>
+#include <future>
+#include <utility>
 
 namespace sandbox
 {
@@ -31,26 +36,27 @@ public:
     [[nodiscard]] auto Name() const -> char const* override;
 private:
     void drawLightEditor(polos::ecs::Scene& tScene, polos::ecs::EntityHandle tLight);
-    auto drawFpsOverlay(float tDeltaTime) -> void;
+    void drawFpsOverlay(float tDeltaTime);
+    void drawSceneControl();
 
-    float         mFps{0.0F};
-    float         mFpsSampleTime{0.0F};
-    std::uint32_t mFpsSampleFrames{0U};
+    float             mFps{0.0F};
+    float             mFpsSampleTime{0.0F};
+    std::uint32_t     mFpsSampleFrames{0U};
+    std::future<void> mSceneSave;
 };
 
 auto SandboxApp::Create() -> void
 {
     using namespace polos;
 
-    auto* scene = ecs::SceneManager::Get().CreateScene();
+    auto* scene = ecs::SceneManager::Get().LoadScene("Scene");
 
-    CreateEntityFromModel("model.Suzanne"_sid, scene);
-    // auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
+    auto [light, _] = *ecs::View<ecs::EntityHandle, ecs::Write<ecs::LightComponent>>(scene).begin();
 
-    auto const light = CreateLightSource(scene);
     communication::Subscribe<communication::RenderUpdate>([this, scene, light](communication::RenderUpdate& tEvent) {
         drawFpsOverlay(tEvent.deltaTime);
         drawLightEditor(*scene, light);
+        drawSceneControl();
     });
     communication::Subscribe<communication::KeyPress>([](communication::KeyPress& tEvent) {
         if (tEvent.key == GLFW_KEY_ESCAPE)
@@ -115,6 +121,42 @@ auto SandboxApp::drawFpsOverlay(float tDeltaTime) -> void
         gui::Text(mFps > 0.0F ? std::format("FPS: {:.1f}", mFps) : "FPS: --");
         gui::Text(
             std::format("DrawCalls: {}", polos::rendering::RenderingApi::Get().GetLastFrameStatistics().drawCalls));
+    }
+    gui::End();
+}
+
+void SandboxApp::drawSceneControl()
+{
+    namespace ecs = polos::ecs;
+    namespace gui = polos::gui;
+
+    if (gui::Begin("Scene Control"))
+    {
+        bool const saveRequested = gui::Button("Save Current Scene");
+        bool const savePending =
+            mSceneSave.valid() && mSceneSave.wait_for(std::chrono::seconds(0)) != std::future_status::ready;
+        if (saveRequested && !savePending)
+        {
+            auto snapshot = ecs::SceneManager::Get().TakeCurrentSceneSnapshot();
+            if (!snapshot)
+            {
+                LogError("{}", snapshot.error().Message());
+            }
+            else
+            {
+                mSceneSave = std::async(std::launch::async, [snapshot = std::move(*snapshot)] {
+                    if (auto result = ecs::SceneManager::SaveSceneSnapshot(*snapshot); !result)
+                    {
+                        LogError("{}", result.error().Message());
+                    }
+                });
+            }
+        }
+
+        if (gui::Button("Load Scene"))
+        {
+            ecs::SceneManager::Get().LoadScene("Scene");
+        }
     }
     gui::End();
 }

@@ -218,6 +218,18 @@ auto ResourceManager::FetchMaterials() -> std::vector<std::weak_ptr<material::Ma
     return mats;
 }
 
+auto ResourceManager::FetchModels() -> std::vector<std::weak_ptr<model::Model>>
+{
+    std::vector<std::weak_ptr<model::Model>> models;
+    models.reserve(mModels.mResources.size());
+    for (auto const& [_, model] : mModels.mResources)
+    {
+        models.push_back(model);
+    }
+
+    return models;
+}
+
 auto ResourceManager::ClearCache() -> void
 {
     mImages.Clear();

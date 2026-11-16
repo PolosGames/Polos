@@ -5,6 +5,7 @@
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/components/visibility_component.hpp"
+#include "polos/ecs/ecs_error_domain.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/ecs/view.hpp"
@@ -19,6 +20,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <initializer_list>
 #include <memory>
 #include <string>
@@ -52,7 +54,8 @@ protected:
 
     auto Save(std::filesystem::path const& path) -> bool
     {
-        return manager->SaveCurrentScene(utils::RegisterString(path.string()));
+        manager->GetCurrentScene()->name = utils::RegisterString(path.string());
+        return manager->SaveCurrentScene().value_or(false);
     }
 
     std::unique_ptr<SceneManager> manager;
@@ -214,11 +217,38 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
 TEST_F(SceneSerializationTest, ReportsMissingSceneAndOpenFailure)
 {
     SceneManager emptyManager;
-    EXPECT_FALSE(emptyManager.SaveCurrentScene(utils::RegisterString((directory / "missing.yaml").string())));
+    auto const missing = emptyManager.SaveCurrentScene();
+    ASSERT_FALSE(missing);
+    EXPECT_EQ(missing.error(), MakeErrorCode(EcsErrc::kNoCurrentScene));
     EXPECT_FALSE(std::filesystem::exists(directory / "missing.yaml"));
     EXPECT_FALSE(Save(directory / "absent" / "fail.yaml"));
     EXPECT_EQ(manager->LoadScene((directory / "missing.yaml").string()), nullptr);
     EXPECT_EQ(manager->GetCurrentScene(), scene);
+}
+
+TEST_F(SceneSerializationTest, WorkerSavesCapturedSceneAfterLiveSceneChanges)
+{
+    auto const path = directory / "snapshot.yaml";
+    scene->name = utils::RegisterString(path.string());
+    auto const entity = scene->NewEntity();
+    ASSERT_NE(scene->AddComponent(entity, TransformComponent{.position = {3.0F, 0.0F, 0.0F}}), nullptr);
+
+    auto snapshot = scene->TakeSnapshot();
+    ASSERT_TRUE(snapshot);
+
+    ASSERT_TRUE(scene->RetireEntity(entity));
+    scene->name = utils::RegisterString((directory / "renamed.yaml").string());
+
+    auto save = std::async(std::launch::async, [snapshot = *snapshot] {
+        return SceneManager::SaveSceneSnapshot(*snapshot);
+    });
+    ASSERT_TRUE(save.get().value_or(false));
+    EXPECT_FALSE(std::filesystem::exists(directory / "renamed.yaml"));
+
+    auto const document = YAML::LoadFile(path.string());
+    auto const entities = document["scene"];
+    ASSERT_EQ(entities.size(), 2U);
+    EXPECT_FLOAT_EQ(entities[1]["transform"]["position"][0].as<float>(), 3.0F);
 }
 
 TEST_F(SceneSerializationTest, DefaultEditorCameraRoundTripsWithoutDuplication)
