@@ -301,7 +301,8 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
     }
 
     YAML::Node const modelYaml = YAML::Load(file);
-    auto const       modelName = modelYaml["id"].as<std::string>();
+    auto             modelName = modelYaml["id"].as<std::string>();
+    modelName                  = modelName.substr(modelName.find('.') + 1U);
     // Model descriptors live in Resources/Models. Their paths are relative to Resources.
     auto const path = tPath.parent_path().parent_path() / modelYaml["path"].as<std::string>();
 
@@ -348,8 +349,8 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
     {
         auto const& input = asset.meshes[i];
         auto&       mesh  = model->meshes[i];
-        auto const  index = std::to_string(i);
-        mesh.name         = input.name.empty() ? modelName + "." + index : std::string(input.name);
+        mesh.name = input.name.empty() ? "mesh." + modelName + std::to_string(i) : "mesh." + std::string(input.name);
+        LogInfo("Mesh saved as: {}", mesh.name);
 
         if (!ProcessMesh(asset, mesh, input, materials))
         {

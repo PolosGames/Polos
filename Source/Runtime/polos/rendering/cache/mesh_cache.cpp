@@ -8,6 +8,7 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/resources/material.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
+#include "polos/resource/resource_manager.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/profiling.hpp"
 #include "polos/utils/string_map.hpp"
@@ -229,6 +230,18 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
         std::ignore = AddMesh(quadMesh);
     }
 
+    for (auto const& model : resource::ResourceManager::Get().FetchModels())
+    {
+        auto modelPtr = model.lock();
+        for (auto const& mesh : modelPtr->meshes)
+        {
+            for (auto const& meshPrim : mesh.primitives)
+            {
+                std::ignore = AddMesh(meshPrim);
+            }
+        }
+    }
+
     return {};
 }
 
@@ -250,8 +263,10 @@ auto MeshCache::Destroy() -> void
     mMeshCount  = 0U;
 }
 
-auto MeshCache::AddMesh(resource::model::MeshPrimitive& tMesh) -> MeshHandle
+auto MeshCache::AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHandle
 {
+    LogDebug("Adding to mesh cache: {}", tMesh.name);
+
     auto meshId = utils::StrHash64Runtime(tMesh.name);
     if (mMeshes.contains(meshId))
     {

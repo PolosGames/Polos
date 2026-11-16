@@ -73,6 +73,7 @@ public:
     [[nodiscard]] auto GetFile(ResourceId tId) const -> std::shared_ptr<fs::File>;
 
     [[nodiscard]] auto FetchMaterials() -> std::vector<std::weak_ptr<material::Material>>;
+    [[nodiscard]] auto FetchModels() -> std::vector<std::weak_ptr<model::Model>>;
 
     /// @brief Releases the manager's ownership.
     /// Getters return nullptr until resources are loaded again. Existing shared references remain valid.

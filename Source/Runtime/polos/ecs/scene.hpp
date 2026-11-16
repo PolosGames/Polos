@@ -14,6 +14,7 @@
 #include "polos/ecs/scene_graph.hpp"
 #include "polos/ecs/settings.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/utils/error_code.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <glm/glm.hpp>
@@ -28,6 +29,8 @@
 
 namespace polos::ecs
 {
+
+struct SceneSnapshot;
 
 class POLOS_API Scene
 {
@@ -148,6 +151,9 @@ public:
     [[nodiscard]] auto GetEntityDataByIndex(EntityIndex tIndex) const -> EntityData const*;
 
     [[nodiscard]] auto GetObjectsByLayer() -> std::vector<uint32_t> const&;
+
+    /// Capture on the thread that owns the scene. The snapshot can be saved on a worker.
+    [[nodiscard]] auto TakeSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>;
 
     auto SetActiveCamera(EntityHandle tHandle) -> bool;
 
