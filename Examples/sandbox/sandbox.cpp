@@ -44,7 +44,7 @@ auto SandboxApp::Create() -> void
 
     auto* scene = ecs::SceneManager::Get().CreateScene();
 
-    CreateEntityFromModel("model.suzanne"_sid, scene);
+    CreateEntityFromModel("model.Suzanne"_sid, scene);
     // auto*      transform = scene->GetMutableComponent<ecs::TransformComponent>(entity);
 
     auto const light = CreateLightSource(scene);

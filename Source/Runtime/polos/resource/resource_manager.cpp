@@ -106,8 +106,6 @@ auto ResourceManager::LoadCatalog() -> void
             auto const resStr = resSeq[i]["id"].as<std::string_view>();
             ResourceId resId  = staged.registerResource(resStr, resSeq[i]["path"].as<std::string_view>());
 
-            LogInfo("{}", resStr);
-
             if (resStr.contains("texture."))
             {
                 staged.loadImage(resId);
@@ -119,6 +117,12 @@ auto ResourceManager::LoadCatalog() -> void
             if (resStr.contains("model."))
             {
                 staged.loadModel(resId);
+            }
+            if (resStr.starts_with("shader."))
+            {
+                auto const& shaderPath = staged.mResources.at(resId).path;
+                auto const  shader     = staged.LoadFile(resId, shaderPath);
+                PL_ASSERT(shader != nullptr, "Failed to load shader {} from {}", resStr, shaderPath);
             }
         }
     }
@@ -256,7 +260,7 @@ void ResourceManager::loadMaterial(ResourceId const tResource)
     }
 
     auto loaded = material::LoadMaterial(mResources[tResource].path);
-    PL_ASSERT(mMaterials.Add(tResource, loaded), "Failed to load image.");
+    PL_ASSERT(mMaterials.Add(tResource, loaded), "Failed to load material.");
 }
 
 void ResourceManager::loadModel(ResourceId const tResource)
@@ -268,7 +272,7 @@ void ResourceManager::loadModel(ResourceId const tResource)
     }
 
     auto loaded = model::LoadGltf(mResources[tResource].path);
-    PL_ASSERT(mModels.Add(tResource, std::move(loaded)), "Failed to load image.");
+    PL_ASSERT(mModels.Add(tResource, std::move(loaded)), "Failed to load model.");
 }
 
 

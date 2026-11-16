@@ -87,6 +87,18 @@ add_subdirectory(ThirdParty)
 add_subdirectory(Source)
 add_subdirectory(Tools)
 
+add_custom_target(install-runtime
+    COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --component Runtime
+    DEPENDS polos
+    VERBATIM
+)
+
+add_custom_target(install-sdk
+    COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --component SDK
+    DEPENDS install-runtime
+    VERBATIM
+)
+
 if (BUILD_EXAMPLES)
     add_subdirectory(Examples)
 endif ()

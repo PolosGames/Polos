@@ -18,23 +18,11 @@ if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
     set_target_properties(it-engine-smoke PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")
 
-    set(SMOKE_RESOURCE_DIR "$<TARGET_FILE_DIR:it-engine-smoke>/Resources")
-    get_property(SMOKE_SHADER_DIR GLOBAL PROPERTY POLOS_SHADER_BINARY_DIR)
-    add_dependencies(it-engine-smoke compile_shaders)
-    add_custom_command(TARGET it-engine-smoke POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${SMOKE_RESOURCE_DIR}/Shaders"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/test/integration/resources.json"
-            "${SMOKE_RESOURCE_DIR}/resources.json"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${SMOKE_SHADER_DIR}/forward_shading.vert.spv" "${SMOKE_SHADER_DIR}/forward_shading.frag.spv"
-            "${SMOKE_SHADER_DIR}/main_compute.comp.spv"
-            "${SMOKE_RESOURCE_DIR}/Shaders"
-        VERBATIM)
-    set_property(TARGET it-engine-smoke APPEND PROPERTY LINK_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/test/integration/resources.json"
-        "${SMOKE_SHADER_DIR}/forward_shading.vert.spv" "${SMOKE_SHADER_DIR}/forward_shading.frag.spv"
-        "${SMOKE_SHADER_DIR}/main_compute.comp.spv")
+    set(SMOKE_RESOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/integration/Resources")
+    polos_compile_shaders(engine-smoke-shaders
+        "${POLOS_EXAMPLES}/sandbox/Resources" "${SMOKE_RESOURCE_DIR}")
+    add_dependencies(it-engine-smoke engine-smoke-shaders)
+    configure_file(test/integration/resources.yaml "${SMOKE_RESOURCE_DIR}/resources.yaml" COPYONLY)
 
     gtest_add_tests(TARGET it-engine-smoke TEST_LIST INTEGRATION_TESTS
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")

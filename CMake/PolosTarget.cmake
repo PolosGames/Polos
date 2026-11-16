@@ -131,5 +131,27 @@ macro (define_polos_app)
         RUNTIME DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime
     )
 
-    install(DIRECTORY Resources/ DESTINATION Resources COMPONENT Runtime)
+    set(app_resources "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
+    set(compiled_resources "${CMAKE_CURRENT_BINARY_DIR}/compiled-resources")
+    install(DIRECTORY "${app_resources}/" DESTINATION "${POLOS_INSTALL_DIR}/Resources" COMPONENT Runtime
+        PATTERN "*.vert" EXCLUDE
+        PATTERN "*.frag" EXCLUDE
+        PATTERN "*.comp" EXCLUDE
+        PATTERN "*.tesc" EXCLUDE
+        PATTERN "*.tese" EXCLUDE
+        PATTERN "*.geom" EXCLUDE
+        PATTERN "*.glsl" EXCLUDE
+    )
+
+    polos_compile_shaders(${app_NAME}-shaders "${app_resources}" "${compiled_resources}" INSTALL)
+    add_dependencies(compile_shaders ${app_NAME}-shaders)
+    add_custom_target(${app_NAME}-resources
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${app_resources}" "$<TARGET_FILE_DIR:${app_NAME}>/Resources"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${compiled_resources}" "$<TARGET_FILE_DIR:${app_NAME}>/Resources"
+        VERBATIM
+    )
+    add_dependencies(${app_NAME}-resources ${app_NAME}-shaders)
+    add_dependencies(${app_NAME} ${app_NAME}-resources)
+    add_dependencies(install-runtime ${app_NAME})
+
 endmacro ()

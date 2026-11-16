@@ -20,8 +20,6 @@ struct TransformComponent
     glm::vec3 position{0.0F, 0.0F, 0.0F};
     glm::vec3 rotation{0.0F, 0.0F, 0.0F};
     float     scale{1.0F};
-
-    glm::quat quatRotation;
 };
 }// namespace polos::ecs
 

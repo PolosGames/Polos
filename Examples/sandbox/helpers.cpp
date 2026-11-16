@@ -25,15 +25,15 @@ auto CreateEntityFromModel(polos::utils::string_id const tModel, polos::ecs::Sce
     {
         auto meshEntity = tScene->NewEntity(parent);
         tScene->AddComponent(meshEntity, ecs::TransformComponent{});
-        for (auto& part : mesh.parts)
+        for (auto& primitive : mesh.primitives)
         {
-            auto partEntity = tScene->NewEntity(meshEntity);
-            tScene->AddComponent(partEntity, ecs::TransformComponent{});
+            auto primitiveEntity = tScene->NewEntity(meshEntity);
+            tScene->AddComponent(primitiveEntity, ecs::TransformComponent{});
             tScene->AddComponent(
-                partEntity, ecs::MeshRendererComponent{
-                                .meshHandle = rendering::MeshCache::Get().AddMesh(part),
-                                .matHandle  = part.material,
-                            });
+                primitiveEntity, ecs::MeshRendererComponent{
+                                     .meshHandle = rendering::MeshCache::Get().AddMesh(primitive),
+                                     .matHandle  = primitive.material,
+                                 });
         }
     }
 

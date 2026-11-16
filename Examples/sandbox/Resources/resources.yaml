@@ -218,6 +218,12 @@ resources:
   - id: material.Suzanne
     path: Materials/Suzanne.yaml
   - id: model.Sponza
-    path: Resources/Models/Sponza.yaml
+    path: Models/Sponza.yaml
   - id: model.Suzanne
-    path: Resources/Models/Suzanne.yaml
+    path: Models/Suzanne.yaml
+  - id: shader.vert.forward_shading
+    path: Shaders/forward_shading.vert.spv
+  - id: shader.frag.forward_shading
+    path: Shaders/forward_shading.frag.spv
+  - id: shader.comp.main_compute
+    path: Shaders/main_compute.comp.spv
