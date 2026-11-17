@@ -12,7 +12,7 @@
 #include "polos/utils/string_map.hpp"
 
 #include <gtest/gtest.h>
-#include <yaml-cpp/yaml.h>
+#include "polos/utils/yaml_read.hpp"
 
 #include <array>
 #include <chrono>
@@ -37,7 +37,7 @@ protected:
         manager                 = std::make_unique<SceneManager>();
         SceneManager::sInstance = manager.get();
 
-        scene = manager->CreateScene("SerializationTest"_sid);
+        scene = manager->CreateScene("SerializationTest");
         // These fixtures build their own camera and hierarchy, including root-only scenes.
         ASSERT_TRUE(scene->RetireEntity(scene->activeCamera));
 
@@ -175,16 +175,18 @@ TEST_F(SceneSerializationTest, WritesEntityOrderAndRemapsChildrenAcrossRetiredSl
     auto const path = directory / "test.yaml";
     ASSERT_TRUE(Save(path));
 
-    auto const document = YAML::LoadFile(path.string());
+    std::ifstream file(path);
+    auto const tree = utils::yaml::Parse(file);
+    auto const document = tree.crootref();
     auto const entities = document["scene"];
-    ASSERT_EQ(entities.size(), 3U);
-    EXPECT_EQ(entities[0]["info"]["children"].as<std::vector<EntityIndex>>(), (std::vector<EntityIndex>{2U}));
-    EXPECT_EQ(entities[1]["info"]["debugName"].as<std::string>(), "Child");
-    EXPECT_FALSE(entities[1]["info"]["graphHandle"]);
-    EXPECT_EQ(entities[1]["transform"]["position"].as<std::vector<float>>(), (std::vector<float>{42.0F, 3.0F, -1.0F}));
-    EXPECT_EQ(entities[2]["info"]["debugName"].as<std::string>(), "Parent");
-    EXPECT_EQ(entities[2]["info"]["children"].as<std::vector<EntityIndex>>(), (std::vector<EntityIndex>{1U}));
-    EXPECT_EQ(document["activeCamera"].as<EntityIndex>(), 1U);
+    ASSERT_EQ(entities.num_children(), 3U);
+    EXPECT_EQ((utils::yaml::ReadArray<EntityIndex, 1>(entities[0]["info"]["children"])), (std::array<EntityIndex, 1>{2U}));
+    EXPECT_EQ(utils::yaml::Scalar(entities[1]["info"]["debugName"]), "Child");
+    EXPECT_FALSE(entities[1]["info"].find_child("graphHandle").readable());
+    EXPECT_EQ((utils::yaml::ReadArray<float, 3>(entities[1]["transform"]["position"])), (std::array{42.0F, 3.0F, -1.0F}));
+    EXPECT_EQ(utils::yaml::Scalar(entities[2]["info"]["debugName"]), "Parent");
+    EXPECT_EQ((utils::yaml::ReadArray<EntityIndex, 1>(entities[2]["info"]["children"])), (std::array<EntityIndex, 1>{1U}));
+    EXPECT_EQ(utils::yaml::Read<EntityIndex>(document["activeCamera"]), 1U);
 
     auto* loaded = manager->LoadScene(path.string());
     ASSERT_NE(loaded, nullptr);
@@ -205,12 +207,14 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
 
     ASSERT_TRUE(Save(path));
 
-    auto const document = YAML::LoadFile(path.string());
+    std::ifstream file(path);
+    auto const tree = utils::yaml::Parse(file);
+    auto const document = tree.crootref();
     auto const entities = document["scene"];
-    ASSERT_EQ(entities.size(), 1U);
-    EXPECT_EQ(entities[0]["info"]["debugName"].as<std::string>(), "SceneRoot");
-    EXPECT_EQ(entities[0]["info"]["children"].size(), 0U);
-    EXPECT_TRUE(document["activeCamera"].IsNull());
+    ASSERT_EQ(entities.num_children(), 1U);
+    EXPECT_EQ(utils::yaml::Scalar(entities[0]["info"]["debugName"]), "SceneRoot");
+    EXPECT_EQ(entities[0]["info"]["children"].num_children(), 0U);
+    EXPECT_TRUE(document["activeCamera"].val_is_null());
     EXPECT_LT(std::filesystem::file_size(path), 4096U);
 }
 
@@ -245,10 +249,12 @@ TEST_F(SceneSerializationTest, WorkerSavesCapturedSceneAfterLiveSceneChanges)
     ASSERT_TRUE(save.get().value_or(false));
     EXPECT_FALSE(std::filesystem::exists(directory / "renamed.yaml"));
 
-    auto const document = YAML::LoadFile(path.string());
+    std::ifstream file(path);
+    auto const tree = utils::yaml::Parse(file);
+    auto const document = tree.crootref();
     auto const entities = document["scene"];
-    ASSERT_EQ(entities.size(), 2U);
-    EXPECT_FLOAT_EQ(entities[1]["transform"]["position"][0].as<float>(), 3.0F);
+    ASSERT_EQ(entities.num_children(), 2U);
+    EXPECT_FLOAT_EQ(utils::yaml::Read<float>(entities[1]["transform"]["position"][0]), 3.0F);
 }
 
 TEST_F(SceneSerializationTest, DefaultEditorCameraRoundTripsWithoutDuplication)

@@ -82,7 +82,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(Vulkan 1.3 REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(yaml-cpp CONFIG REQUIRED)
+find_package(ryml CONFIG REQUIRED)
 
 add_subdirectory(ThirdParty)
 add_subdirectory(Source)

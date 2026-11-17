@@ -22,6 +22,9 @@ polos_tests(gltf-validation SOURCES
 )
 
 if (BUILD_TESTS)
+    target_link_libraries(ut-resource PRIVATE ryml::ryml)
+    target_link_libraries(ut-gltf-validation PRIVATE ryml::ryml)
+
     # Run image and manager tests independently of glTF decoding tests.
     add_executable(ut-resource-loading
         test/loader_test.cpp

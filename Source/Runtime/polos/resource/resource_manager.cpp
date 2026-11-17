@@ -14,7 +14,7 @@
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
 
-#include <yaml-cpp/yaml.h>
+#include "polos/utils/yaml_read.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -97,14 +97,17 @@ auto ResourceManager::LoadCatalog() -> void
 
     ResourceManager staged(mRoot);
     {
-        auto const path      = mRoot / "resources.yaml";
-        YAML::Node resources = YAML::LoadFile(path.string());
+        auto const path = mRoot / "resources.yaml";
+        std::ifstream file(path);
+        PL_ASSERT(file.is_open(), "Could not open resource catalog: {}", path.string());
+        auto const resources = utils::yaml::Parse(file);
 
-        auto resSeq = resources["resources"];
-        for (uint32_t i{0U}; i < resSeq.size(); ++i)
+        auto const resSeq = utils::yaml::Find(resources.crootref(), "resources");
+        PL_ASSERT(resSeq.readable() && resSeq.is_seq(), "Missing resource sequence in {}", path.string());
+        for (auto resource : resSeq.children())
         {
-            auto const resStr = resSeq[i]["id"].as<std::string_view>();
-            ResourceId resId  = staged.registerResource(resStr, resSeq[i]["path"].as<std::string_view>());
+            auto const resStr = utils::yaml::Scalar(utils::yaml::Find(resource, "id"));
+            ResourceId resId  = staged.registerResource(resStr, utils::yaml::Scalar(utils::yaml::Find(resource, "path")));
 
             if (resStr.contains("texture."))
             {
