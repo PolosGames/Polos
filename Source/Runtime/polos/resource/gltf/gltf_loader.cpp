@@ -13,7 +13,7 @@
 
 #include <fastgltf/core.hpp>
 #include <fastgltf/glm_element_traits.hpp>
-#include <yaml-cpp/yaml.h>
+#include "polos/utils/yaml_read.hpp"
 
 #include <algorithm>
 #include <array>
@@ -300,11 +300,12 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         return nullptr;
     }
 
-    YAML::Node const modelYaml = YAML::Load(file);
-    auto             modelName = modelYaml["id"].as<std::string>();
-    modelName                  = modelName.substr(modelName.find('.') + 1U);
+    auto const tree      = utils::yaml::Parse(file);
+    auto const modelYaml = tree.crootref();
+    auto const id        = utils::yaml::Scalar(utils::yaml::Find(modelYaml, "id"));
+    std::string const modelName{id.substr(id.find('.') + 1U)};
     // Model descriptors live in Resources/Models. Their paths are relative to Resources.
-    auto const path = tPath.parent_path().parent_path() / modelYaml["path"].as<std::string>();
+    auto const path = tPath.parent_path().parent_path() / utils::yaml::Scalar(utils::yaml::Find(modelYaml, "path"));
 
     auto data = fastgltf::GltfDataBuffer::FromPath(path);
     if (data.has_error())
@@ -333,12 +334,14 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 #endif
 
     std::vector<ResourceId> materials;
-    auto const              matSeq        = modelYaml["materials"];
-    auto const              materialCount = matSeq ? matSeq.size() : 0U;
-    materials.reserve(materialCount);
-    for (size_t i{0U}; i < materialCount; ++i)
+    auto const matSeq = utils::yaml::Find(modelYaml, "materials");
+    if (matSeq.readable() && matSeq.is_seq())
     {
-        materials.push_back(utils::StrHash64Runtime(matSeq[i]["id"].Scalar()));
+        materials.reserve(matSeq.num_children());
+        for (auto material : matSeq.children())
+        {
+            materials.push_back(utils::StrHash64Runtime(utils::yaml::Scalar(utils::yaml::Find(material, "id"))));
+        }
     }
 
     auto model  = std::make_unique<Model>();

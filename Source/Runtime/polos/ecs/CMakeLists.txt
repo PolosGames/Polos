@@ -14,6 +14,9 @@ polos_sources(
 polos_tests(scene-graph SOURCES test/scene_graph_test.cpp)
 
 polos_tests(scene-serialization SOURCES test/scene_serialization_test.cpp LABELS ct)
+if (BUILD_TESTS)
+    target_link_libraries(ut-scene-serialization PRIVATE ryml::ryml)
+endif()
 
 polos_tests(ecs SOURCES
     test/component_pool_test.cpp

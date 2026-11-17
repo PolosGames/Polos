@@ -29,8 +29,8 @@ target_link_libraries(polos PUBLIC
     stb_image::stb_image
     stb_textedit::stb_textedit
     fastgltf::fastgltf
-    yaml-cpp::yaml-cpp
 )
+target_link_libraries(polos PRIVATE ryml::ryml)
 if (ENABLE_PROFILING)
     target_link_libraries(polos PUBLIC Tracy::TracyClient)
 endif()
@@ -47,6 +47,7 @@ set_target_properties(polos
         INSTALL_RPATH             "$ORIGIN"
 )
 build_options(polos true)
+
 if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # libstdc++ keeps the Windows terminal helpers used by std::println here.
     target_link_libraries(polos PRIVATE stdc++exp)

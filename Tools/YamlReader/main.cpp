@@ -3,10 +3,11 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include <yaml-cpp/yaml.h>
+#include "polos/utils/yaml_read.hpp"
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <print>
 
 namespace fs = std::filesystem;
@@ -33,12 +34,24 @@ auto main(int32_t const tArgc, char** tArgv) -> int32_t
         return 1;
     }
 
-    fs::path const yamlPath  = resourcesDir / "resources.yaml";
-    YAML::Node     resources = YAML::LoadFile(yamlPath.string());
-
-    auto resSeq = resources["resources"];
-    for (uint32_t i{0U}; i < resSeq.size(); ++i)
+    fs::path const yamlPath = resourcesDir / "resources.yaml";
+    std::ifstream file(yamlPath);
+    if (!file)
     {
-        std::println("{}", resSeq[i]["id"].as<std::string_view>());
+        std::println("Could not open resource catalog: {}", yamlPath.string());
+        return 1;
+    }
+
+    auto const tree = polos::utils::yaml::Parse(file);
+    auto const resources = polos::utils::yaml::Find(tree.crootref(), "resources");
+    if (!resources.readable() || !resources.is_seq())
+    {
+        std::println("Missing resource sequence in {}", yamlPath.string());
+        return 1;
+    }
+
+    for (auto resource : resources.children())
+    {
+        std::println("{}", polos::utils::yaml::Scalar(polos::utils::yaml::Find(resource, "id")));
     }
 }

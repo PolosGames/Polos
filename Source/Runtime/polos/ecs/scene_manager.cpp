@@ -15,7 +15,9 @@
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
 
-#include <yaml-cpp/yaml.h>
+#include "polos/utils/yaml_read.hpp"
+
+#include <ryml/ryml_std.hpp>
 
 #include <algorithm>
 #include <array>
@@ -93,118 +95,127 @@ namespace
 //     &LoadComponentSection<ComponentType::kMeshRenderer>,
 // };
 
-auto WriteId(utils::string_id tId) -> YAML::Node
+void WriteId(ryml::NodeRef tNode, utils::string_id tId)
 {
     auto const name = utils::GetStringFromID(tId);
     if (!name.empty())
     {
-        return YAML::Node(std::string(name));
+        tNode << ryml::csubstr{name.data(), name.size()};
+        tNode |= ryml::VAL_DQUO;
+        return;
     }
-
-    YAML::Node node(tId);
-    node.SetTag("!id");
-    return node;
+    tNode << tId;
+    tNode.set_val_tag("!id");
 }
 
-auto ReadId(YAML::Node const& tNode) -> utils::string_id
+auto ReadId(ryml::ConstNodeRef tNode) -> utils::string_id
 {
-    if (tNode.Tag() == "!id")
+    if (tNode.readable() && tNode.has_val_tag() && tNode.val_tag() == "!id")
     {
-        return tNode.as<utils::string_id>();
+        return utils::yaml::Read<utils::string_id>(tNode);
     }
-    return utils::StrHash64Runtime(tNode.as<std::string>());
+    return utils::StrHash64Runtime(utils::yaml::Scalar(tNode));
 }
 
-auto WriteVec3(glm::vec3 tValue) -> YAML::Node
+void WriteVec3(ryml::NodeRef tNode, glm::vec3 tValue)
 {
-    YAML::Node node(std::array{tValue.x, tValue.y, tValue.z});
-    node.SetStyle(YAML::EmitterStyle::Flow);
-    return node;
+    tNode |= ryml::SEQ;
+    tNode |= ryml::FLOW_SL;
+    tNode.append_child() << tValue.x;
+    tNode.append_child() << tValue.y;
+    tNode.append_child() << tValue.z;
 }
 
 template<typename T>
-auto ReadField(YAML::Node const& tNode, char const* tKey, T tDefault) -> T
+auto ReadField(ryml::ConstNodeRef tNode, char const* tKey, T tDefault) -> T
 {
-    auto const field = tNode[tKey];
-    return field ? field.as<T>() : tDefault;
+    return utils::yaml::Read(utils::yaml::Find(tNode, ryml::to_csubstr(tKey)), tDefault);
 }
 
-auto ReadVec3(YAML::Node const& tNode, char const* tKey, glm::vec3 tDefault) -> glm::vec3
+auto ReadVec3(ryml::ConstNodeRef tNode, char const* tKey, glm::vec3 tDefault) -> glm::vec3
 {
-    auto const value = ReadField(tNode, tKey, std::array{tDefault.x, tDefault.y, tDefault.z});
+    auto const value = utils::yaml::ReadArray(
+        utils::yaml::Find(tNode, ryml::to_csubstr(tKey)), std::array{tDefault.x, tDefault.y, tDefault.z});
     return {value[0], value[1], value[2]};
 }
 
-auto WriteComponents(Scene& tScene, EntityHandle tHandle, YAML::Node& tEntity) -> void
+auto WriteComponents(Scene& tScene, EntityHandle tHandle, ryml::NodeRef tEntity) -> void
 {
     if (tScene.HasComponent<TransformComponent>(tHandle))
     {
         auto const& value = *tScene.GetComponent<TransformComponent>(tHandle);
         auto        node  = tEntity["transform"];
-        node["position"]  = WriteVec3(value.position);
-        node["rotation"]  = WriteVec3(value.rotation);
-        node["scale"]     = value.scale;
+        node |= ryml::MAP;
+        WriteVec3(node["position"], value.position);
+        WriteVec3(node["rotation"], value.rotation);
+        node["scale"] << value.scale;
     }
     if (tScene.HasComponent<MeshRendererComponent>(tHandle))
     {
         auto const& value = *tScene.GetComponent<MeshRendererComponent>(tHandle);
         auto        node  = tEntity["mesh_renderer"];
-        node["mesh"]      = WriteId(value.meshHandle);
-        node["material"]  = WriteId(value.matHandle);
+        node |= ryml::MAP;
+        WriteId(node["mesh"], value.meshHandle);
+        WriteId(node["material"], value.matHandle);
     }
     if (tScene.HasComponent<VisibilityComponent>(tHandle))
     {
-        tEntity["visibility"]["isVisible"] = tScene.GetComponent<VisibilityComponent>(tHandle)->isVisible;
+        auto node = tEntity["visibility"];
+        node |= ryml::MAP;
+        node["isVisible"].set_val(tScene.GetComponent<VisibilityComponent>(tHandle)->isVisible ? "true" : "false");
     }
     if (tScene.HasComponent<CameraComponent>(tHandle))
     {
         auto const& value  = *tScene.GetComponent<CameraComponent>(tHandle);
         auto        node   = tEntity["camera"];
-        node["cameraType"] = value.cameraType == CameraType::kOrtho ? "orthographic" : "perspective";
-        node["nearZ"]      = value.nearZ;
-        node["farZ"]       = value.farZ;
-        node["fov"]        = value.fov;
-        node["size"]       = value.size;
+        node |= ryml::MAP;
+        node["cameraType"].set_val(value.cameraType == CameraType::kOrtho ? ryml::csubstr{"orthographic"} : ryml::csubstr{"perspective"});
+        node["nearZ"] << value.nearZ;
+        node["farZ"] << value.farZ;
+        node["fov"] << value.fov;
+        node["size"] << value.size;
     }
     if (tScene.HasComponent<EditorCameraControllerComponent>(tHandle))
     {
         auto const& value       = *tScene.GetComponent<EditorCameraControllerComponent>(tHandle);
         auto        node        = tEntity["editor_camera_controller"];
-        node["moveSpeed"]       = value.moveSpeed;
-        node["lookSensitivity"] = value.lookSensitivity;
+        node |= ryml::MAP;
+        node["moveSpeed"] << value.moveSpeed;
+        node["lookSensitivity"] << value.lookSensitivity;
     }
     if (tScene.HasComponent<LightComponent>(tHandle))
     {
         auto const& value      = *tScene.GetComponent<LightComponent>(tHandle);
         auto        node       = tEntity["light"];
-        node["color"]          = WriteVec3(value.color);
-        node["ambientFactor"]  = value.ambientFactor;
-        node["specularFactor"] = value.specularFactor;
+        node |= ryml::MAP;
+        WriteVec3(node["color"], value.color);
+        node["ambientFactor"] << value.ambientFactor;
+        node["specularFactor"] << value.specularFactor;
     }
 }
 
 template<typename Reader>
-auto ReadComponent(Scene& tScene, EntityHandle tHandle, YAML::Node const& tNode, Reader tRead) -> bool
+auto ReadComponent(Scene& tScene, EntityHandle tHandle, ryml::ConstNodeRef tNode, Reader tRead) -> bool
 {
-    if (!tNode)
+    if (!tNode.readable())
     {
         return true;
     }
-    if (!tNode.IsMap())
+    if (!tNode.is_map())
     {
         return false;
     }
     return tScene.AddComponent(tHandle, tRead(tNode)) != nullptr;
 }
 
-auto ReadComponents(Scene& tScene, EntityHandle tHandle, YAML::Node const& tEntity) -> bool
+auto ReadComponents(Scene& tScene, EntityHandle tHandle, ryml::ConstNodeRef tEntity) -> bool
 {
     auto const read = [&](char const* tKey, auto tRead) {
-        return ReadComponent(tScene, tHandle, tEntity[tKey], tRead);
+        return ReadComponent(tScene, tHandle, utils::yaml::Find(tEntity, ryml::to_csubstr(tKey)), tRead);
     };
 
-    std::string cameraType = "perspective";
-    if (auto const camera = tEntity["camera"]; camera && camera.IsMap())
+    std::string_view cameraType = "perspective";
+    if (auto const camera = utils::yaml::Find(tEntity, "camera"); camera.readable() && camera.is_map())
     {
         cameraType = ReadField(camera, "cameraType", cameraType);
         if (cameraType != "perspective" && cameraType != "orthographic")
@@ -213,24 +224,24 @@ auto ReadComponents(Scene& tScene, EntityHandle tHandle, YAML::Node const& tEnti
         }
     }
 
-    return read("transform", [](YAML::Node const& node) {
+    return read("transform", [](ryml::ConstNodeRef node) {
         TransformComponent value{};
         value.position = ReadVec3(node, "position", value.position);
         value.rotation = ReadVec3(node, "rotation", value.rotation);
         value.scale    = ReadField(node, "scale", value.scale);
         return value;
-    }) && read("mesh_renderer", [](YAML::Node const& node) {
-        MeshRendererComponent value{.meshHandle = ReadId(node["mesh"])};
-        if (auto const material = node["material"]; material)
+    }) && read("mesh_renderer", [](ryml::ConstNodeRef node) {
+        MeshRendererComponent value{.meshHandle = ReadId(utils::yaml::Find(node, "mesh"))};
+        if (auto const material = utils::yaml::Find(node, "material"); material.readable())
         {
             value.matHandle = ReadId(material);
         }
         return value;
-    }) && read("visibility", [](YAML::Node const& node) {
+    }) && read("visibility", [](ryml::ConstNodeRef node) {
         VisibilityComponent value{};
         value.isVisible = ReadField(node, "isVisible", value.isVisible);
         return value;
-    }) && read("camera", [&](YAML::Node const& node) {
+    }) && read("camera", [&](ryml::ConstNodeRef node) {
         CameraComponent value{};
         value.cameraType = cameraType == "orthographic" ? CameraType::kOrtho : CameraType::kPerspective;
         value.nearZ      = ReadField(node, "nearZ", value.nearZ);
@@ -238,12 +249,12 @@ auto ReadComponents(Scene& tScene, EntityHandle tHandle, YAML::Node const& tEnti
         value.fov        = ReadField(node, "fov", value.fov);
         value.size       = ReadField(node, "size", value.size);
         return value;
-    }) && read("editor_camera_controller", [](YAML::Node const& node) {
+    }) && read("editor_camera_controller", [](ryml::ConstNodeRef node) {
         EditorCameraControllerComponent value{};
         value.moveSpeed       = ReadField(node, "moveSpeed", value.moveSpeed);
         value.lookSensitivity = ReadField(node, "lookSensitivity", value.lookSensitivity);
         return value;
-    }) && read("light", [](YAML::Node const& node) {
+    }) && read("light", [](ryml::ConstNodeRef node) {
         LightComponent value{};
         value.color          = ReadVec3(node, "color", value.color);
         value.ambientFactor  = ReadField(node, "ambientFactor", value.ambientFactor);
@@ -302,7 +313,7 @@ auto SceneManager::GetCurrentScene() -> Scene*
 struct SceneSnapshot
 {
     std::filesystem::path destination;
-    YAML::Node            document;
+    ryml::Tree            document;
 };
 
 auto Scene::TakeSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>
@@ -326,33 +337,36 @@ auto Scene::TakeSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>
         }
     }
 
-    YAML::Node entities(YAML::NodeType::Sequence);
+    ryml::Tree document;
+    auto root = document.rootref();
+    root |= ryml::MAP;
+    auto entities = root["scene"];
+    entities |= ryml::SEQ;
     for (auto const handle : handles)
     {
-        YAML::Node entity(YAML::NodeType::Map);
-        auto       info   = entity["info"];
-        info["debugName"] = WriteId(getComponent<InfoComponent>(handle.index)->debugName);
+        auto entity = entities.append_child();
+        entity |= ryml::MAP;
+        auto info = entity["info"];
+        info |= ryml::MAP;
+        WriteId(info["debugName"], getComponent<InfoComponent>(handle.index)->debugName);
 
-        YAML::Node children(YAML::NodeType::Sequence);
-        children.SetStyle(YAML::EmitterStyle::Flow);
+        auto children = info["children"];
+        children |= ryml::SEQ;
+        children |= ryml::FLOW_SL;
         for (auto child = GetChild(handle); IsEntityValid(child); child = GetNextSibling(child))
         {
-            children.push_back(indices[child.index]);
+            children.append_child() << indices[child.index];
         }
-        info["children"] = children;
         WriteComponents(*this, handle, entity);
-        entities.push_back(entity);
     }
 
-    YAML::Node document;
-    document["scene"] = entities;
     if (isEntityValid(activeCamera) && HasComponent<CameraComponent>(activeCamera))
     {
-        document["activeCamera"] = indices[activeCamera.index];
+        root["activeCamera"] << indices[activeCamera.index];
     }
     else
     {
-        document["activeCamera"] = YAML::Null;
+        root["activeCamera"].set_val("null");
     }
 
     return std::make_shared<SceneSnapshot const>(std::filesystem::path(destination), std::move(document));
@@ -379,9 +393,8 @@ auto SceneManager::SaveCurrentScene() -> Result<bool>
 
 auto SceneManager::SaveSceneSnapshot(SceneSnapshot const& tSnapshot) -> Result<bool>
 {
-    YAML::Emitter output;
-    output << tSnapshot.document;
-    if (!output.good())
+    auto const output = ryml::emitrs_yaml<std::string>(tSnapshot.document);
+    if (output.empty())
     {
         return ErrorType{EcsErrc::kSceneSerializationFailed};
     }
@@ -395,7 +408,7 @@ auto SceneManager::SaveSceneSnapshot(SceneSnapshot const& tSnapshot) -> Result<b
         return ErrorType{EcsErrc::kSceneFileOpenFailed};
     }
 
-    file << output.c_str() << '\n';
+    file << output;
     file.close();
 
     std::error_code error;
@@ -423,18 +436,27 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         return nullptr;
     }
 
-    auto const document = YAML::Load(file);
-    if (!document.IsMap())
+    auto const tree = utils::yaml::Parse(file);
+    auto const document = tree.crootref();
+    if (!document.readable() || !document.is_map())
     {
         LogError("Invalid document in scene: {}", tScene);
         return nullptr;
     }
 
-    auto const entities = document["scene"];
-    if (!entities || !entities.IsSequence() || entities.size() == 0 || entities.size() > Settings::kMaxEntities)
+    auto const entitySequence = utils::yaml::Find(document, "scene");
+    if (!entitySequence.readable() || !entitySequence.is_seq() || !entitySequence.has_children() ||
+        entitySequence.num_children() > Settings::kMaxEntities)
     {
         LogError("Invalid entity sequence in scene: {}", tScene);
         return nullptr;
+    }
+
+    std::vector<ryml::ConstNodeRef> entities;
+    entities.reserve(entitySequence.num_children());
+    for (auto entity : entitySequence.children())
+    {
+        entities.push_back(entity);
     }
 
     auto scene = std::unique_ptr<Scene>(new Scene(utils::StrHash64Runtime(tScene), false));
@@ -442,8 +464,8 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
     for (EntityIndex i{0U}; i < entities.size(); ++i)
     {
         auto const entity = entities[i];
-        auto const info   = entity["info"];
-        auto const name   = ReadId(info["debugName"]);
+        auto const info   = utils::yaml::Find(entity, "info");
+        auto const name   = ReadId(utils::yaml::Find(info, "debugName"));
         if (i == 0U)
         {
             scene->getComponent<InfoComponent>(scene->sceneRoot.index)->debugName = name;
@@ -461,21 +483,21 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
     {
         auto const parent   = parents[i];
         auto*      info     = scene->getComponent<InfoComponent>(parent);
-        auto const children = entities[parent]["info"]["children"];
-        if (!children)
+        auto const children = utils::yaml::Find(utils::yaml::Find(entities[parent], "info"), "children");
+        if (!children.readable())
         {
             continue;
         }
-        if (!children.IsSequence() || children.size() >= entities.size())
+        if (!children.is_seq() || children.num_children() >= entities.size())
         {
             LogError("Invalid children for entity {} in scene {}", parent, tScene);
             return nullptr;
         }
 
         // AddChild prepends. Attach in reverse to reproduce the listed sibling order.
-        for (auto childIndex = children.size(); childIndex > 0U; --childIndex)
+        for (auto node = children.last_child(); node.readable(); node = node.prev_sibling())
         {
-            auto const child = children[childIndex - 1U].as<EntityIndex>(kInvalidEntityIndex);
+            auto const child = utils::yaml::Read(node, kInvalidEntityIndex);
             if (child == 0U || child >= entities.size())
             {
                 LogError("Invalid child index {} in scene {}", child, tScene);
@@ -517,9 +539,10 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         }
     }
 
-    if (auto const activeCamera = document["activeCamera"]; activeCamera && !activeCamera.IsNull())
+    if (auto const activeCamera = utils::yaml::Find(document, "activeCamera");
+        activeCamera.readable() && !(activeCamera.has_val() && activeCamera.val_is_null()))
     {
-        auto const index = activeCamera.as<EntityIndex>(kInvalidEntityIndex);
+        auto const index = utils::yaml::Read(activeCamera, kInvalidEntityIndex);
         if (index >= entities.size() || !scene->SetActiveCamera(scene->GetEntityAtIndex(index)))
         {
             LogError("Invalid active camera in scene {}", tScene);
