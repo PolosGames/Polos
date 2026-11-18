@@ -84,7 +84,7 @@ find_package(ryml CONFIG REQUIRED)
 find_package(Vulkan 1.3 REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
-add_subdirectory(ThirdParty)
+add_subdirectory(ThirdParty SYSTEM)
 add_subdirectory(Source)
 add_subdirectory(Tools)
 
