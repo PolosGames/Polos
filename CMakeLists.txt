@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 if (POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
+    set(CMAKE_POLICY_DEFAULT_CMP0177 NEW)
 endif()
 # The LINUX platform variable used by the build requires CMake 3.25.
 
@@ -96,7 +97,7 @@ add_custom_target(install-runtime
 
 add_custom_target(install-sdk
     COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --component SDK
-    DEPENDS install-runtime
+    DEPENDS install-runtime ResourcePreprocessor
     VERBATIM
 )
 

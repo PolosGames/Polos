@@ -15,12 +15,13 @@
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
-#include "polos/gui/gui.hpp"
+#include "polos/gui/backend.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/common.hpp"
 
 #include <gtest/gtest.h>
+#include <imgui.h>
 
 #include <GLFW/glfw3.h>
 
@@ -125,16 +126,19 @@ public:
             state.cursorCaptured  = state.cursorCaptured || cursorMode == GLFW_CURSOR_DISABLED;
             state.cursorReleased  = state.cursorReleased || (state.cursorCaptured && cursorMode == GLFW_CURSOR_NORMAL);
 
-            gui::SetNextWindowSize({320.0F, 180.0F});
-            if (gui::Begin("Integration GUI"))
+            ImGui::SetNextWindowSize({320.0F, 180.0F});
+            if (ImGui::Begin("Integration GUI"))
             {
-                gui::Text("A scene and a GUI overlay.");
-                if (gui::Image(rendering::kDefaultTexture, {24.0F, 24.0F}))
-                {
-                    ++state.guiFrames;
-                }
+                ImGui::TextUnformatted("A scene and a GUI overlay.");
+                auto const texture = gui::backend::GetImageTexture(rendering::kDefaultTexture);
+                EXPECT_NE(texture, 0U);
+                ImGui::Image(texture, {24.0F, 24.0F});
+                float values[]{0.0F, 0.0F, 0.0F};
+                ImGui::DragFloat2("Two values", values);
+                ImGui::DragFloat3("Three values", values);
+                ++state.guiFrames;
             }
-            gui::End();
+            ImGui::End();
         });
         communication::Subscribe<communication::EndFrame>([&state = mState](communication::EndFrame&) {
             ++state.completedFrames;

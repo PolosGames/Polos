@@ -32,8 +32,6 @@ public:
 
         if (itr == std::end(data))
         {
-            // TODO(sorbatdev): When moving this out, return a result.
-            LogError("Cannot find value in map");
             return ErrorType{UtilsErrc::kValueNotFoundInMap};
         }
         return itr->second;

@@ -9,6 +9,7 @@ polos_sources(
     passes/ui_render_pass.cpp
     resources/buffer.cpp
     resources/image.cpp
+    resources/material.cpp
     resources/shader.cpp
     resources/texture.cpp
     ssbo/quad_instance.cpp

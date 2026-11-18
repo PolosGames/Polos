@@ -1,0 +1,3 @@
+id: material.eyes
+baseColorFactor: [1, 1, 1, 1]
+baseColorTexture: texture.eyes_baseColor

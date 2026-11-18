@@ -34,8 +34,11 @@ enum class LogLevel : std::uint8_t
 
 [[nodiscard]] POLOS_API auto GetConsoleSinkName() -> std::string_view;
 [[nodiscard]] POLOS_API auto ShouldLog(LogContext tContext, LogLevel tLevel) -> bool;
-POLOS_API void WriteLog(LogContext tContext, LogLevel tLevel, std::string_view tMessage,
-                        std::source_location tLocation = std::source_location::current());
+POLOS_API void               WriteLog(
+    LogContext           tContext,
+    LogLevel             tLevel,
+    std::string_view     tMessage,
+    std::source_location tLocation = std::source_location::current());
 POLOS_API void FlushLogger(LogContext tContext);
 
 }// namespace polos::logging

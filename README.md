@@ -78,6 +78,23 @@ and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, librari
 and Windows import libraries. Link against Polos and place the
 engine shared libraries and `Resources` beside the application executable.
 
+To export directly into a project's `sdk/` directory, pass the project path:
+
+```sh
+bash Scripts/Linux/export_sdk.sh /path/to/project
+bash Scripts/Linux/export_sdk.sh /path/to/project debug-sdk
+```
+
+On Windows, use `./Scripts/Windows/export_sdk.ps1 -Destination C:/path/to/project`
+and optionally `-Preset debug-sdk`. An existing `sdk/` is replaced after the export
+succeeds. Both scripts also produce the ZIP archive. The SDK includes
+`tools/ResourcePreprocessor` (`.exe` on Windows). Run it with the project directory
+to generate YAML from that project's `Resources/`:
+
+```sh
+/path/to/project/sdk/tools/ResourcePreprocessor /path/to/project
+```
+
 The **Export Polos SDK** workflow uploads separate Linux and Windows Release
 SDK archives. Running applications with the Windows SDK requires a Vulkan 1.3
 driver and the x64 MSVC runtime on the destination machine.

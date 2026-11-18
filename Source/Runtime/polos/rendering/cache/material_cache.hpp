@@ -33,6 +33,7 @@ public:
     MaterialCache& operator=(MaterialCache const&) = delete;
     MaterialCache& operator=(MaterialCache&&)      = delete;
 
+    [[nodiscard]] auto AddMaterial(resource::ResourceId tName, Material const& tMat) -> MaterialHandle;
     [[nodiscard]] auto GetMaterial(MaterialHandle tHandle) const -> Material const*;
 private:
     static MaterialCache* sInstance;
