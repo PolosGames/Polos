@@ -13,10 +13,10 @@
 #include "polos/rendering/vk/vulkan_device.hpp"
 #include "polos/resource/image.hpp"
 #include "polos/resource/resource_manager.hpp"
-#include "polos/utils/assert.hpp"
 
 #include <algorithm>
 #include <limits>
+#include <tuple>
 #include <utility>
 
 namespace polos::rendering
@@ -102,6 +102,15 @@ auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
     mTextures.push_back(std::move(texture));
     writeBindlessDescriptor(kDefaultTextureIndex, *mTextures.front());
 
+    for (auto const& material : resource::ResourceManager::Get().FetchMaterials())
+    {
+        if (auto source = material.lock())
+        {
+            auto const& baseColor = source->baseColorTexture;
+            std::ignore = GetOrCreateTextureIndex(baseColor.img, baseColor.textureDetails);
+        }
+    }
+
     return {};
 }
 
@@ -115,6 +124,11 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, SamplerDe
     }
 
     auto image = resource::ResourceManager::Get().GetImage(tResource);
+    if (image == nullptr)
+    {
+        LogError("Texture image '{}' is missing from the resource catalog.", tResource);
+        return std::numeric_limits<std::uint32_t>::max();
+    }
 
     auto const         width  = static_cast<std::uint32_t>(image->width);
     auto const         height = static_cast<std::uint32_t>(image->height);
@@ -131,7 +145,11 @@ auto TextureCache::CreateTexture(resource::ResourceId const tResource, SamplerDe
         },
         format, image->data);
 
-    PL_ASSERT(nullptr != gpuImage, "Image could not be created from the resource");
+    if (gpuImage == nullptr)
+    {
+        LogError("Could not create a GPU image for texture '{}'.", tResource);
+        return std::numeric_limits<std::uint32_t>::max();
+    }
 
     auto const index   = static_cast<uint32_t>(textures.size());
     auto       texture = Texture::Create(tResource, std::move(gpuImage), tDetails);
@@ -155,12 +173,10 @@ auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource,
         return kDefaultTextureIndex;
     }
 
-    for (std::size_t i{0U}; i < mTextures.size(); ++i)
+    auto const index = GetTextureIndex(tResource, tDetails);
+    if (index != kDefaultTextureIndex)
     {
-        if (mTextures[i]->name == tResource)
-        {
-            return static_cast<TextureIndex>(i);
-        }
+        return index;
     }
 
     auto const created = CreateTexture(tResource, tDetails);
@@ -170,6 +186,19 @@ auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource,
     }
 
     return static_cast<TextureIndex>(created);
+}
+
+auto TextureCache::GetTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails) const
+    -> TextureIndex
+{
+    for (std::size_t i{1U}; i < mTextures.size(); ++i)
+    {
+        if (mTextures[i]->name == tResource && mTextures[i]->details == tDetails)
+        {
+            return static_cast<TextureIndex>(i);
+        }
+    }
+    return kDefaultTextureIndex;
 }
 
 auto TextureCache::GetTexture(resource::ResourceId const tResource) -> Texture const*

@@ -23,6 +23,8 @@ struct SamplerDetails
     VkSamplerMipmapMode  mipmap{VK_SAMPLER_MIPMAP_MODE_LINEAR};
     VkSamplerAddressMode addressModeU{VK_SAMPLER_ADDRESS_MODE_REPEAT};
     VkSamplerAddressMode addressModeV{VK_SAMPLER_ADDRESS_MODE_REPEAT};
+
+    auto operator==(SamplerDetails const&) const -> bool = default;
 };
 
 struct Texture

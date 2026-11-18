@@ -6,25 +6,9 @@
 #include "polos/rendering/cache/material_cache.hpp"
 
 #include "polos/rendering/cache/texture_cache.hpp"
-#include "polos/utils/assert.hpp"
-#include "polos/utils/string_id.hpp"
-
-#include <string>
 
 namespace polos::rendering
 {
-
-namespace
-{
-auto ResolveTexture(resource::material::MaterialTexture const& tTexture) -> TextureIndex
-{
-    auto index = TextureCache::Get().CreateTexture(tTexture.img, tTexture.textureDetails);
-    PL_ASSERT(
-        std::numeric_limits<uint32_t>::max() != index,
-        "Texture belonging to a material could not be created inside TextureCache");
-    return index;
-}
-}// namespace
 
 MaterialCache* MaterialCache::sInstance = nullptr;
 
@@ -60,10 +44,11 @@ auto MaterialCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
             baseColorFactor[static_cast<int32_t>(i)] = matPtr->baseColorFactor[i];
         }
 
+        auto const& texture = matPtr->baseColorTexture;
         mMaterials.try_emplace(
             matPtr->name, Material{
                               .baseColorFactor  = baseColorFactor,
-                              .baseColorTexture = ResolveTexture(matPtr->baseColorTexture),
+                              .baseColorTexture = TextureCache::Get().GetTextureIndex(texture.img, texture.textureDetails),
                           });
     }
 

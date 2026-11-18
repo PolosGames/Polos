@@ -48,6 +48,9 @@ public:
     [[nodiscard]] auto GetOrCreateTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails = {})
         -> TextureIndex;
 
+    [[nodiscard]] auto GetTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails) const
+        -> TextureIndex;
+
     [[nodiscard]] auto GetTexture(resource::ResourceId tResource) -> Texture const*;
 
     [[nodiscard]] auto GetTextureAtIndex(std::size_t tIndex) -> Texture const*;
@@ -57,8 +60,6 @@ public:
 private:
     friend class RenderCompositor;
 
-    auto createTexture() -> bool;
-    auto loadTexturesFromResources() -> bool;
     auto writeBindlessDescriptor(TextureIndex tIndex, Texture const& tTexture) -> void;
 
     static TextureCache* sInstance;

@@ -199,6 +199,7 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
         cubeMesh.primitiveVertices = CreateCubeVertices();
         // The generated vertices are already in triangle order.
         cubeMesh.primitiveIndices.resize(cubeMesh.primitiveVertices.size());
+        cubeMesh.bounds = ComputeBounds(cubeMesh.primitiveVertices);
         std::ranges::iota(cubeMesh.primitiveIndices, std::uint32_t{0});
 
         std::ignore = AddMesh(cubeMesh);
@@ -210,6 +211,7 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
             .primitiveVertices = {},
             .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
             .material          = {},
+            .bounds            = {},
         };
         constexpr std::array corners{
             glm::vec2{0.0F, 0.0F},
@@ -227,7 +229,8 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
                 .texCoord = uv,
             });
         }
-        std::ignore = AddMesh(quadMesh);
+        quadMesh.bounds = ComputeBounds(quadMesh.primitiveVertices);
+        std::ignore     = AddMesh(quadMesh);
     }
 
     for (auto const& model : resource::ResourceManager::Get().FetchModels())

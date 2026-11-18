@@ -87,6 +87,7 @@ auto ProcessModel(fs::path const& tPath) -> bool
     if (!asset.has_value())
     {
         std::println("Model parse failed {}", fastgltf::getErrorMessage(asset.error()));
+        return false;
     }
 
     size_t                   unnamedMaterialIdx{0};
@@ -105,14 +106,30 @@ auto ProcessModel(fs::path const& tPath) -> bool
             mat.baseColorFactor[i] = material.pbrData.baseColorFactor[i];
         }
 
-        // Might throw exception
-        fastgltf::Image& img =
-            asset->images[asset->textures[material.pbrData.baseColorTexture->textureIndex].imageIndex.value()];
-        auto& uri = std::get<fastgltf::sources::URI>(img.data);
-
-        std::string_view texturePath = uri.uri->path();
-        mat.baseColorTexture         = "texture." + std::string(texturePath.substr(0, texturePath.find('.')));
-        mat.path                     = "Materials/" + matName + ".yaml";
+        if (auto const& baseColor = material.pbrData.baseColorTexture)
+        {
+            if (baseColor->textureIndex >= asset->textures.size())
+            {
+                std::println("Invalid base color texture for {}", mat.id);
+                return false;
+            }
+            auto const& texture = asset->textures[baseColor->textureIndex];
+            if (!texture.imageIndex || *texture.imageIndex >= asset->images.size())
+            {
+                std::println("Missing base color image for {}", mat.id);
+                return false;
+            }
+            auto const& image = asset->images[*texture.imageIndex];
+            auto const* uri   = std::get_if<fastgltf::sources::URI>(&image.data);
+            if (uri == nullptr)
+            {
+                std::println("Expected an external base color image for {}", mat.id);
+                return false;
+            }
+            auto const imagePath = fs::path(std::string_view(uri->uri->path()));
+            mat.baseColorTexture = "texture." + imagePath.stem().string();
+        }
+        mat.path = "Materials/" + matName + ".yaml";
 
         modelMaterials.push_back(mat.id);
     }
