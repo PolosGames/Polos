@@ -8,6 +8,7 @@
 #include "polos/filesystem/filesystem_error_domain.hpp"
 #include "polos/logging/log_macros.hpp"
 
+#include <cstring>
 #include <cstddef>
 #include <cstdlib>
 #include <filesystem>

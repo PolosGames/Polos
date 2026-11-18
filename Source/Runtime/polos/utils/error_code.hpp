@@ -8,10 +8,8 @@
 
 #include "polos/utils/error_domain.hpp"
 
-#include <quill/DeferredFormatCodec.h>
-#include <quill/bundled/fmt/ostream.h>
-
 #include <expected>
+#include <format>
 #include <functional>
 #include <string_view>
 #include <type_traits>
@@ -76,8 +74,6 @@ public:
     [[nodiscard]] constexpr explicit operator std::string_view() const
     { return Message(); }
 private:
-    friend struct quill::DeferredFormatCodec<ErrorCode>;
-
     CodeType                                  mCode;
     std::reference_wrapper<ErrorDomain const> mDomain;
 };
@@ -91,17 +87,12 @@ constexpr bool operator!=(ErrorCode const& tLhs, ErrorCode const& tRhs)
 }// namespace polos::utils
 
 template<>
-struct fmtquill::formatter<polos::utils::ErrorCode>
+struct std::formatter<polos::utils::ErrorCode> : std::formatter<std::string_view>
 {
-    constexpr auto parse(format_parse_context& tCtx)// NOLINT
-    { return tCtx.begin(); }
-    auto format(polos::utils::ErrorCode const& tEvent, format_context& tCtx) const// NOLINT
-    { return fmtquill::format_to(tCtx.out(), "{}", tEvent.Message()); }
-};
-
-template<>
-struct quill::Codec<polos::utils::ErrorCode> : quill::DeferredFormatCodec<polos::utils::ErrorCode>
-{
+    auto format(polos::utils::ErrorCode const& tError, std::format_context& tCtx) const
+    {
+        return std::formatter<std::string_view>::format(tError.Message(), tCtx);
+    }
 };
 
 namespace polos
