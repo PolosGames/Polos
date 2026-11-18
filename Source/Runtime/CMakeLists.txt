@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.25)
-
 add_library(polos SHARED)
 add_library(polos::polos ALIAS polos)
 target_compile_features(polos PUBLIC cxx_std_23)
@@ -102,7 +100,7 @@ find_path(POLOS_VMA_INCLUDE_DIR vk_mem_alloc.h
 install(FILES "${POLOS_VMA_INCLUDE_DIR}/vk_mem_alloc.h"
     DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
 
-foreach(DEPENDENCY glfw glm::glm imgui::imgui)
+foreach(DEPENDENCY glfw glm::glm)
     get_target_property(DEPENDENCY_TYPE ${DEPENDENCY} TYPE)
     if (DEPENDENCY_TYPE STREQUAL "SHARED_LIBRARY")
         install(IMPORTED_RUNTIME_ARTIFACTS ${DEPENDENCY}

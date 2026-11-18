@@ -19,15 +19,15 @@
 #    error "PL_LOGGER_TYPE not defined"
 #endif
 
-#define PL_LOG(Context, Level, ...)                                                                    \
-    do                                                                                                 \
-    {                                                                                                  \
-        auto const polosLogContext = (Context);                                                        \
-        constexpr auto polosLogLevel = ::polos::logging::LogLevel::Level;                                \
-        if (::polos::logging::ShouldLog(polosLogContext, polosLogLevel))                                  \
-        {                                                                                              \
-            ::polos::logging::WriteLog(polosLogContext, polosLogLevel, std::format(__VA_ARGS__));          \
-        }                                                                                              \
+#define PL_LOG(Context, Level, ...)                                                               \
+    do                                                                                            \
+    {                                                                                             \
+        auto const     polosLogContext = (Context);                                               \
+        constexpr auto polosLogLevel   = ::polos::logging::LogLevel::Level;                       \
+        if (::polos::logging::ShouldLog(polosLogContext, polosLogLevel))                          \
+        {                                                                                         \
+            ::polos::logging::WriteLog(polosLogContext, polosLogLevel, std::format(__VA_ARGS__)); \
+        }                                                                                         \
     } while (false)
 
 #define LogCritical(...) PL_LOG(LOGGER_TYPE, kCritical, __VA_ARGS__)

@@ -6,6 +6,7 @@ add_subdirectory(quill)
 add_subdirectory(stb_image)
 add_subdirectory(stb_textedit)
 add_subdirectory(fastgltf)
+add_subdirectory(imgui)
 
 if (ENABLE_PROFILING)
     add_subdirectory(tracy)

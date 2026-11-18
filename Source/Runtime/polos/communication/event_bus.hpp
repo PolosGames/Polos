@@ -8,8 +8,8 @@
 
 #include "polos/communication/event.hpp"
 #include "polos/communication/event_defer_options.hpp"
-#include "polos/polos_api.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/polos_api.hpp"
 
 #include <concepts>
 #include <cstddef>
@@ -114,7 +114,10 @@ auto EventBus::Dispatch(EventDeferOptions const tDefer, Args&&... tArgs) -> std:
     {
         EventType event{std::forward<Args>(tArgs)...};
 
-        for (auto& callback : subcribers_callbacks) { callback(event); }
+        for (auto& callback : subcribers_callbacks)
+        {
+            callback(event);
+        }
     }
     else if (tDefer == EventDeferOptions::kNextFrame)
     {
@@ -126,19 +129,29 @@ auto EventBus::Dispatch(EventDeferOptions const tDefer, Args&&... tArgs) -> std:
 
 template<PolosEvent EventType>
 auto Subscribe(std::function<void(EventType&)> tCallback) -> std::int64_t
-{ return EventBus::Get().Subscribe(std::move(tCallback)); }
+{
+    return EventBus::Get().Subscribe(std::move(tCallback));
+}
 
 template<PolosEvent EventType, typename... Args>
 auto DispatchNow(Args&&... tArgs) -> std::size_t
-{ return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(tArgs)...); }
+{
+    return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kImmediate, std::forward<Args>(tArgs)...);
+}
 
 template<PolosEvent EventType, typename... Args>
 auto DispatchDefer(Args&&... tArgs) -> std::size_t
-{ return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(tArgs)...); }
+{
+    return EventBus::Get().Dispatch<EventType>(EventDeferOptions::kNextFrame, std::forward<Args>(tArgs)...);
+}
 
 POLOS_API auto DispatchDeferredEvents() -> void;
 
 }// namespace polos::communication
 
+#define PL_SUBSCRIBE_TO_EVENT_MEMBER_FN(EventType, MemberFn)               \
+    polos::communication::Subscribe<EventType>([this](EventType& tEvent) { \
+        MemberFn(tEvent);                                                  \
+    })
 
 #endif// POLOS_COMMUNICATION_EVENT_BUS_HPP

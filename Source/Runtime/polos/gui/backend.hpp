@@ -6,6 +6,7 @@
 #ifndef POLOS_GUI_BACKEND_HPP
 #define POLOS_GUI_BACKEND_HPP
 
+#include "polos/polos_api.hpp"
 #include "polos/utils/string_id.hpp"
 
 #include <vulkan/vulkan.h>
@@ -23,7 +24,7 @@ auto Initialize(VkRenderPass tRenderPass) -> bool;
 auto Shutdown() -> void;
 auto BeginFrame() -> void;
 auto RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void;
-auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t;
+auto POLOS_API GetImageTexture(utils::string_id tTexture) -> std::uint64_t;
 }// namespace polos::gui::backend
 
 #endif// POLOS_GUI_BACKEND_HPP

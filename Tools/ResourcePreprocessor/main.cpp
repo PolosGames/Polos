@@ -11,8 +11,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <format>
-#include <string_view>
 #include <print>
+#include <string_view>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -156,7 +156,7 @@ auto RecurseResources() -> bool
             continue;
         }
 
-        std::string extension = dirEntry.path().extension();
+        std::string extension = dirEntry.path().extension().string();
         std::ranges::transform(extension, extension.begin(), [](char const chr) {
             return std::tolower(chr);
         });

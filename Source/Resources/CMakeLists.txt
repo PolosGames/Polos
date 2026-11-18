@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.25)
-
 function(polos_compile_shaders TARGET_NAME SOURCE_DIR OUTPUT_DIR)
     cmake_parse_arguments(SHADERS "INSTALL" "" "" ${ARGN})
 

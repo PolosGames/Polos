@@ -5,6 +5,7 @@
 
 #include "polos/rendering/cache/material_cache.hpp"
 
+#include "polos/logging/log_macros.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 
 namespace polos::rendering
@@ -38,18 +39,7 @@ auto MaterialCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
     {
         auto matPtr = material.lock();
 
-        glm::vec4 baseColorFactor;
-        for (uint32_t i{0U}; i < matPtr->baseColorFactor.size(); ++i)
-        {
-            baseColorFactor[static_cast<int32_t>(i)] = matPtr->baseColorFactor[i];
-        }
-
-        auto const& texture = matPtr->baseColorTexture;
-        mMaterials.try_emplace(
-            matPtr->name, Material{
-                              .baseColorFactor  = baseColorFactor,
-                              .baseColorTexture = TextureCache::Get().GetTextureIndex(texture.img, texture.textureDetails),
-                          });
+        mMaterials.try_emplace(matPtr->name, Material::Create(*matPtr));
     }
 
     return {};
@@ -59,6 +49,18 @@ auto MaterialCache::Destroy() -> void
 {
     mMaterials.clear();
     mNextSuffix = 1U;
+}
+
+auto MaterialCache::AddMaterial(resource::ResourceId tName, Material const& tMat) -> MaterialHandle
+{
+    auto const [itr, success] = mMaterials.try_emplace(tName, tMat);
+
+    if (!success)
+    {
+        LogWarn("Trying insert an already existent material.");
+    }
+
+    return itr->first;
 }
 
 auto MaterialCache::GetMaterial(MaterialHandle const tHandle) const -> Material const*
