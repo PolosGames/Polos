@@ -44,8 +44,6 @@ public:
 
     auto GetLastFrameStatistics() -> FrameStatistics const&;
 private:
-    friend class core::Engine;
-
     static RenderingApi* sInstance;
 
     void createRenderContext();

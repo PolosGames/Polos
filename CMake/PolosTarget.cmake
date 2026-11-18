@@ -144,7 +144,6 @@ macro (define_polos_app)
     )
 
     polos_compile_shaders(${app_NAME}-shaders "${app_resources}" "${compiled_resources}" INSTALL)
-    add_dependencies(compile_shaders ${app_NAME}-shaders)
     add_custom_target(${app_NAME}-resources
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${app_resources}" "$<TARGET_FILE_DIR:${app_NAME}>/Resources"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${compiled_resources}" "$<TARGET_FILE_DIR:${app_NAME}>/Resources"

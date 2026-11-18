@@ -19,9 +19,6 @@ if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")
 
     set(SMOKE_RESOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/integration/Resources")
-    polos_compile_shaders(engine-smoke-shaders
-        "${POLOS_EXAMPLES}/sandbox/Resources" "${SMOKE_RESOURCE_DIR}")
-    add_dependencies(it-engine-smoke engine-smoke-shaders)
     configure_file(test/integration/resources.yaml "${SMOKE_RESOURCE_DIR}/resources.yaml" COPYONLY)
 
     gtest_add_tests(TARGET it-engine-smoke TEST_LIST INTEGRATION_TESTS

@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.25)
 
 polos_sources(
+    systems/light_collection_system.cpp
+    systems/mesh_instance_sync_system.cpp
+    systems/editor_camera_system.cpp
     component_pool.cpp
     entity.cpp
     scene_manager.cpp
     scene_graph.cpp
     scene.cpp
-    systems/light_collection_system.cpp
-    systems/mesh_instance_sync_system.cpp
-    systems/editor_camera_system.cpp
+    system_registry.cpp
 )
 
 polos_tests(scene-graph SOURCES test/scene_graph_test.cpp)

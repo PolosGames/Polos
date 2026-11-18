@@ -44,8 +44,6 @@ public:
     [[nodiscard]] auto GetMainWindow() const -> GLFWwindow*;
     [[nodiscard]] auto GetWindowSurface() const -> IWindowSurface&;
 private:
-    friend class core::Engine;
-
     static PlatformManager* sInstance;
 
     GLFWwindow*                        mWindow{nullptr};

@@ -10,7 +10,6 @@
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
@@ -23,8 +22,10 @@
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
-#include <deque>
-#include <limits>
+#include "forward_shading.frag.cpp"
+#include "forward_shading.vert.cpp"
+#include "main_compute.comp.cpp"
+
 #include <span>
 #include <utility>
 
@@ -33,9 +34,17 @@ namespace polos::rendering
 
 auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    mForwardVertexShader   = Shader::Create("shader.vert.forward_shading"_sid, ShaderStage::kVertex);
-    mForwardFragmentShader = Shader::Create("shader.frag.forward_shading"_sid, ShaderStage::kFragment);
-    mMainComputeShader     = Shader::Create("shader.comp.main_compute"_sid, ShaderStage::kCompute);
+    auto vertexShader   = Shader::Create(shader::forward_shading_vert::kData, ShaderStage::kVertex);
+    auto fragmentShader = Shader::Create(shader::forward_shading_frag::kData, ShaderStage::kFragment);
+    auto computeShader  = Shader::Create(shader::main_compute::kData, ShaderStage::kCompute);
+    if (!vertexShader || !fragmentShader || !computeShader)
+    {
+        return ErrorType{RenderingErrc::kFailedCreateShaderModule};
+    }
+
+    mForwardVertexShader   = std::move(vertexShader);
+    mForwardFragmentShader = std::move(fragmentShader);
+    mMainComputeShader     = std::move(computeShader);
 
     PL_ASSERT(createTargets().has_value(), "Failed to create render compositor");
 
@@ -64,8 +73,8 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
         PL_ASSERT(nullptr != buffer, "Light instance buffer could not be created");
     }
 
-    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
-        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass =
+        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
 
     mUiRenderPass = std::make_unique<UiRenderPass>();
@@ -99,8 +108,8 @@ auto RenderCompositor::RecreateTargets() -> Result<void>
     releaseTargets();
     PL_ASSERT(createTargets().has_value(), "Failed to recreate render compositor");
 
-    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
-        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass =
+        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
     return {};
 }
@@ -131,8 +140,8 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
         changes.clear();
     }
 
-    auto const& renderData = scene->GetRenderData();
-    auto& lightBuffer     = *mLightInstances[tFrameData.frameSlot];
+    auto const& renderData  = scene->GetRenderData();
+    auto&       lightBuffer = *mLightInstances[tFrameData.frameSlot];
     if (renderData.lightInfo.lightCount != 0U)
     {
         lightBuffer.Write(renderData.lightInstances.data(), renderData.lightInfo.lightCount * sizeof(LightInstance));

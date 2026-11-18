@@ -54,7 +54,7 @@ public:
     [[nodiscard]] static auto Get() -> ResourceManager&;
     [[nodiscard]] auto        Root() const -> std::filesystem::path const&;
 
-    /// @brief Reads Resources/resources.json and preloads every image, model, and raw file.
+    /// @brief Reads Resources/resources.yaml and preloads cataloged textures, materials, and models.
     /// Logs the first failure and aborts immediately if the catalog or any resource cannot load.
     auto LoadCatalog() -> void;
 

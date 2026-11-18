@@ -56,7 +56,6 @@ TEST(StringRegistryTest, LooksUpBuiltInIdsWithoutExplicitRegistration)
 {
     EXPECT_EQ(GetStringFromID("Scene.slop"_sid), "Scene.slop");
     EXPECT_EQ(GetStringFromID("mesh.PolosDefaultQuad.part.0"_sid), "mesh.PolosDefaultQuad.part.0");
-    EXPECT_EQ(GetStringFromID("shader.vert.forward_shading"_sid), "shader.vert.forward_shading");
     EXPECT_EQ(GetStringFromID("WindowFramebufferResize"_sid), "WindowFramebufferResize");
 }
 

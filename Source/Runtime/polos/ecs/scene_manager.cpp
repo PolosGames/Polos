@@ -14,7 +14,6 @@
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
-
 #include "polos/utils/yaml_read.hpp"
 
 #include <ryml/ryml_std.hpp>
@@ -166,10 +165,11 @@ auto WriteComponents(Scene& tScene, EntityHandle tHandle, ryml::NodeRef tEntity)
     }
     if (tScene.HasComponent<CameraComponent>(tHandle))
     {
-        auto const& value  = *tScene.GetComponent<CameraComponent>(tHandle);
-        auto        node   = tEntity["camera"];
+        auto const& value = *tScene.GetComponent<CameraComponent>(tHandle);
+        auto        node  = tEntity["camera"];
         node |= ryml::MAP;
-        node["cameraType"].set_val(value.cameraType == CameraType::kOrtho ? ryml::csubstr{"orthographic"} : ryml::csubstr{"perspective"});
+        node["cameraType"].set_val(
+            value.cameraType == CameraType::kOrtho ? ryml::csubstr{"orthographic"} : ryml::csubstr{"perspective"});
         node["nearZ"] << value.nearZ;
         node["farZ"] << value.farZ;
         node["fov"] << value.fov;
@@ -177,16 +177,16 @@ auto WriteComponents(Scene& tScene, EntityHandle tHandle, ryml::NodeRef tEntity)
     }
     if (tScene.HasComponent<EditorCameraControllerComponent>(tHandle))
     {
-        auto const& value       = *tScene.GetComponent<EditorCameraControllerComponent>(tHandle);
-        auto        node        = tEntity["editor_camera_controller"];
+        auto const& value = *tScene.GetComponent<EditorCameraControllerComponent>(tHandle);
+        auto        node  = tEntity["editor_camera_controller"];
         node |= ryml::MAP;
         node["moveSpeed"] << value.moveSpeed;
         node["lookSensitivity"] << value.lookSensitivity;
     }
     if (tScene.HasComponent<LightComponent>(tHandle))
     {
-        auto const& value      = *tScene.GetComponent<LightComponent>(tHandle);
-        auto        node       = tEntity["light"];
+        auto const& value = *tScene.GetComponent<LightComponent>(tHandle);
+        auto        node  = tEntity["light"];
         node |= ryml::MAP;
         WriteVec3(node["color"], value.color);
         node["ambientFactor"] << value.ambientFactor;
@@ -272,8 +272,15 @@ auto SceneManager::Get() -> SceneManager&
     return *sInstance;
 }
 
-SceneManager::SceneManager()  = default;
-SceneManager::~SceneManager() = default;
+SceneManager::SceneManager()
+{
+    sInstance = this;
+}
+
+SceneManager::~SceneManager()
+{
+    sInstance = nullptr;
+}
 
 auto SceneManager::CreateScene(std::string_view const tName) -> Scene*
 {
@@ -338,7 +345,7 @@ auto Scene::TakeSnapshot() -> Result<std::shared_ptr<SceneSnapshot const>>
     }
 
     ryml::Tree document;
-    auto root = document.rootref();
+    auto       root = document.rootref();
     root |= ryml::MAP;
     auto entities = root["scene"];
     entities |= ryml::SEQ;
@@ -436,7 +443,7 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         return nullptr;
     }
 
-    auto const tree = utils::yaml::Parse(file);
+    auto const tree     = utils::yaml::Parse(file);
     auto const document = tree.crootref();
     if (!document.readable() || !document.is_map())
     {

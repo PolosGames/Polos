@@ -6,12 +6,12 @@
 #ifndef POLOS_RENDERING_SHADER_HPP
 #define POLOS_RENDERING_SHADER_HPP
 
-#include "polos/utils/string_id.hpp"
-
 #include <vulkan/vulkan.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <span>
 
 namespace polos::rendering
 {
@@ -28,11 +28,10 @@ enum class ShaderStage : std::uint8_t
 
 struct Shader
 {
-    [[nodiscard]] static auto Create(utils::string_id tResourceId, ShaderStage tStage) -> std::shared_ptr<Shader>;
+    [[nodiscard]] static auto Create(std::span<std::byte const> tData, ShaderStage tStage) -> std::shared_ptr<Shader>;
 
-    utils::string_id name;
-    ShaderStage      stage;
-    VkShaderModule   module{VK_NULL_HANDLE};
+    ShaderStage    stage;
+    VkShaderModule module{VK_NULL_HANDLE};
 };
 
 }// namespace polos::rendering

@@ -21,10 +21,15 @@ auto RenderingApi::Get() -> RenderingApi&
 RenderingApi::RenderingApi(platform::IWindowSurface& tSurface)
     : mWindowSurface{&tSurface}
 {
+    sInstance = this;
+
     createRenderContext();
 }
 
-RenderingApi::~RenderingApi() = default;
+RenderingApi::~RenderingApi()
+{
+    sInstance = nullptr;
+}
 
 auto RenderingApi::Shutdown() -> void
 {

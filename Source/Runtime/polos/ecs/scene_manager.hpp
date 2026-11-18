@@ -52,7 +52,6 @@ public:
 private:
     auto serializeEntity();
 
-    friend class core::Engine;
     friend class SceneSerializationTest;
 
     static SceneManager* sInstance;

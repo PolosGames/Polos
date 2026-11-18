@@ -8,6 +8,7 @@
 #include "polos/core/engine_layer.hpp"
 #include "polos/core/main_loop.hpp"
 #include "polos/ecs/scene_manager.hpp"
+#include "polos/ecs/system_registry.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"
 #include "polos/platform/platform_manager.hpp"
@@ -37,12 +38,9 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
     std::string const build = utils::FormatBuildInfo(utils::GetBuildInfo());
     LogInfo("Polos build {}", build);
 
-    std::unique_ptr<platform::PlatformManager> platform_manager = std::make_unique<platform::PlatformManager>();
-    platform::PlatformManager::sInstance                        = platform_manager.get();
+    auto platformManager = std::make_unique<platform::PlatformManager>();
 
-    PL_ASSERT(
-        platform_manager->CreateNewWindow(kWidth, kHeight, std::format("PolosEngine - {}", build)),
-        "Could not create the engine window.");
+    PL_ASSERT(platformManager->CreateNewWindow(kWidth, kHeight, tAppLayer->Name()), "Could not create the window.");
 
     auto& resources = resource::ResourceManager::Get();
     {
@@ -50,31 +48,25 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
         resources.LoadCatalog();
     }
 
-    auto sceneManager            = std::make_unique<ecs::SceneManager>();
-    ecs::SceneManager::sInstance = sceneManager.get();
+    auto sceneManager   = std::make_unique<ecs::SceneManager>();
+    auto systemRegistry = std::make_unique<ecs::SystemRegistry>();
+    auto renderingApi   = std::make_unique<rendering::RenderingApi>(platformManager->GetWindowSurface());
 
-    std::unique_ptr<rendering::RenderingApi> rendering_api =
-        std::make_unique<rendering::RenderingApi>(platform_manager->GetWindowSurface());
-    rendering::RenderingApi::sInstance = rendering_api.get();
-
-    std::unique_ptr<ILiveLayer> engine_layer{new EngineLayer{}};
-    std::unique_ptr<ILiveLayer> app_layer{tAppLayer};
-    engine_layer->Create();
+    std::unique_ptr<ILiveLayer> engineLayer{new EngineLayer{}};
+    std::unique_ptr<ILiveLayer> appLayer{tAppLayer};
+    engineLayer->Create();
     {
         POLOS_PROFILE_ZONE("Create application scene");
-        app_layer->Create();
+        appLayer->Create();
     }
 
-    MainLoop loop{};// NOLINT
-    loop.Run();
+    MainLoop{}.Run();// NOLINT
 
-    app_layer->Destroy();
-    engine_layer->Destroy();
+    appLayer->Destroy();
+    engineLayer->Destroy();
 
-    rendering_api->Shutdown();
+    renderingApi->Shutdown();
     resources.ClearCache();
-
-    ecs::SceneManager::sInstance = nullptr;
 
     logging::FlushLogger(LOG_CTX_APP);
     logging::FlushLogger(LOG_CTX_POLLY);
