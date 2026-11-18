@@ -17,7 +17,7 @@ target_sources(polos
 )
 
 if (DEFINED ENV{VULKAN_SDK})
-    target_include_directories(polos BEFORE PUBLIC "${Vulkan_INCLUDE_DIR}")
+    target_include_directories(polos SYSTEM BEFORE PUBLIC "${Vulkan_INCLUDE_DIR}")
 endif()
 
 target_link_libraries(polos PUBLIC
