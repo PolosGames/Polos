@@ -23,7 +23,7 @@ function(polos_tests NAME)
     include(GoogleTest)
     add_executable(ut-${NAME} ${TEST_SOURCES})
     target_link_libraries(ut-${NAME} PRIVATE polos::polos GTest::gtest_main)
-    target_compile_definitions(ut-${NAME} PRIVATE PL_LOGGER_TYPE=App QUILL_DLL_IMPORT BUILD_TESTS)
+    target_compile_definitions(ut-${NAME} PRIVATE PL_LOGGER_TYPE=App BUILD_TESTS)
     foreach(DATA_FILE IN LISTS TEST_DATA)
         get_filename_component(DATA_NAME "${DATA_FILE}" NAME)
         configure_file("${DATA_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${DATA_NAME}" COPYONLY)
@@ -115,7 +115,6 @@ macro (define_polos_app)
     endif ()
 
     target_compile_definitions(${app_NAME} PRIVATE PL_LOGGER_TYPE=App)
-    target_compile_definitions(${app_NAME} PRIVATE QUILL_DLL_IMPORT)
 
     target_compile_features(${app_NAME} PRIVATE cxx_std_23)
 

@@ -13,7 +13,6 @@
 
 #cmakedefine ENABLE_PROFILING
 #cmakedefine GUI_USE_IMGUI
-#cmakedefine QUILL_DISABLE_NON_PREFIXED_MACROS
 
 #if defined(_WIN64)
 #    define POLOS_WIN

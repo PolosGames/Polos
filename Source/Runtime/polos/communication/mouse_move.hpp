@@ -8,6 +8,8 @@
 
 #include "polos/communication/event.hpp"
 
+#include <cmath>
+
 namespace polos::communication
 {
 

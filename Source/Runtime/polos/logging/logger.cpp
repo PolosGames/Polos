@@ -5,49 +5,95 @@
 
 #include "polos/logging/logger.hpp"
 
-#include "quill/LogMacros.h"
-#include "quill_shared.hpp"
+#include <quill/Backend.h>
+#include <quill/Frontend.h>
+#include <quill/LogMacros.h>
+#include <quill/sinks/ConsoleSink.h>
+
+#include <array>
+#include <string>
+#include <utility>
 
 namespace polos::logging
 {
+namespace
+{
 
-std::string_view GetConsoleSinkName()
+auto GetLogger(LogContext tContext) -> quill::Logger*
+{
+    static auto const loggers = [] {
+#if defined(NDEBUG)
+        constexpr auto level = quill::LogLevel::Info;
+#else
+        constexpr auto level = quill::LogLevel::Debug;
+#endif
+        quill::Backend::start();
+        auto sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(std::string(GetConsoleSinkName()));
+        quill::PatternFormatterOptions const formatter{
+            "%(log_level:<3): %(logger:<6) [%(short_source_location)] %(message)",
+            "%H:%M:%S.%Qms",
+        };
+        std::array const contexts{
+            quill::Frontend::create_or_get_logger("POLOS", sink, formatter),
+            quill::Frontend::create_or_get_logger("POLLY", sink, formatter),
+            quill::Frontend::create_or_get_logger("APP", sink, formatter),
+        };
+        for (auto* logger : contexts)
+        {
+            logger->set_log_level(level);
+        }
+        return contexts;
+    }();
+    return loggers[std::to_underlying(tContext)];
+}
+
+auto ToQuillLevel(LogLevel tLevel) -> quill::LogLevel
+{
+    constexpr std::array levels{
+        quill::LogLevel::TraceL1,
+        quill::LogLevel::Debug,
+        quill::LogLevel::Info,
+        quill::LogLevel::Warning,
+        quill::LogLevel::Error,
+        quill::LogLevel::Critical,
+    };
+    return levels[std::to_underlying(tLevel)];
+}
+
+}// namespace
+
+auto GetConsoleSinkName() -> std::string_view
 {
     return "pl_std_sink";
 }
 
-Logger::Logger()
+auto ShouldLog(LogContext tContext, LogLevel tLevel) -> bool
 {
-    setup_quill();
-
-    mPolosLogger = get_logger("POLOS");
-    mPollyLogger = get_logger("POLLY");
-    mAppLogger   = get_logger("APP");
+    return GetLogger(tContext)->should_log_statement(ToQuillLevel(tLevel));
 }
 
-Logger& Logger::Get()
+void WriteLog(LogContext tContext, LogLevel tLevel, std::string_view tMessage, std::source_location tLocation)
 {
-    static Logger sInstance;
-    return sInstance;
-}
+    using quill::MacroMetadata;
+    auto* logger = GetLogger(tContext);
+    auto const level = ToQuillLevel(tLevel);
 
-quill::Logger* Logger::GetPolosLogger() const
-{ return mPolosLogger; }
-
-quill::Logger* Logger::GetPollyLogger() const
-{ return mPollyLogger; }
-
-quill::Logger* Logger::GetAppLogger() const
-{ return mAppLogger; }
-
-void FlushLogger(quill::Logger* tLogger)
-{
-    if (nullptr == tLogger)
+    // Retain the caller's source location when submitting the formatted message.
+    static constexpr MacroMetadata metadata{
+        "[placeholder]", "[placeholder]", "{}" QUILL_MAGIC_SEPARATOR "{}" QUILL_MAGIC_SEPARATOR "{}"
+            QUILL_MAGIC_SEPARATOR "{}",
+        nullptr, quill::LogLevel::Dynamic, MacroMetadata::Event::LogWithRuntimeMetadata,
+    };
+    if (logger->should_log_statement(level))
     {
-        QUILL_LOG_ERROR(Logger::Get().GetPolosLogger(), "Cannot flush a null logger!");
-        return;
+        logger->log_statement<QUILL_IMMEDIATE_FLUSH, true>(
+            level, &metadata, tMessage, tLocation.file_name(), tLocation.line(), tLocation.function_name());
     }
-    tLogger->flush_log();
+}
+
+void FlushLogger(LogContext tContext)
+{
+    GetLogger(tContext)->flush_log();
 }
 
 }// namespace polos::logging

@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.25)
 add_library(polos SHARED)
 add_library(polos::polos ALIAS polos)
 target_compile_features(polos PUBLIC cxx_std_23)
-target_compile_definitions(polos PRIVATE POLOS_ENGINE_EXPORTS PL_LOGGER_TYPE=Polos QUILL_DLL_IMPORT)
+target_compile_definitions(polos PRIVATE POLOS_ENGINE_EXPORTS PL_LOGGER_TYPE=Polos
+    QUILL_DISABLE_NON_PREFIXED_MACROS QUILL_ENABLE_IMMEDIATE_FLUSH QUILL_NO_EXCEPTIONS)
 target_sources(polos
     PUBLIC
         FILE_SET runtime_headers TYPE HEADERS
@@ -25,12 +26,11 @@ target_link_libraries(polos PUBLIC
     glm::glm
     Vulkan::Vulkan
     GPUOpen::VulkanMemoryAllocator
-    quill::quill_shared
     stb_image::stb_image
     stb_textedit::stb_textedit
     fastgltf::fastgltf
 )
-target_link_libraries(polos PRIVATE ryml::ryml)
+target_link_libraries(polos PRIVATE ryml::ryml quill::quill)
 if (ENABLE_PROFILING)
     target_link_libraries(polos PUBLIC Tracy::TracyClient)
 endif()
@@ -87,9 +87,10 @@ install(FILES "${CMAKE_SOURCE_DIR}/VERSION" "${CMAKE_SOURCE_DIR}/LICENSE"
     DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime)
 
 set(POLOS_VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+install(FILES "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/quill/copyright"
+    DESTINATION "${POLOS_INSTALL_DIR}" RENAME LICENSE-Quill.txt COMPONENT Runtime)
 install(DIRECTORY
     "${POLOS_VCPKG_INCLUDE_DIR}/glm"
-    "${POLOS_VCPKG_INCLUDE_DIR}/quill"
     "${POLOS_VCPKG_INCLUDE_DIR}/GLFW"
     "${Vulkan_INCLUDE_DIR}/vulkan"
     "${Vulkan_INCLUDE_DIR}/vk_video"

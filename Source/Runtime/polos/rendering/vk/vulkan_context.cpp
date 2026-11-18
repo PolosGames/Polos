@@ -12,6 +12,7 @@
 #include "polos/rendering/settings.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
 
+#include <cstring>
 #include <algorithm>
 #include <string>
 

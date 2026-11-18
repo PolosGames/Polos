@@ -8,49 +8,35 @@
 
 #include "polos/polos_api.hpp"
 
-#include <quill/Logger.h>
+#include <cstdint>
+#include <source_location>
+#include <string_view>
 
 namespace polos::logging
 {
 
-/// Get the sink name for the console logger
-/// @return a string view to the name of the sink
-[[nodiscard]] POLOS_API std::string_view GetConsoleSinkName();
-
-/// Flush the designated logger immediately while blocking the calling thread.
-/// @param tLogger The logger whose sink that needs flushing
-POLOS_API void FlushLogger(quill::Logger* tLogger);
-
-class POLOS_API Logger
+enum class LogContext : std::uint8_t
 {
-public:
-    ~Logger() = default;
-
-    Logger(Logger const&)            = delete;
-    Logger(Logger&&)                 = delete;
-    Logger& operator=(Logger const&) = delete;
-    Logger& operator=(Logger&&)      = delete;
-
-    static auto Get() -> Logger&;
-
-    /// Get pointer for the quill logger that will be used for logging inside Polos framework
-    /// @return Pointer to the logger with id "POLOS"
-    [[nodiscard]] auto GetPolosLogger() const -> quill::Logger*;
-
-    /// Get pointer for the quill logger that will be used for logging inside Polly Editor
-    /// @return Pointer to the logger with id "POLLY"
-    [[nodiscard]] auto GetPollyLogger() const -> quill::Logger*;
-
-    /// Get pointer for the quill logger that will be used for logging inside Apps made from Polos
-    /// @return Pointer to the logger with id "APP"
-    [[nodiscard]] auto GetAppLogger() const -> quill::Logger*;
-private:
-    Logger();
-
-    quill::Logger* mPolosLogger;
-    quill::Logger* mPollyLogger;
-    quill::Logger* mAppLogger;
+    kPolos,
+    kPolly,
+    kApp,
 };
+
+enum class LogLevel : std::uint8_t
+{
+    kTrace,
+    kDebug,
+    kInfo,
+    kWarning,
+    kError,
+    kCritical,
+};
+
+[[nodiscard]] POLOS_API auto GetConsoleSinkName() -> std::string_view;
+[[nodiscard]] POLOS_API auto ShouldLog(LogContext tContext, LogLevel tLevel) -> bool;
+POLOS_API void WriteLog(LogContext tContext, LogLevel tLevel, std::string_view tMessage,
+                        std::source_location tLocation = std::source_location::current());
+POLOS_API void FlushLogger(LogContext tContext);
 
 }// namespace polos::logging
 

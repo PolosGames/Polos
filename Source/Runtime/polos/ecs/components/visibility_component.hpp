@@ -8,8 +8,8 @@
 
 #include "polos/ecs/component.hpp"
 
-#include <quill/DeferredFormatCodec.h>
-#include <quill/bundled/fmt/ostream.h>
+#include <format>
+#include <string_view>
 
 namespace polos::ecs
 {
@@ -24,15 +24,12 @@ struct VisibilityComponent
 }// namespace polos::ecs
 
 template<>
-struct fmtquill::formatter<polos::ecs::VisibilityComponent> : fmtquill::formatter<std::string_view>
+struct std::formatter<polos::ecs::VisibilityComponent> : std::formatter<std::string_view>
 {
-    auto format(polos::ecs::VisibilityComponent const& tComponent, format_context& tCtx) const
-    { return fmtquill::format_to(tCtx.out(), "Is Visible {}", tComponent.isVisible); }
-};
-
-template<>
-struct quill::Codec<polos::ecs::VisibilityComponent> : quill::DeferredFormatCodec<polos::ecs::VisibilityComponent>
-{
+    auto format(polos::ecs::VisibilityComponent const& tComponent, std::format_context& tCtx) const
+    {
+        return std::formatter<std::string_view>::format(tComponent.isVisible ? "Is Visible true" : "Is Visible false", tCtx);
+    }
 };
 
 #endif// POLOS_ECS_VISIBILITY_COMPONENT_HPP

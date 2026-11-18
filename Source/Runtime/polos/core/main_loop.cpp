@@ -24,8 +24,6 @@
 #include "polos/utils/profiling.hpp"
 #include "polos/utils/time.hpp"
 
-#include <quill/std/Chrono.h>
-
 #include <chrono>
 #include <cmath>
 #include <cstdint>

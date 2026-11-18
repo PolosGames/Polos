@@ -14,7 +14,7 @@ if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
     include(GoogleTest)
     add_executable(it-engine-smoke test/engine_integration_test.cpp)
     target_link_libraries(it-engine-smoke PRIVATE polos::polos GTest::gtest_main)
-    target_compile_definitions(it-engine-smoke PRIVATE PL_LOGGER_TYPE=App QUILL_DLL_IMPORT)
+    target_compile_definitions(it-engine-smoke PRIVATE PL_LOGGER_TYPE=App)
     set_target_properties(it-engine-smoke PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")
 

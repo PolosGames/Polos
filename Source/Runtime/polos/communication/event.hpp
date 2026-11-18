@@ -9,10 +9,10 @@
 #include "polos/polos_api.hpp"
 #include "polos/utils/string_id.hpp"
 
-#include <quill/DeferredFormatCodec.h>
-#include <quill/bundled/fmt/ostream.h>
-
 #include <cstdint>
+#include <format>
+#include <sstream>
+#include <string>
 #include <string_view>
 
 namespace polos::communication
@@ -40,12 +40,10 @@ auto EventHash() -> utils::string_id
 
 }// namespace polos::communication
 
-/// Declare and define a default constructor, override the Name function and add a friend declaration for
-/// quill::DeferredFormatCodec. Has to be called inside event declaration scope. Don't forget to add ; to end of call.
+/// Define the default constructor, event name, and hash inside an event declaration.
 /// @param EventName name of the event
 #define DECLARE_POLOS_EVENT(EventName)                           \
 private:                                                         \
-    friend struct quill::DeferredFormatCodec<EventName>;         \
     [[nodiscard]] auto Hash() const -> utils::string_id override \
     {                                                            \
         static constexpr utils::string_id kHash = []() {         \
@@ -59,38 +57,32 @@ public:                                                          \
     { return #EventName; }
 
 
-/// Declare and define log formatting of the event. Shall be called after each declaration of an event.
-/// @param EventName Event's class name with its full namespace
-/// @param Fmt Format string to log the event
-/// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "tEvent." prefix
-#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                              \
-    template<>                                                                    \
-    struct fmtquill::formatter<EventName> : fmtquill::formatter<std::string_view> \
-    {                                                                             \
-        auto format(EventName const& tEvent, format_context& tCtx) const          \
-        { return fmtquill::format_to(tCtx.out(), Fmt, __VA_ARGS__); }             \
-    };                                                                            \
-    template<>                                                                    \
-    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName>        \
-    {                                                                             \
+/// Define the event formatter after the event declaration. Refer to fields through tEvent.
+#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                                                    \
+    template<>                                                                                         \
+    struct std::formatter<EventName> : std::formatter<std::string_view>                                 \
+    {                                                                                                  \
+        auto format(EventName const& tEvent, std::format_context& tCtx) const                           \
+        {                                                                                              \
+            return std::formatter<std::string_view>::format(std::format(Fmt, __VA_ARGS__), tCtx);       \
+        }                                                                                              \
     }
 
-/// Shall be called after each declaration of an event. The format should match as if overloading ostream.
-/// @param EventName Event's class name with its full namespace
-/// @param __VA_ARGSS__ The variables that shall be logged. Each variable should start with "tEvent." prefix
-#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                           \
-    std::ostream& operator<<(std::ostream& tOs, EventName const& tEvent)   \
-    {                                                                      \
-        tOs << __VA_ARGS__;                                                \
-        return tOs;                                                        \
-    }                                                                      \
-    template<>                                                             \
-    struct fmtquill::formatter<EventName> : fmtquill::ostream_formatter    \
-    {                                                                      \
-    };                                                                     \
-    template<>                                                             \
-    struct quill::Codec<EventName> : quill::DeferredFormatCodec<EventName> \
-    {                                                                      \
+/// Define stream insertion and formatting for an event.
+#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                                                         \
+    inline std::ostream& operator<<(std::ostream& tOs, EventName const& tEvent)                         \
+    {                                                                                                  \
+        return tOs << __VA_ARGS__;                                                                     \
+    }                                                                                                  \
+    template<>                                                                                         \
+    struct std::formatter<EventName> : std::formatter<std::string_view>                                 \
+    {                                                                                                  \
+        auto format(EventName const& tEvent, std::format_context& tCtx) const                           \
+        {                                                                                              \
+            std::ostringstream output;                                                                 \
+            operator<<(output, tEvent);                                                                \
+            return std::formatter<std::string_view>::format(output.str(), tCtx);                       \
+        }                                                                                              \
     }
 
 #endif// POLOS_COMMUNICATION_EVENT_HPP
