@@ -7,7 +7,6 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/utils/string_id.hpp"
-
 #include "polos/utils/yaml_read.hpp"
 
 #include <fstream>
@@ -24,12 +23,18 @@ auto LoadMaterial(std::filesystem::path const& tPath) -> std::shared_ptr<Materia
         return nullptr;
     }
 
-    auto const tree                = utils::yaml::Parse(file);
-    auto const materialYaml        = tree.crootref();
-    auto       material            = std::make_shared<Material>();
-    material->name                 = utils::StrHash64Runtime(utils::yaml::Scalar(utils::yaml::Find(materialYaml, "id")));
-    material->baseColorFactor      = utils::yaml::ReadArray(utils::yaml::Find(materialYaml, "baseColorFactor"), material->baseColorFactor);
-    material->baseColorTexture.img = utils::StrHash64Runtime(utils::yaml::Scalar(utils::yaml::Find(materialYaml, "baseColorTexture")));
+    auto const tree         = utils::yaml::Parse(file);
+    auto const materialYaml = tree.crootref();
+
+    auto material  = std::make_shared<Material>();
+    material->name = utils::StrHash64Runtime(utils::yaml::Scalar(utils::yaml::Find(materialYaml, "id")));
+    material->baseColorFactor =
+        utils::yaml::ReadArray(utils::yaml::Find(materialYaml, "baseColorFactor"), material->baseColorFactor);
+    auto const texture = utils::yaml::Scalar(utils::yaml::Find(materialYaml, "baseColorTexture"));
+    if (!texture.empty())
+    {
+        material->baseColorTexture.img = utils::StrHash64Runtime(texture);
+    }
 
     return material;
 }

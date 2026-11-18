@@ -123,6 +123,22 @@ auto ResourceManager::LoadCatalog() -> void
             }
         }
     }
+    // Resolve model sampler settings after all material descriptors have been loaded.
+    for (auto const& [_, model] : staged.mModels.mResources)
+    {
+        for (auto const& [id, texture] : model->materialTextures)
+        {
+            auto material = staged.mMaterials.Get(id);
+            if (material != nullptr)
+            {
+                material->baseColorTexture.textureDetails = texture.textureDetails;
+                if (material->baseColorTexture.img == 0)
+                {
+                    material->baseColorTexture.img = texture.img;
+                }
+            }
+        }
+    }
     mResources = std::move(staged.mResources);
     mImages.Swap(staged.mImages);
     mMaterials.Swap(staged.mMaterials);

@@ -10,10 +10,10 @@
 #include "polos/resource/model.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
+#include "polos/utils/yaml_read.hpp"
 
 #include <fastgltf/core.hpp>
 #include <fastgltf/glm_element_traits.hpp>
-#include "polos/utils/yaml_read.hpp"
 
 #include <algorithm>
 #include <array>
@@ -188,6 +188,75 @@ auto ReadPositionBound(fastgltf::AccessorBoundsArray const& tBound) -> glm::vec3
     return glm::vec3(static_cast<float>(values[0]), static_cast<float>(values[1]), static_cast<float>(values[2]));
 }
 
+auto ToAddressMode(fastgltf::Wrap tWrap) -> VkSamplerAddressMode
+{
+    switch (tWrap)
+    {
+        case fastgltf::Wrap::ClampToEdge: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case fastgltf::Wrap::MirroredRepeat: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case fastgltf::Wrap::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    }
+    return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+}
+
+auto ReadSampler(fastgltf::Sampler const& tSampler) -> rendering::SamplerDetails
+{
+    using fastgltf::Filter;
+    auto const min = tSampler.minFilter.value_or(Filter::LinearMipMapLinear);
+    bool const nearestMin =
+        min == Filter::Nearest || min == Filter::NearestMipMapNearest || min == Filter::NearestMipMapLinear;
+    bool const nearestMip = min == Filter::NearestMipMapNearest || min == Filter::LinearMipMapNearest;
+
+    return {
+        .minFilter    = nearestMin ? VK_FILTER_NEAREST : VK_FILTER_LINEAR,
+        .magFilter    = tSampler.magFilter == Filter::Nearest ? VK_FILTER_NEAREST : VK_FILTER_LINEAR,
+        .mipmap       = nearestMip ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR,
+        .addressModeU = ToAddressMode(tSampler.wrapS),
+        .addressModeV = ToAddressMode(tSampler.wrapT),
+    };
+}
+
+auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId const> tMaterials, Model& tModel) -> bool
+{
+    for (std::size_t i{0U}; i < tMaterials.size(); ++i)
+    {
+        auto const& baseColor = tAsset.materials[i].pbrData.baseColorTexture;
+        if (!baseColor)
+        {
+            continue;
+        }
+        if (baseColor->textureIndex >= tAsset.textures.size())
+        {
+            return false;
+        }
+
+        auto const& texture = tAsset.textures[baseColor->textureIndex];
+        if ((texture.imageIndex && *texture.imageIndex >= tAsset.images.size()) ||
+            (texture.samplerIndex && *texture.samplerIndex >= tAsset.samplers.size()))
+        {
+            return false;
+        }
+
+        material::MaterialTexture binding;
+        if (texture.imageIndex)
+        {
+            auto const& image = tAsset.images[*texture.imageIndex];
+            if (auto const* uri = std::get_if<fastgltf::sources::URI>(&image.data))
+            {
+                // The preprocessor uses the image file stem for the catalog ID.
+                auto const name = std::filesystem::path(std::string_view(uri->uri->path())).stem().string();
+                binding.img     = utils::StrHash64Runtime("texture." + name);
+            }
+        }
+        if (texture.samplerIndex)
+        {
+            binding.textureDetails = ReadSampler(tAsset.samplers[*texture.samplerIndex]);
+        }
+        tModel.materialTextures.emplace(tMaterials[i], binding);
+    }
+    return true;
+}
+
 auto ProcessMesh(
     fastgltf::Asset const&      tAsset,
     Mesh&                       tTarget,
@@ -238,6 +307,10 @@ auto ProcessMesh(
         meshPrim.material = rendering::kDefaultMaterial;
         if (primitive.materialIndex)
         {
+            if (*primitive.materialIndex >= tMaterials.size())
+            {
+                return false;
+            }
             // The preprocessor writes the material IDs in glTF material order.
             meshPrim.material = tMaterials[*primitive.materialIndex];
         }
@@ -300,9 +373,9 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         return nullptr;
     }
 
-    auto const tree      = utils::yaml::Parse(file);
-    auto const modelYaml = tree.crootref();
-    auto const id        = utils::yaml::Scalar(utils::yaml::Find(modelYaml, "id"));
+    auto const        tree      = utils::yaml::Parse(file);
+    auto const        modelYaml = tree.crootref();
+    auto const        id        = utils::yaml::Scalar(utils::yaml::Find(modelYaml, "id"));
     std::string const modelName{id.substr(id.find('.') + 1U)};
     // Model descriptors live in Resources/Models. Their paths are relative to Resources.
     auto const path = tPath.parent_path().parent_path() / utils::yaml::Scalar(utils::yaml::Find(modelYaml, "path"));
@@ -334,7 +407,7 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 #endif
 
     std::vector<ResourceId> materials;
-    auto const matSeq = utils::yaml::Find(modelYaml, "materials");
+    auto const              matSeq = utils::yaml::Find(modelYaml, "materials");
     if (matSeq.readable() && matSeq.is_seq())
     {
         materials.reserve(matSeq.num_children());
@@ -346,6 +419,11 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 
     auto model  = std::make_unique<Model>();
     model->name = modelName;
+    if (materials.size() > asset.materials.size() || !ReadMaterialTextures(asset, materials, *model))
+    {
+        LogError("Invalid material texture references in {}", modelName);
+        return nullptr;
+    }
     model->meshes.resize(asset.meshes.size());
 
     for (size_t i{0U}; i < asset.meshes.size(); ++i)
@@ -353,7 +431,6 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         auto const& input = asset.meshes[i];
         auto&       mesh  = model->meshes[i];
         mesh.name = input.name.empty() ? "mesh." + modelName + std::to_string(i) : "mesh." + std::string(input.name);
-        LogInfo("Mesh saved as: {}", mesh.name);
 
         if (!ProcessMesh(asset, mesh, input, materials))
         {
