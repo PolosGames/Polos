@@ -10,11 +10,12 @@ function Invoke-CMake {
 }
 
 function Initialize-PolosBuild {
-    param([string]$Preset, [string]$BuildDir, [string]$InstallDir, [string]$BuildExamples)
+    param([string]$Preset, [string]$BuildDir, [string]$InstallDir, [string]$BuildExamples, [string]$Example = '')
     $Options = @(
         "-DCMAKE_INSTALL_PREFIX=$InstallDir"
         '-DPOLOS_INSTALL_DIR:STRING=.'
         "-DBUILD_EXAMPLES=$BuildExamples"
+        "-DPOLOS_EXAMPLE:STRING=$Example"
     )
     if ($BuildExamples -eq 'OFF') {
         $Options += '-DBUILD_TESTS=OFF'

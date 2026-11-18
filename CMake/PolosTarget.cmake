@@ -69,12 +69,15 @@ function(polos_attach_build_info TARGET_NAME SOURCES)
     target_sources(${TARGET_NAME} PRIVATE "${GEN_FILE}")
 endfunction()
 
-# NAME: Should be the same as the folder name where this macro is called as well.
+# NAME: Should be the same as the folder name where this function is called as well.
 # DIRECTORY: Relative to root CMakeLists.txt
-macro (define_polos_app)
+function(define_polos_app)
     set(oneValueArgs NAME DIRECTORY LOGGER_TYPE)
     set(multiValueArgs SOURCES DEFINES)
-    cmake_parse_arguments(app "" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+    cmake_parse_arguments(PARSE_ARGV 0 app "" "${oneValueArgs}" "${multiValueArgs}")
+    if (POLOS_EXAMPLE AND NOT "${POLOS_EXAMPLE}" STREQUAL "${app_NAME}")
+        return()
+    endif()
 
     file(GLOB_RECURSE ${app_NAME}_INC "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
@@ -153,4 +156,4 @@ macro (define_polos_app)
     add_dependencies(${app_NAME} ${app_NAME}-resources)
     add_dependencies(install-runtime ${app_NAME})
 
-endmacro ()
+endfunction()

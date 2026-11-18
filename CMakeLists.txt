@@ -100,8 +100,12 @@ add_custom_target(install-sdk
     VERBATIM
 )
 
+set(POLOS_EXAMPLE "" CACHE STRING "Build only this example target when set")
 if (BUILD_EXAMPLES)
     add_subdirectory(Examples)
+    if (POLOS_EXAMPLE AND NOT TARGET "${POLOS_EXAMPLE}")
+        message(FATAL_ERROR "Unknown Polos example: ${POLOS_EXAMPLE}")
+    endif()
 endif ()
 
 add_custom_target(

@@ -62,12 +62,18 @@ install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK
 | Task | Linux | Windows |
 | --- | --- | --- |
 | Build and stage Sandbox | `bash Scripts/Linux/build_sandbox.sh release-runtime` | `./Scripts/Windows/build_sandbox.ps1 -Preset release-runtime` |
-| Build and run Sandbox | `bash Scripts/Linux/run_sandbox.sh` | `./Scripts/Windows/run_sandbox.ps1` |
+| Build and run an example | `bash Scripts/Linux/run_project.sh sandbox` | `./Scripts/Windows/run_project.ps1 -Project sandbox` |
 | Build and debug with LLDB | `bash Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
 | Export the SDK | `bash Scripts/Linux/export_sdk.sh release-sdk` | `./Scripts/Windows/export_sdk.ps1` |
 
-Sandbox is staged in `out/bin/<preset>` with the engine shared libraries and
-resources. Run and debug default to the Debug preset. The SDK defaults to Release
+Pass an example name from `Examples` to `run_project`. The runner generates its
+resource YAML, builds the runtime and selected example, then launches it from
+`out/bin/<preset>/<project>`. The preset defaults to `debug-runtime`. For example,
+run `bash Scripts/Linux/run_project.sh CatchTheCoin release-runtime` or
+`./Scripts/Windows/run_project.ps1 -Project CatchTheCoin -Preset release-runtime`.
+
+The Sandbox build script stages Sandbox in `out/bin/<preset>` with the engine
+shared libraries and resources. The SDK defaults to Release
 and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, libraries,
 and Windows import libraries. Link against Polos and place the
 engine shared libraries and `Resources` beside the application executable.

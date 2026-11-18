@@ -3,7 +3,7 @@
 polos_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 
 configure_polos() {
-    local preset=$1 build_dir=$2 install_dir=$3 examples=$4
+    local preset=$1 build_dir=$2 install_dir=$3 examples=$4 example=${5:-}
     local sdk_default="$HOME/VulkanSDK/1.4.363.0/x86_64"
     local options=()
     if [[ -z ${VULKAN_SDK:-} && -d "$sdk_default" ]]; then
@@ -17,5 +17,5 @@ configure_polos() {
     fi
     cmake -S "$polos_root" --preset "$preset" -B "$build_dir" \
         "-DCMAKE_INSTALL_PREFIX=$install_dir" -DPOLOS_INSTALL_DIR:STRING=. \
-        "-DBUILD_EXAMPLES=$examples" "${options[@]}"
+        "-DBUILD_EXAMPLES=$examples" "-DPOLOS_EXAMPLE:STRING=$example" "${options[@]}"
 }
