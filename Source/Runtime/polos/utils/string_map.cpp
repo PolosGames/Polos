@@ -32,9 +32,6 @@ constexpr ConstexprMap kKnownStrings{std::array{
     StringEntry("mesh.DefaultQuad"),
     StringEntry("texture.Default"),
     StringEntry("material.Default"),
-    StringEntry("shader.vert.forward_shading"),
-    StringEntry("shader.frag.forward_shading"),
-    StringEntry("shader.comp.main_compute"),
     StringEntry("pipeline.cube"),
     StringEntry("model.suzanne"),
 

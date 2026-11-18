@@ -48,13 +48,11 @@ GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t tErrorCode)
     {
         case GLFW_INVALID_ENUM:
             return {
-                .level   = GlfwLogLevel::Warn,
-                .message = "GLFW received an invalid enum to it's function! Desc: {0}"
+                .level = GlfwLogLevel::Warn, .message = "GLFW received an invalid enum to it's function! Desc: {0}"
             };
         case GLFW_INVALID_VALUE:
             return {
-                .level   = GlfwLogLevel::Warn,
-                .message = "GLFW received an invalid value to it's function! Desc: {0}"
+                .level = GlfwLogLevel::Warn, .message = "GLFW received an invalid value to it's function! Desc: {0}"
             };
         case GLFW_OUT_OF_MEMORY:
             return {
@@ -105,18 +103,11 @@ void OnEndFrame()
 
 PlatformManager* PlatformManager::sInstance{nullptr};
 
-PlatformManager::~PlatformManager()
-{
-    mWindowSurface.reset();
-    if (mGlfwInitialized)
-    {
-        glfwTerminate();
-    }
-}
-
 PlatformManager::PlatformManager()
 {
     using namespace polos::communication;
+
+    sInstance = this;
 
     Subscribe<EndFrame>([](EndFrame&) {
         OnEndFrame();
@@ -151,6 +142,17 @@ PlatformManager::PlatformManager()
 #ifndef NDEBUG
     glfwSetErrorCallback(GlfwErrorCallback);
 #endif// !NDEBUG
+}
+
+PlatformManager::~PlatformManager()
+{
+    mWindowSurface.reset();
+    if (mGlfwInitialized)
+    {
+        glfwTerminate();
+    }
+
+    sInstance = nullptr;
 }
 
 PlatformManager& PlatformManager::Get()
@@ -206,12 +208,8 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
         });
 
         glfwSetKeyCallback(
-            mWindow,
-            [](GLFWwindow* /*tWindow*/,
-               std::int32_t tKey,
-               std::int32_t /*tScancode*/,
-               std::int32_t tAction,
-               std::int32_t /*tMods*/) {
+            mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tKey, std::int32_t /*tScancode*/, std::int32_t tAction,
+                         std::int32_t /*tMods*/) {
                 switch (tAction)
                 {
                     case GLFW_RELEASE: DispatchDefer<KeyRelease>(tKey); break;
@@ -225,8 +223,7 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
         });
 
         glfwSetMouseButtonCallback(
-            mWindow,
-            [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
+            mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
                 DispatchDefer<MouseInput>(tButton, tAction);
             });
     }

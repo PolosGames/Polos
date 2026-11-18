@@ -26,9 +26,9 @@ public:
     ~EditorCameraSystem();
 
     EditorCameraSystem(EditorCameraSystem const&)                    = delete;
-    EditorCameraSystem(EditorCameraSystem&&)                         = delete;
+    EditorCameraSystem(EditorCameraSystem&&)                         = default;
     auto operator=(EditorCameraSystem const&) -> EditorCameraSystem& = delete;
-    auto operator=(EditorCameraSystem&&) -> EditorCameraSystem&      = delete;
+    auto operator=(EditorCameraSystem&&) -> EditorCameraSystem&      = default;
 
     /// A null window allows camera updates without changing the cursor mode.
     auto Update(Scene* tScene, float tDeltaTime, GLFWwindow* tWindow = nullptr) -> void;

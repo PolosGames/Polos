@@ -43,11 +43,14 @@ advance it or modify the tracked semantic version.
 
 ### Resources
 
-Resources load from `Resources` beside the executable. The engine catalog lives in
-`Source/Resources/resources.json`. The sandbox keeps its models, textures, and catalog
-in `Examples/sandbox/Resources`. The build combines both catalogs when packaging the
-sandbox. See the [resource loading guide](Source/Runtime/polos/resource/README.md) for
-lookup and caching rules.
+The sandbox loads its catalog, models, and textures from `Resources` beside the
+executable. Their source files are in `Examples/sandbox/Resources`. See the
+[resource loading guide](Source/Runtime/polos/resource/README.md) for lookup and caching rules.
+
+Engine shaders live in `Source/Resources/Shaders`. The build compiles them to
+SPIR-V and writes the generated `.cpp` byte arrays beside `render_compositor.cpp`
+in `Source/Runtime/polos/rendering/compositor`. The compositor includes those arrays
+directly into the runtime library.
 
 ### Sandbox and SDK
 
@@ -66,7 +69,7 @@ install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK
 Sandbox is staged in `out/bin/<preset>` with the engine shared libraries and
 resources. Run and debug default to the Debug preset. The SDK defaults to Release
 and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, libraries,
-engine resources, and Windows import libraries. Link against Polos and place the
+and Windows import libraries. Link against Polos and place the
 engine shared libraries and `Resources` beside the application executable.
 
 The **Export Polos SDK** workflow uploads separate Linux and Windows Release

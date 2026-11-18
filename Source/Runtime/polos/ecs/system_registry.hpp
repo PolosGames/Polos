@@ -17,22 +17,18 @@ class Scene;
 class SystemRegistry
 {
 public:
-    using SystemUpdate = std::function<void(Scene*, float)>;
+    using SystemUpdate = std::move_only_function<void(Scene*, float)>;
 
-    /// Register systems before calling UpdateAll.
-    void Register(SystemUpdate tUpdate)
-    {
-        mSystems.push_back(std::move(tUpdate));
-    }
+    SystemRegistry();
+    ~SystemRegistry();
 
-    void UpdateAll(Scene* tScene, float tDeltaTime) const
-    {
-        for (auto const& update : mSystems)
-        {
-            update(tScene, tDeltaTime);
-        }
-    }
+    [[nodiscard]] static auto Get() -> SystemRegistry&;
+
+    void Register(SystemUpdate&& tUpdate);
+    void UpdateAll(Scene* tScene, float tDeltaTime);
 private:
+    static SystemRegistry* sInstance;
+
     std::vector<SystemUpdate> mSystems;
 };
 }// namespace polos::ecs

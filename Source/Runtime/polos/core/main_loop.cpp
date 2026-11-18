@@ -15,9 +15,9 @@
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/ecs/system_registry.hpp"
+#include "polos/ecs/systems/editor_camera_system.hpp"
 #include "polos/ecs/systems/light_collection_system.hpp"
 #include "polos/ecs/systems/mesh_instance_sync_system.hpp"
-#include "polos/ecs/systems/editor_camera_system.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/rendering_api.hpp"
@@ -57,15 +57,13 @@ void MainLoop::Run() const
     // constexpr Duration const     kTimestep{1_sec / kTargetFrames};
 #endif
 
-    ecs::EditorCameraSystem editorCameraSystem;
-    ecs::SystemRegistry     systems;
-    systems.Register([&editorCameraSystem](ecs::Scene* tScene, float tDeltaTime) {
-        editorCameraSystem.Update(tScene, tDeltaTime, platform::PlatformManager::Get().GetMainWindow());
+    ecs::SystemRegistry& systems = ecs::SystemRegistry::Get();
+    systems.Register([system = ecs::EditorCameraSystem{}](ecs::Scene* tScene, float tDeltaTime) mutable {
+        system.Update(tScene, tDeltaTime, platform::PlatformManager::Get().GetMainWindow());
     });
     systems.Register([system = ecs::MeshInstanceSyncSystem{}](ecs::Scene* tScene, float) mutable {
         system.Update(tScene);
     });
-
     systems.Register([system = ecs::LightCollectionSystem{}](ecs::Scene* tScene, float) mutable {
         system.Update(tScene);
     });

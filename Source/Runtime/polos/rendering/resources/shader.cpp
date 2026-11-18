@@ -5,12 +5,8 @@
 
 #include "polos/rendering/resources/shader.hpp"
 
-#include "polos/filesystem/file.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
-#include "polos/resource/resource_manager.hpp"
-#include "polos/utils/assert.hpp"
-#include "polos/utils/string_map.hpp"
 
 #include <cstring>
 #include <vector>
@@ -18,44 +14,38 @@
 namespace polos::rendering
 {
 
-auto Shader::Create(utils::string_id tResourceId, ShaderStage tStage) -> std::shared_ptr<Shader>
+auto Shader::Create(std::span<std::byte const> tData, ShaderStage tStage) -> std::shared_ptr<Shader>
 {
-    auto file = resource::ResourceManager::Get().GetFile(tResourceId);
-    if (!file)
+    if (tData.empty() || tData.size() % sizeof(std::uint32_t) != 0U)
     {
-        LogError("Could not get preloaded shader resource '{}'.", tResourceId);
+        LogError("Invalid SPIR-V size: {} bytes.", tData.size());
         return nullptr;
     }
 
-    if (file->data.empty() || file->data.size() % sizeof(std::uint32_t) != 0)
-    {
-        LogError("Invalid SPIR-V size for shader resource '{}'.", tResourceId);
-        return nullptr;
-    }
-
-    std::vector<std::uint32_t> code(file->data.size() / sizeof(std::uint32_t));
-    std::memcpy(code.data(), file->data.data(), file->data.size());
+    // Vulkan expects word-aligned SPIR-V. The byte span may be unaligned.
+    std::vector<std::uint32_t> code(tData.size() / sizeof(std::uint32_t));
+    std::memcpy(code.data(), tData.data(), tData.size());
     VkShaderModuleCreateInfo const createInfo{
         .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext    = nullptr,
         .flags    = 0U,
-        .codeSize = file->data.size(),
+        .codeSize = tData.size(),
         .pCode    = code.data(),
     };
 
     VkDevice const device = VulkanDevice::Get().logiDevice;
-    auto shader = std::shared_ptr<Shader>{new Shader{.name = tResourceId, .stage = tStage}, [device](Shader* tShader) {
+    auto shader = std::shared_ptr<Shader>{new Shader{.stage = tStage}, [device](Shader* tShader) {
                                               vkDestroyShaderModule(device, tShader->module, nullptr);
                                               delete tShader;
                                           }};
 
-    VkShaderModule module{VK_NULL_HANDLE};
-    PL_ASSERT(
-        VK_SUCCESS == vkCreateShaderModule(device, &createInfo, nullptr, &module),
-        "Failed to create shader {}",
-        utils::GetStringFromID(tResourceId));
-
-    shader->module = module;
+    VkResult const result = vkCreateShaderModule(device, &createInfo, nullptr, &shader->module);
+    if (result != VK_SUCCESS)
+    {
+        shader->module = VK_NULL_HANDLE;
+        LogError("Failed to create shader module: VkResult {}.", static_cast<int>(result));
+        return nullptr;
+    }
     return shader;
 }
 

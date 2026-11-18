@@ -19,7 +19,6 @@
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/common.hpp"
-#include "polos/resource/resource_manager.hpp"
 
 #include <gtest/gtest.h>
 
@@ -43,7 +42,6 @@ struct SmokeState
     unsigned                      completedFrames{0U};
     unsigned                      guiFrames{0U};
     bool                          windowCreated{false};
-    bool                          shadersLoaded{false};
     bool                          cameraMoved{false};
     bool                          cursorCaptured{false};
     bool                          cursorReleased{false};
@@ -73,11 +71,6 @@ public:
         auto&      platform    = platform::PlatformManager::Get();
         auto const framebuffer = platform.GetWindowSurface().GetFramebufferSize();
         mState.windowCreated   = platform.GetMainWindow() != nullptr && framebuffer.width > 0 && framebuffer.height > 0;
-
-        auto& resources      = resource::ResourceManager::Get();
-        mState.shadersLoaded = resources.GetFile("shader.vert.forward_shading"_sid) != nullptr &&
-                               resources.GetFile("shader.frag.forward_shading"_sid) != nullptr &&
-                               resources.GetFile("shader.comp.main_compute"_sid) != nullptr;
 
         auto*      scene           = ecs::SceneManager::Get().CreateScene();
         auto const camera          = scene->activeCamera;
@@ -184,7 +177,6 @@ TEST(EngineIntegrationTest, RendersSceneAndGuiAcrossFrameSlots)
 
     EXPECT_EQ(result, 0);
     EXPECT_TRUE(state.windowCreated);
-    EXPECT_TRUE(state.shadersLoaded);
     EXPECT_TRUE(state.cameraMoved);
     EXPECT_TRUE(state.cursorCaptured);
     EXPECT_TRUE(state.cursorReleased);
