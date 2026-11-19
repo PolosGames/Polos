@@ -70,7 +70,8 @@ public:
     [[nodiscard]] static auto Create(BufferDescription const& tDesc, std::span<std::byte const> tInitialData)
         -> std::unique_ptr<Buffer>;
 
-    static auto Create(resource::model::Primitive const& tPrim) -> std::unique_ptr<Buffer>;
+    [[nodiscard]] static auto CreateFixedVertexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>;
+    [[nodiscard]] static auto CreateFixedIndexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>;
 
     /// Preserves the common prefix and leaves newly added bytes uninitialized.
     /// Finish using the old buffer before resizing. A size change replaces the handle and mapping.

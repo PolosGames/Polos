@@ -9,7 +9,6 @@
 #include "polos/rendering/resources/buffer.hpp"
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/settings.hpp"
-#include "polos/rendering/uniforms/camera_uniform.hpp"
 #include "polos/rendering/vk/dependency_info_builder.hpp"
 #include "polos/rendering/vk/descriptor_pool.hpp"
 #include "polos/rendering/vk/vulkan_pipeline.hpp"
@@ -19,6 +18,7 @@
 
 #include <array>
 #include <memory>
+#include <span>
 
 namespace polos::rendering
 {
@@ -40,8 +40,6 @@ public:
         VkRect2D const&   scissor;
         VkViewport const& viewport;
 
-        CameraUniform const& cameraUbo;
-
         uint32_t slotCount{0U};
 
         SceneLightInfo const& lightInfo;
@@ -50,7 +48,8 @@ public:
     ForwardShadingPass(
         std::shared_ptr<Shader const> tVertexShader,
         std::shared_ptr<Shader const> tFragmentShader,
-        std::shared_ptr<Shader const> tMainCompShader);
+        std::shared_ptr<Shader const> tMainCompShader,
+        std::span<Buffer*>            tCameraUniforms);
     ~ForwardShadingPass();
 
     auto CreateFramebuffers(std::span<FrameTargets const> tTargets, VkExtent2D const& tScExtent) -> void;
@@ -73,8 +72,6 @@ private:
 
     VulkanPipeline mComputeMainPipeline{};
     VulkanPipeline mPbrPipeline{};
-
-    std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mCameraUniforms;
 
     std::unique_ptr<Buffer> mVisibleMatrixIndicesBuffer;
     std::unique_ptr<Buffer> mWorldMatrices;

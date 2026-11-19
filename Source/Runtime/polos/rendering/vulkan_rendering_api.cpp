@@ -33,6 +33,7 @@ RenderingApi::~RenderingApi()
 
 auto RenderingApi::Shutdown() -> void
 {
+    mDebugDrawQueue.Clear();
     if (auto const result = mRenderContext->Shutdown(); !result.has_value())
     {
         LogWarn("{}", result.error());
@@ -43,9 +44,15 @@ auto RenderingApi::BeginFrame() -> CommandBuffer*
 {
     if (nullptr == mRenderContext)
     {
+        mDebugDrawQueue.Clear();
         return nullptr;
     }
-    return mRenderContext->BeginFrame();
+    auto* cmdBuf = mRenderContext->BeginFrame();
+    if (cmdBuf == nullptr)
+    {
+        mDebugDrawQueue.Clear();
+    }
+    return cmdBuf;
 }
 
 auto RenderingApi::EndFrame() -> void
@@ -54,11 +61,17 @@ auto RenderingApi::EndFrame() -> void
     {
         lastStatistics = mRenderContext->EndFrame();
     }
+    mDebugDrawQueue.Clear();
 }
 
 auto RenderingApi::GetLastFrameStatistics() -> FrameStatistics const&
 {
     return lastStatistics;
+}
+
+auto RenderingApi::GetDebugDrawQueue() -> DebugDrawQueue&
+{
+    return mDebugDrawQueue;
 }
 
 void RenderingApi::createRenderContext()

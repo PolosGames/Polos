@@ -8,6 +8,7 @@
 
 #include "polos/platform/i_window_surface.hpp"
 #include "polos/polos_api.hpp"
+#include "polos/rendering/debug_draw.hpp"
 #include "polos/rendering/frame_statistics.hpp"
 
 #include <memory>
@@ -42,7 +43,8 @@ public:
     auto BeginFrame() -> CommandBuffer*;
     auto EndFrame() -> void;
 
-    auto GetLastFrameStatistics() -> FrameStatistics const&;
+    auto               GetLastFrameStatistics() -> FrameStatistics const&;
+    [[nodiscard]] auto GetDebugDrawQueue() -> DebugDrawQueue&;
 private:
     static RenderingApi* sInstance;
 
@@ -53,6 +55,7 @@ private:
 
     FrameStatistics                 lastStatistics{};
     std::shared_ptr<IRenderContext> mRenderContext;
+    DebugDrawQueue                  mDebugDrawQueue;
 };
 
 }// namespace polos::rendering

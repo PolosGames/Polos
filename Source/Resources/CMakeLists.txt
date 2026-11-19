@@ -35,7 +35,7 @@ endfunction()
 
 find_program(GLSLANG_EXECUTABLE NAMES glslang glslangValidator HINTS "$ENV{VULKAN_SDK}/bin" REQUIRED)
 
-set(engine_shader_sources forward_shading.vert forward_shading.frag main_compute.comp)
+set(engine_shader_sources forward_shading.vert forward_shading.frag main_compute.comp debug_draw.vert debug_draw.frag)
 set(shader_generator "${CMAKE_CURRENT_SOURCE_DIR}/EmbedShader.cmake")
 set(embedded_shaders)
 foreach(shader IN LISTS engine_shader_sources)

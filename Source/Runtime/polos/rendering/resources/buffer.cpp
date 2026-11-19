@@ -204,6 +204,34 @@ auto Buffer::Create(BufferDescription const& tDesc, std::span<std::byte const> t
     return destination;
 }
 
+auto Buffer::CreateFixedVertexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>
+{
+    return Buffer::Create(
+        BufferDescription{
+            .size               = tData.size_bytes(),
+            .usage              = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            .residence          = MemoryResidence::kDevice,
+            .hostAccess         = HostAccessFlags::kNone,
+            .persistentlyMapped = false,
+            .resizable          = false,
+        },
+        std::as_bytes(tData));
+}
+
+auto Buffer::CreateFixedIndexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>
+{
+    return Buffer::Create(
+        BufferDescription{
+            .size               = tData.size_bytes(),
+            .usage              = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            .residence          = MemoryResidence::kDevice,
+            .hostAccess         = HostAccessFlags::kNone,
+            .persistentlyMapped = false,
+            .resizable          = false,
+        },
+        std::as_bytes(tData));
+}
+
 auto Buffer::Resize(VkDeviceSize tSize) -> bool
 {
     if (!mResizable || tSize == 0U || buffer == VK_NULL_HANDLE)

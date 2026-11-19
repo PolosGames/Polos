@@ -5,6 +5,9 @@ polos_sources(
     cache/mesh_cache.cpp
     cache/texture_cache.cpp
     compositor/render_compositor.cpp
+    debug_draw.cpp
+    passes/debug_geometry.cpp
+    passes/debug_render_pass.cpp
     passes/forward_shading_pass.cpp
     passes/ui_render_pass.cpp
     resources/buffer.cpp
@@ -14,6 +17,7 @@ polos_sources(
     resources/texture.cpp
     ssbo/quad_instance.cpp
     uniforms/camera_uniform.cpp
+    vertex/debug_vertex.cpp
     vertex/mesh_vertex.cpp
     vertex/quad_vertex.cpp
     vk/command_buffer.cpp
@@ -39,4 +43,9 @@ polos_tests(rendering SOURCES
     test/camera_uniform_test.cpp
     vertex/mesh_vertex.cpp
     vertex/quad_vertex.cpp
+)
+
+polos_tests(debug-draw SOURCES
+    test/debug_draw_test.cpp
+    passes/debug_geometry.cpp
 )

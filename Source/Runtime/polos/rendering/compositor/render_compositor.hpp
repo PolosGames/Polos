@@ -7,10 +7,10 @@
 #define POLOS_RENDERING_RENDER_COMPOSITOR_HPP
 
 #include "polos/rendering/compositor/frame_targets.hpp"
+#include "polos/rendering/passes/debug_render_pass.hpp"
 #include "polos/rendering/passes/forward_shading_pass.hpp"
 #include "polos/rendering/passes/ui_render_pass.hpp"
 #include "polos/rendering/settings.hpp"
-#include "polos/rendering/uniforms/camera_uniform.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
@@ -62,14 +62,16 @@ private:
     std::shared_ptr<Shader const>                          mForwardVertexShader;
     std::shared_ptr<Shader const>                          mForwardFragmentShader;
     std::shared_ptr<Shader const>                          mMainComputeShader;
+    std::shared_ptr<Shader const>                          mDebugVertexShader;
+    std::shared_ptr<Shader const>                          mDebugFragmentShader;
 
-    std::unique_ptr<Buffer> mInstanceBuffer;
+    std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mCameraUniforms;
+    std::unique_ptr<Buffer>                                           mInstanceBuffer;
     std::array<std::unique_ptr<Buffer>, Settings::kMaxFramesInFlight> mLightInstances;
 
     std::unique_ptr<ForwardShadingPass> mForwardShadingPass;
+    std::unique_ptr<DebugRenderPass>    mDebugRenderPass;
     std::unique_ptr<UiRenderPass>       mUiRenderPass;
-
-    CameraUniform mCameraUbo;
 };
 
 }// namespace polos::rendering

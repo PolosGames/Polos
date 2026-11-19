@@ -55,6 +55,12 @@ public:
         std::uint32_t              tOffset,
         std::span<std::byte const> tData) const;
     void Dispatch(std::uint32_t tGroupCountX, std::uint32_t tGroupCountY, std::uint32_t tGroupCountZ) const;
+    void DrawIndexed(
+        std::uint32_t tIndexCount,
+        std::uint32_t tInstanceCount = 1U,
+        std::uint32_t tFirstIndex    = 0U,
+        std::int32_t  tVertexOffset  = 0,
+        std::uint32_t tFirstInstance = 0U) const;
     void
     DrawIndexedIndirect(VkBuffer tBuffer, VkDeviceSize tOffset, std::uint32_t tDrawCount, std::uint32_t tStride) const;
 

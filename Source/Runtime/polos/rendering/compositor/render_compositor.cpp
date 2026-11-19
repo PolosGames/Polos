@@ -5,12 +5,18 @@
 
 #include "polos/rendering/compositor/render_compositor.hpp"
 
+#include "debug_draw.frag.cpp"
+#include "debug_draw.vert.cpp"
+#include "forward_shading.frag.cpp"
+#include "forward_shading.vert.cpp"
+#include "main_compute.comp.cpp"
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
 #include "polos/ecs/scene.hpp"
 #include "polos/ecs/scene_manager.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
+#include "polos/rendering/rendering_api.hpp"
 #include "polos/rendering/rendering_error_domain.hpp"
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/resources/shader.hpp"
@@ -22,10 +28,6 @@
 #include "polos/rendering/vk/vulkan_utils.hpp"
 #include "polos/utils/assert.hpp"
 
-#include "forward_shading.frag.cpp"
-#include "forward_shading.vert.cpp"
-#include "main_compute.comp.cpp"
-
 #include <span>
 #include <utility>
 
@@ -34,10 +36,12 @@ namespace polos::rendering
 
 auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
-    auto vertexShader   = Shader::Create(shader::forward_shading_vert::kData, ShaderStage::kVertex);
-    auto fragmentShader = Shader::Create(shader::forward_shading_frag::kData, ShaderStage::kFragment);
-    auto computeShader  = Shader::Create(shader::main_compute::kData, ShaderStage::kCompute);
-    if (!vertexShader || !fragmentShader || !computeShader)
+    auto vertexShader        = Shader::Create(shader::forward_shading_vert::kData, ShaderStage::kVertex);
+    auto fragmentShader      = Shader::Create(shader::forward_shading_frag::kData, ShaderStage::kFragment);
+    auto computeShader       = Shader::Create(shader::main_compute::kData, ShaderStage::kCompute);
+    auto debugVertexShader   = Shader::Create(shader::debug_draw_vert::kData, ShaderStage::kVertex);
+    auto debugFragmentShader = Shader::Create(shader::debug_draw_frag::kData, ShaderStage::kFragment);
+    if (!vertexShader || !fragmentShader || !computeShader || !debugVertexShader || !debugFragmentShader)
     {
         return ErrorType{RenderingErrc::kFailedCreateShaderModule};
     }
@@ -45,8 +49,17 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
     mForwardVertexShader   = std::move(vertexShader);
     mForwardFragmentShader = std::move(fragmentShader);
     mMainComputeShader     = std::move(computeShader);
+    mDebugVertexShader     = std::move(debugVertexShader);
+    mDebugFragmentShader   = std::move(debugFragmentShader);
 
     PL_ASSERT(createTargets().has_value(), "Failed to create render compositor");
+
+    std::array<Buffer*, Settings::kMaxFramesInFlight> cameraUniforms{};
+    for (std::size_t i{0U}; i < mCameraUniforms.size(); ++i)
+    {
+        mCameraUniforms[i] = CreateCameraUniformBuffer();
+        cameraUniforms[i]  = mCameraUniforms[i].get();
+    }
 
     mInstanceBuffer = Buffer::Create(
         BufferDescription{
@@ -73,9 +86,12 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
         PL_ASSERT(nullptr != buffer, "Light instance buffer could not be created");
     }
 
-    mForwardShadingPass =
-        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
+        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader, cameraUniforms);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
+
+    mDebugRenderPass = std::make_unique<DebugRenderPass>(mDebugVertexShader, mDebugFragmentShader, cameraUniforms);
+    mDebugRenderPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
 
     mUiRenderPass = std::make_unique<UiRenderPass>();
     if (!mUiRenderPass->Create(mFrameTargets.front().colorImg->format))
@@ -89,13 +105,20 @@ auto RenderCompositor::Create(CreationDetails const& /*tDetails*/) -> Result<voi
 auto RenderCompositor::Destroy() -> void
 {
     mUiRenderPass.reset();
+    mDebugRenderPass.reset();
     mForwardShadingPass.reset();
+    for (auto& buffer : mCameraUniforms)
+    {
+        buffer.reset();
+    }
     mInstanceBuffer.reset();
     for (auto& buffer : mLightInstances)
     {
         buffer.reset();
     }
     mMainComputeShader.reset();
+    mDebugFragmentShader.reset();
+    mDebugVertexShader.reset();
     mForwardFragmentShader.reset();
     mForwardVertexShader.reset();
     releaseTargets();
@@ -104,13 +127,21 @@ auto RenderCompositor::Destroy() -> void
 auto RenderCompositor::RecreateTargets() -> Result<void>
 {
     mUiRenderPass->ReleaseFramebuffers();
+    mDebugRenderPass->ReleaseFramebuffers();
     mForwardShadingPass.reset();
     releaseTargets();
     PL_ASSERT(createTargets().has_value(), "Failed to recreate render compositor");
 
-    mForwardShadingPass =
-        std::make_unique<ForwardShadingPass>(mForwardVertexShader, mForwardFragmentShader, mMainComputeShader);
+    std::array<Buffer*, Settings::kMaxFramesInFlight> cameraUniforms{};
+    for (std::size_t i{0U}; i < mCameraUniforms.size(); ++i)
+    {
+        cameraUniforms[i] = mCameraUniforms[i].get();
+    }
+
+    mForwardShadingPass = std::make_unique<ForwardShadingPass>(
+        mForwardVertexShader, mForwardFragmentShader, mMainComputeShader, cameraUniforms);
     mForwardShadingPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
+    mDebugRenderPass->CreateFramebuffers(mFrameTargets, VulkanSwapchain::Get().GetExtent());
     return {};
 }
 
@@ -120,10 +151,11 @@ auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
     ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
 
     // Always at least 1 camera, no need to check if activeCamera exists
-    mCameraUbo = GetCameraUniform(
+    CameraUniform const cameraUbo = GetCameraUniform(
         scene->GetComponent<ecs::CameraComponent>(scene->activeCamera),
         scene->GetComponent<ecs::TransformComponent>(scene->activeCamera), tFrameData.scImage->extent.width,
         tFrameData.scImage->extent.height);
+    mCameraUniforms[tFrameData.frameSlot]->Write(&cameraUbo, sizeof(cameraUbo));
 
     {
         POLOS_PROFILE_ZONE("Upload changed mesh instances");
@@ -156,6 +188,9 @@ auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
     POLOS_PROFILE_GPU_ZONE(tFrameData.currentCmdBuf.GetHandle(), "GPU frame");
     FrameTargets const& targets = mFrameTargets[tFrameData.frameSlot];
 
+    // RenderUpdate runs after Prepare(), so collect debug submissions here.
+    mDebugRenderPass->Prepare(tFrameData.frameSlot, RenderingApi::Get().GetDebugDrawQueue());
+
     ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
 
     int32_t drawCalls{0};
@@ -167,10 +202,17 @@ auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
             .extent     = ToExtent2D(tFrameData.scImage->extent),
             .scissor    = VulkanSwapchain::Get().GetScissor(),
             .viewport   = VulkanSwapchain::Get().GetViewport(),
-            .cameraUbo  = mCameraUbo,
             .slotCount  = scene->GetEntityPoolSize(),
             .lightInfo  = scene->GetRenderData().lightInfo,
         });
+
+    drawCalls += mDebugRenderPass->Record({
+        .frameSlot  = tFrameData.frameSlot,
+        .cmdBuf     = tFrameData.currentCmdBuf,
+        .renderArea = VulkanSwapchain::Get().GetRenderArea(),
+        .scissor    = VulkanSwapchain::Get().GetScissor(),
+        .viewport   = VulkanSwapchain::Get().GetViewport(),
+    });
 
     targets.colorImg->SetUse({
         .layout   = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,

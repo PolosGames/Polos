@@ -97,6 +97,16 @@ void CommandBuffer::Dispatch(
     vkCmdDispatch(mHandle, tGroupCountX, tGroupCountY, tGroupCountZ);
 }
 
+void CommandBuffer::DrawIndexed(
+    std::uint32_t const tIndexCount,
+    std::uint32_t const tInstanceCount,
+    std::uint32_t const tFirstIndex,
+    std::int32_t const  tVertexOffset,
+    std::uint32_t const tFirstInstance) const
+{
+    vkCmdDrawIndexed(mHandle, tIndexCount, tInstanceCount, tFirstIndex, tVertexOffset, tFirstInstance);
+}
+
 void CommandBuffer::DrawIndexedIndirect(
     VkBuffer            tBuffer,
     VkDeviceSize const  tOffset,
