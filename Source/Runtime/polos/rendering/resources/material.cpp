@@ -23,6 +23,7 @@ auto Material::Create(resource::material::Material const& tMat) -> Material
     return {
         .baseColorFactor  = baseColorFactor,
         .baseColorTexture = TextureCache::Get().GetOrCreateTextureIndex(texture.img, texture.textureDetails),
+        .tilingFactor     = tMat.tilingFactor,
     };
 }
 }// namespace polos::rendering

@@ -14,7 +14,13 @@ A C++ game engine project.
 - Linux x64
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ### To Build
+=======
+An application implements `polos::app::ILiveLayer`, or derives from
+`polos::app::BaseLiveLayer`, and returns it from `polos::app::CreateApplication`.
+Including `polos/app/polos_main.hpp` provides the executable entry point.
+>>>>>>> Stashed changes
 =======
 An application implements `polos::app::ILiveLayer`, or derives from
 `polos::app::BaseLiveLayer`, and returns it from `polos::app::CreateApplication`.
@@ -34,12 +40,18 @@ toolchain. For a manual CMake invocation, use a fresh build directory or configu
 the existing directory once with `cmake --fresh`.
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ### Runtime and versions
 =======
+=======
+>>>>>>> Stashed changes
 Subscribe to `polos::core::EngineUpdate` for gameplay and
 `polos::rendering::RenderUpdate` for ImGui calls. Both events provide frame delta
 time. The engine runs until the window closes or a `polos::core::EngineTerminate`
 event is dispatched, then calls `Destroy()` and shuts down.
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 The runtime builds as one `polos` shared library, defined in
@@ -81,7 +93,7 @@ SDK installed. On Linux, install Vulkan development files and glslang, or set
 | --- | --- | --- |
 | Build and stage Sandbox | `bash Scripts/Linux/build_sandbox.sh release-runtime` | `./Scripts/Windows/build_sandbox.ps1 -Preset release-runtime` |
 | Build and run an example | `bash Scripts/Linux/run_project.sh sandbox` | `./Scripts/Windows/run_project.ps1 -Project sandbox` |
-| Build and debug with LLDB | `bash Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
+| Build and debug with LLDB | `bash Scripts/Linux/debug_project.sh Tetris` | `./Scripts/Windows/debug_sandbox.ps1` |
 | Export the SDK | `bash Scripts/Linux/export_sdk.sh release-sdk` | `./Scripts/Windows/export_sdk.ps1` |
 
 Pass an example name from `Examples` to `run_project`. The runner generates its
@@ -117,16 +129,16 @@ The **Export Polos SDK** workflow uploads separate Linux and Windows Release
 SDK archives. Running applications with the Windows SDK requires a Vulkan 1.3
 driver and the x64 MSVC runtime on the destination machine.
 
-### Windows Sandbox from Linux
+### Windows Examples from Linux
 
 Run `bash Scripts/Linux/build_windows.sh [PROJECT]` with Ninja, Linux glslang, and an
 x86_64 MinGW-w64 GCC toolchain with C++23 support. The cross-build fetches the
 Windows Vulkan headers and generates the import library for the target's
 `vulkan-1.dll`. If the compiler is outside
 `PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
-The default project is Sandbox. The script stages its Windows executable, DLLs,
-and resources in `out/bin/linux-to-win-mingw-release`. Other examples are staged
-in a project-named subdirectory. Use the native Windows build for the MSVC SDK ABI.
+The default project is Tetris. The script stages its Windows executable, DLLs,
+and resources in `out/bin/linux-to-win-mingw-release/Tetris`.
+Use the native Windows build for the MSVC SDK ABI.
 
 ## AI Usage
 

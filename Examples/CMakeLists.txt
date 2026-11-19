@@ -1,2 +1,1 @@
-add_subdirectory(CatchTheCoin)
-add_subdirectory(sandbox)
+add_subdirectory(Tetris)

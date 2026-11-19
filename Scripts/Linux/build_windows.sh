@@ -2,9 +2,11 @@
 set -euo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
+default_project=Tetris
+
 usage() {
     printf 'Usage: bash %s [PROJECT]\n' "$0"
-    printf 'PROJECT is an example under Examples and defaults to sandbox.\n'
+    printf 'PROJECT is an example under Examples and defaults to %s.\n' "$default_project"
 }
 
 if [[ ${1:-} == --help || ${1:-} == -h ]]; then
@@ -15,7 +17,7 @@ if (( $# > 1 )); then
     usage >&2
     exit 1
 fi
-project=${1:-sandbox}
+project=${1:-$default_project}
 validate_polos_example "$project"
 
 toolchain=${POLOS_MINGW_ROOT:-}
