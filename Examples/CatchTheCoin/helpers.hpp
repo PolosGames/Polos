@@ -22,14 +22,20 @@ class Scene;
 namespace ctc
 {
 auto CreateEntityFromModel(polos::utils::string_id tModel, polos::ecs::Scene* tScene) -> polos::ecs::EntityHandle;
+
 auto CreateLightSource(polos::ecs::Scene* tScene, polos::ecs::LightComponent const& tLight = {})
     -> polos::ecs::EntityHandle;
+
 void CreateQuad(
     polos::ecs::Scene*                    tScene,
     polos::rendering::MaterialHandle      tMaterial,
     polos::ecs::TransformComponent const& tTransform = {});
+
 auto CreateMaterialFromTexture(std::string_view tName, polos::resource::material::MaterialTexture const& tTexture)
     -> polos::rendering::MaterialHandle;
+
+auto CreateCamera(polos::ecs::Scene* tScene, polos::ecs::TransformComponent const& tTransform)
+    -> polos::ecs::EntityHandle;
 
 }// namespace ctc
 

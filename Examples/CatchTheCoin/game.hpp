@@ -6,6 +6,7 @@
 #ifndef CATCHTHECOIN_GAME_HPP
 #define CATCHTHECOIN_GAME_HPP
 
+#include "polos/ecs/entity.hpp"
 namespace polos::ecs
 {
 class Scene;
@@ -22,8 +23,12 @@ public:
     void Update(float tDt);
     void Render(float tDt);
 private:
+    void renderEditor(float tDt);
+
     polos::ecs::Scene* mScene;
-    bool               mShowDemo{true};
+    bool               mShowDemo{false};
+
+    polos::ecs::EntityHandle mCharacterCam;
 };
 
 }// namespace ctc

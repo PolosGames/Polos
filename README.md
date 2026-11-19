@@ -1,111 +1,120 @@
-<img src=".github/resources/logo_bw.svg" alt="logo" width="500"/>
+<img src=".github/resources/logo_bw.svg" alt="Polos" width="500"/>
 
-# [![GitHub](https://img.shields.io/github/license/PolosGames/Polos)](https://github.com/PolosGames/Polos/blob/master/LICENSE)
+# Polos
 
-A C++ game engine project.
+Polos is a C++23 game engine for Windows and Linux on x64. It provides a Vulkan
+renderer, an entity-component system, asset loading, and an application loop.
+Games are written in C++ and can use the engine from its source tree or through
+an exported SDK.
 
-**Roadmap** can be found in [this](https://trello.com/b/frG6m0AQ) link.
+The runtime builds as one shared library, `polos.dll` on Windows and `libpolos.so`
+on Linux. Applications own their game logic, scenes, and resources.
 
-**Coding Guidelines** can be found in [Polos Engine C++ Coding Guidelines](https://bit.ly/3YpjIqH).
+## Engine
 
-### Supported Platforms
+- **Rendering** uses Vulkan 1.3, with mesh and material caches, lighting,
+  instanced drawing, and GPU frustum culling.
+- **Scenes** contain entities and components for transforms, cameras, meshes,
+  and lights. Systems update those components each frame. Scenes can be saved
+  to and loaded from YAML.
+- **Assets** include glTF models, images, and materials. Material textures retain
+  their glTF sampler settings. The renderer uploads loaded assets into its caches.
+- **Input and events** provide keyboard and mouse state, window events, and
+  callbacks for engine and rendering updates.
+- **UI** uses Dear ImGui directly. Polos initializes its context and handles the
+  GLFW and Vulkan backends. Applications call `ImGui::*` during rendering updates.
+- **Logging and profiling** provide engine and application logs, with optional
+  Tracy instrumentation.
 
-- Windows x64
-- Linux x64
+## Writing an application
 
-### To Build
+An application implements `ILiveLayer`, or derives from `BaseLiveLayer`, and
+returns it from `polos::CreateApplication`. Including `polos/core/polos_main.hpp`
+provides the executable entry point.
 
-You need:
-- CMake 3.25 or newer
-- vcpkg (Need to set `VCPKG_ROOT` environment variable to the installation of the vcpkg)
-- [OPTIONAL]
-    - Workspace file can be obtained by running `bash Scripts/Linux/get-workspace.sh`
-    - Either curl or wget is required
+Polos creates the window, loads the resource catalog, and initializes rendering
+before calling the application's `Create()`. Create or load a scene there so
+the renderer has an active camera.
 
-### Runtime and versions
+Subscribe to `EngineUpdate` for gameplay and `RenderUpdate` for ImGui calls.
+Both events provide frame delta time. The engine runs until the window closes
+or an `EngineTerminate` event is dispatched, then calls `Destroy()` and shuts down.
 
-The runtime builds as one `polos` shared library, defined in
-`Source/Runtime/CMakeLists.txt`. Directory-local CMake files contribute sources;
-all runtime headers are accessible across areas. See [Runtime layout](Source/Runtime/README.md).
+## Resources
 
-The root `VERSION` file starts at `0.0.1` and controls the CMake project version,
-shared-library version, `POLOS_VERSION*` macros, and engine build information.
-Increase it for each versioned change and commit it with that change:
+Each application keeps its assets in a `Resources/` directory beside its
+executable. `Resources/resources.yaml` maps resource IDs to paths within that
+directory. The engine loads the catalog before starting the application.
 
-```sh
-cmake -P Scripts/bump_version.cmake              # patch, e.g. 0.0.1 -> 0.0.2
-cmake -DPART=minor -P Scripts/bump_version.cmake # resets patch to zero
-cmake -DPART=major -P Scripts/bump_version.cmake # resets minor and patch
-```
-
-Builds keep a separate local counter in the build directory; no-op builds do not
-advance it or modify the tracked semantic version.
-
-### Resources
-
-The sandbox loads its catalog, models, and textures from `Resources` beside the
-executable. Their source files are in `Examples/sandbox/Resources`. See the
-[resource loading guide](Source/Runtime/polos/resource/README.md) for lookup and caching rules.
+`ResourcePreprocessor` scans a project's `Resources/` directory and generates
+the resource catalog and model and material YAML descriptors. Run it after
+adding or changing source assets.
 
 Engine shaders live in `Source/Resources/Shaders`. The build compiles them to
-SPIR-V and writes the generated `.cpp` byte arrays beside `render_compositor.cpp`
-in `Source/Runtime/polos/rendering/compositor`. The compositor includes those arrays
-directly into the runtime library.
+SPIR-V and embeds their byte arrays in the runtime.
 
-### Sandbox and SDK
+## Building
 
-Run the scripts below from the repository root. They configure CMake and build with
-Ninja. Set `VCPKG_ROOT` to a bootstrapped vcpkg installation. On Windows, use an
-x64 Visual Studio Developer PowerShell with the Vulkan SDK installed. On Linux,
-install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK.
+Use a C++23 compiler, CMake 3.25 or newer, Ninja, and a bootstrapped vcpkg
+installation. Set `VCPKG_ROOT` to the vcpkg directory. Install the Vulkan SDK
+and set `VULKAN_SDK`, or provide Vulkan development headers, the loader, and
+glslang through your system.
 
-| Task | Linux | Windows |
-| --- | --- | --- |
-| Build and stage Sandbox | `bash Scripts/Linux/build_sandbox.sh release-runtime` | `./Scripts/Windows/build_sandbox.ps1 -Preset release-runtime` |
-| Build and run an example | `bash Scripts/Linux/run_project.sh sandbox` | `./Scripts/Windows/run_project.ps1 -Project sandbox` |
-| Build and debug with LLDB | `bash Scripts/Linux/debug_sandbox.sh` | `./Scripts/Windows/debug_sandbox.ps1` |
-| Export the SDK | `bash Scripts/Linux/export_sdk.sh release-sdk` | `./Scripts/Windows/export_sdk.ps1` |
+On Windows, run the scripts from an x64 Visual Studio Developer PowerShell.
 
-Pass an example name from `Examples` to `run_project`. The runner generates its
-resource YAML, builds the runtime and selected example, then launches it from
-`out/bin/<preset>/<project>`. The preset defaults to `debug-runtime`. For example,
-run `bash Scripts/Linux/run_project.sh CatchTheCoin release-runtime` or
-`./Scripts/Windows/run_project.ps1 -Project CatchTheCoin -Preset release-runtime`.
+To build and run an example from `Examples/`, run from the repository root:
 
-The Sandbox build script stages Sandbox in `out/bin/<preset>` with the engine
-shared libraries and resources. The SDK defaults to Release
-and writes `out/packages/polos-sdk-<version>-<preset>.zip` with headers, libraries,
-and Windows import libraries. Link against Polos and place the
-engine shared libraries and `Resources` beside the application executable.
+```sh
+bash Scripts/Linux/run_project.sh <project> [preset]
+```
 
-To export directly into a project's `sdk/` directory, pass the project path:
+```powershell
+./Scripts/Windows/run_project.ps1 -Project <project> -Preset debug-runtime
+```
+
+The default preset is `debug-runtime`. Use `release-runtime` for Release.
+The runner generates resource YAML, builds the selected application, and launches
+it from `out/bin/<preset>/<project>/`. Build files go under `out/build/`.
+
+## Using the SDK
+
+Export the SDK into a standalone project's directory:
 
 ```sh
 bash Scripts/Linux/export_sdk.sh /path/to/project
-bash Scripts/Linux/export_sdk.sh /path/to/project debug-sdk
 ```
 
-On Windows, use `./Scripts/Windows/export_sdk.ps1 -Destination C:/path/to/project`
-and optionally `-Preset debug-sdk`. An existing `sdk/` is replaced after the export
-succeeds. Both scripts also produce the ZIP archive. The SDK includes
-`tools/ResourcePreprocessor` (`.exe` on Windows). Run it with the project directory
-to generate YAML from that project's `Resources/`:
+```powershell
+./Scripts/Windows/export_sdk.ps1 -Destination C:/path/to/project
+```
+
+The export defaults to `release-sdk`. Pass `debug-sdk` as the second argument
+on Linux or use `-Preset debug-sdk` on Windows for a Debug SDK.
+
+The scripts place headers, runtime libraries, Windows import libraries, and
+`tools/ResourcePreprocessor` in the project's `sdk/` directory. An existing
+`sdk/` is replaced after a successful export. A ZIP is also written to
+`out/packages/`. Running the export script without a destination produces the ZIP.
+
+Add `sdk/include` to your application's include paths and link against Polos.
+Make the SDK's runtime libraries available beside the executable or through
+its runtime search path. The destination machine needs a Vulkan 1.3-capable driver.
+
+Generate the standalone project's resource descriptors with:
 
 ```sh
 /path/to/project/sdk/tools/ResourcePreprocessor /path/to/project
 ```
 
-The **Export Polos SDK** workflow uploads separate Linux and Windows Release
-SDK archives. Running applications with the Windows SDK requires a Vulkan 1.3
-driver and the x64 MSVC runtime on the destination machine.
+On Windows, use `sdk/tools/ResourcePreprocessor.exe`. Copy the application's
+`Resources/` directory beside its executable before running it.
 
-### Windows Sandbox from Linux
+## Contributing
 
-Run `bash Scripts/Linux/build_windows.sh` with Ninja, glslang, vcpkg, and an
-x86_64 MinGW-w64 GCC toolchain with C++23 support. If the compiler is outside
-`PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
-The script stages the Windows executable, DLLs, and resources in
-`out/bin/linux-to-win-mingw-release`. Use the native Windows build for the MSVC SDK ABI.
+The project uses the MIT license. Commit prefixes are documented in
+[CONTRIBUTE.md](CONTRIBUTE.md). The project also maintains a
+[roadmap](https://trello.com/b/frG6m0AQ) and
+[C++ coding guidelines](https://bit.ly/3YpjIqH).
 
 ## AI Usage
 

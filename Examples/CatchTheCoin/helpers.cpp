@@ -4,6 +4,7 @@
 ///
 #include "helpers.hpp"
 
+#include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/info_component.hpp"
 
 #include <polos/ecs/components/mesh_renderer_component.hpp>
@@ -82,6 +83,15 @@ auto CreateMaterialFromTexture(std::string_view tName, resource::material::Mater
     };
 
     return rendering::MaterialCache::Get().AddMaterial(nameHash, rendering::Material::Create(resMat));
+}
+
+auto CreateCamera(ecs::Scene* tScene, polos::ecs::TransformComponent const& tTransform) -> polos::ecs::EntityHandle
+{
+    auto camera = tScene->NewEntity();
+    tScene->AddComponent(camera, tTransform);
+    tScene->AddComponent(camera, ecs::CameraComponent{.nearZ = 0.1F, .farZ = 800.0F, .fov = 60.0F});
+
+    return camera;
 }
 
 }// namespace ctc

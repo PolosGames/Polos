@@ -4,7 +4,6 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
 usage() {
     printf 'Usage: bash %s PROJECT [PRESET]\n' "$0"
-    printf 'PROJECT is an example name under Examples, such as sandbox or CatchTheCoin.\n'
     printf 'PRESET defaults to debug-runtime.\n'
 }
 
