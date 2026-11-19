@@ -220,7 +220,7 @@ ForwardShadingPass::ForwardShadingPass(
         builder.AddShader(std::move(tFragmentShader));
 
         builder.SetVertexInput(MeshVertex::CreateVertexInputDescription());
-        builder.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+        builder.SetRasterization(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         builder.SetMultisampling(kSceneSampleCount);
 
         builder.SetRenderPass(mRenderPass.GetHandle());

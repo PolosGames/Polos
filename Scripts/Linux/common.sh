@@ -70,3 +70,14 @@ preprocess_polos_project() {
     cmake --build "$build_dir" --target ResourcePreprocessor
     "$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" "$project_dir"
 }
+
+build_polos_project() {
+    local project=$1 preset=$2
+    local build_dir="$polos_root/out/build/projects/$preset/$project"
+    local bin_dir="$polos_root/out/bin/$preset/$project"
+
+    validate_polos_example "$project"
+    configure_polos "$preset" "$build_dir" "$bin_dir" ON "$project"
+    preprocess_polos_project "$build_dir" "$polos_root/Examples/$project"
+    cmake --build "$build_dir" --target install-runtime
+}

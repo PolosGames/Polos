@@ -85,18 +85,6 @@ constexpr std::array<uint16_t, 6UL * 6UL> kCubeIndices{
 
 // clang-format on
 
-constexpr std::size_t kIndicesPerFace = 6U;
-// Each color corresponds to one row of kCubeIndices.
-constexpr std::array kCubeFaceColors{
-    glm::vec4(0.95F, 0.18F, 0.18F, 1.0F),
-    glm::vec4(0.95F, 0.70F, 0.10F, 1.0F),
-    glm::vec4(0.15F, 0.45F, 0.95F, 1.0F),
-    glm::vec4(0.12F, 0.75F, 0.32F, 1.0F),
-    glm::vec4(0.65F, 0.25F, 0.90F, 1.0F),
-    glm::vec4(0.95F, 0.40F, 0.10F, 1.0F),
-};
-static_assert(kCubeFaceColors.size() * kIndicesPerFace == kCubeIndices.size());
-
 auto CreateCubeVertices() -> std::vector<MeshVertex>
 {
     std::vector<MeshVertex> vertices;
@@ -112,12 +100,11 @@ auto CreateCubeVertices() -> std::vector<MeshVertex>
 
         for (std::size_t corner{0}; corner < 3U; ++corner)
         {
-            auto vertex    = kCubeVertices[kCubeIndices[i + corner]];
-            vertex.normal  = normal;
-            vertex.tangent = glm::vec4(tangent, 1.0F);
-            vertex.texCoord =
-                glm::vec2(glm::dot(vertex.position, tangent), glm::dot(vertex.position, bitangent)) + 0.5F;
-            vertex.color = kCubeFaceColors[i / kIndicesPerFace];
+            auto vertex     = kCubeVertices[kCubeIndices[i + corner]];
+            vertex.normal   = normal;
+            vertex.tangent  = glm::vec4(tangent, 1.0F);
+            vertex.texCoord = glm::vec2(glm::dot(vertex.position, tangent), glm::dot(vertex.position, bitangent)) + 0.5F;
+            vertex.color    = glm::vec4(1.0F, 1.0F, 1.0F, 1.0F);
             vertices.push_back(vertex);
         }
     }
@@ -297,12 +284,8 @@ auto MeshCache::AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHand
     entry.vertexOffset = mVertexHead;
     entry.indexOffset  = mIndexHead;
 
-    PL_ASSERT(
-        mVertexBuffer->Upload(std::as_bytes(vertData), entry.vertexOffset),
-        "Unable to upload mesh vertices to mega buffer");
-    PL_ASSERT(
-        mIndexBuffer->Upload(std::as_bytes(indData), entry.indexOffset),
-        "Unable to upload mesh indices to mega buffer");
+    PL_ASSERT(mVertexBuffer->Upload(std::as_bytes(vertData), entry.vertexOffset), "Unable to upload mesh vertices to mega buffer");
+    PL_ASSERT(mIndexBuffer->Upload(std::as_bytes(indData), entry.indexOffset), "Unable to upload mesh indices to mega buffer");
 
     mVertexHead += vertData.size_bytes();
     mIndexHead += indData.size_bytes();
@@ -460,7 +443,7 @@ auto MeshCache::FlushMeshUses(uint32_t const tFrameSlot) -> void
     {
         for (auto const& meshUse : mMeshUses)
         {
-            int32_t const totalUse = std::max(static_cast<int32_t>(mMeshInstances[meshUse.first]) + meshUse.second, 0);
+            int32_t const totalUse        = std::max(static_cast<int32_t>(mMeshInstances[meshUse.first]) + meshUse.second, 0);
             mMeshInstances[meshUse.first] = static_cast<uint32_t>(totalUse);
         }
 

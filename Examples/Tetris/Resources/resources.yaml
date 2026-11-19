@@ -1,0 +1,25 @@
+resources:
+  - id: texture.polos_icon
+    path: Textures/polos_icon.png
+  - id: texture.tetris_aurora
+    path: Textures/tetris_aurora.png
+  - id: texture.tetris_background
+    path: Textures/tetris_background.png
+  - id: texture.tetris_block_blue
+    path: Textures/tetris_block_blue.png
+  - id: texture.tetris_block_cyan
+    path: Textures/tetris_block_cyan.png
+  - id: texture.tetris_block_green
+    path: Textures/tetris_block_green.png
+  - id: texture.tetris_block_orange
+    path: Textures/tetris_block_orange.png
+  - id: texture.tetris_block_purple
+    path: Textures/tetris_block_purple.png
+  - id: texture.tetris_block_red
+    path: Textures/tetris_block_red.png
+  - id: texture.tetris_block_yellow
+    path: Textures/tetris_block_yellow.png
+  - id: texture.tetris_grid_border
+    path: Textures/tetris_grid_border.png
+  - id: texture.tetris_grid_cell
+    path: Textures/tetris_grid_cell.png
