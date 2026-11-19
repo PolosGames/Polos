@@ -27,7 +27,7 @@ struct CameraComponent
 
     CameraType cameraType{CameraType::kPerspective};
     float      nearZ{0.0F};
-    float      farZ{0.0F};
+    float      farZ{1000.0F};
     float      fov{60.0F}; // perspective
     float      size{10.0F};// ortho
 };

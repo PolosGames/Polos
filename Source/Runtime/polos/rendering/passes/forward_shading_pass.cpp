@@ -198,10 +198,11 @@ auto BuildDescriptorPool(DescriptorPool& tPool)
 ForwardShadingPass::ForwardShadingPass(
     std::shared_ptr<Shader const> tVertexShader,
     std::shared_ptr<Shader const> tFragmentShader,
-    std::shared_ptr<Shader const> tMainCompShader)
-    : mRenderPass(CreateRenderPass()),
-      mCameraUniforms(std::array{CreateCameraUniformBuffer(), CreateCameraUniformBuffer(), CreateCameraUniformBuffer()})
+    std::shared_ptr<Shader const> tMainCompShader,
+    std::span<Buffer*>            tCameraUniforms)
+    : mRenderPass(CreateRenderPass())
 {
+    PL_ASSERT(tCameraUniforms.size() == Settings::kMaxFramesInFlight, "Expected one camera buffer per frame slot");
     BuildDescriptorPool(mDescPool);
 
     std::array<VkDescriptorSetLayout, 4U> graphicsSetLayouts{
@@ -307,7 +308,7 @@ ForwardShadingPass::ForwardShadingPass(
         mDescPool.UpdateBuffers(
             kSet0, i,
             {
-                {.binding = kBinding_Ubo_Camera.binding, .buffer = mCameraUniforms[i]->buffer},
+                {.binding = kBinding_Ubo_Camera.binding, .buffer = tCameraUniforms[i]->buffer},
             });
 
         mDescPool.UpdateBuffers(
@@ -438,8 +439,6 @@ auto ForwardShadingPass::Record(Inputs const& tInputs) -> int32_t
         TextureCache::Get().GetBindlessDescriptorSet(),
     };
     auto const computeSets = std::span{graphicsSets}.first<3U>();
-
-    mCameraUniforms[tInputs.frameSlot]->Write(&tInputs.cameraUbo, sizeof(CameraUniform));
 
     MeshCache::Get().FlushMeshUses(tInputs.frameSlot);
 
