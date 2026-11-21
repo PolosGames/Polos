@@ -20,17 +20,13 @@ fi
 project=$1
 preset=${2:-debug-runtime}
 project_dir="$polos_root/Examples/$project"
-if [[ ! $project =~ ^[A-Za-z0-9_][A-Za-z0-9_.+-]*$ || ! -f $project_dir/CMakeLists.txt ]]; then
-    printf 'Unknown Polos example: %s\n' "$project" >&2
-    exit 1
-fi
+validate_polos_example "$project"
 
 build_dir="$polos_root/out/build/projects/$preset/$project"
 bin_dir="$polos_root/out/bin/$preset/$project"
 
 configure_polos "$preset" "$build_dir" "$bin_dir" ON "$project"
-cmake --build "$build_dir" --target ResourcePreprocessor
-"$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" "$project_dir"
+preprocess_polos_project "$build_dir" "$project_dir"
 cmake --build "$build_dir" --target install-runtime
 
 cd "$bin_dir"

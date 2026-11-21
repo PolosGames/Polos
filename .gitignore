@@ -26,7 +26,6 @@ vsbuild/
 !CMakeLists.txt
 !CMakeSettings.json
 !CMakePresets.json
-!vcpkg.json
 !Source/Resources/resources.json
 !Examples/sandbox/Resources/resources.json
 !Source/Runtime/polos/core/test/integration/resources.json

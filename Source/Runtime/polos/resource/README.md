@@ -61,13 +61,10 @@ can add a second representation under an existing ID. Read/decode failures retur
 nullptr without caching a failed result, so a later call can retry. `ClearCache()`
 and catalog reloads release explicitly loaded resources as well as catalog resources.
 
-The glTF loader enables tinygltf's strict, index, and byte-range validation before
-resolving accessors. `CMake/vcpkg-ports/tinygltf` pins the validation-capable upstream
-revision; the registry's original v3 alpha does not implement these checks. The
-loader separately requires loaded buffer data and rejects unsupported
-sparse accessors and accessors without a buffer view. Run the focused checks with
-`cmake --build out/build/linux-debug --target ut-resource ut-gltf-validation` followed by
-`ctest --test-dir out/build/linux-debug -R '^Gltf(Loader|Validation)Test\.' --output-on-failure`.
+The glTF loader uses fastgltf and requests external buffer loading, generated mesh
+indices, and decomposition of node matrices. The loader checks for loaded buffer
+data and rejects unsupported sparse accessors and accessors without a buffer
+view. Dependency versions are pinned in `ThirdParty/fastgltf/CMakeLists.txt`.
 
 Each mesh part stores `primitiveVertices` in accessor order. Indexed triangle
 lists also store their original index order in `primitiveIndices` as 32-bit

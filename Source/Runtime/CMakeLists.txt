@@ -1,55 +1,66 @@
-add_library(polos SHARED)
-add_library(polos::polos ALIAS polos)
-target_compile_features(polos PUBLIC cxx_std_23)
-target_compile_definitions(polos PRIVATE POLOS_ENGINE_EXPORTS PL_LOGGER_TYPE=Polos
-    QUILL_DISABLE_NON_PREFIXED_MACROS QUILL_ENABLE_IMMEDIATE_FLUSH QUILL_NO_EXCEPTIONS)
-target_sources(polos
-    PUBLIC
-        FILE_SET runtime_headers TYPE HEADERS
-            BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
-        FILE_SET generated_headers TYPE HEADERS
-            BASE_DIRS "${POLOS_CONFIG_INCLUDE_DIR}"
-            FILES
-                "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_api.hpp"
-                "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp"
+add_library(
+    polos
+        SHARED
+)
+add_library(
+    polos::polos
+        ALIAS polos
+)
+target_compile_features(
+    polos
+        PUBLIC cxx_std_23
+)
+target_compile_definitions(
+    polos
+        PRIVATE POLOS_ENGINE_EXPORTS PL_LOGGER_TYPE=Polos
+)
+target_sources(
+    polos
+        PUBLIC
+            FILE_SET runtime_headers TYPE HEADERS
+                BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}"
+            FILE_SET generated_headers TYPE HEADERS
+                BASE_DIRS "${POLOS_CONFIG_INCLUDE_DIR}"
+                FILES
+                    "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_api.hpp"
+                    "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp"
 )
 
-if (DEFINED ENV{VULKAN_SDK})
-    target_include_directories(polos SYSTEM BEFORE PUBLIC "${Vulkan_INCLUDE_DIR}")
-endif()
-
-target_link_libraries(polos PUBLIC
-    ctre::ctre
-    glfw
-    glm::glm
-    Vulkan::Vulkan
-    GPUOpen::VulkanMemoryAllocator
-    stb_image::stb_image
-    stb_textedit::stb_textedit
-    fastgltf::fastgltf
+target_link_libraries(
+    polos
+        PUBLIC
+            glfw::glfw
+            glm::glm
+            Vulkan::Vulkan
+            GPUOpen::VulkanMemoryAllocator
+            stb_image::stb_image
+            fastgltf::fastgltf
+        PRIVATE
+            ryml::ryml
+            quill::quill
 )
-target_link_libraries(polos PRIVATE ryml::ryml quill::quill)
 if (ENABLE_PROFILING)
-    target_link_libraries(polos PUBLIC Tracy::TracyClient)
+    target_link_libraries(
+        polos
+            PUBLIC Tracy::TracyClient
+    )
 endif()
 
-set_target_properties(polos
-    PROPERTIES
-        CXX_STANDARD              ${POLOS_CXX_STANDARD}
-        CXX_STANDARD_REQUIRED     ON
-        POSITION_INDEPENDENT_CODE ON
-        CXX_VISIBILITY_PRESET     hidden
-        VISIBILITY_INLINES_HIDDEN ON
-        VERSION                   ${PROJECT_VERSION}
-        SOVERSION                 ${PROJECT_VERSION_MAJOR}
-        INSTALL_RPATH             "$ORIGIN"
+set_target_properties(
+    polos
+        PROPERTIES
+            CXX_VISIBILITY_PRESET     hidden
+            VISIBILITY_INLINES_HIDDEN ON
+            VERSION                   ${PROJECT_VERSION}
+            SOVERSION                 ${PROJECT_VERSION_MAJOR}
+            INSTALL_RPATH             "$ORIGIN"
 )
-build_options(polos true)
-
-if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # libstdc++ keeps the Windows terminal helpers used by std::println here.
-    target_link_libraries(polos PRIVATE stdc++exp)
-endif()
+polos_build_options(
+    polos
+)
+polos_link_print_support(
+    polos
+)
 
 add_subdirectory(polos/communication)
 add_subdirectory(polos/core)
@@ -68,9 +79,15 @@ get_target_property(POLOS_GENERATED_HEADERS polos HEADER_SET_generated_headers)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX Runtime
     FILES ${POLOS_SOURCES} ${POLOS_RUNTIME_HEADERS})
 source_group(Generated FILES ${POLOS_GENERATED_HEADERS})
-polos_attach_build_info(polos "${POLOS_SOURCES};${POLOS_RUNTIME_HEADERS};${POLOS_GENERATED_HEADERS}")
+polos_attach_build_info(
+    polos
+        "${POLOS_SOURCES};${POLOS_RUNTIME_HEADERS};${POLOS_GENERATED_HEADERS}"
+)
 
-add_dependencies(polos compile_shaders)
+add_dependencies(
+    polos
+        compile_shaders
+)
 install(TARGETS polos
     LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime NAMELINK_COMPONENT SDK
     ARCHIVE DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT SDK
@@ -83,29 +100,3 @@ if (MSVC)
 endif()
 install(FILES "${CMAKE_SOURCE_DIR}/VERSION" "${CMAKE_SOURCE_DIR}/LICENSE"
     DESTINATION "${POLOS_INSTALL_DIR}" COMPONENT Runtime)
-
-set(POLOS_VCPKG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
-install(FILES "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/quill/copyright"
-    DESTINATION "${POLOS_INSTALL_DIR}" RENAME LICENSE-Quill.txt COMPONENT Runtime)
-install(DIRECTORY
-    "${POLOS_VCPKG_INCLUDE_DIR}/glm"
-    "${POLOS_VCPKG_INCLUDE_DIR}/GLFW"
-    "${Vulkan_INCLUDE_DIR}/vulkan"
-    "${Vulkan_INCLUDE_DIR}/vk_video"
-    DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
-get_target_property(POLOS_VMA_INCLUDE_HINTS GPUOpen::VulkanMemoryAllocator INTERFACE_INCLUDE_DIRECTORIES)
-find_path(POLOS_VMA_INCLUDE_DIR vk_mem_alloc.h
-    HINTS ${POLOS_VMA_INCLUDE_HINTS} "${POLOS_VCPKG_INCLUDE_DIR}" "${Vulkan_INCLUDE_DIR}"
-    PATH_SUFFIXES vma REQUIRED)
-install(FILES "${POLOS_VMA_INCLUDE_DIR}/vk_mem_alloc.h"
-    DESTINATION "${POLOS_INSTALL_INC_DIR}" COMPONENT SDK)
-
-foreach(DEPENDENCY glfw glm::glm)
-    get_target_property(DEPENDENCY_TYPE ${DEPENDENCY} TYPE)
-    if (DEPENDENCY_TYPE STREQUAL "SHARED_LIBRARY")
-        install(IMPORTED_RUNTIME_ARTIFACTS ${DEPENDENCY}
-            LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime
-            RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime
-        )
-    endif()
-endforeach()

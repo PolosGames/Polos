@@ -1,33 +1,15 @@
-cmake_minimum_required(VERSION 3.25)
-
-function(build_options target warnings)
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR
-        CMAKE_C_COMPILER_ID STREQUAL "Clang" OR
-        CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+function(polos_build_options target)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
         target_compile_options(
             ${target}
                 PRIVATE
-                    $<$<CONFIG:Debug>:-O0 -g>
-                    $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+                    "$<$<CONFIG:Debug>:-O0;-g>"
+                    "$<$<CONFIG:RelWithDebInfo>:-O2;-g>"
                     $<$<CONFIG:Release>:-O2>
                     $<$<CONFIG:MinSizeRel>:-O3>
         )
     endif()
 
-    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-        set_target_properties(${target} PROPERTIES LINKER_FLAGS "-lc++")
-    endif()
-
-
-    # if we are compiling a third party library, we don't care about the
-    # warnings, so turn them off
-    if(NOT ${warnings})
-        message(WARNING "Compiler warnings will not be enabled for ${target}")
-        return()
-    endif()
-
-    # THANKS FOR SOME OF THE WARNINGS, JASON! (@lefticus)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(
             ${target}
@@ -65,8 +47,8 @@ function(build_options target warnings)
                     "/wd4324" # disable padding warnings
                     "/wd4251" # needs to have dll-interface to be used by clients
                     "/wd4275" # needs to have dll-interface to be used by clients
+                    "/wd5204" # nonvirtual destructor in polymorphic class
         )
-        target_compile_options(${target} PRIVATE "/wd5204") # for quill virtual function error, TODO: Remove
     else()
         target_compile_options(
             ${target}
@@ -91,7 +73,7 @@ function(build_options target warnings)
         )
 
         # GCC only warnings
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             target_compile_options(
                 ${target}
                     PRIVATE
@@ -111,5 +93,14 @@ function(build_options target warnings)
            )
         endif()
     endif()
+endfunction()
 
+# MinGW's libstdc++ provides the Windows terminal helpers for std::println here.
+function(polos_link_print_support target)
+    if (MINGW AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_libraries(
+            ${target}
+                PRIVATE stdc++exp
+        )
+    endif()
 endfunction()

@@ -4,11 +4,7 @@
 
 namespace polos::rendering::shader::main_compute
 {
-<<<<<<< Updated upstream
-static constexpr std::array<std::byte, 13424> kData{
-=======
 static constexpr std::array<std::byte, 13584> kData{
->>>>>>> Stashed changes
     std::byte{0x03}, std::byte{0x02}, std::byte{0x23}, std::byte{0x07},
     std::byte{0x00}, std::byte{0x06}, std::byte{0x01}, std::byte{0x00},
     std::byte{0x0b}, std::byte{0x00}, std::byte{0x08}, std::byte{0x00},
@@ -324,8 +320,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x04}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x6d}, std::byte{0x65}, std::byte{0x73}, std::byte{0x68},
     std::byte{0x49}, std::byte{0x64}, std::byte{0x00}, std::byte{0x00},
-<<<<<<< Updated upstream
-=======
     std::byte{0x06}, std::byte{0x00}, std::byte{0x06}, std::byte{0x00},
     std::byte{0x63}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x05}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
@@ -339,7 +333,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x6e}, std::byte{0x67}, std::byte{0x46}, std::byte{0x61},
     std::byte{0x63}, std::byte{0x74}, std::byte{0x6f}, std::byte{0x72},
     std::byte{0x00}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
->>>>>>> Stashed changes
     std::byte{0x05}, std::byte{0x00}, std::byte{0x03}, std::byte{0x00},
     std::byte{0x65}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x6f}, std::byte{0x62}, std::byte{0x6a}, std::byte{0x00},
@@ -377,8 +370,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x04}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x6d}, std::byte{0x65}, std::byte{0x73}, std::byte{0x68},
     std::byte{0x49}, std::byte{0x64}, std::byte{0x00}, std::byte{0x00},
-<<<<<<< Updated upstream
-=======
     std::byte{0x06}, std::byte{0x00}, std::byte{0x06}, std::byte{0x00},
     std::byte{0x66}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x05}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
@@ -392,7 +383,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x6e}, std::byte{0x67}, std::byte{0x46}, std::byte{0x61},
     std::byte{0x63}, std::byte{0x74}, std::byte{0x6f}, std::byte{0x72},
     std::byte{0x00}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
->>>>>>> Stashed changes
     std::byte{0x05}, std::byte{0x00}, std::byte{0x06}, std::byte{0x00},
     std::byte{0x68}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x4d}, std::byte{0x65}, std::byte{0x73}, std::byte{0x68},
@@ -1110,37 +1100,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x59}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x5a}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x09}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-<<<<<<< Updated upstream
-    std::byte{0x20}, std::byte{0x00}, std::byte{0x04}, std::byte{0x00},
-    std::byte{0x5b}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x09}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x2e}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x1e}, std::byte{0x00}, std::byte{0x07}, std::byte{0x00},
-    std::byte{0x63}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x09}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x2e}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x07}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x06}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x2e}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x20}, std::byte{0x00}, std::byte{0x04}, std::byte{0x00},
-    std::byte{0x64}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x07}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x63}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x1e}, std::byte{0x00}, std::byte{0x07}, std::byte{0x00},
-    std::byte{0x66}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x09}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x2e}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x07}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x06}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x2e}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x1d}, std::byte{0x00}, std::byte{0x03}, std::byte{0x00},
-    std::byte{0x67}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x66}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x1e}, std::byte{0x00}, std::byte{0x03}, std::byte{0x00},
-    std::byte{0x68}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x67}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
-    std::byte{0x20}, std::byte{0x00}, std::byte{0x04}, std::byte{0x00},
-=======
     std::byte{0x20}, std::byte{0x00}, std::byte{0x04}, std::byte{0x00},
     std::byte{0x5b}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x09}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
@@ -1174,7 +1133,6 @@ static constexpr std::array<std::byte, 13584> kData{
     std::byte{0x68}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x67}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x20}, std::byte{0x00}, std::byte{0x04}, std::byte{0x00},
->>>>>>> Stashed changes
     std::byte{0x69}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x0c}, std::byte{0x00}, std::byte{0x00}, std::byte{0x00},
     std::byte{0x68}, std::byte{0x01}, std::byte{0x00}, std::byte{0x00},
