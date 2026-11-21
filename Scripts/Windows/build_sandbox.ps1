@@ -8,11 +8,6 @@ param(
 $BuildDir = Join-Path $PolosRoot "out/build/$Preset"
 $BinDir = Join-Path $PolosRoot "out/bin/$Preset"
 
-Initialize-PolosBuild $Preset $BuildDir $BinDir 'ON'
-Invoke-CMake --build $BuildDir --target ResourcePreprocessor
-$Preprocessor = Join-Path $BuildDir 'Tools/ResourcePreprocessor/ResourcePreprocessor.exe'
-& $Preprocessor (Join-Path $PolosRoot 'Examples/sandbox')
-if ($LASTEXITCODE -ne 0) {
-    throw "ResourcePreprocessor exited with code $LASTEXITCODE."
-}
+Initialize-PolosBuild $Preset $BuildDir $BinDir 'ON' 'sandbox'
+Invoke-PolosResourcePreprocessor $BuildDir (Join-Path $PolosRoot 'Examples/sandbox')
 Invoke-CMake --build $BuildDir --target install-runtime

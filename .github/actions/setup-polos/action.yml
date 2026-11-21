@@ -1,5 +1,5 @@
 name: Set up Polos build
-description: Install native build dependencies and bootstrap pinned vcpkg
+description: Install the native compiler and Vulkan build prerequisites
 runs:
   using: composite
   steps:
@@ -20,47 +20,3 @@ runs:
       uses: humbletim/install-vulkan-sdk@v1.2
       with:
         version: 1.4.309.0
-
-    - name: Install pkgconf for Windows vcpkg
-      if: runner.os == 'Windows'
-      id: msys2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        update: true
-        install: mingw-w64-ucrt-x86_64-pkgconf
-
-    - name: Configure vcpkg to use installed pkgconf
-      if: runner.os == 'Windows'
-      shell: pwsh
-      env:
-        MSYS2_ROOT: ${{ steps.msys2.outputs.msys2-location }}
-      run: |
-        $PkgConfig = Join-Path $env:MSYS2_ROOT 'ucrt64/bin/pkgconf.exe'
-        & $PkgConfig --version
-        if ($LASTEXITCODE -ne 0) { throw 'pkgconf failed to start' }
-        # The pinned vcpkg otherwise downloads an MSYS2 runtime removed from its mirrors.
-        "PKG_CONFIG=$PkgConfig" >> $env:GITHUB_ENV
-        $KeepVars = @($env:VCPKG_KEEP_ENV_VARS, 'PKG_CONFIG') | Where-Object { $_ }
-        "VCPKG_KEEP_ENV_VARS=$($KeepVars -join ';')" >> $env:GITHUB_ENV
-
-    - name: Bootstrap pinned vcpkg
-      shell: pwsh
-      run: |
-        $ErrorActionPreference = 'Stop'
-        $PSNativeCommandUseErrorActionPreference = $true
-        $Baseline = (Get-Content vcpkg.json -Raw | ConvertFrom-Json).'builtin-baseline'
-        # Linux needs the port index that added GLFW 3.5.1. Fetch the manifest baseline for the other ports.
-        $Revision = if ($IsLinux) { 'e208d9a2e58bc5cd6605268dec9550636cc8180d' } else { $Baseline }
-        $Refs = @(@($Baseline, $Revision) | Select-Object -Unique)
-        $VcpkgRoot = Join-Path $env:RUNNER_TEMP 'polos-vcpkg'
-        git init $VcpkgRoot
-        git -C $VcpkgRoot remote add origin https://github.com/microsoft/vcpkg.git
-        git -C $VcpkgRoot fetch --depth 1 origin @Refs
-        git -C $VcpkgRoot checkout --detach $Revision
-        if ($IsWindows) {
-          & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics
-        } else {
-          & (Join-Path $VcpkgRoot 'bootstrap-vcpkg.sh') -disableMetrics
-        }
-        "VCPKG_ROOT=$VcpkgRoot" >> $env:GITHUB_ENV

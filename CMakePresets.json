@@ -10,17 +10,12 @@
             "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/bin/${presetName}",
-            "toolchainFile": "${sourceDir}/CMake/Toolchain.cmake",
             "generator": "Ninja",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
             },
-            "environment": {
-                "PATH": "$penv{PATH}"
-            },
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "POLOS_INSTALL_DIR": "${sourceDir}/out/bin/${presetName}"
             }
         },
@@ -60,6 +55,7 @@
         },
         {
             "name": "linux-base",
+            "hidden": true,
             "inherits": "base",
             "condition": {
                 "type": "equals",
@@ -222,14 +218,6 @@
             "inherits": "linux-debug",
             "displayName": "x64-RelWithDebInfo",
             "configurePreset": "linux-relwithdebinfo"
-        }
-    ],
-    "testPresets": [
-        {
-            "name": "PolosTest",
-            "description": "",
-            "displayName": "polos-test-release",
-            "configurePreset": "win-release"
         }
     ]
 }

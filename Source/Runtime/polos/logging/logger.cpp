@@ -74,24 +74,10 @@ auto ShouldLog(LogContext tContext, LogLevel tLevel) -> bool
 
 void WriteLog(LogContext tContext, LogLevel tLevel, std::string_view tMessage, std::source_location tLocation)
 {
-    using quill::MacroMetadata;
     auto*      logger = GetLogger(tContext);
     auto const level  = ToQuillLevel(tLevel);
-
-    // Retain the caller's source location when submitting the formatted message.
-    static constexpr MacroMetadata metadata{
-        "[placeholder]",
-        "[placeholder]",
-        "{}" QUILL_MAGIC_SEPARATOR "{}" QUILL_MAGIC_SEPARATOR "{}" QUILL_MAGIC_SEPARATOR "{}",
-        nullptr,
-        quill::LogLevel::Dynamic,
-        MacroMetadata::Event::LogWithRuntimeMetadata,
-    };
-    if (logger->should_log_statement(level))
-    {
-        logger->log_statement<QUILL_IMMEDIATE_FLUSH, true>(
-            level, &metadata, tMessage, tLocation.file_name(), tLocation.line(), tLocation.function_name());
-    }
+    QUILL_LOG_RUNTIME_METADATA(
+        logger, level, tLocation.file_name(), tLocation.line(), tLocation.function_name(), "{}", tMessage);
 }
 
 void FlushLogger(LogContext tContext)

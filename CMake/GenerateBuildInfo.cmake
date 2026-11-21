@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 # Run with -P. Bumps the per-build-dir counter and regenerates one TU.
-# Inputs: BUILD_NUMBER_FILE, TEMPLATE_FILE, OUTPUT_FILE, SOURCE_DIR
+# Inputs: BUILD_NUMBER_FILE, TEMPLATE_FILE, OUTPUT_FILE, SOURCE_DIR, GIT_EXECUTABLE
 
 if (EXISTS "${BUILD_NUMBER_FILE}")
     file(READ "${BUILD_NUMBER_FILE}" POLOS_BUILD_NUMBER)
@@ -12,13 +12,11 @@ else()
 endif()
 file(WRITE "${BUILD_NUMBER_FILE}" "${POLOS_BUILD_NUMBER}")
 
-find_package(Git QUIET)
-
-# a shallow clone or an archive export has no history - fall back rather than fail the build
+# Use defaults when building from a source archive without Git metadata.
 set(POLOS_COMMIT_COUNT 0)
 set(POLOS_COMMIT "unknown")
 
-if (GIT_FOUND)
+if (GIT_EXECUTABLE)
     execute_process(
         COMMAND "${GIT_EXECUTABLE}" rev-list --count HEAD
         WORKING_DIRECTORY "${SOURCE_DIR}"

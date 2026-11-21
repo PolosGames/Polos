@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.25)
-
 polos_sources(
     base_live_layer.cpp
     engine_layer.cpp
@@ -8,15 +6,29 @@ polos_sources(
 )
 
 # MainLoop is internal to the runtime library.
-polos_tests(core SOURCES test/main_loop_test.cpp main_loop.cpp)
+polos_tests(
+    core
+        SOURCES test/main_loop_test.cpp main_loop.cpp
+)
 
 if (BUILD_TESTS AND BUILD_INTEGRATION_TESTS)
-    include(GoogleTest)
-    add_executable(it-engine-smoke test/engine_integration_test.cpp)
-    target_link_libraries(it-engine-smoke PRIVATE polos::polos GTest::gtest_main)
-    target_compile_definitions(it-engine-smoke PRIVATE PL_LOGGER_TYPE=App)
-    set_target_properties(it-engine-smoke PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration")
+    add_executable(
+        it-engine-smoke
+            test/engine_integration_test.cpp
+    )
+    target_link_libraries(
+        it-engine-smoke
+            PRIVATE polos::polos GTest::gtest_main
+    )
+    target_compile_definitions(
+        it-engine-smoke
+            PRIVATE PL_LOGGER_TYPE=App
+    )
+    set_target_properties(
+        it-engine-smoke
+            PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/integration"
+    )
 
     set(SMOKE_RESOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/integration/Resources")
     configure_file(test/integration/resources.yaml "${SMOKE_RESOURCE_DIR}/resources.yaml" COPYONLY)

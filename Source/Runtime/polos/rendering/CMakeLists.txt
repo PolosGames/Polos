@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.25)
-
 polos_sources(
     cache/material_cache.cpp
     cache/mesh_cache.cpp
@@ -37,15 +35,19 @@ polos_sources(
     vulkan_rendering_api.cpp
 )
 
-polos_tests(rendering SOURCES
-    test/render_subsystem_test.cpp
-    test/vertex_layout_test.cpp
-    test/camera_uniform_test.cpp
-    vertex/mesh_vertex.cpp
-    vertex/quad_vertex.cpp
+polos_tests(
+    rendering
+        SOURCES
+            test/render_subsystem_test.cpp
+            test/vertex_layout_test.cpp
+            test/camera_uniform_test.cpp
+            vertex/mesh_vertex.cpp
+            vertex/quad_vertex.cpp
 )
 
-polos_tests(debug-draw SOURCES
-    test/debug_draw_test.cpp
-    passes/debug_geometry.cpp
+polos_tests(
+    debug-draw
+        SOURCES
+            test/debug_draw_test.cpp
+            passes/debug_geometry.cpp
 )

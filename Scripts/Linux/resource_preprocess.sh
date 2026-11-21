@@ -11,5 +11,4 @@ project_dir=$(cd -- "$1" && pwd)
 preset=${2:-release-runtime}
 build_dir="$polos_root/out/build/tools/$preset"
 configure_polos "$preset" "$build_dir" "$polos_root/out/bin/$preset" OFF
-cmake --build "$build_dir" --target ResourcePreprocessor
-exec "$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" "$project_dir"
+preprocess_polos_project "$build_dir" "$project_dir"

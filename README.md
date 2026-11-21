@@ -15,12 +15,17 @@ A C++ game engine project.
 
 ### To Build
 
-You need:
-- CMake 3.25 or newer
-- vcpkg (Need to set `VCPKG_ROOT` environment variable to the installation of the vcpkg)
-- [OPTIONAL]
-    - Workspace file can be obtained by running `bash Scripts/Linux/get-workspace.sh`
-    - Either curl or wget is required
+- CMake 3.25 or newer, Ninja, and a C++23 compiler.
+- Vulkan 1.3 or newer development headers and loader, plus the glslang shader compiler.
+- On Linux, the GLFW development dependencies for X11 and Wayland. On Ubuntu,
+  install `pkg-config xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols`.
+- Internet access for the first configure. CPM downloads pinned dependencies defined
+  in `ThirdParty/`. The build scripts share a source cache under `out/cache/cpm`.
+  Set `CPM_SOURCE_CACHE` to use a different directory.
+
+The build scripts refresh a build directory that still points to the retired
+toolchain. For a manual CMake invocation, use a fresh build directory or configure
+the existing directory once with `cmake --fresh`.
 
 ### Runtime and versions
 
@@ -55,9 +60,9 @@ directly into the runtime library.
 ### Sandbox and SDK
 
 Run the scripts below from the repository root. They configure CMake and build with
-Ninja. Set `VCPKG_ROOT` to a bootstrapped vcpkg installation. On Windows, use an
-x64 Visual Studio Developer PowerShell with the Vulkan SDK installed. On Linux,
-install Vulkan development files and glslang, or set `VULKAN_SDK` to a local SDK.
+Ninja. On Windows, use an x64 Visual Studio Developer PowerShell with the Vulkan
+SDK installed. On Linux, install Vulkan development files and glslang, or set
+`VULKAN_SDK` to a local SDK.
 
 | Task | Linux | Windows |
 | --- | --- | --- |
@@ -101,11 +106,14 @@ driver and the x64 MSVC runtime on the destination machine.
 
 ### Windows Sandbox from Linux
 
-Run `bash Scripts/Linux/build_windows.sh` with Ninja, glslang, vcpkg, and an
-x86_64 MinGW-w64 GCC toolchain with C++23 support. If the compiler is outside
+Run `bash Scripts/Linux/build_windows.sh [PROJECT]` with Ninja, Linux glslang, and an
+x86_64 MinGW-w64 GCC toolchain with C++23 support. The cross-build fetches the
+Windows Vulkan headers and generates the import library for the target's
+`vulkan-1.dll`. If the compiler is outside
 `PATH`, set `POLOS_MINGW_ROOT` to the prefix containing its `bin` directory.
-The script stages the Windows executable, DLLs, and resources in
-`out/bin/linux-to-win-mingw-release`. Use the native Windows build for the MSVC SDK ABI.
+The default project is Sandbox. The script stages its Windows executable, DLLs,
+and resources in `out/bin/linux-to-win-mingw-release`. Other examples are staged
+in a project-named subdirectory. Use the native Windows build for the MSVC SDK ABI.
 
 ## AI Usage
 

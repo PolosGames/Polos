@@ -17,12 +17,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $ProjectDir 'CMakeLists.txt') -PathT
 $BuildDir = Join-Path $PolosRoot "out/build/projects/$Preset/$Project"
 $BinDir = Join-Path $PolosRoot "out/bin/$Preset/$Project"
 Initialize-PolosBuild $Preset $BuildDir $BinDir 'ON' $Project
-Invoke-CMake --build $BuildDir --target ResourcePreprocessor
-$Preprocessor = Join-Path $BuildDir 'Tools/ResourcePreprocessor/ResourcePreprocessor.exe'
-& $Preprocessor $ProjectDir
-if ($LASTEXITCODE -ne 0) {
-    throw "ResourcePreprocessor exited with code $LASTEXITCODE."
-}
+Invoke-PolosResourcePreprocessor $BuildDir $ProjectDir
 Invoke-CMake --build $BuildDir --target install-runtime
 
 Push-Location $BinDir
