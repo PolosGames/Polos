@@ -16,7 +16,7 @@ inline constexpr std::uint8_t const kFilesystemErrorDomainId{0x03U};
 inline constexpr std::uint8_t const kRenderingErrorDomainId{0x05U};
 inline constexpr std::uint8_t const kResourceErrorDomainId{0x06U};
 inline constexpr std::uint8_t const kUtilsErrorDomainId{0x07U};
-inline constexpr std::uint8_t const kEcsErrorDomainId{0x08U};
+inline constexpr std::uint8_t const kSceneErrorDomainId{0x08U};
 
 ///
 /// @brief A class representing a domain's all error values and their related messages.

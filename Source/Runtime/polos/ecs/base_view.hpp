@@ -6,8 +6,8 @@
 #ifndef POLOS_ECS_BASE_VIEW_HPP
 #define POLOS_ECS_BASE_VIEW_HPP
 
-#include "polos/ecs/scene.hpp"
 #include "polos/ecs/settings.hpp"
+#include "polos/scene/scene.hpp"
 
 #include <bitset>
 
@@ -43,13 +43,13 @@ public:
         return end();
     }
 protected:
-    explicit BaseView(Scene* tScene, std::bitset<kMaxComponents> tMask)
+    explicit BaseView(scene::Scene* tScene, std::bitset<kMaxComponents> tMask)
         : scene{tScene},
           mask{tMask}
     {}
 private:
     friend Iterator;
-    friend class Scene;
+    friend class scene::Scene;
 
     [[nodiscard]] auto Matches(EntityIndex tIndex) const -> bool
     {
@@ -58,7 +58,7 @@ private:
                (entity->componentMask & mask) == mask;
     }
 
-    Scene*                      scene;
+    scene::Scene*               scene;
     std::bitset<kMaxComponents> mask;
 };
 

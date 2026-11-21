@@ -8,9 +8,9 @@
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
-#include "polos/ecs/scene.hpp"
 #include "polos/ecs/view.hpp"
-#include "polos/platform/input_state.hpp"
+#include "polos/input/input_state.hpp"
+#include "polos/scene/scene.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 
@@ -25,7 +25,7 @@ namespace
 {
 auto KeyAxis(std::int32_t tPositive, std::int32_t tNegative) -> float
 {
-    using platform::input::IsKeyDown;
+    using input::IsKeyDown;
     return static_cast<float>(IsKeyDown(tPositive)) - static_cast<float>(IsKeyDown(tNegative));
 }
 }// namespace
@@ -35,7 +35,7 @@ EditorCameraSystem::~EditorCameraSystem()
     reset();
 }
 
-auto EditorCameraSystem::Update(Scene* tScene, float const tDeltaTime, GLFWwindow* tWindow) -> void
+auto EditorCameraSystem::Update(scene::Scene* tScene, float const tDeltaTime, GLFWwindow* tWindow) -> void
 {
     if (tScene == nullptr)
     {
@@ -63,7 +63,7 @@ auto EditorCameraSystem::Update(Scene* tScene, float const tDeltaTime, GLFWwindo
             mTargetRotation = glm::vec2{currentTransform->rotation};
         }
 
-        bool const looking = platform::input::IsKeyDown(GLFW_MOUSE_BUTTON_RIGHT);
+        bool const looking = input::IsKeyDown(GLFW_MOUSE_BUTTON_RIGHT);
         if (looking != mWasLooking && mWindow != nullptr)
         {
             glfwSetInputMode(mWindow, GLFW_CURSOR, looking ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
@@ -71,7 +71,7 @@ auto EditorCameraSystem::Update(Scene* tScene, float const tDeltaTime, GLFWwindo
 
         if (looking && mWasLooking)
         {
-            auto const mouseDelta = platform::input::gInputState.mouseDelta;
+            auto const mouseDelta = input::gInputState.mouseDelta;
             mTargetRotation.x =
                 std::clamp(mTargetRotation.x - (mouseDelta.y * controller->lookSensitivity), -90.0F, 89.9F);
             mTargetRotation.y =

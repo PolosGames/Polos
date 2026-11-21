@@ -32,11 +32,6 @@ namespace polos::platform
 class PlatformManager;
 }// namespace polos::platform
 
-namespace polos::communication
-{
-struct WindowFramebufferResize;
-}// namespace polos::communication
-
 namespace polos::ecs
 {
 }// namespace polos::ecs

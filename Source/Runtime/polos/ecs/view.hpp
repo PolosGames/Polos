@@ -57,7 +57,7 @@ class View : public BaseView<detail::ViewIteratorFor<Access...>>
 public:
     View() = delete;
 
-    explicit View(Scene* tScene)
+    explicit View(scene::Scene* tScene)
         : BaseView<Iterator>{tScene, Iterator::MakeMask()}
     {}
 

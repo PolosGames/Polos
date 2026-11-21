@@ -6,7 +6,7 @@
 #ifndef POLOS_CORE_ENGINE_HPP
 #define POLOS_CORE_ENGINE_HPP
 
-#include "polos/core/i_live_layer.hpp"
+#include "polos/app/i_live_layer.hpp"
 #include "polos/polos_api.hpp"
 
 #include <cstdint>
@@ -16,7 +16,7 @@ namespace polos::core
 class POLOS_API Engine
 {
 public:
-    static std::int32_t Run(ILiveLayer* tAppLayer);
+    static std::int32_t Run(app::ILiveLayer* tAppLayer);
 };
 }// namespace polos::core
 

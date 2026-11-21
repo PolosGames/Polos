@@ -13,7 +13,13 @@ A C++ game engine project.
 - Windows x64
 - Linux x64
 
+<<<<<<< Updated upstream
 ### To Build
+=======
+An application implements `polos::app::ILiveLayer`, or derives from
+`polos::app::BaseLiveLayer`, and returns it from `polos::app::CreateApplication`.
+Including `polos/app/polos_main.hpp` provides the executable entry point.
+>>>>>>> Stashed changes
 
 - CMake 3.25 or newer, Ninja, and a C++23 compiler.
 - Vulkan 1.3 or newer development headers and loader, plus the glslang shader compiler.
@@ -27,7 +33,14 @@ The build scripts refresh a build directory that still points to the retired
 toolchain. For a manual CMake invocation, use a fresh build directory or configure
 the existing directory once with `cmake --fresh`.
 
+<<<<<<< Updated upstream
 ### Runtime and versions
+=======
+Subscribe to `polos::core::EngineUpdate` for gameplay and
+`polos::rendering::RenderUpdate` for ImGui calls. Both events provide frame delta
+time. The engine runs until the window closes or a `polos::core::EngineTerminate`
+event is dispatched, then calls `Destroy()` and shuts down.
+>>>>>>> Stashed changes
 
 The runtime builds as one `polos` shared library, defined in
 `Source/Runtime/CMakeLists.txt`. Directory-local CMake files contribute sources;

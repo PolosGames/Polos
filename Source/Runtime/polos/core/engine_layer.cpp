@@ -5,9 +5,9 @@
 
 #include "polos/core/engine_layer.hpp"
 
-#include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/platform/input_state.hpp"
+#include "polos/core/events/engine_terminate.hpp"
+#include "polos/input/input_state.hpp"
 
 #include <csignal>
 
@@ -20,14 +20,14 @@ namespace
 void SignalHandler(int tSignal)
 {
     std::ignore = tSignal;
-    communication::DispatchNow<communication::EngineTerminate>();
+    communication::DispatchNow<EngineTerminate>();
 }
 
 }// namespace
 
 EngineLayer::EngineLayer()
 {
-    platform::input::Initialize();
+    input::Initialize();
 
     // Set up signal handlers for graceful shutdown
     std::ignore = std::signal(SIGINT, SignalHandler);

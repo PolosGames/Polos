@@ -1,9 +1,9 @@
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
-#include "polos/ecs/scene.hpp"
 #include "polos/ecs/systems/editor_camera_system.hpp"
-#include "polos/platform/input_state.hpp"
+#include "polos/input/input_state.hpp"
+#include "polos/scene/scene.hpp"
 
 #include <gtest/gtest.h>
 
@@ -17,29 +17,27 @@ namespace polos::ecs
 {
 namespace
 {
-namespace input = platform::input;
-
 class EditorCameraSystemTest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
-        input::g_input_state = {};
-        scene                = std::make_unique<Scene>();
+        input::gInputState   = {};
+        scene                = std::make_unique<scene::Scene>();
         transform            = scene->GetMutableComponent<TransformComponent>(scene->activeCamera);
     }
 
     void TearDown() override
     {
-        input::g_input_state = {};
+        input::gInputState = {};
     }
 
     static auto Hold(int tKey) -> void
     {
-        input::g_input_state.keysDown.set(static_cast<std::size_t>(tKey));
+        input::gInputState.keysDown.set(static_cast<std::size_t>(tKey));
     }
 
-    std::unique_ptr<Scene> scene;
+    std::unique_ptr<scene::Scene> scene;
     TransformComponent*    transform{};
     EditorCameraSystem     system;
 };
@@ -58,7 +56,7 @@ TEST_F(EditorCameraSystemTest, MovementRequiresRightMouseAndSmoothlyStopsOnRelea
     EXPECT_GT(firstDistance, 0.0F);
     EXPECT_LT(firstDistance, 5.0F * 0.05F);
 
-    input::g_input_state.keysDown.reset(GLFW_MOUSE_BUTTON_RIGHT);
+    input::gInputState.keysDown.reset(GLFW_MOUSE_BUTTON_RIGHT);
     system.Update(scene.get(), 0.05F);
     auto const stoppingDistance = movingPosition.z - transform->position.z;
     EXPECT_GT(stoppingDistance, 0.0F);
@@ -94,7 +92,7 @@ TEST_F(EditorCameraSystemTest, MovementUsesCameraHeadingWorldVerticalAndNormaliz
     for (auto const& movement : movements)
     {
         system.Update(nullptr, 0.0F);
-        input::g_input_state = {};
+        input::gInputState   = {};
         transform->position  = glm::vec3{0.0F};
         transform->rotation  = {0.0F, movement.yaw, 0.0F};
         Hold(GLFW_MOUSE_BUTTON_RIGHT);
@@ -120,12 +118,12 @@ TEST_F(EditorCameraSystemTest, MovementUsesCameraHeadingWorldVerticalAndNormaliz
 TEST_F(EditorCameraSystemTest, MouseLookIgnoresCaptureDeltaClampsPitchAndWrapsYawSmoothly)
 {
     transform->rotation             = {0.0F, 179.0F, 0.0F};
-    input::g_input_state.mouseDelta = {1000.0F, 1000.0F};
+    input::gInputState.mouseDelta   = {1000.0F, 1000.0F};
     Hold(GLFW_MOUSE_BUTTON_RIGHT);
     system.Update(scene.get(), 0.1F);
     EXPECT_EQ(transform->rotation, (glm::vec3{0.0F, 179.0F, 0.0F}));
 
-    input::g_input_state.mouseDelta = {-40.0F, -10000.0F};
+    input::gInputState.mouseDelta = {-40.0F, -10000.0F};
     system.Update(scene.get(), 0.1F);
     auto const yawChange = std::remainder(transform->rotation.y - 179.0F, 360.0F);
     EXPECT_GT(yawChange, 0.0F);
@@ -133,7 +131,7 @@ TEST_F(EditorCameraSystemTest, MouseLookIgnoresCaptureDeltaClampsPitchAndWrapsYa
     EXPECT_GT(transform->rotation.x, 0.0F);
     EXPECT_LT(transform->rotation.x, 89.9F);
 
-    input::g_input_state.mouseDelta = glm::vec2{0.0F};
+    input::gInputState.mouseDelta = glm::vec2{0.0F};
     for (int i{0}; i < 20; ++i)
     {
         system.Update(scene.get(), 0.1F);
@@ -155,12 +153,12 @@ TEST_F(EditorCameraSystemTest, CameraAndSceneChangesDiscardMomentumAndUseTheNewR
         otherCamera,
         TransformComponent{.position = {1.0F, 2.0F, 3.0F}, .rotation = {20.0F, 30.0F, 0.0F}});
     ASSERT_TRUE(scene->SetActiveCamera(otherCamera));
-    input::g_input_state = {};
+    input::gInputState = {};
     system.Update(scene.get(), 0.1F);
     EXPECT_EQ(otherTransform->position, (glm::vec3{1.0F, 2.0F, 3.0F}));
     EXPECT_EQ(otherTransform->rotation, (glm::vec3{20.0F, 30.0F, 0.0F}));
 
-    auto otherScene = std::make_unique<Scene>();
+    auto otherScene = std::make_unique<scene::Scene>();
     system.Update(otherScene.get(), 0.1F);
     EXPECT_EQ(
         otherScene->GetComponent<TransformComponent>(otherScene->activeCamera)->position,

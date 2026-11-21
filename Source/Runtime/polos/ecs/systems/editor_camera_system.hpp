@@ -13,11 +13,13 @@
 
 struct GLFWwindow;
 
+namespace polos::scene
+{
+class Scene;
+}// namespace polos::scene
+
 namespace polos::ecs
 {
-
-class Scene;
-
 /// Controls the active camera when it has an EditorCameraControllerComponent.
 class POLOS_API EditorCameraSystem
 {
@@ -31,11 +33,11 @@ public:
     auto operator=(EditorCameraSystem&&) -> EditorCameraSystem&      = default;
 
     /// A null window allows camera updates without changing the cursor mode.
-    auto Update(Scene* tScene, float tDeltaTime, GLFWwindow* tWindow = nullptr) -> void;
+    auto Update(scene::Scene* tScene, float tDeltaTime, GLFWwindow* tWindow = nullptr) -> void;
 private:
     auto reset() -> void;
 
-    Scene*       mScene{nullptr};
+    scene::Scene* mScene{nullptr};
     EntityHandle mCamera{kInvalidEntityHandle};
     GLFWwindow*  mWindow{nullptr};
     glm::vec2    mTargetRotation{0.0F};

@@ -5,22 +5,22 @@
 
 #include "polos/core/main_loop.hpp"
 
-#include "polos/communication/end_frame.hpp"
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/process_input.hpp"
-#include "polos/communication/render_update.hpp"
-#include "polos/communication/window_close.hpp"
-#include "polos/ecs/scene.hpp"
-#include "polos/ecs/scene_manager.hpp"
+#include "polos/core/events/end_frame.hpp"
+#include "polos/core/events/engine_terminate.hpp"
+#include "polos/core/events/engine_update.hpp"
 #include "polos/ecs/system_registry.hpp"
 #include "polos/ecs/systems/editor_camera_system.hpp"
 #include "polos/ecs/systems/light_collection_system.hpp"
 #include "polos/ecs/systems/mesh_instance_sync_system.hpp"
+#include "polos/input/events/process_input.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/platform/events/window_close.hpp"
 #include "polos/platform/platform_manager.hpp"
+#include "polos/rendering/events/render_update.hpp"
 #include "polos/rendering/rendering_api.hpp"
+#include "polos/scene/scene.hpp"
+#include "polos/scene/scene_manager.hpp"
 #include "polos/utils/profiling.hpp"
 #include "polos/utils/time.hpp"
 
@@ -38,7 +38,7 @@ MainLoop::MainLoop()
 
     using namespace polos::communication;
 
-    Subscribe<WindowClose>([this](WindowClose&) {
+    Subscribe<platform::WindowClose>([this](platform::WindowClose&) {
         on_window_close();
     });
 
@@ -56,13 +56,13 @@ void MainLoop::Run() const
 #endif
 
     ecs::SystemRegistry& systems = ecs::SystemRegistry::Get();
-    systems.Register([system = ecs::EditorCameraSystem{}](ecs::Scene* tScene, float tDeltaTime) mutable {
+    systems.Register([system = ecs::EditorCameraSystem{}](scene::Scene* tScene, float tDeltaTime) mutable {
         system.Update(tScene, tDeltaTime, platform::PlatformManager::Get().GetMainWindow());
     });
-    systems.Register([system = ecs::MeshInstanceSyncSystem{}](ecs::Scene* tScene, float) mutable {
+    systems.Register([system = ecs::MeshInstanceSyncSystem{}](scene::Scene* tScene, float) mutable {
         system.Update(tScene);
     });
-    systems.Register([system = ecs::LightCollectionSystem{}](ecs::Scene* tScene, float) mutable {
+    systems.Register([system = ecs::LightCollectionSystem{}](scene::Scene* tScene, float) mutable {
         system.Update(tScene);
     });
 
@@ -75,7 +75,7 @@ void MainLoop::Run() const
 
         {
             POLOS_PROFILE_ZONE("Engine update callbacks");
-            communication::DispatchNow<communication::EngineUpdate>(delta_time_in_secs);
+            communication::DispatchNow<EngineUpdate>(delta_time_in_secs);
         }
         if (!mIsRunning)
         {
@@ -83,7 +83,7 @@ void MainLoop::Run() const
         }
         {
             POLOS_PROFILE_ZONE("ECS system updates");
-            auto* scene = ecs::SceneManager::Get().GetCurrentScene();
+            auto* scene = scene::SceneManager::Get().GetCurrentScene();
             systems.UpdateAll(scene, delta_time_in_secs);
             if (scene != nullptr)
             {
@@ -95,18 +95,18 @@ void MainLoop::Run() const
         {
             {
                 POLOS_PROFILE_ZONE("Render update callbacks");
-                communication::DispatchNow<communication::RenderUpdate>(delta_time_in_secs);
+                communication::DispatchNow<rendering::RenderUpdate>(delta_time_in_secs);
             }
 
             rendering::RenderingApi::Get().EndFrame();
             POLOS_PROFILE_FRAME();
-            communication::DispatchNow<communication::EndFrame>();
+            communication::DispatchNow<EndFrame>();
         }
 
         {
             POLOS_PROFILE_ZONE("Deferred events and input");
             communication::DispatchDeferredEvents();
-            communication::DispatchNow<communication::ProcessInput>();
+            communication::DispatchNow<input::ProcessInput>();
         }
 
 

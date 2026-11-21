@@ -1,8 +1,9 @@
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/window_close.hpp"
+#include "polos/core/events/engine_terminate.hpp"
+#include "polos/core/events/engine_update.hpp"
 #include "polos/core/main_loop.hpp"
+#include "polos/ecs/system_registry.hpp"
+#include "polos/platform/events/window_close.hpp"
 
 #include <gtest/gtest.h>
 
@@ -18,12 +19,13 @@ TEST(MainLoopTest, WindowCloseStopsBeforeFirstFrame)
 {
     EXPECT_EXIT(
         {
-            MainLoop loop;
-            communication::Subscribe<communication::EngineUpdate>([](communication::EngineUpdate&) {
+            ecs::SystemRegistry systems;
+            MainLoop            loop;
+            communication::Subscribe<EngineUpdate>([](EngineUpdate&) {
                 std::exit(EXIT_FAILURE);
             });
 
-            communication::DispatchNow<communication::WindowClose>(nullptr);
+            communication::DispatchNow<platform::WindowClose>(nullptr);
             loop.Run();
 
             std::exit(EXIT_SUCCESS);
@@ -36,12 +38,13 @@ TEST(MainLoopTest, EngineTerminateStopsBeforeFirstFrame)
 {
     EXPECT_EXIT(
         {
-            MainLoop loop;
-            communication::Subscribe<communication::EngineUpdate>([](communication::EngineUpdate&) {
+            ecs::SystemRegistry systems;
+            MainLoop            loop;
+            communication::Subscribe<EngineUpdate>([](EngineUpdate&) {
                 std::exit(EXIT_FAILURE);
             });
 
-            communication::DispatchNow<communication::EngineTerminate>();
+            communication::DispatchNow<EngineTerminate>();
             loop.Run();
 
             std::exit(EXIT_SUCCESS);

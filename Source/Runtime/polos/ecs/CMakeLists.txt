@@ -4,22 +4,7 @@ polos_sources(
     systems/editor_camera_system.cpp
     component_pool.cpp
     entity.cpp
-    scene_manager.cpp
-    scene_graph.cpp
-    scene.cpp
     system_registry.cpp
-)
-
-polos_tests(
-    scene-graph
-        SOURCES test/scene_graph_test.cpp
-)
-
-polos_tests(
-    scene-serialization
-        SOURCES test/scene_serialization_test.cpp
-        LIBRARIES ryml::ryml
-        LABELS ct
 )
 
 polos_tests(
@@ -27,6 +12,5 @@ polos_tests(
         SOURCES
             test/component_pool_test.cpp
             test/editor_camera_system_test.cpp
-            test/scene_test.cpp
             test/view_test.cpp
 )

@@ -30,7 +30,7 @@ void SystemRegistry::Register(SystemUpdate&& tUpdate)
     mSystems.push_back(std::move(tUpdate));
 }
 
-void SystemRegistry::UpdateAll(Scene* tScene, float tDeltaTime)
+void SystemRegistry::UpdateAll(scene::Scene* tScene, float tDeltaTime)
 {
     for (auto& update : mSystems)
     {

@@ -1,24 +1,24 @@
-#include "polos/communication/end_frame.hpp"
-#include "polos/communication/engine_terminate.hpp"
-#include "polos/communication/engine_update.hpp"
+#include "polos/app/i_live_layer.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/key_press.hpp"
-#include "polos/communication/key_release.hpp"
-#include "polos/communication/mouse_input.hpp"
-#include "polos/communication/render_update.hpp"
-#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/core/engine.hpp"
-#include "polos/core/i_live_layer.hpp"
+#include "polos/core/events/end_frame.hpp"
+#include "polos/core/events/engine_terminate.hpp"
+#include "polos/core/events/engine_update.hpp"
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/editor_camera_controller_component.hpp"
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
-#include "polos/ecs/scene.hpp"
-#include "polos/ecs/scene_manager.hpp"
 #include "polos/gui/backend.hpp"
+#include "polos/input/events/key_press.hpp"
+#include "polos/input/events/key_release.hpp"
+#include "polos/input/events/mouse_input.hpp"
+#include "polos/platform/events/window_framebuffer_resize.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/common.hpp"
+#include "polos/rendering/events/render_update.hpp"
+#include "polos/scene/scene.hpp"
+#include "polos/scene/scene_manager.hpp"
 
 #include <gtest/gtest.h>
 #include <imgui.h>
@@ -49,7 +49,7 @@ struct SmokeState
     std::vector<std::string_view> lifecycle;
 };
 
-class SmokeApplication final : public ILiveLayer
+class SmokeApplication final : public app::ILiveLayer
 {
 public:
     explicit SmokeApplication(SmokeState& tState)
@@ -73,7 +73,7 @@ public:
         auto const framebuffer = platform.GetWindowSurface().GetFramebufferSize();
         mState.windowCreated   = platform.GetMainWindow() != nullptr && framebuffer.width > 0 && framebuffer.height > 0;
 
-        auto*      scene           = ecs::SceneManager::Get().CreateScene();
+        auto*      scene           = scene::SceneManager::Get().CreateScene("Scene", true);
         auto const camera          = scene->activeCamera;
         auto*      cameraTransform = scene->GetMutableComponent<ecs::TransformComponent>(camera);
         auto const cube            = scene->NewEntity(scene->sceneRoot, "SmokeCube"_sid);
@@ -88,13 +88,13 @@ public:
         }
         cameraTransform->position = {0.0F, 0.0F, 2.0F};
 
-        communication::Subscribe<communication::EngineUpdate>(
-            [&state = mState, scene, cube](communication::EngineUpdate&) {
+        communication::Subscribe<EngineUpdate>(
+            [&state = mState, scene, cube](EngineUpdate&) {
                 ++state.updates;
                 if (state.updates == 1U)
                 {
-                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
-                    communication::DispatchNow<communication::KeyPress>(GLFW_KEY_W);
+                    communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
+                    communication::DispatchNow<input::KeyPress>(GLFW_KEY_W);
                 }
                 if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
                 {
@@ -106,16 +106,16 @@ public:
                 }
                 if (state.updates == 3U)
                 {
-                    communication::DispatchNow<communication::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
-                    communication::DispatchNow<communication::KeyRelease>(GLFW_KEY_W);
+                    communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
+                    communication::DispatchNow<input::KeyRelease>(GLFW_KEY_W);
                 }
                 if (state.updates >= 120U)
                 {
-                    communication::DispatchNow<communication::EngineTerminate>();
+                    communication::DispatchNow<EngineTerminate>();
                 }
             });
-        communication::Subscribe<communication::RenderUpdate>([&state = mState, scene, cube, meshIndex,
-                                                                  cameraTransform](communication::RenderUpdate&) {
+        communication::Subscribe<rendering::RenderUpdate>([&state = mState, scene, cube, meshIndex, cameraTransform](
+                                                              rendering::RenderUpdate&) {
             auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
             EXPECT_EQ(scene->GetRenderData().meshInstances[cube.index].meshId, expectedMesh)
                 << "Frame " << state.completedFrames;
@@ -140,7 +140,7 @@ public:
             }
             ImGui::End();
         });
-        communication::Subscribe<communication::EndFrame>([&state = mState](communication::EndFrame&) {
+        communication::Subscribe<EndFrame>([&state = mState](EndFrame&) {
             ++state.completedFrames;
             state.lifecycle.push_back("end-frame");
             if (state.completedFrames == 1U)
@@ -149,11 +149,11 @@ public:
                 int width{};
                 int height{};
                 glfwGetFramebufferSize(platform::PlatformManager::Get().GetMainWindow(), &width, &height);
-                communication::DispatchNow<communication::WindowFramebufferResize>(width, height);
+                communication::DispatchNow<platform::WindowFramebufferResize>(width, height);
             }
             if (state.completedFrames == kFrameCount)
             {
-                communication::DispatchNow<communication::EngineTerminate>();
+                communication::DispatchNow<EngineTerminate>();
             }
         });
     }

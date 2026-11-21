@@ -6,9 +6,9 @@
 #include "polos/ecs/systems/mesh_instance_sync_system.hpp"
 
 #include "polos/ecs/components/mesh_renderer_component.hpp"
-#include "polos/ecs/scene.hpp"
 #include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
+#include "polos/scene/scene.hpp"
 #include "polos/utils/profiling.hpp"
 
 namespace polos::ecs
@@ -20,7 +20,7 @@ constexpr auto kTransformBit    = static_cast<std::size_t>(ComponentType::kTrans
 constexpr auto kMeshRendererBit = static_cast<std::size_t>(ComponentType::kMeshRenderer);
 }// namespace
 
-void MeshInstanceSyncSystem::Update(Scene* tScene)
+void MeshInstanceSyncSystem::Update(scene::Scene* tScene)
 {
     POLOS_PROFILE_ZONE("Sync mesh instances");
     if (tScene == nullptr)
@@ -58,7 +58,7 @@ void MeshInstanceSyncSystem::Update(Scene* tScene)
     }
 }
 
-void MeshInstanceSyncSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
+void MeshInstanceSyncSystem::updateInstance(scene::Scene& tScene, EntityHandle tEntity)
 {
     auto const&             mask = tScene.mEntities[tEntity.index].componentMask;
     rendering::MeshInstance instance{

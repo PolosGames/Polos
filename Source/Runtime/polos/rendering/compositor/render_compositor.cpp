@@ -12,8 +12,6 @@
 #include "main_compute.comp.cpp"
 #include "polos/ecs/components/camera_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
-#include "polos/ecs/scene.hpp"
-#include "polos/ecs/scene_manager.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/rendering_api.hpp"
@@ -26,6 +24,8 @@
 #include "polos/rendering/vk/vulkan_profiling.hpp"
 #include "polos/rendering/vk/vulkan_swapchain.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
+#include "polos/scene/scene.hpp"
+#include "polos/scene/scene_manager.hpp"
 #include "polos/utils/assert.hpp"
 
 #include <span>
@@ -148,7 +148,7 @@ auto RenderCompositor::RecreateTargets() -> Result<void>
 auto RenderCompositor::Prepare(FrameData const& tFrameData) -> void
 {
     POLOS_PROFILE_ZONE("Prepare render compositor");
-    ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
+    scene::Scene* scene = scene::SceneManager::Get().GetCurrentScene();
 
     // Always at least 1 camera, no need to check if activeCamera exists
     CameraUniform const cameraUbo = GetCameraUniform(
@@ -191,7 +191,7 @@ auto RenderCompositor::Record(FrameData& tFrameData) -> int32_t
     // RenderUpdate runs after Prepare(), so collect debug submissions here.
     mDebugRenderPass->Prepare(tFrameData.frameSlot, RenderingApi::Get().GetDebugDrawQueue());
 
-    ecs::Scene* scene = ecs::SceneManager::Get().GetCurrentScene();
+    scene::Scene* scene = scene::SceneManager::Get().GetCurrentScene();
 
     int32_t drawCalls{0};
     drawCalls += mForwardShadingPass->Record(

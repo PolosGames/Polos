@@ -6,9 +6,9 @@
 #include "polos/rendering/vk/render_context.hpp"
 
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/window_framebuffer_resize.hpp"
 #include "polos/gui/backend.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/platform/events/window_framebuffer_resize.hpp"
 #include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
@@ -40,7 +40,7 @@ auto RenderContext::Get() -> RenderContext&
 
 RenderContext::RenderContext()
 {
-    using communication::WindowFramebufferResize;
+    using platform::WindowFramebufferResize;
     sRenderContext = this;
     communication::Subscribe<WindowFramebufferResize>([this](WindowFramebufferResize&) {
         mHasFramebufferResized = true;
