@@ -25,7 +25,7 @@ struct InputState
     glm::vec2 mouseDelta;
 };
 
-extern POLOS_API InputState g_input_state;
+extern POLOS_API InputState gInputState;
 
 /// Register input event handlers during engine startup.
 POLOS_API auto Initialize() -> void;

@@ -13,6 +13,8 @@ struct MeshInstance
     vec4  rotation;
     float scale;
     uint  meshId;
+    uint  textureIdx;
+    float tilingFactor;
 };
 
 struct IndirectCommand
@@ -149,12 +151,11 @@ void main()
     vec4  accRot    = obj.rotation;
     float accScale  = obj.scale;
     uint  curParent = obj.parentId;
-
     while (curParent != kRootParentId)
     {
         MeshInstance p = instances[curParent];
-        accPos     = p.position + p.scale * rotate_quat(p.rotation, accPos);
-        accRot     = mul_quat(p.rotation, accRot);
+        accPos         = p.position + p.scale * rotate_quat(p.rotation, accPos);
+        accRot         = mul_quat(p.rotation, accRot);
         accScale *= p.scale;
         curParent = p.parentId;
     }

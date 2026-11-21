@@ -226,9 +226,17 @@ auto ReadComponents(Scene& tScene, EntityHandle tHandle, ryml::ConstNodeRef tEnt
 
     return read("transform", [](ryml::ConstNodeRef node) {
         TransformComponent value{};
-        value.position = ReadVec3(node, "position", value.position);
-        value.rotation = ReadVec3(node, "rotation", value.rotation);
-        value.scale    = ReadField(node, "scale", value.scale);
+        value.position   = ReadVec3(node, "position", value.position);
+        value.rotation   = ReadVec3(node, "rotation", value.rotation);
+        auto const scale = utils::yaml::Find(node, "scale");
+        if (scale.readable() && scale.is_seq())
+        {
+            value.scale = utils::yaml::Read(scale[0], value.scale);
+        }
+        else
+        {
+            value.scale = utils::yaml::Read(scale, value.scale);
+        }
         return value;
     }) && read("mesh_renderer", [](ryml::ConstNodeRef node) {
         MeshRendererComponent value{.meshHandle = ReadId(utils::yaml::Find(node, "mesh"))};
@@ -282,9 +290,9 @@ SceneManager::~SceneManager()
     sInstance = nullptr;
 }
 
-auto SceneManager::CreateScene(std::string_view const tName) -> Scene*
+auto SceneManager::CreateScene(std::string_view const tName, bool tEditorCamera) -> Scene*
 {
-    auto& scene = mScenes.emplace_back(std::make_unique<Scene>(utils::StrHash64Runtime(tName)));
+    auto& scene = mScenes.emplace_back(std::make_unique<Scene>(utils::StrHash64Runtime(tName), tEditorCamera));
     MakeCurrentScene(scene->name);
     return scene.get();
 }

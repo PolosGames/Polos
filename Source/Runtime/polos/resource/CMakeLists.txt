@@ -21,7 +21,13 @@ polos_tests(gltf-validation SOURCES
     gltf/gltf_loader.cpp
 )
 
+polos_tests(gltf-nodes SOURCES
+    test/gltf_nodes_test.cpp
+    gltf/gltf_loader.cpp
+)
+
 if (BUILD_TESTS)
+    target_link_libraries(ut-gltf-nodes PRIVATE ryml::ryml)
     target_link_libraries(ut-resource PRIVATE ryml::ryml)
     target_link_libraries(ut-gltf-validation PRIVATE ryml::ryml)
 

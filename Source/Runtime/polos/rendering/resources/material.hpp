@@ -18,6 +18,7 @@ struct POLOS_API Material
 {
     glm::vec4    baseColorFactor{1.0F};
     TextureIndex baseColorTexture{kDefaultTextureIndex};
+    float        tilingFactor{kDefaultTilingFactor};
 
     [[nodiscard]] static auto Create(resource::material::Material const& tMat) -> Material;
 };

@@ -389,7 +389,8 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 
     auto assetRes = gParser.loadGltf(
         data.get(), path.parent_path(),
-        fastgltf::Options::LoadExternalBuffers | fastgltf::Options::GenerateMeshIndices);
+        fastgltf::Options::LoadExternalBuffers | fastgltf::Options::GenerateMeshIndices |
+            fastgltf::Options::DecomposeNodeMatrices);
     if (assetRes.has_error())
     {
         LogError("Could not parse model file {}: {}", path.string(), fastgltf::getErrorMessage(assetRes.error()));
@@ -436,6 +437,46 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         {
             LogError("Could not process mesh {} in {}", mesh.name, modelName);
             return nullptr;
+        }
+    }
+
+    model->nodes.reserve(asset.nodes.size());
+    std::vector<bool> hasParent(asset.nodes.size(), false);
+    for (auto const& input : asset.nodes)
+    {
+        auto const& trs = std::get<fastgltf::TRS>(input.transform);
+        Node        node{
+            .name     = input.name,
+            .position = {trs.translation[0], trs.translation[1], trs.translation[2]},
+            .rotation = {trs.rotation[3], trs.rotation[0], trs.rotation[1], trs.rotation[2]},
+            .scale    = trs.scale[0],
+            .meshIndex = std::nullopt,
+            .children = input.children,
+        };
+        if (input.meshIndex)
+        {
+            node.meshIndex = *input.meshIndex;
+        }
+        for (auto const child : input.children)
+        {
+            hasParent[child] = true;
+        }
+        model->nodes.push_back(std::move(node));
+    }
+
+    if (!asset.scenes.empty())
+    {
+        auto const sceneIndex = asset.defaultScene.value_or(0U);
+        model->rootNodes      = asset.scenes[sceneIndex].nodeIndices;
+    }
+    else
+    {
+        for (std::size_t i = 0U; i < hasParent.size(); ++i)
+        {
+            if (!hasParent[i])
+            {
+                model->rootNodes.push_back(i);
+            }
         }
     }
 

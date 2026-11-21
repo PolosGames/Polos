@@ -71,7 +71,7 @@ auto EditorCameraSystem::Update(Scene* tScene, float const tDeltaTime, GLFWwindo
 
         if (looking && mWasLooking)
         {
-            auto const mouseDelta = platform::input::g_input_state.mouseDelta;
+            auto const mouseDelta = platform::input::gInputState.mouseDelta;
             mTargetRotation.x =
                 std::clamp(mTargetRotation.x - (mouseDelta.y * controller->lookSensitivity), -90.0F, 89.9F);
             mTargetRotation.y =

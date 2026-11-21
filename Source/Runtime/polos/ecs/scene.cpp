@@ -33,6 +33,7 @@ Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
         sceneRoot.index, InfoComponent{
                              .debugName   = "SceneRoot"_sid,
                              .graphHandle = SceneGraphHandle{0U},
+                             .isTreeOpen  = true,
                          });
 
     if (tCreateEditorCamera)

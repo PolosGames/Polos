@@ -52,7 +52,33 @@ auto Initialize(VkRenderPass tRenderPass) -> bool
     auto& io       = ImGui::GetIO();
     io.IniFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
+
     ImGui::StyleColorsDark();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // --- 1. Sizing and Spacing (Modern & Tight) ---
+    style.WindowPadding    = ImVec2(8.0f, 8.0f);
+    style.FramePadding     = ImVec2(5.0f, 3.0f);
+    style.CellPadding      = ImVec2(6.0f, 4.0f);
+    style.ItemSpacing      = ImVec2(6.0f, 4.0f);
+    style.ItemInnerSpacing = ImVec2(6.0f, 4.0f);
+    style.ScrollbarSize    = 13.0f;
+    style.GrabMinSize      = 10.0f;
+
+    // --- 2. Borders & Rounding ---
+    style.WindowBorderSize = 1.0f;
+    style.ChildBorderSize  = 1.0f;
+    style.PopupBorderSize  = 1.0f;
+    style.FrameBorderSize  = 1.0f;
+
+    style.WindowRounding    = 4.0f;
+    style.ChildRounding     = 3.0f;
+    style.FrameRounding     = 3.0f;
+    style.PopupRounding     = 3.0f;
+    style.ScrollbarRounding = 9.0f;
+    style.GrabRounding      = 3.0f;
+    style.TabRounding       = 3.0f;
 
     auto* window = platform::PlatformManager::Get().GetMainWindow();
     if (window == nullptr || !ImGui_ImplGlfw_InitForVulkan(window, true))
