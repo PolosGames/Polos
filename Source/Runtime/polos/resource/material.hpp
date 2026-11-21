@@ -24,8 +24,8 @@ enum class AlphaMode : uint8_t
 
 struct MaterialTexture
 {
-    ResourceId                img;
-    rendering::SamplerDetails textureDetails;
+    ResourceId                img{0};
+    rendering::SamplerDetails textureDetails{};
 };
 
 struct Material
@@ -33,6 +33,7 @@ struct Material
     ResourceId            name;
     std::array<float, 4U> baseColorFactor;
     MaterialTexture       baseColorTexture;
+    float                 tilingFactor{rendering::kDefaultTilingFactor};
 
     // std::array<float, 3U>    emissiveFactor{0.0F, 0.0F, 0.0F};
     // AlphaMode                alphaMode = AlphaMode::kOpaque;

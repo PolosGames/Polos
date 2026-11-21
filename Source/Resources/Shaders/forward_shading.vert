@@ -14,6 +14,7 @@ struct MeshInstance
     float scale;
     uint  meshId;
     uint  textureIdx;
+    float tilingFactor;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer MeshInstances
@@ -45,6 +46,7 @@ layout(location = 4) in vec4 iColor;
 layout(location = 0) out VertexOutput oVertOut;
 layout(location = 2) out flat uint oTexIndex;
 layout(location = 3) out vec3 oNormal;
+layout(location = 4) out float oRepeat;
 
 void main()
 {
@@ -58,4 +60,7 @@ void main()
     oVertOut.texCoord = iTexCoord;
     oNormal           = iNormal;
     oTexIndex         = inst.textureIdx;
+
+    float worldSize = length(worldMatrix[0].xyz);
+    oRepeat         = worldSize * inst.tilingFactor;
 }

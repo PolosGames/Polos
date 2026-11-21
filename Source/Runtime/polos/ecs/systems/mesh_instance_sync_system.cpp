@@ -84,7 +84,8 @@ void MeshInstanceSyncSystem::updateInstance(Scene& tScene, EntityHandle tEntity)
             material = materials.GetMaterial(rendering::kDefaultMaterial);
         }
 
-        instance.texID = material->baseColorTexture;
+        instance.texID        = material->baseColorTexture;
+        instance.tilingFactor = material->tilingFactor;
     }
 
     rendering::MeshIndex const oldMeshId = tScene.mRenderData.meshInstances[tEntity.index].meshId;

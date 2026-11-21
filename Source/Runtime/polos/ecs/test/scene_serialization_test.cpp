@@ -427,6 +427,7 @@ TEST_F(SceneSerializationTest, LoadsNamedMeshAndMaterialFromYaml)
   - info: {debugName: Suzanne}
     transform:
       position: [0.33, 22.222, 4.1254]
+      scale: 2
     mesh_renderer:
       mesh: mesh.Suzanne
       material: material.Suzanne
@@ -444,7 +445,7 @@ TEST_F(SceneSerializationTest, LoadsNamedMeshAndMaterialFromYaml)
     auto const* transform = loaded->GetComponent<TransformComponent>(handle);
     ASSERT_NE(transform, nullptr);
     EXPECT_EQ(transform->position, glm::vec3(0.33F, 22.222F, 4.1254F));
-    EXPECT_FLOAT_EQ(transform->scale, 1.0F);
+    EXPECT_FLOAT_EQ(transform->scale, 2.0F);
 }
 
 TEST_F(SceneSerializationTest, InvalidSceneShapeOrHierarchyLeavesCurrentSceneUnchanged)

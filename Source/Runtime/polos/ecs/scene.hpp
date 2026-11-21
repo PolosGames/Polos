@@ -36,6 +36,7 @@ class POLOS_API Scene
 {
 public:
     explicit Scene(utils::string_id tName = "Scene"_sid);
+    explicit Scene(utils::string_id tName, bool tCreateEditorCamera);
     ~Scene();
 
     Scene(Scene const&)            = delete;
@@ -166,9 +167,6 @@ private:
 
     friend class LightCollectionSystem;
     friend class MeshInstanceSyncSystem;
-
-    // Deserialization restores the saved cameras instead of creating another editor camera.
-    Scene(utils::string_id tName, bool tCreateEditorCamera);
 
     auto newEntity() -> EntityHandle;
     auto isEntityValid(EntityHandle tHandle) -> bool;

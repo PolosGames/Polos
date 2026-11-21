@@ -39,7 +39,7 @@ public:
     auto operator=(SceneManager const&) -> SceneManager& = delete;
     auto operator=(SceneManager&&) -> SceneManager&      = delete;
 
-    auto CreateScene(std::string_view tName = "Scene") -> Scene*;
+    auto CreateScene(std::string_view tName = "Scene", bool tEditorCamera = false) -> Scene*;
     auto MakeCurrentScene(utils::string_id tName) -> bool;
     auto GetCurrentScene() -> Scene*;
 

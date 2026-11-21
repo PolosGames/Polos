@@ -35,6 +35,7 @@ sceneLightInfo;
 layout(location = 0) in VertexOutput iVertOut;
 layout(location = 2) in flat uint iTexIndex;
 layout(location = 3) in vec3 iNormal;
+layout(location = 4) in float oRepeat;
 
 layout(location = 0) out vec4 oColor;
 
@@ -42,7 +43,7 @@ void main()
 {
     oColor = iVertOut.color;
 
-    vec4 color = iVertOut.color * texture(uTextures[nonuniformEXT(iTexIndex)], iVertOut.texCoord);
+    vec4 color = iVertOut.color * texture(uTextures[nonuniformEXT(iTexIndex)], iVertOut.texCoord * oRepeat);
 
     if (color.a == 0.0)
     {

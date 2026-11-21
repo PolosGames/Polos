@@ -13,6 +13,7 @@
 #include "polos/utils/pair.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <cstdint>
 #include <optional>
@@ -45,10 +46,22 @@ struct Mesh
     AABB                       bounds;
 };
 
+struct Node
+{
+    std::string                name;
+    glm::vec3                  position{0.0F};
+    glm::quat                  rotation{1.0F, 0.0F, 0.0F, 0.0F};
+    float                      scale{1.0F};
+    std::optional<std::size_t> meshIndex;
+    std::vector<std::size_t>   children;
+};
+
 struct Model
 {
     std::string                                               name;
     std::vector<Mesh>                                         meshes;
+    std::vector<Node>                                         nodes;
+    std::vector<std::size_t>                                  rootNodes;
     std::unordered_map<ResourceId, material::MaterialTexture> materialTextures;
 };
 }// namespace polos::resource::model
