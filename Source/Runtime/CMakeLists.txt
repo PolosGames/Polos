@@ -62,15 +62,18 @@ polos_link_print_support(
     polos
 )
 
+add_subdirectory(polos/app)
 add_subdirectory(polos/communication)
 add_subdirectory(polos/core)
 add_subdirectory(polos/ecs)
 add_subdirectory(polos/filesystem)
 add_subdirectory(polos/gui)
+add_subdirectory(polos/input)
 add_subdirectory(polos/logging)
 add_subdirectory(polos/platform)
 add_subdirectory(polos/rendering)
 add_subdirectory(polos/resource)
+add_subdirectory(polos/scene)
 add_subdirectory(polos/utils)
 
 get_target_property(POLOS_SOURCES polos SOURCES)

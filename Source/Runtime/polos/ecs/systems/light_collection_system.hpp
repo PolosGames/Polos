@@ -8,14 +8,17 @@
 
 #include "polos/polos_api.hpp"
 
-namespace polos::ecs
+namespace polos::scene
 {
 class Scene;
+}// namespace polos::scene
 
+namespace polos::ecs
+{
 class POLOS_API LightCollectionSystem
 {
 public:
-    void Update(Scene* tScene);
+    void Update(scene::Scene* tScene);
 };
 }// namespace polos::ecs
 

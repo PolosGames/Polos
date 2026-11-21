@@ -7,13 +7,13 @@
 
 #include "polos/core/engine_layer.hpp"
 #include "polos/core/main_loop.hpp"
-#include "polos/ecs/scene_manager.hpp"
 #include "polos/ecs/system_registry.hpp"
 #include "polos/logging/log_macros.hpp"
 #include "polos/logging/logger.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/rendering_api.hpp"
 #include "polos/resource/resource_manager.hpp"
+#include "polos/scene/scene_manager.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/build_info.hpp"
 #include "polos/utils/profiling.hpp"
@@ -33,7 +33,7 @@ constexpr std::int32_t const kHeight{1150};
 
 }// namespace
 
-std::int32_t Engine::Run(ILiveLayer* tAppLayer)
+std::int32_t Engine::Run(app::ILiveLayer* tAppLayer)
 {
     std::string const build = utils::FormatBuildInfo(utils::GetBuildInfo());
     LogInfo("Polos build {}", build);
@@ -48,12 +48,12 @@ std::int32_t Engine::Run(ILiveLayer* tAppLayer)
         resources.LoadCatalog();
     }
 
-    auto sceneManager   = std::make_unique<ecs::SceneManager>();
+    auto sceneManager   = std::make_unique<scene::SceneManager>();
     auto systemRegistry = std::make_unique<ecs::SystemRegistry>();
     auto renderingApi   = std::make_unique<rendering::RenderingApi>(platformManager->GetWindowSurface());
 
-    std::unique_ptr<ILiveLayer> engineLayer{new EngineLayer{}};
-    std::unique_ptr<ILiveLayer> appLayer{tAppLayer};
+    std::unique_ptr<app::ILiveLayer> engineLayer{new EngineLayer{}};
+    std::unique_ptr<app::ILiveLayer> appLayer{tAppLayer};
     engineLayer->Create();
     {
         POLOS_PROFILE_ZONE("Create application scene");

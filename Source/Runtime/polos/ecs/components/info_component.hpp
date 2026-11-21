@@ -7,7 +7,7 @@
 #define POLOS_ECS_INFO_COMPONENT_HPP
 
 #include "polos/ecs/component.hpp"
-#include "polos/ecs/scene_graph.hpp"
+#include "polos/scene/scene_graph.hpp"
 #include "polos/utils/string_id.hpp"
 
 namespace polos::ecs
@@ -17,7 +17,7 @@ struct InfoComponent
     static constexpr ComponentType kType = ComponentType::kInfo;
 
     utils::string_id debugName{0U};
-    SceneGraphHandle graphHandle{0U};
+    scene::SceneGraphHandle graphHandle{0U};
     std::uint32_t    childCount{0U};
     bool             isTreeOpen{false};
 };

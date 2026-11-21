@@ -23,7 +23,7 @@ auto ExpectEntity(EntityHandle const tActual, EntityHandle const tExpected) -> v
 
 TEST(ViewTest, FiltersByAllRequestedComponentsAndReturnsLiveComponentPointers)
 {
-    auto                      scene            = std::make_unique<Scene>();
+    auto                      scene            = std::make_unique<scene::Scene>();
     auto const                cameraOnly       = scene->NewEntity();
     auto const                match            = scene->NewEntity();
     auto const                removedComponent = scene->NewEntity();
@@ -62,7 +62,7 @@ TEST(ViewTest, FiltersByAllRequestedComponentsAndReturnsLiveComponentPointers)
 
 TEST(ViewTest, GroupedAccessFlattensInDeclarationOrderAndRequiresEveryComponent)
 {
-    auto       scene             = std::make_unique<Scene>();
+    auto       scene             = std::make_unique<scene::Scene>();
     auto const match             = scene->NewEntity();
     auto const missingVisibility = scene->NewEntity();
     for (auto entity : {match, missingVisibility})
@@ -90,7 +90,7 @@ TEST(ViewTest, GroupedAccessFlattensInDeclarationOrderAndRequiresEveryComponent)
 
 TEST(ViewTest, UnfilteredViewSkipsRetiredSlotsAndExposesRecycledVersions)
 {
-    auto       scene    = std::make_unique<Scene>();
+    auto       scene    = std::make_unique<scene::Scene>();
     auto const retired  = scene->NewEntity();
     auto const survivor = scene->NewEntity();
     ASSERT_TRUE(scene->RetireEntity(retired));
@@ -125,7 +125,7 @@ TEST(ViewTest, UnfilteredViewSkipsRetiredSlotsAndExposesRecycledVersions)
 
 TEST(ViewTest, IteratorsSupportEmptyRangesCopiesAndPostIncrement)
 {
-    auto                                  scene = std::make_unique<Scene>();
+    auto                                  scene = std::make_unique<scene::Scene>();
     View<Read<VisibilityComponent>> const emptyView{scene.get()};
 
     EXPECT_EQ(emptyView.begin(), emptyView.end());

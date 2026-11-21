@@ -13,12 +13,6 @@ namespace polos::rendering
 class IRenderSystem;
 }// namespace polos::rendering
 
-namespace polos::communication
-{
-struct EngineUpdate;
-struct WindowClose;
-}// namespace polos::communication
-
 namespace polos::core
 {
 class MainLoop

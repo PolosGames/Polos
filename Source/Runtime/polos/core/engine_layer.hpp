@@ -6,13 +6,13 @@
 #ifndef POLOS_CORE_ENGINE_LAYER_HPP
 #define POLOS_CORE_ENGINE_LAYER_HPP
 
-#include "polos/core/base_live_layer.hpp"
+#include "polos/app/base_live_layer.hpp"
 
 namespace polos::core
 {
 
 /// @brief Layer that should handle all engine related events and relays needed outputs.
-class EngineLayer : public BaseLiveLayer
+class EngineLayer : public app::BaseLiveLayer
 {
 public:
     EngineLayer();

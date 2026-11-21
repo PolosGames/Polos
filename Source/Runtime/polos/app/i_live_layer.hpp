@@ -1,0 +1,27 @@
+///
+/// Copyright (c) 2025 Kayra Urfali
+/// Permission is hereby granted under the MIT License - see LICENSE for details.
+///
+
+#ifndef POLOS_APP_I_LIVE_LAYER_HPP
+#define POLOS_APP_I_LIVE_LAYER_HPP
+
+#include "polos/polos_api.hpp"
+
+namespace polos::app
+{
+
+class POLOS_API ILiveLayer
+{
+public:
+    virtual ~ILiveLayer() = default;
+
+    virtual auto Create() -> void  = 0;
+    virtual auto Destroy() -> void = 0;
+
+    [[nodiscard]] virtual auto Name() const -> char const* = 0;
+};
+
+}// namespace polos::app
+
+#endif// POLOS_APP_I_LIVE_LAYER_HPP

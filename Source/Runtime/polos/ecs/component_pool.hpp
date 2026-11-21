@@ -13,6 +13,12 @@
 
 #include <cstdlib>
 
+namespace polos::scene
+{
+class Scene;
+class SceneManager;
+}// namespace polos::scene
+
 namespace polos::ecs
 {
 
@@ -61,8 +67,8 @@ public:
     ComponentType type{ComponentType::kVisibility};
     std::size_t   elemSize{0U};
 private:
-    friend class Scene;
-    friend class SceneManager;
+    friend class scene::Scene;
+    friend class scene::SceneManager;
 
     std::uint32_t mTotalComponents{0U};
 

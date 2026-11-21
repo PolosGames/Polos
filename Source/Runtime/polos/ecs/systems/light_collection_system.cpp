@@ -7,13 +7,13 @@
 
 #include "polos/ecs/components/light_component.hpp"
 #include "polos/ecs/components/transform_component.hpp"
-#include "polos/ecs/scene.hpp"
 #include "polos/ecs/view.hpp"
+#include "polos/scene/scene.hpp"
 
 namespace polos::ecs
 {
 
-void LightCollectionSystem::Update(Scene* tScene)
+void LightCollectionSystem::Update(scene::Scene* tScene)
 {
     if (tScene == nullptr)
     {

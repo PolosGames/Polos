@@ -10,14 +10,17 @@
 #include <utility>
 #include <vector>
 
-namespace polos::ecs
+namespace polos::scene
 {
 class Scene;
+}// namespace polos::scene
 
+namespace polos::ecs
+{
 class SystemRegistry
 {
 public:
-    using SystemUpdate = std::move_only_function<void(Scene*, float)>;
+    using SystemUpdate = std::move_only_function<void(scene::Scene*, float)>;
 
     SystemRegistry();
     ~SystemRegistry();
@@ -25,7 +28,7 @@ public:
     [[nodiscard]] static auto Get() -> SystemRegistry&;
 
     void Register(SystemUpdate&& tUpdate);
-    void UpdateAll(Scene* tScene, float tDeltaTime);
+    void UpdateAll(scene::Scene* tScene, float tDeltaTime);
 private:
     static SystemRegistry* sInstance;
 

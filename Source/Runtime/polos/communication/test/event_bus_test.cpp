@@ -3,9 +3,9 @@
 /// Permission is hereby granted under the MIT License - see LICENSE for details.
 ///
 
-#include "polos/communication/end_frame.hpp"
-#include "polos/communication/engine_update.hpp"
 #include "polos/communication/event_bus.hpp"
+#include "polos/core/events/end_frame.hpp"
+#include "polos/core/events/engine_update.hpp"
 
 #include <gtest/gtest.h>
 
@@ -40,12 +40,12 @@ TEST_F(EventBusTestFixture, SubscribeToEventTest)
 {
     float receivedDeltaTime{0.0F};
 
-    auto subscriber = [&receivedDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto subscriber = [&receivedDeltaTime](polos::core::EngineUpdate& tEvent) {
         receivedDeltaTime = tEvent.deltaTime;
     };
 
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(subscriber);
-    polos::communication::DispatchNow<polos::communication::EngineUpdate>(kExpectedDeltaTime);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(subscriber);
+    polos::communication::DispatchNow<polos::core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(receivedDeltaTime, kExpectedDeltaTime);
 }
@@ -55,17 +55,17 @@ TEST_F(EventBusTestFixture, SubscribeMultipleTimes)
     float firstDeltaTime{0.0F};
     float secondDeltaTime{0.0F};
 
-    auto firstSubscriber = [&firstDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto firstSubscriber = [&firstDeltaTime](polos::core::EngineUpdate& tEvent) {
         firstDeltaTime = tEvent.deltaTime;
     };
 
-    auto secondSubscriber = [&secondDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto secondSubscriber = [&secondDeltaTime](polos::core::EngineUpdate& tEvent) {
         secondDeltaTime = tEvent.deltaTime;
     };
 
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(firstSubscriber);
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(secondSubscriber);
-    polos::communication::DispatchNow<polos::communication::EngineUpdate>(kExpectedDeltaTime);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(firstSubscriber);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(secondSubscriber);
+    polos::communication::DispatchNow<polos::core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(firstDeltaTime, kExpectedDeltaTime);
     EXPECT_EQ(secondDeltaTime, kExpectedDeltaTime);
@@ -74,7 +74,7 @@ TEST_F(EventBusTestFixture, SubscribeMultipleTimes)
 TEST_F(EventBusTestFixture, DispatchWithoutSubscribers)
 {
     std::size_t const totalDispatched =
-        polos::communication::DispatchNow<polos::communication::EngineUpdate>(kExpectedDeltaTime);
+        polos::communication::DispatchNow<polos::core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(totalDispatched, 0U);
 }
@@ -83,12 +83,12 @@ TEST_F(EventBusTestFixture, DispatchDeferredEvent)
 {
     float receivedDeltaTime{0.0F};
 
-    auto subscriber = [&receivedDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto subscriber = [&receivedDeltaTime](polos::core::EngineUpdate& tEvent) {
         receivedDeltaTime = tEvent.deltaTime;
     };
 
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(subscriber);
-    polos::communication::DispatchDefer<polos::communication::EngineUpdate>(kExpectedDeltaTime);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(subscriber);
+    polos::communication::DispatchDefer<polos::core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(receivedDeltaTime, 0.0F);
 
@@ -102,17 +102,17 @@ TEST_F(EventBusTestFixture, DispatchMultipleDeferredEvents)
     float firstDeltaTime{0.0F};
     float secondDeltaTime{0.0F};
 
-    auto firstSubscriber = [&firstDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto firstSubscriber = [&firstDeltaTime](polos::core::EngineUpdate& tEvent) {
         firstDeltaTime = tEvent.deltaTime;
     };
 
-    auto secondSubscriber = [&secondDeltaTime](polos::communication::EngineUpdate& tEvent) {
+    auto secondSubscriber = [&secondDeltaTime](polos::core::EngineUpdate& tEvent) {
         secondDeltaTime = tEvent.deltaTime;
     };
 
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(firstSubscriber);
-    polos::communication::Subscribe<polos::communication::EngineUpdate>(secondSubscriber);
-    polos::communication::DispatchDefer<polos::communication::EngineUpdate>(kExpectedDeltaTime);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(firstSubscriber);
+    polos::communication::Subscribe<polos::core::EngineUpdate>(secondSubscriber);
+    polos::communication::DispatchDefer<polos::core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(firstDeltaTime, 0.0F);
     EXPECT_EQ(secondDeltaTime, 0.0F);
@@ -126,15 +126,15 @@ TEST_F(EventBusTestFixture, DispatchMultipleDeferredEvents)
 TEST_F(EventBusTestFixture, ImmediateDispatchReportsSubscribersAndSharesEventChanges)
 {
     std::vector<float> observedDeltaTimes;
-    auto const         firstSubscriber  = Subscribe<EngineUpdate>([&](EngineUpdate& tEvent) {
+    auto const         firstSubscriber  = Subscribe<core::EngineUpdate>([&](core::EngineUpdate& tEvent) {
         observedDeltaTimes.push_back(tEvent.deltaTime);
         tEvent.deltaTime += 2.0F;
     });
-    auto const         secondSubscriber = Subscribe<EngineUpdate>([&](EngineUpdate& tEvent) {
+    auto const         secondSubscriber = Subscribe<core::EngineUpdate>([&](core::EngineUpdate& tEvent) {
         observedDeltaTimes.push_back(tEvent.deltaTime);
     });
 
-    auto const dispatched = DispatchNow<EngineUpdate>(4.0F);
+    auto const dispatched = DispatchNow<core::EngineUpdate>(4.0F);
 
     std::vector<float> const expectedDeltaTimes{4.0F, 6.0F};
     EXPECT_NE(firstSubscriber, secondSubscriber);
@@ -146,20 +146,20 @@ TEST_F(EventBusTestFixture, DispatchOnlyNotifiesSubscribersOfTheMatchingEventTyp
 {
     unsigned engineUpdates{0U};
     unsigned frameEnds{0U};
-    Subscribe<EngineUpdate>([&](EngineUpdate&) {
+    Subscribe<core::EngineUpdate>([&](core::EngineUpdate&) {
         ++engineUpdates;
     });
-    Subscribe<EndFrame>([&](EndFrame&) {
+    Subscribe<core::EndFrame>([&](core::EndFrame&) {
         ++frameEnds;
     });
 
-    auto const dispatchedUpdates = DispatchNow<EngineUpdate>(kExpectedDeltaTime);
+    auto const dispatchedUpdates = DispatchNow<core::EngineUpdate>(kExpectedDeltaTime);
 
     EXPECT_EQ(dispatchedUpdates, 1U);
     EXPECT_EQ(engineUpdates, 1U);
     EXPECT_EQ(frameEnds, 0U);
 
-    auto const dispatchedFrameEnds = DispatchNow<EndFrame>();
+    auto const dispatchedFrameEnds = DispatchNow<core::EndFrame>();
 
     EXPECT_EQ(dispatchedFrameEnds, 1U);
     EXPECT_EQ(engineUpdates, 1U);
@@ -169,14 +169,14 @@ TEST_F(EventBusTestFixture, DispatchOnlyNotifiesSubscribersOfTheMatchingEventTyp
 TEST_F(EventBusTestFixture, DeferredEventsRetainInsertionOrderAndAreNotReplayed)
 {
     std::vector<float> receivedDeltaTimes;
-    Subscribe<EngineUpdate>([&](EngineUpdate& tEvent) {
+    Subscribe<core::EngineUpdate>([&](core::EngineUpdate& tEvent) {
         receivedDeltaTimes.push_back(tEvent.deltaTime);
     });
 
     for (auto const deltaTime : {1.0F, 2.0F, 3.0F})
     {
         SCOPED_TRACE(deltaTime);
-        EXPECT_EQ(DispatchDefer<EngineUpdate>(deltaTime), 1U);
+        EXPECT_EQ(DispatchDefer<core::EngineUpdate>(deltaTime), 1U);
     }
 
     EXPECT_TRUE(receivedDeltaTimes.empty());
@@ -194,12 +194,12 @@ TEST_F(EventBusTestFixture, DeferredEventsRetainInsertionOrderAndAreNotReplayed)
 TEST_F(EventBusTestFixture, ImmediateDispatchDoesNotFlushDeferredEvents)
 {
     std::vector<float> receivedDeltaTimes;
-    Subscribe<EngineUpdate>([&](EngineUpdate& tEvent) {
+    Subscribe<core::EngineUpdate>([&](core::EngineUpdate& tEvent) {
         receivedDeltaTimes.push_back(tEvent.deltaTime);
     });
-    DispatchDefer<EngineUpdate>(1.0F);
+    DispatchDefer<core::EngineUpdate>(1.0F);
 
-    DispatchNow<EngineUpdate>(2.0F);
+    DispatchNow<core::EngineUpdate>(2.0F);
 
     std::vector<float> const expectedBeforeDrain{2.0F};
     EXPECT_EQ(receivedDeltaTimes, expectedBeforeDrain);
@@ -212,11 +212,11 @@ TEST_F(EventBusTestFixture, ImmediateDispatchDoesNotFlushDeferredEvents)
 
 TEST_F(EventBusTestFixture, DeferredDispatchWithoutSubscribersReportsZero)
 {
-    auto const dispatched = DispatchDefer<EngineUpdate>(kExpectedDeltaTime);
+    auto const dispatched = DispatchDefer<core::EngineUpdate>(kExpectedDeltaTime);
     DispatchDeferredEvents();
 
     EXPECT_EQ(dispatched, 0U);
-    EXPECT_EQ(DispatchNow<EngineUpdate>(kExpectedDeltaTime), 0U);
+    EXPECT_EQ(DispatchNow<core::EngineUpdate>(kExpectedDeltaTime), 0U);
 }
 
 }// namespace polos::communication

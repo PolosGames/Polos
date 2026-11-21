@@ -5,17 +5,17 @@
 
 #include "polos/platform/platform_manager.hpp"
 
-#include "polos/communication/end_frame.hpp"
-#include "polos/communication/engine_terminate.hpp"
 #include "polos/communication/event_bus.hpp"
-#include "polos/communication/key_press.hpp"
-#include "polos/communication/key_release.hpp"
-#include "polos/communication/mouse_input.hpp"
-#include "polos/communication/mouse_move.hpp"
-#include "polos/communication/window_close.hpp"
-#include "polos/communication/window_focus.hpp"
-#include "polos/communication/window_framebuffer_resize.hpp"
+#include "polos/core/events/end_frame.hpp"
+#include "polos/core/events/engine_terminate.hpp"
+#include "polos/input/events/key_press.hpp"
+#include "polos/input/events/key_release.hpp"
+#include "polos/input/events/mouse_input.hpp"
+#include "polos/input/events/mouse_move.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/platform/events/window_close.hpp"
+#include "polos/platform/events/window_focus.hpp"
+#include "polos/platform/events/window_framebuffer_resize.hpp"
 #include "polos/platform/glfw_window_surface.hpp"
 #include "polos/utils/assert.hpp"
 
@@ -91,7 +91,7 @@ void GlfwErrorCallback(std::int32_t tErrorCode, const char* tDescription)
 
 void OnWindowClose()
 {
-    communication::DispatchDefer<communication::EngineTerminate>();
+    communication::DispatchDefer<core::EngineTerminate>();
 }
 
 void OnEndFrame()
@@ -109,7 +109,7 @@ PlatformManager::PlatformManager()
 
     sInstance = this;
 
-    Subscribe<EndFrame>([](EndFrame&) {
+    Subscribe<core::EndFrame>([](core::EndFrame&) {
         OnEndFrame();
     });
 
@@ -212,19 +212,19 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
                          std::int32_t /*tMods*/) {
                 switch (tAction)
                 {
-                    case GLFW_RELEASE: DispatchDefer<KeyRelease>(tKey); break;
-                    case GLFW_PRESS: DispatchDefer<KeyPress>(tKey);
+                    case GLFW_RELEASE: DispatchDefer<input::KeyRelease>(tKey); break;
+                    case GLFW_PRESS: DispatchDefer<input::KeyPress>(tKey);
                     default: break;
                 }
             });
 
         glfwSetCursorPosCallback(mWindow, [](GLFWwindow* /*tWindow*/, double tXpos, double tYpos) {
-            DispatchDefer<MouseMove>(tXpos, tYpos);
+            DispatchDefer<input::MouseMove>(tXpos, tYpos);
         });
 
         glfwSetMouseButtonCallback(
             mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
-                DispatchDefer<MouseInput>(tButton, tAction);
+                DispatchDefer<input::MouseInput>(tButton, tAction);
             });
     }
 
