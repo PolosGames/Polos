@@ -14,22 +14,55 @@
 #include "polos/input/events/process_input.hpp"
 
 #include <GLFW/glfw3.h>
+#include <cstddef>
 
 namespace polos::input
 {
 
 InputState gInputState{};
 
+namespace
+{
+auto isValidKey(std::int32_t tKey) -> bool
+{
+    return tKey >= 0 && static_cast<std::size_t>(tKey) < gInputState.keysDown.size();
+}
+
+void setKeyDown(std::int32_t tKey, bool tDown)
+{
+    if (!isValidKey(tKey))
+    {
+        return;
+    }
+
+    auto const index = static_cast<std::size_t>(tKey);
+    if (gInputState.keysDown[index] == tDown)
+    {
+        return;
+    }
+
+    gInputState.keysDown[index] = tDown;
+    if (tDown)
+    {
+        gInputState.keysPressed.set(index);
+    }
+    else
+    {
+        gInputState.keysReleased.set(index);
+    }
+}
+}// namespace
+
 auto Initialize() -> void
 {
     using namespace polos::communication;
 
     Subscribe<KeyPress>([](KeyPress& tEvent) {
-        gInputState.keysDown[static_cast<std::size_t>(tEvent.key)] = true;
+        setKeyDown(tEvent.key, true);
     });
 
     Subscribe<KeyRelease>([](KeyRelease& tEvent) {
-        gInputState.keysDown[static_cast<std::size_t>(tEvent.key)] = false;
+        setKeyDown(tEvent.key, false);
     });
 
     Subscribe<MouseMove>([](MouseMove& tEvent) {
@@ -39,12 +72,12 @@ auto Initialize() -> void
     });
 
     Subscribe<MouseInput>([](MouseInput& tEvent) {
-        gInputState.keysDown[static_cast<std::size_t>(tEvent.button)] = tEvent.action == GLFW_PRESS;
+        setKeyDown(tEvent.button, tEvent.action == GLFW_PRESS);
     });
 
-    Subscribe<ProcessInput>([](ProcessInput& tEvent) {
-        std::ignore              = tEvent;
-        gInputState.keysDownPrev = gInputState.keysDown;
+    Subscribe<ProcessInput>([](ProcessInput&) {
+        gInputState.keysPressed.reset();
+        gInputState.keysReleased.reset();
     });
 
     Subscribe<core::EndFrame>([](core::EndFrame&) {
@@ -54,19 +87,17 @@ auto Initialize() -> void
 
 auto IsKeyDown(std::int32_t tKey) -> bool
 {
-    return gInputState.keysDown[static_cast<std::size_t>(tKey)];
+    return isValidKey(tKey) && gInputState.keysDown[static_cast<std::size_t>(tKey)];
 }
 
 auto IsKeyPressed(std::int32_t tKey) -> bool
 {
-    auto key_loc = static_cast<std::size_t>(tKey);
-    return gInputState.keysDown[key_loc] && !gInputState.keysDownPrev[key_loc];
+    return isValidKey(tKey) && gInputState.keysPressed[static_cast<std::size_t>(tKey)];
 }
 
 auto IsKeyReleased(std::int32_t tKey) -> bool
 {
-    auto key_loc = static_cast<std::size_t>(tKey);
-    return !gInputState.keysDown[key_loc] && gInputState.keysDownPrev[key_loc];
+    return isValidKey(tKey) && gInputState.keysReleased[static_cast<std::size_t>(tKey)];
 }
 
 }// namespace polos::input

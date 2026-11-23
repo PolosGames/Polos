@@ -12,6 +12,7 @@
 #include "polos/input/events/key_press.hpp"
 #include "polos/input/events/key_release.hpp"
 #include "polos/input/events/mouse_input.hpp"
+#include "polos/input/input_state.hpp"
 #include "polos/platform/events/window_framebuffer_resize.hpp"
 #include "polos/platform/platform_manager.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
@@ -95,6 +96,14 @@ public:
                 {
                     communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
                     communication::DispatchNow<input::KeyPress>(GLFW_KEY_W);
+                    communication::DispatchDefer<input::KeyPress>(GLFW_KEY_RIGHT);
+                    communication::DispatchDefer<input::KeyRelease>(GLFW_KEY_RIGHT);
+                }
+                if (state.updates == 2U)
+                {
+                    EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_RIGHT));
+                    EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_RIGHT));
+                    EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_RIGHT));
                 }
                 if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
                 {
