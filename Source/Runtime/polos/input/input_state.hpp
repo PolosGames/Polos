@@ -19,7 +19,8 @@ namespace polos::input
 struct InputState
 {
     std::bitset<512> keysDown;
-    std::bitset<512> keysDownPrev;
+    std::bitset<512> keysPressed;
+    std::bitset<512> keysReleased;
 
     glm::vec2 mousePos;
     glm::vec2 mouseDelta;

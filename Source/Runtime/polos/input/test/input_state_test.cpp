@@ -57,6 +57,36 @@ TEST_F(InputStateTest, KeyEventsRetainEdgesUntilInputIsProcessed)
     EXPECT_FALSE(input::IsKeyReleased(GLFW_KEY_W));
 }
 
+TEST_F(InputStateTest, DeferredTapReportsBothEdgesInOneFrame)
+{
+    DispatchDefer<input::KeyPress>(GLFW_KEY_RIGHT);
+    DispatchDefer<input::KeyRelease>(GLFW_KEY_RIGHT);
+    DispatchNow<input::ProcessInput>();
+    DispatchDeferredEvents();
+
+    EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_RIGHT));
+    EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_RIGHT));
+    EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_RIGHT));
+
+    DispatchNow<input::ProcessInput>();
+
+    EXPECT_FALSE(input::IsKeyPressed(GLFW_KEY_RIGHT));
+    EXPECT_FALSE(input::IsKeyReleased(GLFW_KEY_RIGHT));
+}
+
+TEST_F(InputStateTest, InvalidKeyCodesAreIgnored)
+{
+    for (auto const key : {GLFW_KEY_UNKNOWN, 512})
+    {
+        DispatchNow<input::KeyPress>(key);
+        DispatchNow<input::KeyRelease>(key);
+
+        EXPECT_FALSE(input::IsKeyDown(key));
+        EXPECT_FALSE(input::IsKeyPressed(key));
+        EXPECT_FALSE(input::IsKeyReleased(key));
+    }
+}
+
 TEST_F(InputStateTest, MouseEventsUpdateButtonsAndResetMovementAtEndFrame)
 {
     DispatchNow<input::MouseMove>(10.0, 20.0);

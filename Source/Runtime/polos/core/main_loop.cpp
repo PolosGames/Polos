@@ -105,8 +105,8 @@ void MainLoop::Run() const
 
         {
             POLOS_PROFILE_ZONE("Deferred events and input");
-            communication::DispatchDeferredEvents();
             communication::DispatchNow<input::ProcessInput>();
+            communication::DispatchDeferredEvents();
         }
 
 
