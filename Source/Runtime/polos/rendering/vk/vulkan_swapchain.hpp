@@ -64,12 +64,9 @@ public:
     [[nodiscard]] auto GetViewport() const -> VkViewport const&;
     [[nodiscard]] auto GetRenderArea() const -> VkRect2D const&;
 
-    static constexpr std::uint32_t kInvalidImageIndex{std::numeric_limits<std::uint32_t>::max()};
-
-    /// @return The acquired image index, or kInvalidImageIndex on failure. Zero is a valid index.
-    [[nodiscard]] auto AcquireNextImage(AcquireNextImageDetails const& tDetails) -> std::uint32_t;
-    /// @return true if presentation succeeds.
-    [[nodiscard]] auto QueuePresent(VkSemaphore tWaitSemaphore) const -> bool;
+    /// @brief Updates the current image on VK_SUCCESS and VK_SUBOPTIMAL_KHR.
+    [[nodiscard]] auto AcquireNextImage(AcquireNextImageDetails const& tDetails) -> VkResult;
+    [[nodiscard]] auto QueuePresent(VkSemaphore tWaitSemaphore) const -> VkResult;
 
     [[nodiscard]] auto GetCurrentImage() const -> VkImage;
     [[nodiscard]] auto GetCurrentImageResource() const -> std::shared_ptr<Image>;
@@ -82,10 +79,8 @@ public:
 private:
     static VulkanSwapchain* sInstance;
 
-    auto setupExtentAndViewport(VkPhysicalDevice tPhysDevice, platform::FramebufferSize const& tFrameBuffer) -> void;
-    auto
-    selectFormatAndMode(std::vector<VkSurfaceFormatKHR> const& tFormats, std::vector<VkPresentModeKHR> const& tModes)
-        -> bool;
+    auto               setupExtentAndViewport(VkPhysicalDevice tPhysDevice, platform::FramebufferSize const& tFrameBuffer) -> void;
+    auto               selectFormatAndMode(std::vector<VkSurfaceFormatKHR> const& tFormats, std::vector<VkPresentModeKHR> const& tModes) -> bool;
     [[nodiscard]] auto createSwapchainHandle(VkSurfaceTransformFlagsKHR tTransformFlags) -> bool;
     auto               createImageViews() -> Result<void>;
 

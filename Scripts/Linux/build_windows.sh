@@ -48,7 +48,8 @@ configure_polos_tree "$build_dir" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release "-DCMAKE_INSTALL_PREFIX=$bin_dir" \
     -DPOLOS_INSTALL_DIR:STRING=. -DBUILD_EXAMPLES=ON "-DPOLOS_EXAMPLE:STRING=$project" \
     -DBUILD_TESTS=OFF -DENABLE_PROFILING=OFF
-cmake --build "$build_dir" --target install-runtime
+cmake --build "$build_dir" --target "$project"
+cmake --install "$build_dir" --config Release --component Runtime
 
 target_bin=$(dirname -- "$(x86_64-w64-mingw32-g++ -print-prog-name=ld)")
 for dll in libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll; do

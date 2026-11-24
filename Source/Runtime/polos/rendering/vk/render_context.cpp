@@ -26,10 +26,16 @@
 #include <vulkan/vulkan.h>
 
 #include <array>
+#include <cstdint>
 #include <vector>
 
 namespace polos::rendering
 {
+
+namespace
+{
+constexpr std::uint64_t kFrameWaitNanoseconds{16'000'000U};
+}// namespace
 
 RenderContext* RenderContext::sRenderContext{nullptr};
 
@@ -43,7 +49,7 @@ RenderContext::RenderContext()
     using platform::WindowFramebufferResize;
     sRenderContext = this;
     communication::Subscribe<WindowFramebufferResize>([this](WindowFramebufferResize&) {
-        mHasFramebufferResized = true;
+        mNeedsSwapchainRebuild = true;
     });
 };
 
@@ -92,7 +98,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
                 },
             .destroyFunc =
                 [this] {
-                    mSwapchain->Destroy();
+                    destroySwapchain();
                 },
         },
         RegisterSubsystem(
@@ -100,9 +106,11 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
             [] {
                 return TextureCache::CreationDetails{};
             }),
-        RegisterSubsystem(*mMaterialCache, [] {
-            return MaterialCache::CreationDetails{};
-        }),
+        RegisterSubsystem(
+            *mMaterialCache,
+            [] {
+                return MaterialCache::CreationDetails{};
+            }),
         RegisterSubsystem(
             *mMeshCache,
             [] {
@@ -139,8 +147,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     if (queues[mDevice->GetGraphicsQueueFamily()].timestampValidBits > 0U)
     {
         char const* contextName = "Vulkan graphics queue";
-        mGpuProfileContext =
-            TracyVkContext(mDevice->physDevice, mDevice->logiDevice, mDevice->gfxQueue, mFrameData.front().currentCmdBuf.GetHandle());
+        mGpuProfileContext      = TracyVkContext(mDevice->physDevice, mDevice->logiDevice, mDevice->gfxQueue, mFrameData.front().currentCmdBuf.GetHandle());
         TracyVkContextName(mGpuProfileContext, contextName, std::strlen(contextName));
     }
     else
@@ -155,7 +162,13 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
 
 auto RenderContext::createSwapchain(platform::FramebufferSize const& tFbSize) -> Result<void>
 {
-    return mSwapchain->Create({
+    if (tFbSize.width == 0U || tFbSize.height == 0U)
+    {
+        LogError("Cannot create a swapchain for an empty framebuffer.");
+        return ErrorType{RenderingErrc::kNoAdequateSurface};
+    }
+
+    auto const result = mSwapchain->Create({
         .fremebufferSize = tFbSize,
         .preferredSurfaceFormats =
             {
@@ -172,14 +185,37 @@ auto RenderContext::createSwapchain(platform::FramebufferSize const& tFbSize) ->
             },
         .transformFlags = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
     });
+    if (!result)
+    {
+        return result;
+    }
+
+    mSubmitSemaphores.resize(mSwapchain->GetImageCount());
+    VkSemaphoreCreateInfo const semaphoreInfo{
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0U,
+    };
+    for (auto& semaphore : mSubmitSemaphores)
+    {
+        CHECK_VK_SUCCESS_OR_ERR(vkCreateSemaphore(mDevice->logiDevice, &semaphoreInfo, nullptr, &semaphore), RenderingErrc::kFailedCreateSemaphore);
+    }
+
+    return {};
+}
+
+auto RenderContext::destroySwapchain() -> void
+{
+    mSwapchain->Destroy();
+    for (auto semaphore : mSubmitSemaphores)
+    {
+        vkDestroySemaphore(mDevice->logiDevice, semaphore, nullptr);
+    }
+    mSubmitSemaphores.clear();
 }
 
 auto RenderContext::createFrameResources() -> Result<void>
 {
-    // Create submission semaphores with number of images in swapchain
-    // https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html#_discussion_of_solution
-    mSubmitSemaphores.resize(mSwapchain->GetImageCount());
-
     // --- Command buffer allocations ---
     VkCommandBufferAllocateInfo const alloc_info{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -190,9 +226,7 @@ auto RenderContext::createFrameResources() -> Result<void>
     };
 
     std::array<VkCommandBuffer, Settings::kMaxFramesInFlight> handles{};
-    CHECK_VK_SUCCESS_OR_ERR(
-        vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, handles.data()),
-        RenderingErrc::kFailedCmdBufAlloc);
+    CHECK_VK_SUCCESS_OR_ERR(vkAllocateCommandBuffers(mDevice->logiDevice, &alloc_info, handles.data()), RenderingErrc::kFailedCmdBufAlloc);
 
     for (std::size_t i{0U}; i < handles.size(); ++i)
     {
@@ -211,21 +245,10 @@ auto RenderContext::createFrameResources() -> Result<void>
         .flags = VK_FENCE_CREATE_SIGNALED_BIT,
     };
 
-    for (std::uint32_t i{0U}; i < mSwapchain->GetImageCount(); ++i)
-    {
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateSemaphore(mDevice->logiDevice, &semaphore_info, nullptr, &mSubmitSemaphores[i]),
-            RenderingErrc::kFailedCreateSemaphore);
-    }
-
     for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateSemaphore(mDevice->logiDevice, &semaphore_info, nullptr, &mAcqSemaphores[i]),
-            RenderingErrc::kFailedCreateSemaphore);
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateFence(mDevice->logiDevice, &fence_info, nullptr, &mFrameFences[i]),
-            RenderingErrc::kFailedCreateFence);
+        CHECK_VK_SUCCESS_OR_ERR(vkCreateSemaphore(mDevice->logiDevice, &semaphore_info, nullptr, &mAcqSemaphores[i]), RenderingErrc::kFailedCreateSemaphore);
+        CHECK_VK_SUCCESS_OR_ERR(vkCreateFence(mDevice->logiDevice, &fence_info, nullptr, &mFrameFences[i]), RenderingErrc::kFailedCreateFence);
     }
 
     return {};
@@ -234,12 +257,6 @@ auto RenderContext::createFrameResources() -> Result<void>
 auto RenderContext::destroyFrameResources() -> void
 {
     mFrameData = {};
-
-    for (auto* semaphore : mSubmitSemaphores)
-    {
-        vkDestroySemaphore(mDevice->logiDevice, semaphore, nullptr);
-    }
-    mSubmitSemaphores.clear();
 
     for (std::size_t i{0U}; i < Settings::kMaxFramesInFlight; ++i)
     {
@@ -253,32 +270,43 @@ auto RenderContext::destroyFrameResources() -> void
 auto RenderContext::BeginFrame() -> CommandBuffer*
 {
     POLOS_PROFILE_ZONE("Begin frame");
+    auto const framebuffer = mWindowSurface->GetFramebufferSize();
+    if (framebuffer.width == 0U || framebuffer.height == 0U)
     {
-        POLOS_PROFILE_ZONE("Wait for frame fence");
-        vkWaitForFences(
-            mDevice->logiDevice,
-            1U,
-            &mFrameFences[mCurrentFrameIndex],
-            VK_TRUE,
-            std::numeric_limits<std::uint64_t>::max());
+        return nullptr;
+    }
+    if (mNeedsSwapchainRebuild)
+    {
+        recreateSwapchain(framebuffer);
+        mNeedsSwapchainRebuild = false;
     }
 
-    bool acq_ok{false};
-    while (!acq_ok)
     {
-        AcquireNextImageDetails const next_img_dets{
-            .semaphore = mAcqSemaphores[mCurrentFrameIndex],
-            .fence     = VK_NULL_HANDLE,
-            .timeout   = std::numeric_limits<std::uint64_t>::max(),
-        };
-
-        auto const acq_result = mSwapchain->AcquireNextImage(next_img_dets);
-        if (VulkanSwapchain::kInvalidImageIndex != acq_result)
+        POLOS_PROFILE_ZONE("Wait for frame fence");
+        auto const waitResult = vkWaitForFences(mDevice->logiDevice, 1U, &mFrameFences[mCurrentFrameIndex], VK_TRUE, kFrameWaitNanoseconds);
+        if (waitResult == VK_TIMEOUT)
         {
-            acq_ok = true;
-            break;
+            return nullptr;
         }
-        onFramebufferResize();
+        PL_ASSERT(waitResult == VK_SUCCESS, "Could not wait for the frame fence (VkResult: {}).", static_cast<int>(waitResult));
+    }
+
+    auto const acquireResult = mSwapchain->AcquireNextImage({
+        .semaphore = mAcqSemaphores[mCurrentFrameIndex],
+        .fence     = VK_NULL_HANDLE,
+        .timeout   = kFrameWaitNanoseconds,
+    });
+    switch (acquireResult)
+    {
+        case VK_SUCCESS: break;
+        case VK_SUBOPTIMAL_KHR:
+            // Submit this frame to consume the acquire semaphore before rebuilding.
+            mNeedsSwapchainRebuild = true;
+            break;
+        case VK_ERROR_OUT_OF_DATE_KHR: mNeedsSwapchainRebuild = true; return nullptr;
+        case VK_NOT_READY:
+        case VK_TIMEOUT: return nullptr;
+        default: PL_ASSERT(false, "Could not acquire a swapchain image (VkResult: {}).", static_cast<int>(acquireResult));
     }
 
     mSwapchainImageIndex = mSwapchain->GetCurrentImageIndex();
@@ -286,7 +314,7 @@ auto RenderContext::BeginFrame() -> CommandBuffer*
     auto& frame  = mFrameData[mCurrentFrameIndex];
     auto& cmdBuf = frame.currentCmdBuf;
 
-    VkCommandBuffer handle = cmdBuf.GetHandle();
+    VkCommandBuffer                handle = cmdBuf.GetHandle();
     VkCommandBufferBeginInfo const begin_info{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext            = nullptr,
@@ -295,9 +323,7 @@ auto RenderContext::BeginFrame() -> CommandBuffer*
     };
 
     vkResetCommandBuffer(handle, 0U);
-    PL_ASSERT(
-        vkBeginCommandBuffer(handle, &begin_info) == VK_SUCCESS,
-        "Could not begin recording the frame command buffer.");
+    PL_ASSERT(vkBeginCommandBuffer(handle, &begin_info) == VK_SUCCESS, "Could not begin recording the frame command buffer.");
 
 #if defined(ENABLE_PROFILING)
     if (mGpuProfileContext != nullptr)
@@ -329,9 +355,7 @@ auto RenderContext::EndFrame() -> FrameStatistics
     statistics.drawCalls = mRenderCompositor->Record(mFrameData[mCurrentFrameIndex]);
 
     VkCommandBuffer handle = mFrameData[mCurrentFrameIndex].currentCmdBuf.GetHandle();
-    PL_ASSERT(
-        vkEndCommandBuffer(handle) == VK_SUCCESS,
-        "Could not finish recording the frame command buffer.");
+    PL_ASSERT(vkEndCommandBuffer(handle) == VK_SUCCESS, "Could not finish recording the frame command buffer.");
 
     std::array<VkPipelineStageFlags, 1> const wait_stages = {VK_PIPELINE_STAGE_TRANSFER_BIT};
 
@@ -356,10 +380,14 @@ auto RenderContext::EndFrame() -> FrameStatistics
     }
     mIsRecording = false;
 
-    if (!mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]) || mHasFramebufferResized)
+    auto const presentResult = mSwapchain->QueuePresent(mSubmitSemaphores[mSwapchainImageIndex]);
+    if (presentResult == VK_SUBOPTIMAL_KHR || presentResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        mHasFramebufferResized = false;
-        onFramebufferResize();
+        mNeedsSwapchainRebuild = true;
+    }
+    else
+    {
+        PL_ASSERT(presentResult == VK_SUCCESS, "Could not present the swapchain image (VkResult: {}).", static_cast<int>(presentResult));
     }
 
     mCurrentFrameIndex = (mCurrentFrameIndex + 1) % Settings::kMaxFramesInFlight;
@@ -394,11 +422,7 @@ auto RenderContext::BeginSingleTimeCommands() -> CommandBuffer
     if (VK_SUCCESS != vkBeginCommandBuffer(handle, &begin_info))
     {
         LogError("Could not begin command buffer for single time commands!");
-        vkFreeCommandBuffers(
-            mDevice->logiDevice,
-            mDevice->commandPool,
-            1U,
-            &handle);
+        vkFreeCommandBuffers(mDevice->logiDevice, mDevice->commandPool, 1U, &handle);
         return {};
     }
 
@@ -408,16 +432,12 @@ auto RenderContext::BeginSingleTimeCommands() -> CommandBuffer
 auto RenderContext::EndSingleTimeCommands(CommandBuffer& tCmdBuf) -> bool
 {
     VkCommandBuffer handle = tCmdBuf.GetHandle();
-    tCmdBuf = {};
+    tCmdBuf                = {};
 
     if (VK_SUCCESS != vkEndCommandBuffer(handle))
     {
         LogError("Could not end single-time command buffer!");
-        vkFreeCommandBuffers(
-            mDevice->logiDevice,
-            mDevice->commandPool,
-            1U,
-            &handle);
+        vkFreeCommandBuffers(mDevice->logiDevice, mDevice->commandPool, 1U, &handle);
         return false;
     }
 
@@ -436,20 +456,12 @@ auto RenderContext::EndSingleTimeCommands(CommandBuffer& tCmdBuf) -> bool
     if (VK_SUCCESS != vkQueueSubmit(mDevice->gfxQueue, 1U, &submit_info, VK_NULL_HANDLE))
     {
         LogError("Could not submit single-time command buffer to queue!");
-        vkFreeCommandBuffers(
-            mDevice->logiDevice,
-            mDevice->commandPool,
-            1U,
-            &handle);
+        vkFreeCommandBuffers(mDevice->logiDevice, mDevice->commandPool, 1U, &handle);
         return false;
     }
     auto const waitResult = vkQueueWaitIdle(mDevice->gfxQueue);
 
-    vkFreeCommandBuffers(
-        mDevice->logiDevice,
-        mDevice->commandPool,
-        1U,
-        &handle);
+    vkFreeCommandBuffers(mDevice->logiDevice, mDevice->commandPool, 1U, &handle);
     if (waitResult != VK_SUCCESS)
     {
         LogError("Could not wait for single-time commands to complete!");
@@ -471,17 +483,16 @@ auto RenderContext::GetGpuProfileContext() -> tracy::VkCtx*
 }
 #endif
 
-void RenderContext::onFramebufferResize()
+auto RenderContext::recreateSwapchain(platform::FramebufferSize const& tFbSize) -> void
 {
     POLOS_PROFILE_ZONE("Recreate swapchain");
     vkDeviceWaitIdle(mDevice->logiDevice);
-    LogTrace("Recreating swapchain due to framebuffer resize...");
+    LogTrace("Recreating swapchain...");
 
-    mSwapchain->Destroy();
-    vkDeviceWaitIdle(mDevice->logiDevice);
+    destroySwapchain();
 
     {
-        auto const res = createSwapchain(mWindowSurface->GetFramebufferSize());
+        auto const res = createSwapchain(tFbSize);
         PL_ASSERT(res.has_value(), "Failed to recreate the swapchain after destroying the old swapchain.");
     }
 
@@ -531,7 +542,7 @@ auto RenderContext::Shutdown() -> Result<void>
     mContext.reset();
     mWindowSurface         = nullptr;
     mIsInitialized         = false;
-    mHasFramebufferResized = false;
+    mNeedsSwapchainRebuild = false;
     mCurrentFrameIndex     = 0U;
     mSwapchainImageIndex   = 0U;
 

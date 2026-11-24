@@ -44,14 +44,14 @@ auto GlfwWindowSurface::CreateSurface(VkInstance tInstance) const -> VkSurfaceKH
 
 auto GlfwWindowSurface::GetFramebufferSize() const -> FramebufferSize
 {
+    if (glfwGetWindowAttrib(mWindow, GLFW_ICONIFIED) == GLFW_TRUE)
+    {
+        return {.width = 0U, .height = 0U};
+    }
+
     std::int32_t width{0};
     std::int32_t height{0};
     glfwGetFramebufferSize(mWindow, &width, &height);
-    while (width == 0 || height == 0)
-    {
-        glfwGetFramebufferSize(mWindow, &width, &height);
-        glfwWaitEvents();
-    }
 
     return {.width = static_cast<std::uint32_t>(width), .height = static_cast<std::uint32_t>(height)};
 }
