@@ -37,6 +37,8 @@ auto CreateQuad(
     polos::ecs::TransformComponent const& tTransform = {},
     std::string_view                      tName      = "New Quad") -> polos::ecs::EntityHandle;
 
+void CreateGrid(polos::scene::Scene* tScene, polos::rendering::MaterialHandle tMaterial, glm::ivec2 tSize, glm::vec3 tPosition);
+
 auto CreateMaterialFromTexture(
     std::string_view                        tTexture,
     std::string_view                        tName           = {},

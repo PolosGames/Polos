@@ -7,9 +7,7 @@
 
 #include "helpers.hpp"
 #include "polos/input/input_state.hpp"
-#include "polos/rendering/debug_draw.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <polos/scene/scene.hpp>
 
@@ -18,7 +16,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
-#include <random>
 
 namespace ctc
 {
@@ -68,15 +65,9 @@ void Game::Setup(polos::scene::Scene* tScene)
             mScene, ecs::TransformComponent{.position = {static_cast<float>(col) - static_cast<float>(kHalfGridW), 0.0F, -9.0F}, .scale = 1.0F}, borderMat);
     }
 
-    for (int32_t row{kGridH - 1}; row > 0; --row)
-    {
-        for (int32_t col{-kHalfGridW + 1}; col < kHalfGridW - 1; ++col)
-        {
-            CreateQuad(mScene, gridMat, ecs::TransformComponent{.position = {col, row, -9.5F}, .scale = 1.0F});
-        }
-    }
+    CreateGrid(mScene, gridMat, {kGridW - 2, kGridH - 1}, {-0.5F, kGridH / 2.0F, -9.5F});
 
-    mCurrentTetro = createHero();
+    restart();
 }
 
 void Game::Update(float const tDt)
@@ -84,161 +75,76 @@ void Game::Update(float const tDt)
     moveBackground(tDt);
     if (mGameOver)
     {
+        if (input::IsKeyPressed(GLFW_KEY_R))
+        {
+            restart();
+        }
         return;
     }
 
-    if (mPieceRotated)
-    {
-        rotateCurrentPiece();
-    }
-
-    moveCurrentPiece();
+    handleInput();
 
     mAccumulatedTime += tDt;
-    mMoveInterval = kMoveInterval;
-    mSideMovement = 0.0F;
-    handleInput();
+    auto const interval = input::IsKeyDown(GLFW_KEY_DOWN) ? kFastMoveInterval : kMoveInterval;
+    if (mAccumulatedTime >= interval)
+    {
+        mAccumulatedTime = 0.0F;
+        if (!tryMove(mCurrentTetro, {0.0F, -1.0F}))
+        {
+            lockCurrentPiece();
+        }
+    }
 }
 
-void Game::Render(float const tDt)
+void Game::Render(float /*tDt*/)
 {
-    //renderOptionsGui();
+    if (mGameOver)
+    {
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, {0.5F, 0.5F});
+        if (ImGui::Begin(
+                "Game Over", nullptr,
+                ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove))
+        {
+            float oldSize = ImGui::GetFont()->Scale;
+            ImGui::GetFont()->Scale *= 2;
+            ImGui::PushFont(ImGui::GetFont());
+
+            ImGui::TextUnformatted("Game Over");
+            ImGui::TextUnformatted("Press R to restart");
+
+            ImGui::GetFont()->Scale = oldSize;
+            ImGui::PopFont();
+        }
+        ImGui::End();
+    }
 }
 
 auto Game::createPiece() -> Tetromino
 {
-    static constexpr std::array factories{
-        &Game::createHero,
-        &Game::createSmashboy,
-        &Game::createBlueRicky,
-        &Game::createOrangeRicky,
-        &Game::createRhodeIslandZ,
-        &Game::createTeewee,
-        &Game::createClevelandZ,
-    };
-    static std::mt19937                        generator{std::random_device{}()};
-    std::uniform_int_distribution<std::size_t> pick{0, factories.size() - 1};
+    if (mNextPiece == mPieceBag.size())
+    {
+        std::ranges::shuffle(mPieceBag, mGenerator);
+        mNextPiece = 0U;
+    }
 
-    return (this->*factories[pick(generator)])();
-}
+    auto const piece = mPieceBag[mNextPiece++](glm::vec2{kHintStartPos});
 
-auto Game::createHero() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{-1.5F, 0.5F},
-        glm::vec2{-0.5F, 0.5F},
-        glm::vec2{0.5F, 0.5F},
-        glm::vec2{1.5F, 0.5F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.5F, 0.5F};
-    return createTetromino(PieceType::kHero, center, pieceLocalPos, "Material_Hero"_sid, "Hero");
-}
+    Tetromino currentTet = mNextTetro;
 
-auto Game::createSmashboy() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{-0.5F, 0.5F},
-        glm::vec2{0.5F, 0.5F},
-        glm::vec2{-0.5F, -0.5F},
-        glm::vec2{0.5F, -0.5F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.5F, 0.5F};
-    return createTetromino(PieceType::kSmashboy, center, pieceLocalPos, "Material_Smashboy"_sid, "Smashboy");
-}
-
-auto Game::createBlueRicky() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{-1.0F, 1.0F},
-        glm::vec2{-1.0F, 0.0F},
-        glm::vec2{0.0F, 0.0F},
-        glm::vec2{1.0F, 0.0F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.0F, 1.0F};
-    return createTetromino(PieceType::kBlueRicky, center, pieceLocalPos, "Material_BlueRicky"_sid, "BlueRicky");
-}
-
-auto Game::createOrangeRicky() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{1.0F, 1.0F},
-        glm::vec2{-1.0F, 0.0F},
-        glm::vec2{0.0F, 0.0F},
-        glm::vec2{1.0F, 0.0F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.0F, 1.0F};
-    return createTetromino(PieceType::kOrangeRicky, center, pieceLocalPos, "Material_OrangeRicky"_sid, "OrangeRicky");
-}
-
-auto Game::createRhodeIslandZ() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{-1.0F, 1.0F},
-        glm::vec2{0.0F, 1.0F},
-        glm::vec2{0.0F, 0.0F},
-        glm::vec2{1.0F, 0.0F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.0F, 1.0F};
-    return createTetromino(PieceType::kRhodeIslandZ, center, pieceLocalPos, "Material_RhodeIslandZ"_sid, "RhodeIslandZ");
-}
-
-auto Game::createTeewee() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{0.0F, 1.0F},
-        glm::vec2{-1.0F, 0.0F},
-        glm::vec2{0.0F, 0.0F},
-        glm::vec2{1.0F, 0.0F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.0F, 1.0F};
-    return createTetromino(PieceType::kTeewee, center, pieceLocalPos, "Material_Teewee"_sid, "Teewee");
-}
-
-auto Game::createClevelandZ() -> Tetromino
-{
-    static constexpr std::array<glm::vec2, 4U> pieceLocalPos{
-        glm::vec2{0.0F, 1.0F},
-        glm::vec2{1.0F, 1.0F},
-        glm::vec2{-1.0F, 0.0F},
-        glm::vec2{0.0F, 0.0F},
-    };
-    auto const center = glm::vec2{kStartPos} - glm::vec2{0.0F, 1.0F};
-    return createTetromino(PieceType::kClevelandZ, center, pieceLocalPos, "Material_ClevelandZ"_sid, "ClevelandZ");
-}
-
-auto Game::createTetromino(
-    PieceType                        tType,
-    glm::vec2                        tCenter,
-    std::array<glm::vec2, 4U> const& tOffsets,
-    rendering::MaterialHandle        tMaterial,
-    std::string_view                 tName) -> Tetromino
-{
-    Tetromino tetro;
-    tetro.center = tCenter;
-
-    bool const canSpawn = std::ranges::all_of(tOffsets, [&](glm::vec2 offset) {
-        auto const position = tCenter + offset;
-        auto const row      = static_cast<int32_t>(position.y);
-        auto const col      = static_cast<int32_t>(position.x) + kHalfGridW;
-        return row >= 0 && row < kGridH && col >= 0 && col < kGridW &&
-               mBoard[static_cast<size_t>(row)][static_cast<size_t>(col)].entity == ecs::kInvalidEntityHandle;
-    });
-    if (!canSpawn)
+    if (!tryMove(currentTet, glm::vec2(kStartPos - kHintStartPos)))
     {
         mGameOver = true;
-        return tetro;
+        return {};
     }
 
-    for (std::size_t i{0}; i < tOffsets.size(); ++i)
-    {
-        auto& subPiece  = tetro.subpieces[i];
-        subPiece.type   = tType;
-        subPiece.pos    = tOffsets[i];
-        subPiece.entity = CreateCube(
-            mScene, ecs::TransformComponent{.position = glm::vec3{tCenter + subPiece.pos, kStartPos.z}}, tMaterial, std::string{tName} + std::to_string(i));
-    }
+    mNextTetro = CreateTetromino(mScene, piece, kHintStartPos.z);
 
-    return tetro;
+    return currentTet;
+}
+
+auto Game::toBoardCell(glm::vec2 tPosition) -> glm::ivec2
+{
+    return glm::ivec2{tPosition} + glm::ivec2{kHalfGridW, 0};
 }
 
 void Game::moveBackground(float const tDt)
@@ -249,111 +155,104 @@ void Game::moveBackground(float const tDt)
     backdrop->position   = kBackdropCenter + glm::vec3{2.6F * std::sin(phase), 1.4F * std::cos(phase), 0.0F};
 }
 
-void Game::moveCurrentPiece()
+auto Game::canPlace(glm::vec2 tCenter, std::array<glm::vec2, 4U> const& tOffsets) const -> bool
 {
-    glm::vec2 moveVector{0.0F};
-    if (mSideMovement != 0.0F)
-    {
-        if (canMove(mSideMovement, 0.0F))
-        {
-            moveVector.x = mSideMovement;
-        }
-    }
-
-    if (!stopDownMove && mAccumulatedTime >= mMoveInterval)
-    {
-        mAccumulatedTime = 0.0F;
-        if (canMove(0.0F, -1.0F))
-        {
-            moveVector.y = -1.0F;
-        }
-        else
-        {
-            auto const& center = mCurrentTetro.center;
-            for (auto const& piece : mCurrentTetro.subpieces)
-            {
-
-                auto const col = static_cast<size_t>(center.x + piece.pos.x) + kHalfGridW;
-                auto const row = static_cast<size_t>(center.y + piece.pos.y);
-
-                mBoard[row][col].entity = piece.entity;
-                mBoard[row][col].type   = piece.type;
-            }
-
-            checkRowCompletion();
-
-            mCurrentTetro = createPiece();
-            return;
-        }
-    }
-
-    mCurrentTetro.center += moveVector;
-    for (auto const& subPiece : mCurrentTetro.subpieces)
-    {
-        mScene->GetMutableComponent<ecs::TransformComponent>(subPiece.entity)->position += glm::vec3(moveVector, 0.0F);
-    }
+    return std::ranges::all_of(tOffsets, [&](glm::vec2 offset) {
+        auto const cell = toBoardCell(tCenter + offset);
+        auto const row  = static_cast<std::size_t>(cell.y);
+        auto const col  = static_cast<std::size_t>(cell.x);
+        return cell.x >= 0 && cell.x < kGridW && cell.y >= 0 && cell.y < kGridH && mBoard[row][col].entity == ecs::kInvalidEntityHandle;
+    });
 }
 
-auto Game::canMove(float tHorizontal, float tVertical) -> bool
+auto Game::tryMove(Tetromino& tTetro, glm::vec2 tDelta) -> bool
 {
-    return std::ranges::all_of(mCurrentTetro.subpieces, [&](auto const& piece) {
-        auto const row = static_cast<size_t>(mCurrentTetro.center.y + piece.pos.y + tVertical);
-        auto const col = static_cast<size_t>(mCurrentTetro.center.x + piece.pos.x + tHorizontal) + kHalfGridW;
-        return mBoard[row][col].entity == ecs::kInvalidEntityHandle;
-    });
+    auto const center = tTetro.center + tDelta;
+    if (!canPlace(center, tTetro.offsets))
+    {
+        return false;
+    }
+
+    tTetro.center = center;
+    updatePieceTransforms(tTetro);
+    return true;
 }
 
 void Game::rotateCurrentPiece()
 {
-
-    for (auto& subPiece : mCurrentTetro.subpieces)
+    if (mCurrentTetro.type == PieceType::kSmashboy)
     {
-        auto* transform = mScene->GetMutableComponent<ecs::TransformComponent>(subPiece.entity);
-
-        auto const rotated = glm::vec2{subPiece.pos.y, -subPiece.pos.x};
-        auto const next    = mCurrentTetro.center + rotated;
-
-        auto const col = static_cast<int32_t>(next.x) + kHalfGridW;
-        auto const row = static_cast<int32_t>(next.y);
-
-        if (col < 0 || col >= kGridW || row < 0)
-        {
-            mPieceRotated = false;
-            return;
-        }
-
-        if (row < kGridH && mBoard[static_cast<size_t>(row)][static_cast<size_t>(col)].entity != ecs::kInvalidEntityHandle)
-        {
-            mPieceRotated = false;
-            return;
-        }
-
-        subPiece.pos = rotated;
-
-        transform->position = glm::vec3{next, -9.0F};
+        return;
     }
 
-    mPieceRotated = false;
+    auto offsets = mCurrentTetro.offsets;
+    for (auto& offset : offsets)
+    {
+        offset = {offset.y, -offset.x};
+    }
+
+    constexpr std::array kicks{
+        glm::vec2{0, 0},
+        glm::vec2{-1, 0},
+        glm::vec2{1, 0},
+        glm::vec2{-2, 0},
+        glm::vec2{2, 0},
+        glm::vec2{0, 1},
+        glm::vec2{0, -1},
+        glm::vec2{0, 2},
+        glm::vec2{0, -2},
+    };
+    for (auto const kick : kicks)
+    {
+        auto const center = mCurrentTetro.center + kick;
+        if (canPlace(center, offsets))
+        {
+            mCurrentTetro.center  = center;
+            mCurrentTetro.offsets = offsets;
+            updatePieceTransforms(mCurrentTetro);
+            return;
+        }
+    }
 }
 
 void Game::handleInput()
 {
-    if (input::IsKeyDown(GLFW_KEY_DOWN))
-    {
-        mMoveInterval = kFastMoveInterval;
-    }
     if (input::IsKeyPressed(GLFW_KEY_UP))
     {
-        mPieceRotated = true;
-    }
-    if (input::IsKeyPressed(GLFW_KEY_LEFT))
-    {
-        mSideMovement = -1.0F;
+        rotateCurrentPiece();
     }
     if (input::IsKeyPressed(GLFW_KEY_RIGHT))
     {
-        mSideMovement = 1.0F;
+        tryMove(mCurrentTetro, {1.0F, 0.0F});
     }
+    else if (input::IsKeyPressed(GLFW_KEY_LEFT))
+    {
+        tryMove(mCurrentTetro, {-1.0F, 0.0F});
+    }
+}
+
+void Game::updatePieceTransforms(Tetromino& tTetro)
+{
+    for (std::size_t i{0}; i < tTetro.entities.size(); ++i)
+    {
+        auto* const transform = mScene->GetMutableComponent<ecs::TransformComponent>(tTetro.entities[i]);
+        transform->position   = glm::vec3{tTetro.center + tTetro.offsets[i], kStartPos.z};
+    }
+}
+
+void Game::lockCurrentPiece()
+{
+    for (std::size_t i{0}; i < mCurrentTetro.entities.size(); ++i)
+    {
+        auto const cell = toBoardCell(mCurrentTetro.center + mCurrentTetro.offsets[i]);
+        auto const row  = static_cast<std::size_t>(cell.y);
+        auto const col  = static_cast<std::size_t>(cell.x);
+
+        mBoard[row][col].entity = mCurrentTetro.entities[i];
+    }
+
+    checkRowCompletion();
+    mCurrentTetro = createPiece();
 }
 
 void Game::checkRowCompletion()
@@ -362,7 +261,7 @@ void Game::checkRowCompletion()
     for (size_t readRow{1U}; readRow < kGridH; ++readRow)
     {
         auto&      row  = mBoard[readRow];
-        bool const full = std::all_of(row.begin() + 1, row.end() - 1, [](SubPiece const& cell) {
+        bool const full = std::all_of(row.begin() + 1, row.end() - 1, [](BoardCell const& cell) {
             return cell.entity != ecs::kInvalidEntityHandle;
         });
 
@@ -395,57 +294,35 @@ void Game::checkRowCompletion()
     }
 }
 
-void Game::renderOptionsGui()
+void Game::restart()
 {
-    ImGui::SetNextWindowSize({250.0F, 380.0F});
-
-    ImGui::Begin("Options");
-    //ImGui::Checkbox("Show Demo", &mShowDemo);
-    //bool right = input::gInputState.keysDown[GLFW_KEY_RIGHT];
-    ImGui::Checkbox("Stop movement", &stopDownMove);
-    ImGui::End();
-
-    if (mShowDemo)
+    for (std::size_t row{1U}; row < kGridH; ++row)
     {
-        static bool close{false};
-        ImGui::ShowDemoWindow(&close);
-    }
-}
-
-auto Game::Tetromino::Right() -> float
-{
-    float right = subpieces.front().pos.x;
-
-    for (auto const& piece : subpieces)
-    {
-        right = std::max(right, piece.pos.x);
+        for (std::size_t col{1U}; col < kGridW - 1; ++col)
+        {
+            auto& cell = mBoard[row][col];
+            if (cell.entity != ecs::kInvalidEntityHandle)
+            {
+                mScene->RetireEntity(cell.entity);
+                cell = {};
+            }
+        }
     }
 
-    return center.x + right;
-}
-
-auto Game::Tetromino::Left() -> float
-{
-    float left = subpieces.front().pos.x;
-
-    for (auto const& piece : subpieces)
+    for (auto const& piece : mNextTetro.entities)
     {
-        left = std::min(left, piece.pos.x);
+        mScene->RetireEntity(piece);
     }
+    mNextTetro = {};
 
-    return center.x + left;
-}
+    mGameOver        = false;
+    mAccumulatedTime = 0.0F;
 
-auto Game::Tetromino::Bottom() -> float
-{
-    float bottom = subpieces.front().pos.y;
-
-    for (auto const& piece : subpieces)
-    {
-        bottom = std::min(bottom, piece.pos.y);
-    }
-
-    return center.y + bottom;
+    std::ranges::shuffle(mPieceBag, mGenerator);
+    std::iter_swap(mPieceBag.begin(), std::ranges::find(mPieceBag, &CreateHero));
+    mNextPiece    = 0U;
+    mNextTetro    = CreateTetromino(mScene, mPieceBag[mNextPiece++](glm::vec2{kHintStartPos}), kHintStartPos.z);
+    mCurrentTetro = createPiece();
 }
 
 }// namespace ctc

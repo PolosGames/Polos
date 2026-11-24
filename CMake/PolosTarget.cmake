@@ -80,7 +80,7 @@ function(polos_attach_build_info TARGET_NAME SOURCES)
 endfunction()
 
 function(define_polos_app)
-    cmake_parse_arguments(PARSE_ARGV 0 app "" "NAME" "SOURCES")
+    cmake_parse_arguments(PARSE_ARGV 0 app "" "NAME;ENTITY_CAPACITY" "SOURCES")
     if (POLOS_EXAMPLE AND NOT "${POLOS_EXAMPLE}" STREQUAL "${app_NAME}")
         return()
     endif()
@@ -90,6 +90,9 @@ function(define_polos_app)
         ${app_NAME}
             ${app_SOURCES} ${app_headers}
     )
+    if (DEFINED app_ENTITY_CAPACITY)
+        set_property(TARGET ${app_NAME} PROPERTY POLOS_ENTITY_CAPACITY "${app_ENTITY_CAPACITY}")
+    endif()
 
     if (WIN32)
         set_target_properties(

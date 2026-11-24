@@ -103,6 +103,32 @@ auto CreateQuad(scene::Scene* tScene, rendering::MaterialHandle const tMaterial,
     return quad;
 }
 
+void CreateGrid(scene::Scene* tScene, rendering::MaterialHandle tMaterial, glm::ivec2 tSize, glm::vec3 tPosition)
+{
+    resource::model::MeshPrimitive grid{
+        .name              = "Tetris.Grid",
+        .primitiveVertices = {},
+        .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
+        .material          = tMaterial,
+        .bounds            = {},
+    };
+    grid.primitiveVertices.reserve(4U);
+    glm::vec2 const size{tSize};
+    for (auto const corner : {glm::vec2{0.0F, 0.0F}, glm::vec2{1.0F, 0.0F}, glm::vec2{1.0F, 1.0F}, glm::vec2{0.0F, 1.0F}})
+    {
+        grid.primitiveVertices.push_back({
+            .position = glm::vec3{(corner - 0.5F) * size, 0.0F},
+            .normal   = {0.0F, 0.0F, 1.0F},
+            .tangent  = {1.0F, 0.0F, 0.0F, 1.0F},
+            .texCoord = corner * size,
+        });
+    }
+
+    auto const entity = tScene->NewEntity(tScene->sceneRoot, "Tetris Grid"_sid);
+    tScene->AddComponent(entity, ecs::TransformComponent{.position = tPosition});
+    tScene->AddComponent(entity, ecs::MeshRendererComponent{.meshHandle = rendering::MeshCache::Get().AddMesh(grid), .matHandle = tMaterial});
+}
+
 auto CreateMaterialFromTexture(std::string_view tTexture, std::string_view tName, rendering::SamplerDetails const& tSamplerDetails, float tTilingFactor)
     -> rendering::MaterialHandle
 {

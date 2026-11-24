@@ -36,6 +36,7 @@ option(BUILD_TESTS             "Build all unit and component tests for the runti
 option(BUILD_INTEGRATION_TESTS "Build window/Vulkan integration tests (requires BUILD_TESTS)" OFF)
 option(ENABLE_CLANG_TIDY       "Enable clang-tidy static analysis during builds" OFF)
 
+set(POLOS_EXAMPLE "" CACHE STRING "Build only this example target when set")
 set(POLOS_INSTALL_INC_DIR "${POLOS_INSTALL_DIR}/include")
 set(POLOS_INSTALL_LIB_DIR "${POLOS_INSTALL_DIR}")
 
@@ -50,7 +51,6 @@ if (ENABLE_CLANG_TIDY)
 endif()
 
 set(POLOS_CONFIG_INCLUDE_DIR "${CMAKE_BINARY_DIR}/generated/include")
-configure_file(polos_config.hpp.in "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp" @ONLY)
 configure_file(polos_api.hpp.in "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_api.hpp" COPYONLY)
 
 find_package(Git QUIET)
@@ -91,13 +91,25 @@ add_custom_target(
         VERBATIM
 )
 
-set(POLOS_EXAMPLE "" CACHE STRING "Build only this example target when set")
 if (BUILD_EXAMPLES)
     add_subdirectory(Examples)
     if (POLOS_EXAMPLE AND NOT TARGET "${POLOS_EXAMPLE}")
         message(FATAL_ERROR "Unknown Polos example: ${POLOS_EXAMPLE}")
     endif()
 endif()
+
+# The runtime and its examples share one entity capacity per build tree.
+set(POLOS_ENTITY_CAPACITY 4194304)
+if (BUILD_EXAMPLES AND POLOS_EXAMPLE)
+    get_property(example_capacity TARGET "${POLOS_EXAMPLE}" PROPERTY POLOS_ENTITY_CAPACITY)
+    if (DEFINED example_capacity)
+        set(POLOS_ENTITY_CAPACITY "${example_capacity}")
+    endif()
+endif()
+if (NOT POLOS_ENTITY_CAPACITY MATCHES "^[1-9][0-9]*$" OR POLOS_ENTITY_CAPACITY GREATER 4194304)
+    message(FATAL_ERROR "ENTITY_CAPACITY must be an integer between 1 and 4194304")
+endif()
+configure_file(polos_config.hpp.in "${POLOS_CONFIG_INCLUDE_DIR}/polos/polos_config.hpp" @ONLY)
 
 if (CMAKE_EXPORT_COMPILE_COMMANDS AND CMAKE_GENERATOR MATCHES "Ninja|Makefiles")
     add_custom_target(
