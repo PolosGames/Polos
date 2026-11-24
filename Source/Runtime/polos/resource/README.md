@@ -1,101 +1,57 @@
 # Resource loading
 
-`ResourceManager` owns CPU resources indexed only by `ResourceId`, an alias for Polos's
-`utils::string_id`. The engine calls `LoadCatalog()` before initializing rendering.
-This reads `Resources/resources.json` and preloads every listed resource. `Resources` is
-beside the running executable, independent of the process's working directory.
-Build-tree and installed example executables receive the same resource layout.
+Polos reads `Resources/resources.yaml` beside the executable and preloads cataloged textures, materials, and models before rendering starts. Package the catalog and its files together, keeping their paths relative to `Resources/`.
 
-The catalog registers startup resources. Its `id` is the resource's stable
-identity; its `path` is used internally to load the file:
+## Prepare a project
 
-```json
-[
-  { "id": "texture.character", "path": "characters/tux.png" },
-  { "id": "texture.icon", "path": "icons/tux.png" }
-]
+Place assets under the project's `Resources/` directory. The example runners generate the catalog before building. For a project using an exported SDK, pass the **project root** to `ResourcePreprocessor`.
+
+**Linux**
+
+```bash
+/path/to/project/sdk/tools/ResourcePreprocessor /path/to/project
 ```
 
+**Windows**
+
+```powershell
+& "C:/path/to/project/sdk/tools/ResourcePreprocessor.exe" "C:/path/to/project"
+```
+
+The tool scans for PNG and JPEG textures and `.gltf` models. It rewrites `Resources/resources.yaml` and generates YAML descriptors under `Resources/Models/` and `Resources/Materials/`. Keep a model's external buffers and images in the locations referenced by its glTF file. The tool expects base-color images referenced by models to be external files.
+
+## Catalog entries
+
+Each entry has a resource ID and a path. The ID tells Polos which loader to use. Model and material entries point to their YAML descriptors, and a model descriptor points to its glTF source and lists its material IDs in glTF order.
+
+```yaml
+resources:
+  - id: texture.checker
+    path: Textures/checker.png
+  - id: material.checker
+    path: Materials/checker.yaml
+  - id: model.tile
+    path: Models/tile.yaml
+```
+
+Use `texture.`, `material.`, and `model.` prefixes for those asset types. Generated texture and model IDs use the file stem, so use unique stems within each type. Material IDs come from glTF material names when present, so keep those names unique across the project. In a hand-edited catalog, keep the ID when moving a file and update only its path.
+
+The runtime rejects duplicate IDs and stops startup if it cannot read the catalog or preload a listed texture, material, or model. See the [Tetris catalog](../../../../Examples/Tetris/Resources/resources.yaml) for a texture-only example.
+
+## Use resources from C++
+
+Look up resources by ID. Use `_sid` for string literals and `polos::utils::StrHash64(id)` when the ID is known at runtime.
+
 ```cpp
-#include <polos/resource/image.hpp>
 #include <polos/resource/resource_manager.hpp>
+#include <polos/utils/string_id.hpp>
 
 auto const& resources = polos::resource::ResourceManager::Get();
-auto character = resources.GetImage("texture.character"_sid);
-auto icon = resources.GetImage("texture.icon"_sid);
+auto image = resources.GetImage("texture.checker"_sid);
+auto material = resources.GetMaterial("material.checker"_sid);
+auto model = resources.GetModel("model.tile"_sid);
 ```
 
-`GetImage`, `GetModel`, and `GetFile` accept only `ResourceId`. The `_sid` literal hashes
-the resource ID at compile time; `utils::StrHash64(idString)` does the same at runtime.
-There are no path, filename, or short-name lookups. Resources with matching filenames
-are independent because their IDs differ. Hashing a file path does not retrieve
-a resource unless that exact string was explicitly assigned as its ID.
+The getters return cached shared pointers, or `nullptr` when the requested ID and type are absent. Use `LoadImage(id, path)` or `LoadFile(id, path)` to load additional images or raw files explicitly. Relative paths passed to these functions are resolved from the working directory. After loading a raw file, retrieve it with `GetFile(id)`. The resource cache holds CPU data. The renderer manages GPU uploads separately.
 
-The getters return cached shared pointers without filesystem access, decoding,
-or GPU uploads. Unknown IDs, cleared cache entries, and requests for a different
-representation return nullptr. For example, `GetFile` returns nullptr for an resource
-preloaded as an image; it does not read encoded image bytes on demand.
-
-`LoadImage` and `LoadFile` explicitly load resources under a caller-supplied ID,
-without requiring a catalog entry. Each accepts either a `std::filesystem::path`
-or a `std::span<std::byte const>`:
-
-```cpp
-auto& resources = polos::resource::ResourceManager::Get();
-auto preview = resources.LoadImage("texture.preview"_sid, std::filesystem::path("preview.png"));
-auto file = resources.LoadFile("file.import"_sid, std::filesystem::path("import.bin"));
-auto embedded = resources.LoadImage("texture.embedded"_sid, std::as_bytes(std::span(encodedBytes)));
-auto memoryFile = resources.LoadFile("file.memory"_sid, std::as_bytes(std::span(rawBytes)));
-```
-
-Path overloads use the supplied filesystem path; relative paths use the current
-working directory. Memory image input contains encoded PNG, JPEG, TGA, or other
-supported image bytes, decoded to owned RGBA8 pixels with the bottom row first.
-Memory file input is copied into an owned byte vector; empty input is a valid empty
-file, and memory files have empty path/name metadata. Callers can release or modify
-their input bytes after loading.
-
-Successful loads are available through `GetImage`/`GetFile`. Loading the same ID and
-representation again returns the original cached shared pointer. An explicit load
-can add a second representation under an existing ID. Read/decode failures return
-nullptr without caching a failed result, so a later call can retry. `ClearCache()`
-and catalog reloads release explicitly loaded resources as well as catalog resources.
-
-The glTF loader uses fastgltf and requests external buffer loading, generated mesh
-indices, and decomposition of node matrices. The loader checks for loaded buffer
-data and rejects unsupported sparse accessors and accessors without a buffer
-view. Dependency versions are pinned in `ThirdParty/fastgltf/CMakeLists.txt`.
-
-Each mesh part stores `primitiveVertices` in accessor order. Indexed triangle
-lists also store their original index order in `primitiveIndices` as 32-bit
-unsigned integers. Non-indexed triangle lists leave `primitiveIndices` empty.
-UVs and colors support float and normalized unsigned byte/short accessors. RGB
-colors retain alpha 1. The loader ignores unsupported attributes, uses material
-defaults for missing materials, and uses the default magenta texture for missing
-maps. Mesh parts support triangle lists.
-
-Add engine resources to `Source/Resources/resources.json` and sandbox resources to
-`Examples/sandbox/Resources/resources.json`. Package their files under the same relative
-paths. Images are decoded, `.gltf`/`.glb` models are parsed, and other
-extensions (including `.spv` shaders) are read as raw files. Extension classification
-ignores case. Every listed resource must load successfully before rendering starts.
-`LoadCatalog()` returns void; existing catalog, validation, and resource-loading
-failure checks use `PL_ASSERT`. Debug builds use the standard assertion diagnostic;
-Release builds print the condition, reason, and source location to stderr and abort.
-Duplicate IDs and ID hash collisions are rejected. Catalog paths are used as written,
-relative to the Resources directory. Resource lookup uses IDs.
-
-To move or rename a file, change its catalog `path` and keep its `id` unchanged.
-Saved references should store the stable ID string or its numeric `ResourceId`.
-The runtime does not rename files or rewrite the catalog. Catalog reloads build
-a temporary registry and preload all resources before replacing the active state.
-Catalog loading failures abort immediately; there is no error return or recovery path.
-
-`ClearCache()` releases the manager's ownership; getters then return nullptr until
-`LoadCatalog()`, `LoadImage()`, or `LoadFile()` loads them again. Shared pointers already
-held by callers remain valid through cache clearing and catalog reloads. Registry
-and cache access must occur on the engine thread. Low-level image/model decoders are used by catalog
-loading and tests; application code uses the manager's explicit loaders or retrieves
-cached resources by ID. Run image and manager tests independently of glTF decoding
-tests with `cmake --build out/build/linux-debug --target ut-resource-loading`
-and `ctest --test-dir out/build/linux-debug -R '^ResourceLoadingTests$' --output-on-failure`.
+`ClearCache()` releases the manager's references while existing shared pointers remain valid. Reloading the catalog replaces the manager's caches.
