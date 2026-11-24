@@ -2,6 +2,11 @@ name: Export Polos SDK
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the SDK to GitHub Releases (master only)
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [master, main]
@@ -40,3 +45,57 @@ jobs:
           name: polos-sdk-${{ matrix.preset }}
           path: out/packages/polos-sdk-*-${{ matrix.preset }}.zip
           if-no-files-found: error
+
+  publish:
+    name: Publish master SDK prerelease
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master' && inputs.publish_release
+    needs: sdk
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: sdk-release-${{ github.sha }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: polos-sdk-*
+          path: out/release-sdk
+          merge-multiple: true
+      - name: Publish SDK archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          shopt -s nullglob
+          linux_archives=(out/release-sdk/polos-sdk-*-linux-release.zip)
+          windows_archives=(out/release-sdk/polos-sdk-*-win-release.zip)
+          if (( ${#linux_archives[@]} != 1 || ${#windows_archives[@]} != 1 )); then
+            echo 'Expected exactly one Linux SDK ZIP and one Windows SDK ZIP.' >&2
+            exit 1
+          fi
+
+          version=${linux_archives[0]##*/}
+          version=${version#polos-sdk-}
+          version=${version%-linux-release.zip}
+          if [[ ${windows_archives[0]##*/} != "polos-sdk-$version-win-release.zip" ]]; then
+            echo 'The Linux and Windows SDK versions do not match.' >&2
+            exit 1
+          fi
+
+          tag="sdk-master-$GITHUB_SHA"
+          title="Polos SDK $version"
+          archives=("${linux_archives[0]}" "${windows_archives[0]}")
+          if is_draft=$(gh release view "$tag" --json isDraft --jq '.isDraft' 2>/dev/null); then
+            if [[ $is_draft == false ]]; then
+              echo "SDK prerelease for $GITHUB_SHA is already published."
+              exit 0
+            fi
+            gh release upload "$tag" "${archives[@]}" --clobber
+          else
+            gh release create "$tag" "${archives[@]}" --target "$GITHUB_SHA" \
+              --title "$title" \
+              --notes "Linux and Windows SDKs built from master commit $GITHUB_SHA." \
+              --prerelease --draft --latest=false
+          fi
+          gh release edit "$tag" --title "$title" --draft=false --latest=false
