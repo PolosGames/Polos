@@ -41,6 +41,7 @@ public:
 
     auto               CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight, std::string_view tTitle) -> bool;
     auto               ChangeWindowTitle(std::string_view tTitle) -> void;
+    auto               ProcessWindowEvents(bool tWait) -> void;
     [[nodiscard]] auto GetMainWindow() const -> GLFWwindow*;
     [[nodiscard]] auto GetWindowSurface() const -> IWindowSurface&;
 private:

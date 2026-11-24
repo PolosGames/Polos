@@ -6,7 +6,6 @@
 #include "polos/platform/platform_manager.hpp"
 
 #include "polos/communication/event_bus.hpp"
-#include "polos/core/events/end_frame.hpp"
 #include "polos/core/events/engine_terminate.hpp"
 #include "polos/input/events/key_press.hpp"
 #include "polos/input/events/key_release.hpp"
@@ -46,26 +45,13 @@ GlfwErrorBehavior GetGlfwErrorBehavior(std::int32_t tErrorCode)
 {
     switch (tErrorCode)
     {
-        case GLFW_INVALID_ENUM:
-            return {
-                .level = GlfwLogLevel::Warn, .message = "GLFW received an invalid enum to it's function! Desc: {0}"
-            };
-        case GLFW_INVALID_VALUE:
-            return {
-                .level = GlfwLogLevel::Warn, .message = "GLFW received an invalid value to it's function! Desc: {0}"
-            };
+        case GLFW_INVALID_ENUM: return {.level = GlfwLogLevel::Warn, .message = "GLFW received an invalid enum to it's function! Desc: {0}"};
+        case GLFW_INVALID_VALUE: return {.level = GlfwLogLevel::Warn, .message = "GLFW received an invalid value to it's function! Desc: {0}"};
         case GLFW_OUT_OF_MEMORY:
-            return {
-                .level   = GlfwLogLevel::Critical,
-                .message = "A memory allocation failed within GLFW or the operating system! Desc: {0}"
-            };
+            return {.level = GlfwLogLevel::Critical, .message = "A memory allocation failed within GLFW or the operating system! Desc: {0}"};
         case GLFW_API_UNAVAILABLE:
-            return {
-                .level   = GlfwLogLevel::Error,
-                .message = "GLFW could not find support for the requested API on the system! Desc: {0}"
-            };
-        case GLFW_FORMAT_UNAVAILABLE:
-            return {.level = GlfwLogLevel::Error, .message = "The requested pixel format is not supported! Desc: {0}"};
+            return {.level = GlfwLogLevel::Error, .message = "GLFW could not find support for the requested API on the system! Desc: {0}"};
+        case GLFW_FORMAT_UNAVAILABLE: return {.level = GlfwLogLevel::Error, .message = "The requested pixel format is not supported! Desc: {0}"};
         default: return {.level = GlfwLogLevel::Error, .message = ""};
     }
 }
@@ -94,11 +80,6 @@ void OnWindowClose()
     communication::DispatchDefer<core::EngineTerminate>();
 }
 
-void OnEndFrame()
-{
-    glfwPollEvents();
-}
-
 }// namespace
 
 PlatformManager* PlatformManager::sInstance{nullptr};
@@ -108,10 +89,6 @@ PlatformManager::PlatformManager()
     using namespace polos::communication;
 
     sInstance = this;
-
-    Subscribe<core::EndFrame>([](core::EndFrame&) {
-        OnEndFrame();
-    });
 
     Subscribe<WindowClose>([](WindowClose&) {
         OnWindowClose();
@@ -207,25 +184,22 @@ bool PlatformManager::CreateNewWindow(std::int32_t tWidth, std::int32_t tHeight,
             DispatchDefer<WindowFramebufferResize>(tNewWidth, tNewHeight);
         });
 
-        glfwSetKeyCallback(
-            mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tKey, std::int32_t /*tScancode*/, std::int32_t tAction,
-                         std::int32_t /*tMods*/) {
-                switch (tAction)
-                {
-                    case GLFW_RELEASE: DispatchDefer<input::KeyRelease>(tKey); break;
-                    case GLFW_PRESS: DispatchDefer<input::KeyPress>(tKey);
-                    default: break;
-                }
-            });
+        glfwSetKeyCallback(mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tKey, std::int32_t /*tScancode*/, std::int32_t tAction, std::int32_t /*tMods*/) {
+            switch (tAction)
+            {
+                case GLFW_RELEASE: DispatchDefer<input::KeyRelease>(tKey); break;
+                case GLFW_PRESS: DispatchDefer<input::KeyPress>(tKey);
+                default: break;
+            }
+        });
 
         glfwSetCursorPosCallback(mWindow, [](GLFWwindow* /*tWindow*/, double tXpos, double tYpos) {
             DispatchDefer<input::MouseMove>(tXpos, tYpos);
         });
 
-        glfwSetMouseButtonCallback(
-            mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
-                DispatchDefer<input::MouseInput>(tButton, tAction);
-            });
+        glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* /*tWindow*/, std::int32_t tButton, std::int32_t tAction, std::int32_t /*tMods*/) {
+            DispatchDefer<input::MouseInput>(tButton, tAction);
+        });
     }
 
     return true;
@@ -235,6 +209,18 @@ void PlatformManager::ChangeWindowTitle(std::string_view const tTitle)
 {
     std::string const title(tTitle);
     glfwSetWindowTitle(mWindow, title.c_str());
+}
+
+void PlatformManager::ProcessWindowEvents(bool tWait)
+{
+    if (tWait)
+    {
+        glfwWaitEventsTimeout(0.016);
+    }
+    else
+    {
+        glfwPollEvents();
+    }
 }
 
 GLFWwindow* PlatformManager::GetMainWindow() const

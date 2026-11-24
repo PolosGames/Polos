@@ -71,17 +71,13 @@ auto VulkanSwapchain::Create(CreationDetails const& tDetails) -> Result<void>
     return {};
 }
 
-auto VulkanSwapchain::setupExtentAndViewport(
-    VkPhysicalDevice                 tPhysDevice,
-    platform::FramebufferSize const& tFrameBuffer) -> void
+auto VulkanSwapchain::setupExtentAndViewport(VkPhysicalDevice tPhysDevice, platform::FramebufferSize const& tFrameBuffer) -> void
 {
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(tPhysDevice, mSurface, &mSurfaceCap);
 
-    mExtent.width = mExtent3D.width =
-        std::clamp(tFrameBuffer.width, mSurfaceCap.minImageExtent.width, mSurfaceCap.maxImageExtent.width);
-    mExtent.height = mExtent3D.height =
-        std::clamp(tFrameBuffer.height, mSurfaceCap.minImageExtent.height, mSurfaceCap.maxImageExtent.height);
-    mExtent3D.depth = 1U;
+    mExtent.width = mExtent3D.width = std::clamp(tFrameBuffer.width, mSurfaceCap.minImageExtent.width, mSurfaceCap.maxImageExtent.width);
+    mExtent.height = mExtent3D.height = std::clamp(tFrameBuffer.height, mSurfaceCap.minImageExtent.height, mSurfaceCap.maxImageExtent.height);
+    mExtent3D.depth                   = 1U;
 
     mRenderArea.offset.x = 0;
     mRenderArea.offset.y = 0;
@@ -105,9 +101,7 @@ auto VulkanSwapchain::setupExtentAndViewport(
     }
 }
 
-auto VulkanSwapchain::selectFormatAndMode(
-    std::vector<VkSurfaceFormatKHR> const& tFormats,
-    std::vector<VkPresentModeKHR> const&   tModes) -> bool
+auto VulkanSwapchain::selectFormatAndMode(std::vector<VkSurfaceFormatKHR> const& tFormats, std::vector<VkPresentModeKHR> const& tModes) -> bool
 {
     auto const format = std::ranges::find_if(tFormats, [](VkSurfaceFormatKHR const& tFormat) {
         return VulkanDevice::Get().CheckSurfaceFormatSupport(tFormat);
@@ -177,8 +171,7 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
 
     for (std::size_t i = 0U; i < img_count; ++i)
     {
-        auto resource =
-            Image::Create(ImageDescription{.extent = mExtent3D, .format = mSurfaceFormat.format}, mImages[i]);
+        auto resource = Image::Create(ImageDescription{.extent = mExtent3D, .format = mSurfaceFormat.format}, mImages[i]);
         if (!resource)
         {
             return ErrorType{RenderingErrc::kGenericError};
@@ -206,9 +199,7 @@ auto VulkanSwapchain::createImageViews() -> Result<void>
             },
         };
 
-        CHECK_VK_SUCCESS_OR_ERR(
-            vkCreateImageView(mDevice, &create_info, nullptr, &mImageViews[i]),
-            RenderingErrc::kFailedCreateSwapchainImageViews);
+        CHECK_VK_SUCCESS_OR_ERR(vkCreateImageView(mDevice, &create_info, nullptr, &mImageViews[i]), RenderingErrc::kFailedCreateSwapchainImageViews);
     }
 
     LogTrace("Created {} image views.", mImageViews.size());
@@ -276,23 +267,15 @@ auto VulkanSwapchain::GetRenderArea() const -> VkRect2D const&
     return mRenderArea;
 }
 
-auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) -> std::uint32_t
+auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) -> VkResult
 {
     POLOS_PROFILE_ZONE("Acquire swapchain image");
-    std::uint32_t  imageIndex{kInvalidImageIndex};
-    VkResult const res =
-        vkAcquireNextImageKHR(mDevice, mSwapchain, tDetails.timeout, tDetails.semaphore, VK_NULL_HANDLE, &imageIndex);
+    std::uint32_t  imageIndex{0U};
+    VkResult const res = vkAcquireNextImageKHR(mDevice, mSwapchain, tDetails.timeout, tDetails.semaphore, tDetails.fence, &imageIndex);
 
-    if (VK_ERROR_OUT_OF_DATE_KHR == res)
+    if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR)
     {
-        LogError("Swapchain image is out of date.");
-        return kInvalidImageIndex;
-    }
-
-    if (VK_SUCCESS != res)
-    {
-        LogWarn("Failed to acquire next swapchain image (VkResult: {}).", static_cast<std::int32_t>(res));
-        return kInvalidImageIndex;
+        return res;
     }
 
     mCurrentImage = imageIndex;
@@ -306,10 +289,10 @@ auto VulkanSwapchain::AcquireNextImage(AcquireNextImageDetails const& tDetails) 
         .accesses = 0U,
     });
 
-    return mCurrentImage;
+    return res;
 }
 
-auto VulkanSwapchain::QueuePresent(VkSemaphore tWaitSemaphore) const -> bool
+auto VulkanSwapchain::QueuePresent(VkSemaphore tWaitSemaphore) const -> VkResult
 {
     POLOS_PROFILE_ZONE("Present swapchain image");
     VkPresentInfoKHR const present_info{
@@ -323,7 +306,7 @@ auto VulkanSwapchain::QueuePresent(VkSemaphore tWaitSemaphore) const -> bool
         .pResults           = nullptr,
     };
 
-    return VK_SUCCESS == vkQueuePresentKHR(mGfxQueue, &present_info);
+    return vkQueuePresentKHR(mGfxQueue, &present_info);
 }
 
 auto VulkanSwapchain::GetCurrentImageResource() const -> std::shared_ptr<Image>

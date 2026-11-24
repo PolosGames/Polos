@@ -28,7 +28,7 @@ auto GetLogger(LogContext tContext) -> quill::Logger*
         constexpr auto level = quill::LogLevel::Debug;
 #endif
         quill::Backend::start();
-        auto sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(std::string(GetConsoleSinkName()));
+        auto                                 sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(std::string(GetConsoleSinkName()));
         quill::PatternFormatterOptions const formatter{
             "%(log_level:<3): %(logger:<6) [%(short_source_location)] %(message)",
             "%H:%M:%S.%Qms",
@@ -76,13 +76,17 @@ void WriteLog(LogContext tContext, LogLevel tLevel, std::string_view tMessage, s
 {
     auto*      logger = GetLogger(tContext);
     auto const level  = ToQuillLevel(tLevel);
-    QUILL_LOG_RUNTIME_METADATA(
-        logger, level, tLocation.file_name(), tLocation.line(), tLocation.function_name(), "{}", tMessage);
+    QUILL_LOG_RUNTIME_METADATA(logger, level, tLocation.file_name(), tLocation.line(), tLocation.function_name(), "{}", tMessage);
 }
 
 void FlushLogger(LogContext tContext)
 {
     GetLogger(tContext)->flush_log();
+}
+
+void Shutdown() noexcept
+{
+    quill::Backend::stop();
 }
 
 }// namespace polos::logging

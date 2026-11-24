@@ -91,7 +91,8 @@ void MainLoop::Run() const
             }
         }
 
-        if (rendering::RenderingApi::Get().BeginFrame() != nullptr)
+        auto const frameReady = rendering::RenderingApi::Get().BeginFrame() != nullptr;
+        if (frameReady)
         {
             {
                 POLOS_PROFILE_ZONE("Render update callbacks");
@@ -105,6 +106,7 @@ void MainLoop::Run() const
 
         {
             POLOS_PROFILE_ZONE("Deferred events and input");
+            platform::PlatformManager::Get().ProcessWindowEvents(!frameReady);
             communication::DispatchNow<input::ProcessInput>();
             communication::DispatchDeferredEvents();
         }

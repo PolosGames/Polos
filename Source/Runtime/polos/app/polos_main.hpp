@@ -8,6 +8,7 @@
 
 #include "polos/app/i_live_layer.hpp"
 #include "polos/core/engine.hpp"
+#include "polos/logging/logger.hpp"
 
 namespace polos::app
 {
@@ -20,7 +21,11 @@ auto CreateApplication(int tArgc, char** tArgv) -> ILiveLayer*;
 #endif
 
 int main(int tArgc, char* tArgv[])
-{ return polos::core::Engine::Run(polos::app::CreateApplication(tArgc, tArgv)); }
+{
+    auto const result = polos::core::Engine::Run(polos::app::CreateApplication(tArgc, tArgv));
+    polos::logging::Shutdown();
+    return result;
+}
 
 #ifdef _MSVC_LANG
 #    pragma warning(pop)

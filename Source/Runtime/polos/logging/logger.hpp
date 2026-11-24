@@ -40,6 +40,7 @@ POLOS_API void               WriteLog(
     std::string_view     tMessage,
     std::source_location tLocation = std::source_location::current());
 POLOS_API void FlushLogger(LogContext tContext);
+POLOS_API void Shutdown() noexcept;
 
 }// namespace polos::logging
 

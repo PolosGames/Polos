@@ -77,9 +77,9 @@ private:
     friend class platform::PlatformManager;
     static RenderContext* sRenderContext;
 
-    void onFramebufferResize();
-
     auto createSwapchain(platform::FramebufferSize const& tFbSize) -> Result<void>;
+    auto destroySwapchain() -> void;
+    auto recreateSwapchain(platform::FramebufferSize const& tFbSize) -> void;
     auto createFrameResources() -> Result<void>;
     auto destroyFrameResources() -> void;
 
@@ -92,11 +92,11 @@ private:
     std::unique_ptr<MeshCache>        mMeshCache;
     std::unique_ptr<MaterialCache>    mMaterialCache;
 
-    std::array<VkFence, Settings::kMaxFramesInFlight>         mFrameFences{};
-    std::array<VkSemaphore, Settings::kMaxFramesInFlight>     mAcqSemaphores{};
-    std::vector<VkSemaphore>                                  mSubmitSemaphores;
-    std::uint32_t                                             mCurrentFrameIndex{0U};
-    std::uint32_t                                             mSwapchainImageIndex{0U};
+    std::array<VkFence, Settings::kMaxFramesInFlight>     mFrameFences{};
+    std::array<VkSemaphore, Settings::kMaxFramesInFlight> mAcqSemaphores{};
+    std::vector<VkSemaphore>                              mSubmitSemaphores;
+    std::uint32_t                                         mCurrentFrameIndex{0U};
+    std::uint32_t                                         mSwapchainImageIndex{0U};
 
     std::array<FrameData, Settings::kMaxFramesInFlight> mFrameData;
 
@@ -107,7 +107,7 @@ private:
     tracy::VkCtx* mGpuProfileContext{nullptr};
 #endif
 
-    bool mHasFramebufferResized{false};
+    bool mNeedsSwapchainRebuild{false};
 
     bool mIsInitialized{false};
     bool mIsRecording{false};
