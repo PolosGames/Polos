@@ -9,6 +9,7 @@
 #include "polos/rendering/common.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
+#include "polos/utils/string_map.hpp"
 #include "polos/utils/yaml_read.hpp"
 
 #include <fastgltf/core.hpp>
@@ -242,7 +243,7 @@ auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId co
             {
                 // The preprocessor uses the image file stem for the catalog ID.
                 auto const name = std::filesystem::path(std::string_view(uri->uri->path())).stem().string();
-                binding.image   = utils::StrHash64Runtime("texture." + name);
+                binding.image   = utils::RegisterString("texture." + name);
             }
         }
         if (texture.samplerIndex)
@@ -358,7 +359,7 @@ auto ProcessMesh(
         tTarget.bounds.min = glm::min(tTarget.bounds.min, meshPrim.bounds->min);
         tTarget.bounds.max = glm::max(tTarget.bounds.max, meshPrim.bounds->max);
 
-        auto const id = utils::StrHash64Runtime(std::format("{}.{}", tMeshId, i));
+        auto const id = utils::RegisterString(std::format("{}.{}", tMeshId, i));
         tTarget.primitives.push_back(id);
         tModel.primitives.push_back({.first = id, .second = std::move(meshPrim)});
     }
@@ -416,7 +417,7 @@ auto LoadGltf(std::filesystem::path const& tPath, std::string_view tId) -> std::
         materials.reserve(matSeq.num_children());
         for (auto material : matSeq.children())
         {
-            materials.push_back(utils::StrHash64Runtime(utils::yaml::Scalar(utils::yaml::Find(material, "id"))));
+            materials.push_back(utils::RegisterString(utils::yaml::Scalar(utils::yaml::Find(material, "id"))));
         }
     }
 

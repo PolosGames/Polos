@@ -62,12 +62,24 @@ auto GetCameraUniform(
     glm::vec3 const forward     = orientation * glm::vec3{0.0F, 0.0F, -1.0F};
     glm::vec3 const up          = orientation * glm::vec3{0.0F, 1.0F, 0.0F};
 
+    auto const halfHeight = tCamera->size * 0.5F;
+    auto const halfWidth  = halfHeight * (static_cast<float>(tScWidth) / static_cast<float>(tScHeight));
+
     glm::mat4 const viewMatrix = glm::lookAt(tTransform->position, tTransform->position + forward, up);
-    glm::mat4       projMatrix = glm::perspective(
-        glm::radians(static_cast<std::float_t>(tCamera->fov)),
-        static_cast<float>(tScWidth) / static_cast<float>(tScHeight),
-        tCamera->nearZ,
-        tCamera->farZ);
+    glm::mat4       projMatrix = [tCamera](float const tFov, float tNZ, float tFZ, float const tHalfW, float const tHalfH) mutable -> glm::mat4 {
+        switch (tCamera->cameraType)
+        {
+            case ecs::CameraType::kOrtho: return glm::ortho(-tHalfW, tHalfW, -tHalfH, tHalfH, tNZ, tFZ);
+            case ecs::CameraType::kPerspective: return glm::perspective(glm::radians(tFov), tHalfW / tHalfH, tCamera->nearZ, tCamera->farZ); ;
+        }
+    }(tCamera->fov, tCamera->nearZ, tCamera->farZ, halfWidth, halfHeight);
+
+    switch (tCamera->cameraType)
+    {
+
+        case ecs::CameraType::kOrtho:
+        case ecs::CameraType::kPerspective: break;
+    }
 
     projMatrix[1][1] *= -1;
 

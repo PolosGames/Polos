@@ -74,22 +74,36 @@ public:
         auto const framebuffer = platform.GetWindowSurface().GetFramebufferSize();
         mState.windowCreated   = platform.GetMainWindow() != nullptr && framebuffer.width > 0 && framebuffer.height > 0;
 
+        auto& meshes = rendering::MeshCache::Get();
+        EXPECT_EQ(meshes.GetMeshCount(), 0U);
+        rendering::MeshPrimitiveData const mesh{
+            .name = "mesh.SmokeTriangle",
+            .primitiveVertices =
+                {
+                    {.position = {-0.5F, -0.5F, 0.0F}},
+                    {.position = {0.5F, -0.5F, 0.0F}},
+                    {.position = {0.0F, 0.5F, 0.0F}},
+                },
+            .primitiveIndices = {0U, 1U, 2U},
+        };
+        auto const meshId    = meshes.AddMesh("mesh.SmokeTriangle"_sid, mesh);
+        auto const meshIndex = meshes.GetMeshIndex(meshId);
+
         auto*      scene           = scene::SceneManager::Get().CreateScene("Scene", true);
         auto const camera          = scene->activeCamera;
         auto*      cameraTransform = scene->GetMutableComponent<ecs::TransformComponent>(camera);
-        auto const cube            = scene->NewEntity(scene->sceneRoot, "SmokeCube"_sid);
-        auto const meshIndex       = rendering::MeshCache::Get().GetMeshIndex(rendering::kDefaultCube);
+        auto const triangle        = scene->NewEntity(scene->sceneRoot, "SmokeTriangle"_sid);
 
         if (cameraTransform == nullptr || !scene->HasComponent(camera, ecs::CameraComponent::kType) ||
             !scene->HasComponent(camera, ecs::EditorCameraControllerComponent::kType) || meshIndex == rendering::kInvalidMeshId ||
-            scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
-            scene->AddComponent(cube, ecs::MeshRendererComponent{.meshId = rendering::kDefaultCube}) == nullptr)
+            scene->AddComponent(triangle, ecs::TransformComponent{}) == nullptr ||
+            scene->AddComponent(triangle, ecs::MeshRendererComponent{.meshId = meshId}) == nullptr)
         {
             throw std::runtime_error{"Could not create the integration-test scene"};
         }
         cameraTransform->position = {0.0F, 0.0F, 2.0F};
 
-        communication::Subscribe<EngineUpdate>([&state = mState, scene, cube](EngineUpdate&) {
+        communication::Subscribe<EngineUpdate>([&state = mState, scene, triangle, meshId](EngineUpdate&) {
             ++state.updates;
             if (state.updates == 1U)
             {
@@ -104,13 +118,13 @@ public:
                 EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_RIGHT));
                 EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_RIGHT));
             }
-            if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            if (state.completedFrames == 1U && scene->HasComponent(triangle, ecs::ComponentType::kMeshRenderer))
             {
-                EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
+                EXPECT_TRUE(scene->RemoveComponent(triangle, ecs::ComponentType::kMeshRenderer));
             }
-            if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            if (state.completedFrames == 2U && !scene->HasComponent(triangle, ecs::ComponentType::kMeshRenderer))
             {
-                EXPECT_NE(scene->AddComponent(cube, ecs::MeshRendererComponent{.meshId = rendering::kDefaultCube}), nullptr);
+                EXPECT_NE(scene->AddComponent(triangle, ecs::MeshRendererComponent{.meshId = meshId}), nullptr);
             }
             if (state.updates == 3U)
             {
@@ -122,9 +136,9 @@ public:
                 communication::DispatchNow<EngineTerminate>();
             }
         });
-        communication::Subscribe<rendering::RenderUpdate>([&state = mState, scene, cube, meshIndex, cameraTransform](rendering::RenderUpdate&) {
+        communication::Subscribe<rendering::RenderUpdate>([&state = mState, scene, triangle, meshIndex, cameraTransform](rendering::RenderUpdate&) {
             auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
-            EXPECT_EQ(scene->GetRenderData().meshInstances[cube.index].meshId, expectedMesh) << "Frame " << state.completedFrames;
+            EXPECT_EQ(scene->GetRenderData().meshInstances[triangle.index].meshId, expectedMesh) << "Frame " << state.completedFrames;
             ++state.renderUpdates;
             state.lifecycle.push_back("render");
             state.cameraMoved     = state.cameraMoved || cameraTransform->position.z < 2.0F;

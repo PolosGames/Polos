@@ -1,7 +1,8 @@
 polos_sources(
-    scene.cpp
     scene_graph.cpp
     scene_manager.cpp
+    scene_util.cpp
+    scene.cpp
 )
 
 polos_tests(

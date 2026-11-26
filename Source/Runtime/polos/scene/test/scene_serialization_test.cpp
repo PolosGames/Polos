@@ -367,8 +367,8 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInEntityOrde
 
     ecs::EditorCameraControllerComponent const controllerC{.moveSpeed = 17.0F, .lookSensitivity = 0.75F};
 
-    ecs::MeshRendererComponent const meshB{.meshId = rendering::kDefaultQuad, .materialId = utils::RegisterString("material.Suzanne")};
-    ecs::MeshRendererComponent const meshC{.meshId = rendering::kDefaultCube};
+    ecs::MeshRendererComponent const meshB{.meshId = utils::RegisterString("mesh.Panel"), .materialId = utils::RegisterString("material.Suzanne")};
+    ecs::MeshRendererComponent const meshC{.meshId = utils::RegisterString("mesh.Block")};
 
     ASSERT_NE(scene->AddComponent(a, ecs::VisibilityComponent{.isVisible = false}), nullptr);
     ASSERT_NE(scene->AddComponent(c, ecs::VisibilityComponent{.isVisible = true}), nullptr);

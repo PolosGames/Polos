@@ -6,12 +6,11 @@
 #include "polos/resource/material/material_loader.hpp"
 
 #include "polos/logging/log_macros.hpp"
-#include "polos/utils/string_id.hpp"
+#include "polos/utils/string_map.hpp"
 #include "polos/utils/yaml_read.hpp"
 
 #include <array>
 #include <fstream>
-#include <string>
 
 namespace polos::resource::material
 {
@@ -32,7 +31,8 @@ auto LoadMaterial(std::filesystem::path const& tPath) -> std::optional<rendering
 
     return rendering::Material{
         .baseColorFactor  = glm::vec4(color[0], color[1], color[2], color[3]),
-        .baseColorTexture = texture.empty() ? rendering::kDefaultTexture : utils::StrHash64Runtime(texture),
+        .baseColorTexture = texture.empty() ? rendering::kDefaultTexture : utils::RegisterString(texture),
+        .tilingFactor     = utils::yaml::Read(utils::yaml::Find(materialYaml, "tilingFactor"), rendering::kDefaultTilingFactor),
     };
 }
 }// namespace polos::resource::material

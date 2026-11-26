@@ -5,11 +5,11 @@
 
 #include "game.hpp"
 
-#include "helpers.hpp"
 #include "polos/input/input_state.hpp"
 
 #include <imgui.h>
 #include <polos/scene/scene.hpp>
+#include <polos/scene/scene_util.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -33,39 +33,63 @@ void Game::Setup(polos::scene::Scene* tScene)
 {
     mScene = tScene;
 
-    auto const camera    = CreateCamera(mScene, ecs::TransformComponent{.position = {0.0F, 10.F, 10.F}}, ecs::CameraType::kOrtho);
+    auto const camera = scene::Create_Camera(
+        scene::CameraDetails{
+            .name       = "Camera",
+            .position   = {0.0F, 10.F, 10.F},
+            .cameraType = polos::ecs::CameraType::kPerspective,
+            .nearZ      = 1.0F,
+            .farZ       = 30.0F,
+            // .size       = 32.0F,
+        });
     mScene->activeCamera = camera;
 
-    CreateMaterialFromTexture("texture.tetris_block_cyan", "Material_Hero");
-    CreateMaterialFromTexture("texture.tetris_block_yellow", "Material_Smashboy");
-    CreateMaterialFromTexture("texture.tetris_block_blue", "Material_BlueRicky");
-    CreateMaterialFromTexture("texture.tetris_block_orange", "Material_OrangeRicky");
-    CreateMaterialFromTexture("texture.tetris_block_red", "Material_RhodeIslandZ");
-    CreateMaterialFromTexture("texture.tetris_block_purple", "Material_Teewee");
-    CreateMaterialFromTexture("texture.tetris_block_green", "Material_ClevelandZ");
+    constexpr auto backdropMat = "material.Aurora_Backdrop"_sid;
+    constexpr auto borderMat   = "material.GridBorder"_sid;
 
-    auto const backdropMat = CreateMaterialFromTexture("texture.tetris_aurora", "Aurora_Backdrop", {}, 1.0F / kBackdropScale);
-    auto       gridMat     = CreateMaterialFromTexture("texture.tetris_grid_cell");
-    auto       borderMat   = CreateMaterialFromTexture("texture.tetris_grid_border");
-
-    mBackdrop     = CreateQuad(mScene, backdropMat, ecs::TransformComponent{.position = kBackdropCenter, .scale = kBackdropScale}, "Aurora_Backdrop");
+    mBackdrop = scene::Create_TexturedQuad(
+        scene::QuadDetails{
+            .name     = "Background",
+            .position = kBackdropCenter,
+            .scale    = kBackdropScale,
+            .material = backdropMat,
+        });
     mBackdropTime = 0.0F;
 
     // Border
     for (uint32_t row{kGridH - 1}; row > 0; --row)
     {
-        mBoard[row][0U].entity =
-            CreateCube(mScene, ecs::TransformComponent{.position = {-kHalfGridW, static_cast<float>(row), -9.0F}, .scale = 1.0F}, borderMat);
-        mBoard[row][kGridW - 1].entity =
-            CreateCube(mScene, ecs::TransformComponent{.position = {kHalfGridW - 1, static_cast<float>(row), -9.0F}, .scale = 1.0F}, borderMat);
+        mBoard[row][0U].entity = scene::Create_TexturedCuboid(
+            scene::CuboidDetails{
+                .name     = "LeftBorder",
+                .position = {-kHalfGridW, static_cast<float>(row), -9.0F},
+                .material = borderMat,
+            });
+        mBoard[row][kGridW - 1].entity = scene::Create_TexturedCuboid(
+            scene::CuboidDetails{
+                .name     = "RightBorder",
+                .position = {kHalfGridW - 1, static_cast<float>(row), -9.0F},
+                .material = borderMat,
+            });
     }
     for (int32_t col{0}; col < kGridW; ++col)
     {
-        mBoard[0U][static_cast<uint32_t>(col)].entity = CreateCube(
-            mScene, ecs::TransformComponent{.position = {static_cast<float>(col) - static_cast<float>(kHalfGridW), 0.0F, -9.0F}, .scale = 1.0F}, borderMat);
+        mBoard[0U][static_cast<uint32_t>(col)].entity = scene::Create_TexturedCuboid(
+            scene::CuboidDetails{
+                .name     = "BottomBorder",
+                .position = {static_cast<float>(col) - static_cast<float>(kHalfGridW), 0.0F, -9.0F},
+                .material = borderMat,
+            });
     }
 
-    CreateGrid(mScene, gridMat, {kGridW - 2, kGridH - 1}, {-0.5F, kGridH / 2.0F, -9.5F});
+    scene::Create_TexturedQuad(
+        scene::QuadDetails{
+            .name         = "Tetris Grid",
+            .dimensions   = {static_cast<float>(kGridW - 2), static_cast<float>(kGridH - 1)},
+            .position     = {-0.5F, static_cast<float>(kGridH) / 2.0F, -9.5F},
+            .material     = "material.GridCell"_sid,
+            .tilingFactor = {static_cast<float>(kGridW - 2), static_cast<float>(kGridH - 1)},
+        });
 
     restart();
 }
@@ -137,7 +161,7 @@ auto Game::createPiece() -> Tetromino
         return {};
     }
 
-    mNextTetro = CreateTetromino(mScene, piece, kHintStartPos.z);
+    mNextTetro = CreateTetromino(piece, kHintStartPos.z);
 
     return currentTet;
 }
@@ -149,10 +173,10 @@ auto Game::toBoardCell(glm::vec2 tPosition) -> glm::ivec2
 
 void Game::moveBackground(float const tDt)
 {
-    mBackdropTime        = std::fmod(mBackdropTime + tDt, kBackdropPeriod);
-    float const phase    = (2.0F * std::numbers::pi_v<float> / kBackdropPeriod) * mBackdropTime;
-    auto* const backdrop = mScene->GetMutableComponent<ecs::TransformComponent>(mBackdrop);
-    backdrop->position   = kBackdropCenter + glm::vec3{2.6F * std::sin(phase), 1.4F * std::cos(phase), 0.0F};
+    mBackdropTime           = std::fmod(mBackdropTime + tDt, kBackdropPeriod);
+    float const phase       = (2.0F * std::numbers::pi_v<float> / kBackdropPeriod) * mBackdropTime;
+    auto*       bgTransform = scene::GetComponent_Transform(mBackdrop);
+    bgTransform->position   = kBackdropCenter + glm::vec3{2.6F * std::sin(phase), 1.4F * std::cos(phase), 0.0F};
 }
 
 auto Game::canPlace(glm::vec2 tCenter, std::array<glm::vec2, 4U> const& tOffsets) const -> bool
@@ -235,8 +259,7 @@ void Game::updatePieceTransforms(Tetromino& tTetro)
 {
     for (std::size_t i{0}; i < tTetro.entities.size(); ++i)
     {
-        auto* const transform = mScene->GetMutableComponent<ecs::TransformComponent>(tTetro.entities[i]);
-        transform->position   = glm::vec3{tTetro.center + tTetro.offsets[i], kStartPos.z};
+        scene::GetComponent_Transform(tTetro.entities[i])->position = glm::vec3{tTetro.center + tTetro.offsets[i], kStartPos.z};
     }
 }
 
@@ -269,7 +292,7 @@ void Game::checkRowCompletion()
         {
             for (size_t col{1U}; col < kGridW - 1; ++col)
             {
-                mScene->RetireEntity(row[col].entity);
+                scene::RetireEntity(row[col].entity);
                 row[col] = {};
             }
             continue;
@@ -283,7 +306,7 @@ void Game::checkRowCompletion()
                 auto& cell = row[col];
                 if (cell.entity != ecs::kInvalidEntityHandle)
                 {
-                    mScene->GetMutableComponent<ecs::TransformComponent>(cell.entity)->position.y -= drop;
+                    scene::GetComponent_Transform(cell.entity)->position.y -= drop;
                 }
                 mBoard[writeRow][col] = cell;
                 cell                  = {};
@@ -303,7 +326,7 @@ void Game::restart()
             auto& cell = mBoard[row][col];
             if (cell.entity != ecs::kInvalidEntityHandle)
             {
-                mScene->RetireEntity(cell.entity);
+                scene::RetireEntity(cell.entity);
                 cell = {};
             }
         }
@@ -311,7 +334,7 @@ void Game::restart()
 
     for (auto const& piece : mNextTetro.entities)
     {
-        mScene->RetireEntity(piece);
+        scene::RetireEntity(piece);
     }
     mNextTetro = {};
 
@@ -321,7 +344,7 @@ void Game::restart()
     std::ranges::shuffle(mPieceBag, mGenerator);
     std::iter_swap(mPieceBag.begin(), std::ranges::find(mPieceBag, &CreateHero));
     mNextPiece    = 0U;
-    mNextTetro    = CreateTetromino(mScene, mPieceBag[mNextPiece++](glm::vec2{kHintStartPos}), kHintStartPos.z);
+    mNextTetro    = CreateTetromino(mPieceBag[mNextPiece++](glm::vec2{kHintStartPos}), kHintStartPos.z);
     mCurrentTetro = createPiece();
 }
 

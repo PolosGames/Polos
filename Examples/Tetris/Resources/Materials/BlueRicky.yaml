@@ -1,0 +1,3 @@
+id: material.BlueRickyZ
+baseColorFactor: [1.0, 1.0, 1.0, 1.0]
+baseColorTexture: texture.tetris_block_blue

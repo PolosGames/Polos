@@ -26,7 +26,7 @@ struct CameraComponent
     static constexpr ComponentType kType = ComponentType::kCamera;
 
     CameraType cameraType{CameraType::kPerspective};
-    float      nearZ{0.0F};
+    float      nearZ{0.1F};
     float      farZ{1000.0F};
     float      fov{60.0F}; // perspective
     float      size{10.0F};// ortho

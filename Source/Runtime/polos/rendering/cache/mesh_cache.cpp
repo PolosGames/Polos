@@ -12,11 +12,8 @@
 #include "polos/utils/string_map.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
-#include <limits>
-#include <numeric>
-#include <vector>
+#include <span>
 
 namespace polos::rendering
 {
@@ -44,70 +41,6 @@ auto ComputeBounds(std::span<MeshVertex const> tVertices) -> AABB
     return bounds;
 }
 
-constexpr std::array<MeshVertex, 8U> kCubeVertices{
-    MeshVertex{
-        .position = glm::vec3(-0.5F, -0.5F, 0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(0.5F, -0.5F, 0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(0.5F, 0.5F, 0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(-0.5F, 0.5F, 0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(-0.5F, -0.5F, -0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(0.5F, -0.5F, -0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(0.5F, 0.5F, -0.5F),
-    },
-    MeshVertex{
-        .position = glm::vec3(-0.5F, 0.5F, -0.5F),
-    },
-};
-
-// clang-format off
-constexpr std::array<uint16_t, 6UL * 6UL> kCubeIndices{
-    4, 0, 3, 3, 7, 4,
-    4, 5, 0, 0, 5, 1,
-    1, 2, 0, 0, 2, 3,
-    3, 2, 7, 7, 2, 6,
-    6, 5, 4, 4, 7, 6,
-    6, 2, 5, 5, 2, 1,
-};
-
-// clang-format on
-
-auto CreateCubeVertices() -> std::vector<MeshVertex>
-{
-    std::vector<MeshVertex> vertices;
-    vertices.reserve(kCubeIndices.size());
-    for (std::size_t i{0}; i < kCubeIndices.size(); i += 3U)
-    {
-        auto const& a         = kCubeVertices[kCubeIndices[i]].position;
-        auto const& b         = kCubeVertices[kCubeIndices[i + 1U]].position;
-        auto const& c         = kCubeVertices[kCubeIndices[i + 2U]].position;
-        auto const  normal    = glm::normalize(glm::cross(b - a, c - a));
-        auto const  tangent   = normal.y != 0.0F ? glm::vec3(1.0F, 0.0F, 0.0F) : glm::vec3(normal.z, 0.0F, -normal.x);
-        auto const  bitangent = glm::cross(normal, tangent);
-
-        for (std::size_t corner{0}; corner < 3U; ++corner)
-        {
-            auto vertex     = kCubeVertices[kCubeIndices[i + corner]];
-            vertex.normal   = normal;
-            vertex.tangent  = glm::vec4(tangent, 1.0F);
-            vertex.texCoord = glm::vec2(glm::dot(vertex.position, tangent), glm::dot(vertex.position, bitangent)) + 0.5F;
-            vertex.color    = glm::vec4(1.0F, 1.0F, 1.0F, 1.0F);
-            vertices.push_back(vertex);
-        }
-    }
-    return vertices;
-}
 }// namespace
 
 MeshCache* MeshCache::sInstance = nullptr;
@@ -174,47 +107,6 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
             });
 
         PL_ASSERT(nullptr != mMeshInfoBuffer[i], "Mesh Info buffer was not created");
-    }
-
-    {
-        MeshPrimitiveData cubeMesh{
-            .name              = "mesh.DefaultCube",
-            .primitiveVertices = CreateCubeVertices(),
-        };
-        // The generated vertices are already in triangle order.
-        cubeMesh.primitiveIndices.resize(cubeMesh.primitiveVertices.size());
-        cubeMesh.bounds = ComputeBounds(cubeMesh.primitiveVertices);
-        std::ranges::iota(cubeMesh.primitiveIndices, std::uint32_t{0});
-
-        std::ignore = AddMesh(kDefaultCube, cubeMesh);
-    }
-
-    {
-        MeshPrimitiveData quadMesh{
-            .name              = "mesh.DefaultQuad",
-            .primitiveVertices = {},
-            .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
-            .material          = kDefaultMaterial,
-            .bounds            = {},
-        };
-        constexpr std::array corners{
-            glm::vec2{0.0F, 0.0F},
-            glm::vec2{1.0F, 0.0F},
-            glm::vec2{1.0F, 1.0F},
-            glm::vec2{0.0F, 1.0F},
-        };
-        quadMesh.primitiveVertices.reserve(corners.size());
-        for (auto const& uv : corners)
-        {
-            quadMesh.primitiveVertices.push_back({
-                .position = glm::vec3(uv - glm::vec2(0.5F), 0.0F),
-                .normal   = {0.0F, 0.0F, 1.0F},
-                .tangent  = {1.0F, 0.0F, 0.0F, 1.0F},
-                .texCoord = uv,
-            });
-        }
-        quadMesh.bounds = ComputeBounds(quadMesh.primitiveVertices);
-        std::ignore     = AddMesh(kDefaultQuad, quadMesh);
     }
 
     return {};
@@ -287,7 +179,7 @@ auto MeshCache::AddMesh(ResourceId const tId, MeshPrimitiveData const& tMesh) ->
     }
     mMeshBoundsBuffer->Write(&gpuBounds, sizeof(GpuMeshBounds), boundsOffset);
 
-    auto const name = tMesh.name.empty() ? tId : utils::StrHash64Runtime(tMesh.name);
+    auto const name = tMesh.name.empty() ? tId : utils::RegisterString(tMesh.name);
     mMeshes.emplace(tId, MeshPrimitive{.name = name, .index = mMeshCount++, .material = tMesh.material, .bounds = bounds});
     if (name != tId)
     {

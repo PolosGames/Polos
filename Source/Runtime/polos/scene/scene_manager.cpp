@@ -113,7 +113,7 @@ auto ReadId(ryml::ConstNodeRef tNode) -> utils::string_id
     {
         return utils::yaml::Read<utils::string_id>(tNode);
     }
-    return utils::StrHash64Runtime(utils::yaml::Scalar(tNode));
+    return utils::RegisterString(utils::yaml::Scalar(tNode));
 }
 
 void WriteVec3(ryml::NodeRef tNode, glm::vec3 tValue)
@@ -290,7 +290,7 @@ SceneManager::~SceneManager()
 
 auto SceneManager::CreateScene(std::string_view const tName, bool tEditorCamera) -> Scene*
 {
-    auto& scene = mScenes.emplace_back(std::make_unique<Scene>(utils::StrHash64Runtime(tName), tEditorCamera));
+    auto& scene = mScenes.emplace_back(std::make_unique<Scene>(utils::RegisterString(tName), tEditorCamera));
     MakeCurrentScene(scene->name);
     return scene.get();
 }
@@ -471,7 +471,7 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         entities.push_back(entity);
     }
 
-    auto scene = std::unique_ptr<Scene>(new Scene(utils::StrHash64Runtime(tScene), false));
+    auto scene = std::make_unique<Scene>(utils::RegisterString(tScene), false);
     // Allocate in file order, even when an entity refers to a parent at a higher index.
     for (ecs::EntityIndex i{0U}; i < entities.size(); ++i)
     {
@@ -805,20 +805,6 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
 //     for (auto const load : kComponentLoaders)
 //     {
 //         if (!load(file, *scene, header, serializedEntities))
-//         {
-//             return nullptr;
-//         }
-//     }
-
-//     // Older scenes stored a separate quad payload in slot 6.
-//     constexpr auto legacyQuadMask = std::uint32_t{1} << 6U;
-//     constexpr auto meshMask       = std::uint32_t{1} << static_cast<std::uint8_t>(ComponentType::kMeshRenderer);
-//     for (EntityIndex index{1U}; index < serializedEntities.size(); ++index)
-//     {
-//         if ((serializedEntities[index].componentTypes & (legacyQuadMask | meshMask)) == legacyQuadMask &&
-//             scene->AddComponent(
-//                 scene->GetEntityAtIndex(index), MeshRendererComponent{.meshId = rendering::kDefaultQuad, .materialId = }) ==
-//                 nullptr)
 //         {
 //             return nullptr;
 //         }

@@ -48,7 +48,7 @@ Scene::Scene(utils::string_id const tName, bool const tCreateEditorCamera)
 
 Scene::~Scene() = default;
 
-auto Scene::NewEntity(ecs::EntityHandle tParent, utils::string_id const tName) -> ecs::EntityHandle
+auto Scene::NewEntity(ecs::EntityHandle const tParent, utils::string_id const tName) -> ecs::EntityHandle
 {
     if (!isEntityValid(tParent))
     {
@@ -155,21 +155,17 @@ auto Scene::RetireEntity(ecs::EntityHandle const tHandle) -> bool
 
 auto Scene::GetParent(ecs::EntityHandle const tChild) -> ecs::EntityHandle
 {
-    return isEntityValid(tChild) ? mSceneGraph.GetParent(getComponent<ecs::InfoComponent>(tChild.index)->graphHandle)
-                                 : ecs::kInvalidEntityHandle;
+    return isEntityValid(tChild) ? mSceneGraph.GetParent(getComponent<ecs::InfoComponent>(tChild.index)->graphHandle) : ecs::kInvalidEntityHandle;
 }
 
 auto Scene::GetChild(ecs::EntityHandle const tParent) -> ecs::EntityHandle
 {
-    return isEntityValid(tParent) ? mSceneGraph.GetChild(getComponent<ecs::InfoComponent>(tParent.index)->graphHandle)
-                                  : ecs::kInvalidEntityHandle;
+    return isEntityValid(tParent) ? mSceneGraph.GetChild(getComponent<ecs::InfoComponent>(tParent.index)->graphHandle) : ecs::kInvalidEntityHandle;
 }
 
 auto Scene::GetNextSibling(ecs::EntityHandle const tChild) -> ecs::EntityHandle
 {
-    return isEntityValid(tChild)
-             ? mSceneGraph.GetNextSibling(getComponent<ecs::InfoComponent>(tChild.index)->graphHandle)
-             : ecs::kInvalidEntityHandle;
+    return isEntityValid(tChild) ? mSceneGraph.GetNextSibling(getComponent<ecs::InfoComponent>(tChild.index)->graphHandle) : ecs::kInvalidEntityHandle;
 }
 
 auto Scene::HasComponent(ecs::EntityHandle const tHandle, ecs::ComponentType tCompType) -> bool
@@ -350,8 +346,7 @@ auto Scene::newEntity() -> ecs::EntityHandle
 
 auto Scene::isEntityValid(ecs::EntityHandle const tHandle) -> bool
 {
-    return ecs::IsEntityValid(tHandle) && tHandle.index < mEntitiesHead &&
-           mEntities[tHandle.index].handle.index == tHandle.index &&
+    return ecs::IsEntityValid(tHandle) && tHandle.index < mEntitiesHead && mEntities[tHandle.index].handle.index == tHandle.index &&
            mEntities[tHandle.index].handle.version == tHandle.version;
 }
 
