@@ -44,11 +44,11 @@ struct Tetromino
 
 struct TetrominoDefinition
 {
-    PieceType                        type;
-    glm::vec2                        center;
-    std::array<glm::vec2, 4U>        offsets;
-    polos::rendering::MaterialHandle material;
-    std::string_view                 name;
+    PieceType                    type;
+    glm::vec2                    center;
+    std::array<glm::vec2, 4U>    offsets;
+    polos::rendering::ResourceId material;
+    std::string_view             name;
 };
 
 using PieceFactory = TetrominoDefinition (*)(glm::vec2);

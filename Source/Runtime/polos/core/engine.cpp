@@ -42,15 +42,15 @@ std::int32_t Engine::Run(app::ILiveLayer* tAppLayer)
 
     PL_ASSERT(platformManager->CreateNewWindow(kWidth, kHeight, tAppLayer->Name()), "Could not create the window.");
 
-    auto& resources = resource::ResourceManager::Get();
-    {
-        POLOS_PROFILE_ZONE("Preload resource catalog");
-        resources.LoadCatalog();
-    }
-
     auto sceneManager   = std::make_unique<scene::SceneManager>();
     auto systemRegistry = std::make_unique<ecs::SystemRegistry>();
     auto renderingApi   = std::make_unique<rendering::RenderingApi>(platformManager->GetWindowSurface());
+
+    auto& resources = resource::ResourceManager::Get();
+    {
+        POLOS_PROFILE_ZONE("Load resource catalog");
+        resources.LoadCatalog();
+    }
 
     std::unique_ptr<app::ILiveLayer> engineLayer{new EngineLayer{}};
     std::unique_ptr<app::ILiveLayer> appLayer{tAppLayer};

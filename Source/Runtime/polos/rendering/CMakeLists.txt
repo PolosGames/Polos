@@ -1,6 +1,7 @@
 polos_sources(
     cache/material_cache.cpp
     cache/mesh_cache.cpp
+    cache/model_cache.cpp
     cache/texture_cache.cpp
     compositor/render_compositor.cpp
     debug_draw.cpp
@@ -10,7 +11,6 @@ polos_sources(
     passes/ui_render_pass.cpp
     resources/buffer.cpp
     resources/image.cpp
-    resources/material.cpp
     resources/shader.cpp
     resources/texture.cpp
     ssbo/quad_instance.cpp

@@ -61,15 +61,12 @@ public:
     /// @param tFormat Format of the tPixelData array
     /// @param tPixelData At least width * height * depth * texel-size bytes, in the specified VkFormat.
     /// @return The uploaded image, or nullptr for invalid input or allocation/upload failure.
-    [[nodiscard]] static auto
-    Create(ImageDescription const& tDesc, VkFormat tFormat, std::span<std::uint8_t const> tPixelData)
-        -> std::unique_ptr<Image>;
+    [[nodiscard]] static auto Create(ImageDescription const& tDesc, VkFormat tFormat, std::span<std::uint8_t const> tPixelData) -> std::unique_ptr<Image>;
 
     /// @brief Creates Image without owning the VkImage
     /// @param tImg VkImage to hold for operations.
     /// @return The image wrapper, or nullptr if tImg is VK_NULL_HANDLE.
-    [[nodiscard]] static auto Create(ImageDescription const& tDesc, VkImage tImg, ImageUse tInitialUse = {})
-        -> std::unique_ptr<Image>;
+    [[nodiscard]] static auto Create(ImageDescription const& tDesc, VkImage tImg, ImageUse tInitialUse = {}) -> std::unique_ptr<Image>;
 
     /// @brief Records a image barrier outside
     /// Callers must submit that order on the same queue.

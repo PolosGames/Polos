@@ -9,12 +9,11 @@
 #include "polos/polos_api.hpp"
 #include "polos/rendering/resources/texture.hpp"
 #include "polos/rendering/vk/descriptor_pool.hpp"
-#include "polos/resource/resource_manager.hpp"
 #include "polos/utils/error_code.hpp"
 
 #include <vulkan/vulkan.h>
 
-#include <vector>
+#include <unordered_map>
 
 namespace polos::rendering
 {
@@ -39,21 +38,9 @@ public:
     auto Create(CreationDetails const&) -> Result<void>;
     auto Destroy() -> void;
 
-    /// @brief Create texture with given sampler details and receive the index
-    /// @param tResource ResourceId of the texture that is already in resource catalogue
-    /// @param tDetails info that'll be used when creating the sampler
-    /// @return Index of the texure inside the cache.
-    [[nodiscard]] auto CreateTexture(resource::ResourceId tResource, SamplerDetails const& tDetails) -> uint32_t;
-
-    [[nodiscard]] auto GetOrCreateTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails = {})
-        -> TextureIndex;
-
-    [[nodiscard]] auto GetTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails) const
-        -> TextureIndex;
-
-    [[nodiscard]] auto GetTexture(resource::ResourceId tResource) -> Texture const*;
-
-    [[nodiscard]] auto GetTextureAtIndex(std::size_t tIndex) -> Texture const*;
+    [[nodiscard]] auto AddTexture(ResourceId tId, VkExtent2D tExtent, std::span<std::uint8_t const> tPixels, SamplerDetails const& tDetails) -> bool;
+    [[nodiscard]] auto GetTexture(ResourceId tId) const -> Texture const*;
+    [[nodiscard]] auto GetTextureIndex(ResourceId tId) const -> TextureIndex;
 
     [[nodiscard]] auto GetBindlessSetLayout() -> VkDescriptorSetLayout;
     [[nodiscard]] auto GetBindlessDescriptorSet() -> VkDescriptorSet;
@@ -64,7 +51,7 @@ private:
 
     static TextureCache* sInstance;
 
-    std::vector<std::unique_ptr<Texture>> mTextures;
+    std::unordered_map<ResourceId, std::unique_ptr<Texture>> mTextures;
 
     DescriptorPool mBindlessPool;
 };

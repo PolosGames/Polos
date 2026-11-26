@@ -10,6 +10,8 @@
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/material.hpp"
 
+#include <unordered_map>
+
 namespace polos::rendering
 {
 
@@ -33,13 +35,12 @@ public:
     MaterialCache& operator=(MaterialCache const&) = delete;
     MaterialCache& operator=(MaterialCache&&)      = delete;
 
-    [[nodiscard]] auto AddMaterial(resource::ResourceId tName, Material const& tMat) -> MaterialHandle;
-    [[nodiscard]] auto GetMaterial(MaterialHandle tHandle) const -> Material const*;
+    [[nodiscard]] auto AddMaterial(ResourceId tId, Material const& tMat) -> ResourceId;
+    [[nodiscard]] auto GetMaterial(ResourceId tId) const -> Material const*;
 private:
     static MaterialCache* sInstance;
 
-    std::unordered_map<MaterialHandle, Material> mMaterials;
-    std::size_t                                  mNextSuffix{1U};
+    std::unordered_map<ResourceId, Material> mMaterials;
 };
 
 }// namespace polos::rendering

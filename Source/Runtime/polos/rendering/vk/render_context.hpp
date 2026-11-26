@@ -46,6 +46,7 @@ class RenderCompositor;
 class TextureCache;
 class MeshCache;
 class MaterialCache;
+class ModelCache;
 
 class POLOS_API RenderContext : public IRenderContext
 {
@@ -91,6 +92,7 @@ private:
     std::unique_ptr<RenderCompositor> mRenderCompositor;
     std::unique_ptr<MeshCache>        mMeshCache;
     std::unique_ptr<MaterialCache>    mMaterialCache;
+    std::unique_ptr<ModelCache>       mModelCache;
 
     std::array<VkFence, Settings::kMaxFramesInFlight>     mFrameFences{};
     std::array<VkSemaphore, Settings::kMaxFramesInFlight> mAcqSemaphores{};
@@ -100,7 +102,7 @@ private:
 
     std::array<FrameData, Settings::kMaxFramesInFlight> mFrameData;
 
-    std::array<SubsystemEntry, 8U> mSubsystems{};
+    std::array<SubsystemEntry, 9U> mSubsystems{};
     std::size_t                    mInitializedSubsystems{0U};
 
 #if defined(ENABLE_PROFILING)

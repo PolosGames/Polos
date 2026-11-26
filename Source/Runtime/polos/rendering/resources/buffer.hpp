@@ -16,11 +16,6 @@
 #include <ranges>
 #include <span>
 
-namespace polos::resource::model
-{
-struct Primitive;
-}// namespace polos::resource::model
-
 namespace polos::rendering
 {
 
@@ -67,8 +62,7 @@ public:
     /// @brief Initialize a buffer through a temporary staging allocation. The upload completes before returning.
     /// @return Buffer, or nullptr if the data size differs from tDesc.size or upload fails.
     /// @note Adds TRANSFER_DST usage for the initial upload.
-    [[nodiscard]] static auto Create(BufferDescription const& tDesc, std::span<std::byte const> tInitialData)
-        -> std::unique_ptr<Buffer>;
+    [[nodiscard]] static auto Create(BufferDescription const& tDesc, std::span<std::byte const> tInitialData) -> std::unique_ptr<Buffer>;
 
     [[nodiscard]] static auto CreateFixedVertexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>;
     [[nodiscard]] static auto CreateFixedIndexBuffer(std::span<std::byte const> tData) -> std::unique_ptr<Buffer>;
@@ -133,15 +127,12 @@ constexpr bool operator&(polos::rendering::HostAccessFlags tLhs, polos::renderin
     return 0U != (static_cast<std::uint16_t>(tLhs) & static_cast<std::uint16_t>(tRhs));
 }
 
-constexpr polos::rendering::HostAccessFlags
-operator|(polos::rendering::HostAccessFlags tLhs, polos::rendering::HostAccessFlags tRhs)
+constexpr polos::rendering::HostAccessFlags operator|(polos::rendering::HostAccessFlags tLhs, polos::rendering::HostAccessFlags tRhs)
 {
-    return static_cast<polos::rendering::HostAccessFlags>(
-        static_cast<std::uint16_t>(tLhs) | static_cast<std::uint16_t>(tRhs));
+    return static_cast<polos::rendering::HostAccessFlags>(static_cast<std::uint16_t>(tLhs) | static_cast<std::uint16_t>(tRhs));
 }
 
-constexpr polos::rendering::HostAccessFlags&
-operator|=(polos::rendering::HostAccessFlags& tLhs, polos::rendering::HostAccessFlags tRhs)
+constexpr polos::rendering::HostAccessFlags& operator|=(polos::rendering::HostAccessFlags& tLhs, polos::rendering::HostAccessFlags tRhs)
 {
     tLhs = tLhs | tRhs;
     return tLhs;

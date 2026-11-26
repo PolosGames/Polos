@@ -8,6 +8,7 @@
 #include "polos/ecs/components/mesh_renderer_component.hpp"
 #include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
+#include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/scene/scene.hpp"
 #include "polos/utils/profiling.hpp"
 
@@ -75,16 +76,16 @@ void MeshInstanceSyncSystem::updateInstance(scene::Scene& tScene, EntityHandle t
     if (mask.test(kMeshRendererBit))
     {
         auto* const mesh = tScene.getComponent<MeshRendererComponent>(tEntity.index);
-        instance.meshId  = rendering::MeshCache::Get().GetMeshIndexByHandle(mesh->meshHandle);
+        instance.meshId  = rendering::MeshCache::Get().GetMeshIndex(mesh->meshId);
 
         auto const& materials = rendering::MaterialCache::Get();
-        auto const* material  = materials.GetMaterial(mesh->matHandle);
+        auto const* material  = materials.GetMaterial(mesh->materialId);
         if (material == nullptr)
         {
             material = materials.GetMaterial(rendering::kDefaultMaterial);
         }
 
-        instance.texID        = material->baseColorTexture;
+        instance.texID        = rendering::TextureCache::Get().GetTextureIndex(material->baseColorTexture);
         instance.tilingFactor = material->tilingFactor;
     }
 

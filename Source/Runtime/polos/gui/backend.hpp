@@ -7,7 +7,7 @@
 #define POLOS_GUI_BACKEND_HPP
 
 #include "polos/polos_api.hpp"
-#include "polos/utils/string_id.hpp"
+#include "polos/resource/common.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -20,11 +20,11 @@ class CommandBuffer;
 
 namespace polos::gui::backend
 {
-auto Initialize(VkRenderPass tRenderPass) -> bool;
-auto Shutdown() -> void;
-auto BeginFrame() -> void;
-auto RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void;
-auto POLOS_API GetImageTexture(utils::string_id tTexture) -> std::uint64_t;
+auto           Initialize(VkRenderPass tRenderPass) -> bool;
+auto           Shutdown() -> void;
+auto           BeginFrame() -> void;
+auto           RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void;
+auto POLOS_API GetImageTexture(resource::ResourceId tTexture) -> std::uint64_t;
 }// namespace polos::gui::backend
 
 #endif// POLOS_GUI_BACKEND_HPP

@@ -133,8 +133,7 @@ auto ReadField(ryml::ConstNodeRef tNode, char const* tKey, T tDefault) -> T
 
 auto ReadVec3(ryml::ConstNodeRef tNode, char const* tKey, glm::vec3 tDefault) -> glm::vec3
 {
-    auto const value = utils::yaml::ReadArray(
-        utils::yaml::Find(tNode, ryml::to_csubstr(tKey)), std::array{tDefault.x, tDefault.y, tDefault.z});
+    auto const value = utils::yaml::ReadArray(utils::yaml::Find(tNode, ryml::to_csubstr(tKey)), std::array{tDefault.x, tDefault.y, tDefault.z});
     return {value[0], value[1], value[2]};
 }
 
@@ -154,8 +153,8 @@ auto WriteComponents(Scene& tScene, ecs::EntityHandle tHandle, ryml::NodeRef tEn
         auto const& value = *tScene.GetComponent<ecs::MeshRendererComponent>(tHandle);
         auto        node  = tEntity["mesh_renderer"];
         node |= ryml::MAP;
-        WriteId(node["mesh"], value.meshHandle);
-        WriteId(node["material"], value.matHandle);
+        WriteId(node["mesh"], value.meshId);
+        WriteId(node["material"], value.materialId);
     }
     if (tScene.HasComponent<ecs::VisibilityComponent>(tHandle))
     {
@@ -168,8 +167,7 @@ auto WriteComponents(Scene& tScene, ecs::EntityHandle tHandle, ryml::NodeRef tEn
         auto const& value = *tScene.GetComponent<ecs::CameraComponent>(tHandle);
         auto        node  = tEntity["camera"];
         node |= ryml::MAP;
-        node["cameraType"].set_val(
-            value.cameraType == ecs::CameraType::kOrtho ? ryml::csubstr{"orthographic"} : ryml::csubstr{"perspective"});
+        node["cameraType"].set_val(value.cameraType == ecs::CameraType::kOrtho ? ryml::csubstr{"orthographic"} : ryml::csubstr{"perspective"});
         node["nearZ"] << value.nearZ;
         node["farZ"] << value.farZ;
         node["fov"] << value.fov;
@@ -239,10 +237,10 @@ auto ReadComponents(Scene& tScene, ecs::EntityHandle tHandle, ryml::ConstNodeRef
         }
         return value;
     }) && read("mesh_renderer", [](ryml::ConstNodeRef node) {
-        ecs::MeshRendererComponent value{.meshHandle = ReadId(utils::yaml::Find(node, "mesh"))};
+        ecs::MeshRendererComponent value{.meshId = ReadId(utils::yaml::Find(node, "mesh"))};
         if (auto const material = utils::yaml::Find(node, "material"); material.readable())
         {
-            value.matHandle = ReadId(material);
+            value.materialId = ReadId(material);
         }
         return value;
     }) && read("visibility", [](ryml::ConstNodeRef node) {
@@ -460,8 +458,7 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
     }
 
     auto const entitySequence = utils::yaml::Find(document, "scene");
-    if (!entitySequence.readable() || !entitySequence.is_seq() || !entitySequence.has_children() ||
-        entitySequence.num_children() > ecs::Settings::kMaxEntities)
+    if (!entitySequence.readable() || !entitySequence.is_seq() || !entitySequence.has_children() || entitySequence.num_children() > ecs::Settings::kMaxEntities)
     {
         LogError("Invalid entity sequence in scene: {}", tScene);
         return nullptr;
@@ -488,8 +485,7 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
         }
 
         auto const handle = scene->newEntity();
-        scene->addComponent(
-            handle.index, ecs::InfoComponent{.debugName = name, .graphHandle = kInvalidSceneGraphHandle});
+        scene->addComponent(handle.index, ecs::InfoComponent{.debugName = name, .graphHandle = kInvalidSceneGraphHandle});
     }
 
     // Visit from the root so each parent already has a graph handle when its children are attached.
@@ -821,7 +817,7 @@ auto SceneManager::LoadScene(std::string_view const tScene) -> Scene*
 //     {
 //         if ((serializedEntities[index].componentTypes & (legacyQuadMask | meshMask)) == legacyQuadMask &&
 //             scene->AddComponent(
-//                 scene->GetEntityAtIndex(index), MeshRendererComponent{.meshHandle = rendering::kDefaultQuad, .matHandle = }) ==
+//                 scene->GetEntityAtIndex(index), MeshRendererComponent{.meshId = rendering::kDefaultQuad, .materialId = }) ==
 //                 nullptr)
 //         {
 //             return nullptr;

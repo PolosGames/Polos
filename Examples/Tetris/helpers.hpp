@@ -12,7 +12,7 @@
 #include <glm/glm.hpp>
 #include <polos/ecs/components/light_component.hpp>
 #include <polos/ecs/entity.hpp>
-#include <polos/rendering/cache/texture_cache.hpp>
+#include <polos/rendering/resources/texture.hpp>
 #include <polos/utils/string_id.hpp>
 
 namespace polos::scene
@@ -24,7 +24,7 @@ namespace ctc
 {
 auto CreateEntityFromModel(
     polos::scene::Scene*                  tScene,
-    polos::utils::string_id               tModel,
+    polos::rendering::ResourceId          tModel,
     polos::ecs::TransformComponent const& tTransform = {},
     std::string_view                      tName      = "New Entity") -> polos::ecs::EntityHandle;
 
@@ -33,17 +33,17 @@ auto CreateLightSource(polos::scene::Scene* tScene, polos::ecs::LightComponent c
 
 auto CreateQuad(
     polos::scene::Scene*                  tScene,
-    polos::rendering::MaterialHandle      tMaterial,
+    polos::rendering::ResourceId          tMaterial,
     polos::ecs::TransformComponent const& tTransform = {},
     std::string_view                      tName      = "New Quad") -> polos::ecs::EntityHandle;
 
-void CreateGrid(polos::scene::Scene* tScene, polos::rendering::MaterialHandle tMaterial, glm::ivec2 tSize, glm::vec3 tPosition);
+void CreateGrid(polos::scene::Scene* tScene, polos::rendering::ResourceId tMaterial, glm::ivec2 tSize, glm::vec3 tPosition);
 
 auto CreateMaterialFromTexture(
     std::string_view                        tTexture,
     std::string_view                        tName           = {},
     polos::rendering::SamplerDetails const& tSamplerDetails = {},
-    float                                   tTilingFactor   = 1.0F) -> polos::rendering::MaterialHandle;
+    float                                   tTilingFactor   = 1.0F) -> polos::rendering::ResourceId;
 
 auto CreateCamera(
     polos::scene::Scene*                  tScene,
@@ -55,7 +55,7 @@ auto CreateCamera(
 auto CreateCube(
     polos::scene::Scene*                  tScene,
     polos::ecs::TransformComponent const& tTransform = {},
-    polos::rendering::MaterialHandle      tMaterial  = polos::rendering::kDefaultMaterial,
+    polos::rendering::ResourceId          tMaterial  = polos::rendering::kDefaultMaterial,
     std::string_view                      tName      = "New Cube",
     polos::ecs::EntityHandle              tParent    = polos::ecs::EntityHandle{.index = 0U, .version = 0U}) -> polos::ecs::EntityHandle;
 

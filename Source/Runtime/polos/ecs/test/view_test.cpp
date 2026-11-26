@@ -82,9 +82,9 @@ TEST(ViewTest, GroupedAccessFlattensInDeclarationOrderAndRequiresEveryComponent)
     EXPECT_EQ(visibility, scene->GetComponent<VisibilityComponent>(match));
 
     transform->position.x = 2.0F;
-    renderer->meshHandle  = "mesh.test"_sid;
+    renderer->meshId      = "mesh.test"_sid;
     EXPECT_FLOAT_EQ(scene->GetComponent<TransformComponent>(match)->position.x, 2.0F);
-    EXPECT_EQ(scene->GetComponent<MeshRendererComponent>(match)->meshHandle, "mesh.test"_sid);
+    EXPECT_EQ(scene->GetComponent<MeshRendererComponent>(match)->meshId, "mesh.test"_sid);
     EXPECT_EQ(++iterator, view.end());
 }
 

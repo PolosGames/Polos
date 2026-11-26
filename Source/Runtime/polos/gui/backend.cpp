@@ -18,7 +18,6 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
-#include <limits>
 #include <type_traits>
 #include <unordered_map>
 
@@ -26,8 +25,8 @@ namespace polos::gui::backend
 {
 namespace
 {
-constexpr std::uint32_t                               kImageCapacity{256U};
-std::unordered_map<utils::string_id, VkDescriptorSet> gImageDescriptors;
+constexpr std::uint32_t                                   kImageCapacity{256U};
+std::unordered_map<resource::ResourceId, VkDescriptorSet> gImageDescriptors;
 
 template<typename T>
 auto ToTextureId(T tDescriptor) -> std::uint64_t
@@ -153,7 +152,7 @@ auto RecordDrawData(rendering::CommandBuffer& tCmdBuf) -> void
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), tCmdBuf.GetHandle());
 }
 
-auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
+auto GetImageTexture(resource::ResourceId tTexture) -> std::uint64_t
 {
     auto itr = gImageDescriptors.find(tTexture);
     if (itr == gImageDescriptors.end())
@@ -166,16 +165,10 @@ auto GetImageTexture(utils::string_id tTexture) -> std::uint64_t
         auto const* texture = rendering::TextureCache::Get().GetTexture(tTexture);
         if (texture == nullptr)
         {
-            auto const index = rendering::TextureCache::Get().CreateTexture(tTexture, {});
-            if (index == std::numeric_limits<std::uint32_t>::max())
-            {
-                return 0U;
-            }
-            texture = rendering::TextureCache::Get().GetTextureAtIndex(index);
+            return 0U;
         }
 
-        auto* const descriptor =
-            ImGui_ImplVulkan_AddTexture(texture->sampler, texture->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        auto* const descriptor = ImGui_ImplVulkan_AddTexture(texture->sampler, texture->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         if (descriptor == VK_NULL_HANDLE)
         {
             return 0U;

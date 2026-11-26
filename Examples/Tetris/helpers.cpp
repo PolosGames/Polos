@@ -9,8 +9,9 @@
 
 #include <polos/ecs/components/mesh_renderer_component.hpp>
 #include <polos/ecs/components/transform_component.hpp>
-#include <polos/rendering/cache/material_cache.hpp>
 #include <polos/rendering/cache/mesh_cache.hpp>
+#include <polos/rendering/cache/model_cache.hpp>
+#include <polos/rendering/resources/material.hpp>
 #include <polos/resource/resource_manager.hpp>
 #include <polos/scene/scene.hpp>
 #include <polos/utils/pair.hpp>
@@ -21,21 +22,26 @@ namespace ctc
 {
 
 using namespace polos;
-auto CreateEntityFromModel(scene::Scene* tScene, utils::string_id tModel, ecs::TransformComponent const& tTransform, std::string_view tName)
+auto CreateEntityFromModel(scene::Scene* tScene, rendering::ResourceId tModel, ecs::TransformComponent const& tTransform, std::string_view tName)
     -> ecs::EntityHandle
 {
+    auto const* model = rendering::ModelCache::Get().GetModel(tModel);
+    if (model == nullptr)
+    {
+        return ecs::kInvalidEntityHandle;
+    }
+
     auto parent = tScene->NewEntity();
     tScene->AddComponent(parent, tTransform);
     tScene->GetMutableComponent<ecs::InfoComponent>(parent)->debugName = tName.empty() ? tModel : utils::StrHash64Runtime(tName);
 
-    auto                                                     model = resource::ResourceManager::Get().GetModel(tModel);
     std::vector<utils::Pair<std::size_t, ecs::EntityHandle>> pending;
     pending.reserve(model->nodes.size());
 
     // Stack order attaches siblings in reverse because NewEntity prepends them.
     for (auto const root : model->rootNodes)
     {
-        pending.push_back({root, parent});
+        pending.push_back({.first = root, .second = parent});
     }
 
     while (!pending.empty())
@@ -54,22 +60,23 @@ auto CreateEntityFromModel(scene::Scene* tScene, utils::string_id tModel, ecs::T
 
         if (node.meshIndex)
         {
-            auto& mesh = model->meshes[*node.meshIndex];
-            for (auto& primitive : mesh.primitives)
+            auto const& mesh = model->meshes[*node.meshIndex];
+            for (auto const primitiveId : mesh.primitives)
             {
-                auto primitiveEntity = tScene->NewEntity(nodeEntity, utils::StrHash64Runtime(primitive.name));
+                auto const& primitive       = *rendering::MeshCache::Get().GetMesh(primitiveId);
+                auto        primitiveEntity = tScene->NewEntity(nodeEntity, primitive.name);
                 tScene->AddComponent(primitiveEntity, ecs::TransformComponent{});
                 tScene->AddComponent(
                     primitiveEntity, ecs::MeshRendererComponent{
-                                         .meshHandle = rendering::MeshCache::Get().AddMesh(primitive),
-                                         .matHandle  = primitive.material,
+                                         .meshId     = primitiveId,
+                                         .materialId = primitive.material,
                                      });
             }
         }
 
         for (auto const child : node.children)
         {
-            pending.push_back({child, nodeEntity});
+            pending.push_back({.first = child, .second = nodeEntity});
         }
     }
 
@@ -86,7 +93,7 @@ auto CreateLightSource(scene::Scene* tScene, ecs::LightComponent const& tLight, 
     return entity;
 }
 
-auto CreateQuad(scene::Scene* tScene, rendering::MaterialHandle const tMaterial, ecs::TransformComponent const& tTransform, std::string_view tName)
+auto CreateQuad(scene::Scene* tScene, rendering::ResourceId const tMaterial, ecs::TransformComponent const& tTransform, std::string_view tName)
     -> ecs::EntityHandle
 {
     using namespace polos;
@@ -97,15 +104,15 @@ auto CreateQuad(scene::Scene* tScene, rendering::MaterialHandle const tMaterial,
     tScene->AddComponent(quad, tTransform);
     tScene->AddComponent(
         quad, ecs::MeshRendererComponent{
-                  .meshHandle = rendering::kDefaultQuad,
-                  .matHandle  = tMaterial,
+                  .meshId     = rendering::kDefaultQuad,
+                  .materialId = tMaterial,
               });
     return quad;
 }
 
-void CreateGrid(scene::Scene* tScene, rendering::MaterialHandle tMaterial, glm::ivec2 tSize, glm::vec3 tPosition)
+void CreateGrid(scene::Scene* tScene, rendering::ResourceId tMaterial, glm::ivec2 tSize, glm::vec3 tPosition)
 {
-    resource::model::MeshPrimitive grid{
+    rendering::MeshPrimitiveData grid{
         .name              = "Tetris.Grid",
         .primitiveVertices = {},
         .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
@@ -126,26 +133,17 @@ void CreateGrid(scene::Scene* tScene, rendering::MaterialHandle tMaterial, glm::
 
     auto const entity = tScene->NewEntity(tScene->sceneRoot, "Tetris Grid"_sid);
     tScene->AddComponent(entity, ecs::TransformComponent{.position = tPosition});
-    tScene->AddComponent(entity, ecs::MeshRendererComponent{.meshHandle = rendering::MeshCache::Get().AddMesh(grid), .matHandle = tMaterial});
+    auto const meshId = rendering::MeshCache::Get().AddMesh(utils::StrHash64Runtime(grid.name), grid);
+    tScene->AddComponent(entity, ecs::MeshRendererComponent{.meshId = meshId, .materialId = tMaterial});
 }
 
 auto CreateMaterialFromTexture(std::string_view tTexture, std::string_view tName, rendering::SamplerDetails const& tSamplerDetails, float tTilingFactor)
-    -> rendering::MaterialHandle
+    -> rendering::ResourceId
 {
-    auto const matTexture = resource::material::MaterialTexture{
-        .img            = utils::StrHash64Runtime(tTexture),
-        .textureDetails = tSamplerDetails,
-    };
-
-    auto const                   nameHash = tName.empty() ? matTexture.img : utils::StrHash64Runtime(tName);
-    resource::material::Material resMat{
-        .name             = nameHash,
-        .baseColorFactor  = {1.0F, 1.0F, 1.0F, 1.0F},
-        .baseColorTexture = matTexture,
-        .tilingFactor     = tTilingFactor,
-    };
-
-    return rendering::MaterialCache::Get().AddMaterial(nameHash, rendering::Material::Create(resMat));
+    auto const textureId  = utils::StrHash64Runtime(tTexture);
+    auto const materialId = tName.empty() ? textureId : utils::StrHash64Runtime(tName);
+    return resource::ResourceManager::Get().LoadMaterial(
+        materialId, rendering::Material{.baseColorTexture = textureId, .tilingFactor = tTilingFactor}, tSamplerDetails);
 }
 
 auto CreateCamera(scene::Scene* tScene, ecs::TransformComponent const& tTransform, ecs::CameraType tType, std::string_view tName, ecs::EntityHandle tParent)
@@ -163,7 +161,7 @@ auto CreateCamera(scene::Scene* tScene, ecs::TransformComponent const& tTransfor
 auto CreateCube(
     scene::Scene*                  tScene,
     ecs::TransformComponent const& tTransform,
-    rendering::MaterialHandle      tMaterial,
+    rendering::ResourceId          tMaterial,
     std::string_view               tName,
     ecs::EntityHandle              tParent) -> ecs::EntityHandle
 {
@@ -171,7 +169,7 @@ auto CreateCube(
 
     tScene->GetMutableComponent<ecs::InfoComponent>(cube)->debugName = utils::StrHash64Runtime(tName);
     tScene->AddComponent(cube, tTransform);
-    tScene->AddComponent(cube, ecs::MeshRendererComponent{.meshHandle = rendering::kDefaultCube, .matHandle = tMaterial});
+    tScene->AddComponent(cube, ecs::MeshRendererComponent{.meshId = rendering::kDefaultCube, .materialId = tMaterial});
 
     return cube;
 }

@@ -8,15 +8,10 @@
 
 #include "polos/polos_api.hpp"
 #include "polos/resource/common.hpp"
-#include "polos/resource/material.hpp"
 #include "polos/resource/storage.hpp"
 
-#include <cstddef>
 #include <filesystem>
 #include <memory>
-#include <span>
-#include <string>
-#include <string_view>
 #include <unordered_map>
 
 namespace polos::fs
@@ -24,19 +19,17 @@ namespace polos::fs
 struct File;
 }// namespace polos::fs
 
+namespace polos::rendering
+{
+struct ImageData;
+struct Material;
+struct SamplerDetails;
+}// namespace polos::rendering
+
 namespace polos::resource
 {
-namespace image
-{
-struct Image;
-}// namespace image
 
-namespace model
-{
-struct Model;
-}// namespace model
-
-/// CPU resource registry and cache. Catalog resources are preloaded before rendering.
+/// Loads cataloged rendering resources into the rendering caches.
 /// Catalog paths are relative to "Resources" beside the executable.
 class POLOS_API ResourceManager
 {
@@ -54,49 +47,29 @@ public:
     [[nodiscard]] static auto Get() -> ResourceManager&;
     [[nodiscard]] auto        Root() const -> std::filesystem::path const&;
 
-    /// @brief Reads Resources/resources.yaml and preloads cataloged textures, materials, and models.
-    /// Logs the first failure and aborts immediately if the catalog or any resource cannot load.
+    /// @brief Reads Resources/resources.yaml after the rendering caches are initialized.
+    /// Loads models, materials and their referenced textures. Aborts if a required asset fails to load.
     auto LoadCatalog() -> void;
 
-    /// @brief Load and cache under tId, or return the cached resource if already loaded.
-    [[nodiscard]] auto LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<image::Image>;
-    // [[nodiscard]] auto LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>;
+    /// @brief Registers a material and loads its texture from the catalog. Returns zero on failure.
+    [[nodiscard]] auto LoadMaterial(ResourceId tId, rendering::Material tMaterial, rendering::SamplerDetails const& tSampler) -> ResourceId;
 
-    /// @brief Load and cache under tId, or return the cached resource if already loaded.
+    /// @brief Load and cache CPU data under tId, or return the cached data if already loaded.
+    [[nodiscard]] auto LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<rendering::ImageData>;
     [[nodiscard]] auto LoadFile(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<fs::File>;
-    // [[nodiscard]] auto LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>;
 
-    /// @brief Return the cached representation, or nullptr
-    [[nodiscard]] auto GetImage(ResourceId tId) const -> std::shared_ptr<image::Image>;
-    [[nodiscard]] auto GetModel(ResourceId tId) const -> std::shared_ptr<model::Model>;
-    [[nodiscard]] auto GetMaterial(ResourceId tId) const -> std::shared_ptr<material::Material>;
+    [[nodiscard]] auto GetImage(ResourceId tId) const -> std::shared_ptr<rendering::ImageData>;
     [[nodiscard]] auto GetFile(ResourceId tId) const -> std::shared_ptr<fs::File>;
 
-    [[nodiscard]] auto FetchMaterials() -> std::vector<std::weak_ptr<material::Material>>;
-    [[nodiscard]] auto FetchModels() -> std::vector<std::weak_ptr<model::Model>>;
-
-    /// @brief Releases the manager's ownership.
-    /// Getters return nullptr until resources are loaded again. Existing shared references remain valid.
+    /// @brief Releases the manager's catalog paths and CPU data. The renderer owns its caches.
     auto ClearCache() -> void;
 private:
-    auto registerResource(std::string_view tId, std::filesystem::path const& tPath) -> ResourceId;
+    [[nodiscard]] auto loadTexture(ResourceId tId, rendering::SamplerDetails const& tSampler) -> ResourceId;
 
-    void loadImage(ResourceId tResource);
-    void loadMaterial(ResourceId tResource);
-    void loadModel(ResourceId tResource);
-
-    struct Resource
-    {
-        std::filesystem::path path;
-    };
-
-    std::filesystem::path                    mRoot;
-    std::unordered_map<ResourceId, Resource> mResources;
-
-    Storage<image::Image>       mImages;
-    Storage<model::Model>       mModels;
-    Storage<material::Material> mMaterials;
-    Storage<fs::File>           mFiles;
+    std::filesystem::path                                 mRoot;
+    std::unordered_map<ResourceId, std::filesystem::path> mTexturePaths;
+    Storage<rendering::ImageData>                         mImages;
+    Storage<fs::File>                                     mFiles;
 };
 
 }// namespace polos::resource
