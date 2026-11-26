@@ -4,7 +4,6 @@
 ///
 
 #include "polos/resource/gltf/gltf_loader.hpp"
-#include "polos/resource/model.hpp"
 
 #include <gtest/gtest.h>
 
@@ -20,8 +19,8 @@ class GltfNodesTest : public ::testing::Test
 protected:
     void SetUp() override
     {
-        directory = std::filesystem::temp_directory_path() /
-                    ("polos-gltf-nodes-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        directory =
+            std::filesystem::temp_directory_path() / ("polos-gltf-nodes-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         std::filesystem::create_directories(directory / "Models");
         std::ofstream descriptor(directory / "Models/model.yaml");
         descriptor << "id: model.test\npath: model.gltf\nmaterials: []\n";
@@ -35,7 +34,7 @@ protected:
         std::filesystem::remove_all(directory);
     }
 
-    auto Load(std::string_view nodesAndScenes) -> std::unique_ptr<Model>
+    auto Load(std::string_view nodesAndScenes) -> std::unique_ptr<LoadedModel>
     {
         std::ofstream file(directory / "model.gltf");
         file << R"({"asset":{"version":"2.0"},
@@ -62,26 +61,28 @@ TEST_F(GltfNodesTest, PreservesHierarchyTransformsAndSharedMeshInstancesInDefaul
 ],
 "scenes":[{"nodes":[3]},{"nodes":[0]}],"scene":1)");
     ASSERT_NE(model, nullptr);
-    ASSERT_EQ(model->nodes.size(), 4U);
-    EXPECT_EQ(model->rootNodes, (std::vector<std::size_t>{0}));
-    EXPECT_EQ(model->nodes[0].children, (std::vector<std::size_t>{1, 2}));
-    EXPECT_EQ(model->nodes[0].position, glm::vec3(2, 3, 4));
-    EXPECT_FLOAT_EQ(model->nodes[0].scale, 2.0F);
-    EXPECT_EQ(model->nodes[1].rotation, glm::quat(0, 0, 0, 1));
-    EXPECT_EQ(model->nodes[1].meshIndex, model->nodes[2].meshIndex);
-    EXPECT_EQ(model->nodes[2].position, glm::vec3(5, 6, 7));
-    EXPECT_FLOAT_EQ(model->nodes[2].scale, 3.0F);
-    ASSERT_EQ(model->meshes.size(), 1U);
+    ASSERT_EQ(model->model.nodes.size(), 4U);
+    EXPECT_EQ(model->model.rootNodes, (std::vector<std::size_t>{0}));
+    EXPECT_EQ(model->model.nodes[0].children, (std::vector<std::size_t>{1, 2}));
+    EXPECT_EQ(model->model.nodes[0].position, glm::vec3(2, 3, 4));
+    EXPECT_FLOAT_EQ(model->model.nodes[0].scale, 2.0F);
+    EXPECT_EQ(model->model.nodes[1].rotation, glm::quat(0, 0, 0, 1));
+    EXPECT_EQ(model->model.nodes[1].meshIndex, model->model.nodes[2].meshIndex);
+    EXPECT_EQ(model->model.nodes[2].position, glm::vec3(5, 6, 7));
+    EXPECT_FLOAT_EQ(model->model.nodes[2].scale, 3.0F);
+    ASSERT_EQ(model->model.meshes.size(), 1U);
     // Imported translations belong to nodes, leaving shared mesh vertices in local space.
-    EXPECT_EQ(model->meshes[0].primitives[0].primitiveVertices[1].position, glm::vec3(1, 0, 0));
+    ASSERT_EQ(model->primitives.size(), 1U);
+    EXPECT_EQ(model->model.meshes[0].primitives[0], model->primitives[0].first);
+    EXPECT_EQ(model->primitives[0].second.primitiveVertices[1].position, glm::vec3(1, 0, 0));
 }
 
 TEST_F(GltfNodesTest, FindsParentlessNodesWhenTheAssetHasNoScenes)
 {
     auto model = Load(R"("nodes":[{"children":[1]},{"mesh":0},{"mesh":0}])");
     ASSERT_NE(model, nullptr);
-    EXPECT_EQ(model->rootNodes, (std::vector<std::size_t>{0, 2}));
-    EXPECT_EQ(model->nodes[1].position, glm::vec3(0));
-    EXPECT_FLOAT_EQ(model->nodes[1].scale, 1.0F);
+    EXPECT_EQ(model->model.rootNodes, (std::vector<std::size_t>{0, 2}));
+    EXPECT_EQ(model->model.nodes[1].position, glm::vec3(0));
+    EXPECT_FLOAT_EQ(model->model.nodes[1].scale, 1.0F);
 }
 }// namespace polos::resource::model

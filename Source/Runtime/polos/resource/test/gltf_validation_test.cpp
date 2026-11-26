@@ -1,5 +1,4 @@
 #include "polos/resource/gltf/gltf_loader.hpp"
-#include "polos/resource/model.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
@@ -23,22 +22,15 @@ protected:
     void SetUp() override
     {
         static std::atomic<unsigned> serial{};
-        directory =
-            std::filesystem::temp_directory_path() /
-            ("polos-gltf-validation-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
-             "-" + std::to_string(serial++));
-        std::filesystem::create_directory(directory);
+        directory = std::filesystem::temp_directory_path() /
+                    ("polos-gltf-validation-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(serial++));
+        std::filesystem::create_directories(directory / "Models");
+        std::ofstream(directory / "Models/mesh.yaml") << "id: model.test\npath: mesh.gltf\nmaterials: []\n";
         document = {
             {"asset", {{"version", "2.0"}}},
             {"buffers", {{{"uri", "mesh.bin"}, {"byteLength", 36}}}},
             {"bufferViews", {{{"buffer", 0}, {"byteLength", 36}}}},
-            {"accessors",
-             {{{"bufferView", 0},
-               {"componentType", 5126},
-               {"type", "VEC3"},
-               {"count", 3},
-               {"min", {0, 0, 0}},
-               {"max", {0, 0, 0}}}}},
+            {"accessors", {{{"bufferView", 0}, {"componentType", 5126}, {"type", "VEC3"}, {"count", 3}, {"min", {0, 0, 0}}, {"max", {0, 0, 0}}}}},
             {"meshes", {{{"name", "triangle"}, {"primitives", {{{"attributes", {{"POSITION", 0}}}}}}}}},
         };
     }
@@ -48,7 +40,7 @@ protected:
         std::filesystem::remove_all(directory);
     }
 
-    auto Load() -> std::unique_ptr<polos::resource::model::Model>
+    auto Load() -> std::unique_ptr<polos::resource::model::LoadedModel>
     {
         {
             std::array<char, 36> bytes{};
@@ -57,7 +49,7 @@ protected:
             std::ofstream json(directory / "mesh.gltf");
             json << document.dump();
         }
-        return polos::resource::model::LoadGltf(directory / "mesh.gltf");
+        return polos::resource::model::LoadGltf(directory / "Models/mesh.yaml");
     }
 };
 
@@ -137,8 +129,7 @@ TEST_F(GltfValidationTest, RejectsAccessorWithoutBufferView)
 
 TEST_F(GltfValidationTest, RejectsUnsupportedSparseAccessor)
 {
-    document["accessors"][0]["sparse"] =
-        {{"count", 1}, {"indices", {{"bufferView", 0}, {"componentType", 5121}}}, {"values", {{"bufferView", 0}}}};
+    document["accessors"][0]["sparse"] = {{"count", 1}, {"indices", {{"bufferView", 0}, {"componentType", 5121}}}, {"values", {{"bufferView", 0}}}};
     EXPECT_EQ(Load(), nullptr);
 }
 }// namespace

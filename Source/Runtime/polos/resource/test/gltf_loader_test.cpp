@@ -1,6 +1,5 @@
 #include "polos/rendering/common.hpp"
 #include "polos/resource/gltf/gltf_loader.hpp"
-#include "polos/resource/model.hpp"
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
@@ -30,12 +29,10 @@ protected:
     {
         static std::atomic<unsigned> serial{};
         directory = std::filesystem::temp_directory_path() /
-                    ("polos-gltf-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" +
-                        std::to_string(serial++));
-        std::filesystem::create_directory(directory);
+                    ("polos-gltf-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(serial++));
+        std::filesystem::create_directories(directory / "Models");
         document = {
-            {"asset", {{"version", "2.0"}}}, {"buffers", Json::array()}, {"bufferViews", Json::array()},
-            {"accessors", Json::array()},
+            {"asset", {{"version", "2.0"}}}, {"buffers", Json::array()}, {"bufferViews", Json::array()}, {"accessors", Json::array()},
             {"meshes", Json::array({{{"primitives", Json::array({{{"attributes", Json::object()}}})}}})}
         };
         auto view                              = AddView(Floats({0, 0, 0, 1, 0, 0, 0, 1, 0}));
@@ -90,29 +87,29 @@ protected:
         return index;
     }
 
-    auto AddAccessor(
-        std::size_t        view,
-        std::string const& type,
-        unsigned           count,
-        int                component,
-        bool               normalized = false,
-        unsigned           offset     = 0) -> std::size_t
+    auto AddAccessor(std::size_t view, std::string const& type, unsigned count, int component, bool normalized = false, unsigned offset = 0) -> std::size_t
     {
         auto index = document["accessors"].size();
         document["accessors"].push_back(
-            {{"bufferView", view}, {"byteOffset", offset}, {"type", type}, {"componentType", component},
-                {"count", count}, {"normalized", normalized}});
+            {{"bufferView", view}, {"byteOffset", offset}, {"type", type}, {"componentType", component}, {"count", count}, {"normalized", normalized}});
         return index;
     }
 
-    auto Write() -> std::string
+    auto Write(std::string_view materialId = {}) -> std::filesystem::path
     {
         document["buffers"] = Json::array({{{"uri", "mesh.bin"}, {"byteLength", bytes.size()}}});
         std::ofstream binary(directory / "mesh.bin", std::ios::binary);
         binary.write(reinterpret_cast<char const*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
         std::ofstream json(directory / "mesh.gltf");
         json << document.dump();
-        return (directory / "mesh.gltf").string();
+        auto const    descriptorPath = directory / "Models/mesh.yaml";
+        std::ofstream descriptor(descriptorPath);
+        descriptor << "id: model.test\npath: mesh.gltf\n";
+        if (!materialId.empty())
+        {
+            descriptor << "materials:\n  - id: " << materialId << '\n';
+        }
+        return descriptorPath;
     }
 };
 
@@ -122,17 +119,16 @@ TEST_F(GltfLoaderTest, LoadsPackedPositionsAndDefaultsWithoutIndices)
 
     ASSERT_TRUE(result);
 
-    auto const& model = *result;
+    auto const& model = result->model;
 
     ASSERT_EQ(model.meshes.size(), 1U);
     ASSERT_EQ(model.meshes[0].primitives.size(), 1U);
-    auto const& part = model.meshes[0].primitives[0];
-    EXPECT_EQ(part.name, "mesh.0.part.0"_sid);
-    EXPECT_TRUE(part.primitiveIndices.empty());
-    EXPECT_EQ(part.material.baseColorFactor, (std::array<float, 4>{1, 1, 1, 1}));
-    EXPECT_EQ(part.material.alphaMode, resource::AlphaMode::kOpaque);
-    EXPECT_FLOAT_EQ(part.material.metallicFactor, 1);
-    EXPECT_FLOAT_EQ(part.material.roughnessFactor, 1);
+    ASSERT_EQ(result->primitives.size(), 1U);
+    auto const& [id, part] = result->primitives[0];
+    EXPECT_EQ(model.meshes[0].primitives[0], id);
+    EXPECT_EQ(id, "model.test.mesh.0.0"_sid);
+    EXPECT_EQ(part.primitiveIndices, (std::vector<std::uint32_t>{0, 1, 2}));
+    EXPECT_EQ(part.material, polos::rendering::kDefaultMaterial);
     auto const& vertices = part.primitiveVertices;
 
     ASSERT_EQ(vertices.size(), 3U);
@@ -155,9 +151,9 @@ TEST_F(GltfLoaderTest, LoadsSeparatePositionsAndInterleavedNormalsAndUvsWithOffs
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->meshes.size(), 1U);
-    ASSERT_EQ(result->meshes[0].primitives.size(), 1U);
-    auto const& vertices = result->meshes[0].primitives[0].primitiveVertices;
+    ASSERT_EQ(result->model.meshes.size(), 1U);
+    ASSERT_EQ(result->model.meshes[0].primitives.size(), 1U);
+    auto const& vertices = result->primitives[0].second.primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_EQ(vertices[0].normal, glm::vec3(0, 0, 1));
@@ -179,9 +175,9 @@ TEST_F(GltfLoaderTest, DecodesNormalizedByteRgbBeforePositionAndKeepsAlphaOne)
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->meshes.size(), 1U);
-    ASSERT_EQ(result->meshes[0].primitives.size(), 1U);
-    auto const& vertices = result->meshes[0].primitives[0].primitiveVertices;
+    ASSERT_EQ(result->model.meshes.size(), 1U);
+    ASSERT_EQ(result->model.meshes[0].primitives.size(), 1U);
+    auto const& vertices = result->primitives[0].second.primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_FLOAT_EQ(vertices[0].color.r, 1);
@@ -213,9 +209,9 @@ TEST_F(GltfLoaderTest, DecodesNormalizedShortRgbaAndUvs)
 
     ASSERT_TRUE(result);
 
-    ASSERT_EQ(result->meshes.size(), 1U);
-    ASSERT_EQ(result->meshes[0].primitives.size(), 1U);
-    auto const& vertices = result->meshes[0].primitives[0].primitiveVertices;
+    ASSERT_EQ(result->model.meshes.size(), 1U);
+    ASSERT_EQ(result->model.meshes[0].primitives.size(), 1U);
+    auto const& vertices = result->primitives[0].second.primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
 
     EXPECT_FLOAT_EQ(vertices[0].color.g, 32768.0F / 65535.0F);
@@ -255,9 +251,9 @@ TEST_F(GltfLoaderTest, LoadsAllUnsignedIndexWidths)
 
         auto result = resource::LoadGltf(Write());
         ASSERT_TRUE(result);
-        ASSERT_EQ(result->meshes.size(), 1U);
-        ASSERT_EQ(result->meshes[0].primitives.size(), 1U);
-        auto const& part = result->meshes[0].primitives[0];
+        ASSERT_EQ(result->model.meshes.size(), 1U);
+        ASSERT_EQ(result->model.meshes[0].primitives.size(), 1U);
+        auto const& part = result->primitives[0].second;
         EXPECT_EQ(part.primitiveIndices, expected);
         EXPECT_EQ(part.primitiveVertices.size(), 3U);
     }
@@ -286,14 +282,12 @@ TEST_F(GltfLoaderTest, KeepsIndexedQuadVerticesInAccessorOrder)
 
     auto result = resource::LoadGltf(Write());
     ASSERT_TRUE(result);
-    auto const& part     = result->meshes[0].primitives[0];
+    auto const& part     = result->primitives[0].second;
     auto const& vertices = part.primitiveVertices;
     EXPECT_EQ(part.primitiveIndices, (std::vector<std::uint32_t>{0, 2, 1, 0, 3, 2}));
     ASSERT_EQ(vertices.size(), 4U);
     std::array const expectedUvs{glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1)};
-    std::array const expectedColors{
-        glm::vec4(1, 0, 0, 1), glm::vec4(0, 1, 0, 1), glm::vec4(0, 0, 1, 1), glm::vec4(1, 1, 1, 1)
-    };
+    std::array const expectedColors{glm::vec4(1, 0, 0, 1), glm::vec4(0, 1, 0, 1), glm::vec4(0, 0, 1, 1), glm::vec4(1, 1, 1, 1)};
     for (std::size_t i{0}; i < vertices.size(); ++i)
     {
         EXPECT_EQ(vertices[i].position, glm::vec3(expectedUvs[i], 0));
@@ -313,7 +307,7 @@ TEST_F(GltfLoaderTest, DecodesNormalizedByteUvsAndFloatRgb)
 
     auto result = resource::LoadGltf(Write());
     ASSERT_TRUE(result);
-    auto const& vertices = result->meshes[0].primitives[0].primitiveVertices;
+    auto const& vertices = result->primitives[0].second.primitiveVertices;
     ASSERT_EQ(vertices.size(), 3U);
     EXPECT_EQ(vertices[0].texCoord, glm::vec2(0, 0));
     EXPECT_FLOAT_EQ(vertices[1].texCoord.x, 128.0F / 255.0F);
@@ -326,33 +320,27 @@ TEST_F(GltfLoaderTest, LoadsMultipleMeshesAndMaterialsWithoutTextures)
     document["meshes"][0]["name"] = "Sword";
     document["materials"]         = Json::array(
         {{{"alphaMode", "MASK"}, {"alphaCutoff", 0.25}, {"emissiveFactor", {0.1, 0.2, 0.3}},
-            {"pbrMetallicRoughness",
-                {{"baseColorFactor", {0.2, 0.3, 0.4, 0.5}}, {"metallicFactor", 0.25}, {"roughnessFactor", 0.75}}}}});
+            {"pbrMetallicRoughness", {{"baseColorFactor", {0.2, 0.3, 0.4, 0.5}}, {"metallicFactor", 0.25}, {"roughnessFactor", 0.75}}}}});
     auto primitive        = Primitive();
     primitive["material"] = 0;
     document["meshes"][0]["primitives"].push_back(primitive);
     document["meshes"].push_back({{"name", "second"}, {"primitives", Json::array({primitive})}});
 
-    auto result = resource::LoadGltf(Write());
+    auto result = resource::LoadGltf(Write("material.Sword"));
     ASSERT_TRUE(result);
-    ASSERT_EQ(result->meshes.size(), 2U);
-    ASSERT_EQ(result->meshes[0].primitives.size(), 2U);
-    ASSERT_EQ(result->meshes[1].primitives.size(), 1U);
-    EXPECT_EQ(result->meshes[0].primitives[0].name, "mesh.Sword.part.0"_sid);
-    EXPECT_EQ(result->meshes[0].primitives[1].name, "mesh.Sword.part.1"_sid);
-    EXPECT_EQ(result->meshes[1].primitives[0].name, "mesh.second.part.0"_sid);
-    EXPECT_EQ(result->meshes[1].name, "second");
-    EXPECT_EQ(result->meshes[0].primitives[0].material.alphaMode, resource::AlphaMode::kOpaque);
-    auto const& material = result->meshes[0].primitives[1].material;
-    EXPECT_EQ(material.alphaMode, resource::AlphaMode::kMask);
-    EXPECT_FLOAT_EQ(material.alphaCutoff, 0.25F);
-    EXPECT_FLOAT_EQ(material.emissiveFactor[2], 0.3F);
-    EXPECT_FLOAT_EQ(material.baseColorFactor[1], 0.3F);
-    EXPECT_FLOAT_EQ(material.metallicFactor, 0.25F);
-    EXPECT_FLOAT_EQ(material.roughnessFactor, 0.75F);
-    EXPECT_EQ(material.normalTexture, resource::kNoTextureIndex);
-    EXPECT_EQ(material.baseColorTexture, resource::kNoTextureIndex);
-    EXPECT_EQ(result->meshes[1].primitives[0].primitiveVertices.size(), 3U);
+    ASSERT_EQ(result->model.meshes.size(), 2U);
+    ASSERT_EQ(result->model.meshes[0].primitives.size(), 2U);
+    ASSERT_EQ(result->model.meshes[1].primitives.size(), 1U);
+    ASSERT_EQ(result->primitives.size(), 3U);
+    EXPECT_EQ(result->model.meshes[0].primitives[0], result->primitives[0].first);
+    EXPECT_EQ(result->model.meshes[0].primitives[1], result->primitives[1].first);
+    EXPECT_EQ(result->model.meshes[1].primitives[0], result->primitives[2].first);
+    EXPECT_EQ(result->model.meshes[1].name, "mesh.second");
+    EXPECT_EQ(result->primitives[0].second.material, polos::rendering::kDefaultMaterial);
+    EXPECT_EQ(result->primitives[1].second.material, "material.Sword"_sid);
+    EXPECT_EQ(result->primitives[2].second.material, "material.Sword"_sid);
+    EXPECT_EQ(result->primitives[2].second.primitiveVertices.size(), 3U);
+    EXPECT_TRUE(result->materialTextures.empty());
 }
 
 TEST_F(GltfLoaderTest, RejectsMismatchedAttributeCountsInEitherDirection)
@@ -386,57 +374,45 @@ TEST_F(GltfLoaderTest, RejectsMissingPositionsAndUnsupportedModes)
     }
 }
 
-TEST_F(GltfLoaderTest, RecordsExternalTexturePathsAndRejectsInvalidMaterials)
+TEST_F(GltfLoaderTest, RecordsExternalTextureIdsAndRejectsInvalidMaterials)
 {
-    document["images"]   = Json::array({{{"uri", "missing.png"}}});
-    document["textures"] = Json::array({{{"source", 0}}});
-    auto result          = resource::LoadGltf(Write());
-    ASSERT_TRUE(result);
-    ASSERT_EQ(result->textures.size(), 1U);
-    EXPECT_EQ(result->textures.front().path, directory / "missing.png");
+    document["images"]                      = Json::array({{{"uri", "textures/missing.png"}}});
+    document["textures"]                    = Json::array({{{"source", 0}}});
+    document["materials"]                   = Json::array({{{"pbrMetallicRoughness", {{"baseColorTexture", {{"index", 0}}}}}}});
+    Primitive()["material"]                 = 0;
+    auto view                               = AddView(Floats({0, 0, 1, 0, 0, 1}));
+    Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC2", 3, 5126);
 
-    document.erase("images");
-    document.erase("textures");
+    auto result = resource::LoadGltf(Write("material.test"));
+    ASSERT_TRUE(result);
+    ASSERT_TRUE(result->materialTextures.contains("material.test"_sid));
+    EXPECT_EQ(result->materialTextures.at("material.test"_sid).image, "texture.missing"_sid);
+
     document["materials"] = Json::array({{{"alphaMode", "INVALID"}}});
-    EXPECT_FALSE(resource::LoadGltf(Write()));
+    EXPECT_FALSE(resource::LoadGltf(Write("material.test")));
 }
 
 TEST_F(GltfLoaderTest, ResolvesRelativeImagesAndSharedSamplerIndices)
 {
-    // A complete one-pixel RGBA PNG, stored below the glTF directory.
-    std::array<std::uint8_t, 70> const png{
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
-        0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00,
-        0x0D, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0xFF, 0xFF, 0xFF, 0x7F, 0x00, 0x09, 0xFB, 0x03, 0xFD,
-        0x2A, 0x86, 0xE3, 0x8A, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
-    };
-    std::filesystem::create_directory(directory / "textures");
-    auto const filename = directory.filename().string() + ".png";
-    {
-        std::ofstream file(directory / "textures" / filename, std::ios::binary);
-        file.write(reinterpret_cast<char const*>(png.data()), static_cast<std::streamsize>(png.size()));
-    }
-    document["images"] = Json::array({{{"uri", "textures/" + filename}}});
-    document["samplers"] =
-        Json::array({{{"minFilter", 9986}, {"magFilter", 9729}, {"wrapS", 33071}, {"wrapT", 33648}}});
-    document["textures"]    = Json::array({{{"source", 0}, {"sampler", 0}}, {{"source", 0}, {"sampler", 0}}});
-    document["materials"]   = Json::array({{{"pbrMetallicRoughness", {{"baseColorTexture", {{"index", 1}}}}}}});
-    Primitive()["material"] = 0;
-    auto view               = AddView(Floats({0, 0, 1, 0, 0, 1}));
+    std::string const filename              = "sampler.png";
+    document["images"]                      = Json::array({{{"uri", "textures/" + filename}}});
+    document["samplers"]                    = Json::array({{{"minFilter", 9986}, {"magFilter", 9729}, {"wrapS", 33071}, {"wrapT", 33648}}});
+    document["textures"]                    = Json::array({{{"source", 0}, {"sampler", 0}}, {{"source", 0}, {"sampler", 0}}});
+    document["materials"]                   = Json::array({{{"pbrMetallicRoughness", {{"baseColorTexture", {{"index", 1}}}}}}});
+    Primitive()["material"]                 = 0;
+    auto view                               = AddView(Floats({0, 0, 1, 0, 0, 1}));
     Primitive()["attributes"]["TEXCOORD_0"] = AddAccessor(view, "VEC2", 3, 5126);
 
-    auto result = resource::LoadGltf(Write());
+    auto result = resource::LoadGltf(Write("material.test"));
     ASSERT_TRUE(result);
-    auto const index = result->meshes[0].primitives[0].material.baseColorTexture;
-    ASSERT_EQ(index, 1U);
-    ASSERT_LT(index, result->textures.size());
-    auto const& texture = result->textures[index];
-    EXPECT_EQ(texture.path, directory / "textures" / filename);
-    EXPECT_EQ(texture.samplerDetails.minFilter, VK_FILTER_NEAREST);
-    EXPECT_EQ(texture.samplerDetails.magFilter, VK_FILTER_LINEAR);
-    EXPECT_EQ(texture.samplerDetails.mipmap, VK_SAMPLER_MIPMAP_MODE_LINEAR);
-    EXPECT_EQ(texture.samplerDetails.addressModeU, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
-    EXPECT_EQ(texture.samplerDetails.addressModeV, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT);
+    ASSERT_TRUE(result->materialTextures.contains("material.test"_sid));
+    auto const& texture = result->materialTextures.at("material.test"_sid);
+    EXPECT_EQ(texture.image, "texture.sampler"_sid);
+    EXPECT_EQ(texture.sampler.minFilter, VK_FILTER_NEAREST);
+    EXPECT_EQ(texture.sampler.magFilter, VK_FILTER_LINEAR);
+    EXPECT_EQ(texture.sampler.mipmap, VK_SAMPLER_MIPMAP_MODE_LINEAR);
+    EXPECT_EQ(texture.sampler.addressModeU, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+    EXPECT_EQ(texture.sampler.addressModeV, VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT);
 }
 
 TEST_F(GltfLoaderTest, RejectsMalformedAccessorsAndRanges)
@@ -501,9 +477,7 @@ TEST_F(GltfLoaderTest, RejectsMalformedAccessorsAndRanges)
     });
 
     expectRejectedDocument([&] {
-        document["accessors"][0]["sparse"] = {
-            {"count", 1}, {"indices", {{"bufferView", 0}, {"componentType", 5121}}}, {"values", {{"bufferView", 0}}}
-        };
+        document["accessors"][0]["sparse"] = {{"count", 1}, {"indices", {{"bufferView", 0}, {"componentType", 5121}}}, {"values", {{"bufferView", 0}}}};
     });
 
     expectRejectedDocument([&] {
@@ -518,13 +492,9 @@ TEST_F(GltfLoaderTest, ReturnsNullForMissingOrMalformedFiles)
 {
     EXPECT_EQ(resource::LoadGltf(directory / "missing.gltf"), nullptr);
 
-    auto path = directory / "malformed.gltf";
-    {
-        std::ofstream file(path);
-        file << "{invalid json";
-    }
-
-    EXPECT_EQ(resource::LoadGltf(path), nullptr);
+    auto const descriptor = Write();
+    std::ofstream(directory / "mesh.gltf") << "{invalid json";
+    EXPECT_EQ(resource::LoadGltf(descriptor), nullptr);
 }
 
 TEST_F(GltfLoaderTest, SkipsUnsupportedAttributesAndCleansUpFailedLoads)

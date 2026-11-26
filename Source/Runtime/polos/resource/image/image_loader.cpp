@@ -6,7 +6,7 @@
 #include "polos/resource/image/image_loader.hpp"
 
 #include "polos/logging/log_macros.hpp"
-#include "polos/resource/image.hpp"
+#include "polos/rendering/resources/image_data.hpp"
 
 #include <stb_image.h>
 
@@ -19,30 +19,30 @@ namespace
 {
 constexpr std::int32_t kOutputComponents{4};
 
-auto MakeImage(std::uint8_t* tPixels, std::int32_t tWidth, std::int32_t tHeight) -> std::shared_ptr<Image>
+auto MakeImage(std::uint8_t* tPixels, std::int32_t tWidth, std::int32_t tHeight) -> std::shared_ptr<rendering::ImageData>
 {
     auto const imgSize = static_cast<std::size_t>(tWidth) * static_cast<std::size_t>(tHeight) * kOutputComponents;
-    return std::shared_ptr<Image>(
-        new Image{
+    return std::shared_ptr<rendering::ImageData>(
+        new rendering::ImageData{
             .width      = tWidth,
             .height     = tHeight,
             .components = kOutputComponents,
             .data       = std::span<std::uint8_t>(tPixels, imgSize),
         },
-        [](Image* tPtr) -> void {
+        [](rendering::ImageData* tPtr) -> void {
             stbi_image_free(tPtr->data.data());
             delete tPtr;
         });
 }
 }// namespace
 
-auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<Image>
+auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<rendering::ImageData>
 {
     std::int32_t width{0};
     std::int32_t height{0};
     std::int32_t sourceComponents{0};
-    auto const pathUtf8 = tPath.u8string();
-    auto const* path = reinterpret_cast<char const*>(pathUtf8.c_str());
+    auto const   pathUtf8 = tPath.u8string();
+    auto const*  path     = reinterpret_cast<char const*>(pathUtf8.c_str());
     if (1U != stbi_info(path, &width, &height, &sourceComponents))
     {
         LogError("Could not read image information for '{}': {}", path, stbi_failure_reason());
@@ -60,7 +60,7 @@ auto LoadImage(std::filesystem::path const& tPath) -> std::shared_ptr<Image>
     return MakeImage(pixels, width, height);
 }
 
-auto LoadImage(std::span<std::byte const> tData) -> std::shared_ptr<Image>
+auto LoadImage(std::span<std::byte const> tData) -> std::shared_ptr<rendering::ImageData>
 {
     if (tData.empty() || std::cmp_greater(tData.size(), std::numeric_limits<int>::max()))
     {
@@ -73,12 +73,7 @@ auto LoadImage(std::span<std::byte const> tData) -> std::shared_ptr<Image>
     std::int32_t sourceComponents{0};
     stbi_set_flip_vertically_on_load_thread(1);
     auto* pixels = stbi_load_from_memory(
-        reinterpret_cast<stbi_uc const*>(tData.data()),
-        static_cast<int>(tData.size()),
-        &width,
-        &height,
-        &sourceComponents,
-        kOutputComponents);
+        reinterpret_cast<stbi_uc const*>(tData.data()), static_cast<int>(tData.size()), &width, &height, &sourceComponents, kOutputComponents);
     if (pixels == nullptr)
     {
         LogError("Could not decode image data: {}", stbi_failure_reason());

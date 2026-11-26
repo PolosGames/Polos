@@ -7,7 +7,6 @@
 
 #include "polos/logging/log_macros.hpp"
 #include "polos/rendering/common.hpp"
-#include "polos/resource/model.hpp"
 #include "polos/utils/constexpr_map.hpp"
 #include "polos/utils/pair.hpp"
 #include "polos/utils/yaml_read.hpp"
@@ -18,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <limits>
 #include <span>
@@ -37,7 +37,11 @@ thread_local fastgltf::Parser gParser;
 
 using fastgltf::AccessorType;
 using fastgltf::ComponentType;
+using rendering::AABB;
+using rendering::Mesh;
+using rendering::MeshPrimitiveData;
 using rendering::MeshVertex;
+using rendering::Node;
 using namespace std::string_view_literals;
 
 auto HasAccessorData(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor) -> bool
@@ -57,8 +61,7 @@ auto HasAccessorData(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tA
 
     auto const& view = tAsset.bufferViews[*tAccessor.bufferViewIndex];
     auto const& data = tAsset.buffers[view.bufferIndex].data;
-    return std::holds_alternative<fastgltf::sources::Array>(data) ||
-           std::holds_alternative<fastgltf::sources::Vector>(data) ||
+    return std::holds_alternative<fastgltf::sources::Array>(data) || std::holds_alternative<fastgltf::sources::Vector>(data) ||
            std::holds_alternative<fastgltf::sources::ByteView>(data);
 }
 
@@ -66,8 +69,7 @@ template<auto Member>
 using VertexMember = std::integral_constant<decltype(Member), Member>;
 
 template<auto Member, typename Element>
-auto ReadAttribute(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices)
-    -> bool
+auto ReadAttribute(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices) -> bool
 {
     if (tAccessor.type != fastgltf::ElementTraits<Element>::type)
     {
@@ -84,8 +86,7 @@ auto ReadAttribute(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAcc
             return false;
         }
 
-        bool const isUnsigned = tAccessor.componentType == ComponentType::UnsignedByte ||
-                                tAccessor.componentType == ComponentType::UnsignedShort;
+        bool const isUnsigned = tAccessor.componentType == ComponentType::UnsignedByte || tAccessor.componentType == ComponentType::UnsignedShort;
         if (!isUnsigned)
         {
             return false;
@@ -113,8 +114,7 @@ auto ReadAttribute(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAcc
     return true;
 }
 
-auto ReadColor(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices)
-    -> bool
+auto ReadColor(fastgltf::Asset const& tAsset, fastgltf::Accessor const& tAccessor, std::span<MeshVertex> tVertices) -> bool
 {
     if (tAccessor.type == AccessorType::Vec3)
     {
@@ -132,7 +132,7 @@ inline constexpr utils::ConstexprMap kAttribReaders(
         utils::Pair("COLOR_0"sv, &ReadColor),
     });
 
-auto ReadIndices(fastgltf::Asset const& tAsset, fastgltf::Primitive const& tPrimitive, MeshPrimitive& tTarget) -> bool
+auto ReadIndices(fastgltf::Asset const& tAsset, fastgltf::Primitive const& tPrimitive, MeshPrimitiveData& tTarget) -> bool
 {
     if (!tPrimitive.indicesAccessor)
     {
@@ -157,8 +157,7 @@ auto ReadIndices(fastgltf::Asset const& tAsset, fastgltf::Primitive const& tPrim
         return false;
     }
 
-    bool const isUnsigned = accessor.componentType == ComponentType::UnsignedByte ||
-                            accessor.componentType == ComponentType::UnsignedShort ||
+    bool const isUnsigned = accessor.componentType == ComponentType::UnsignedByte || accessor.componentType == ComponentType::UnsignedShort ||
                             accessor.componentType == ComponentType::UnsignedInt;
     if (!isUnsigned)
     {
@@ -202,9 +201,8 @@ auto ToAddressMode(fastgltf::Wrap tWrap) -> VkSamplerAddressMode
 auto ReadSampler(fastgltf::Sampler const& tSampler) -> rendering::SamplerDetails
 {
     using fastgltf::Filter;
-    auto const min = tSampler.minFilter.value_or(Filter::LinearMipMapLinear);
-    bool const nearestMin =
-        min == Filter::Nearest || min == Filter::NearestMipMapNearest || min == Filter::NearestMipMapLinear;
+    auto const min        = tSampler.minFilter.value_or(Filter::LinearMipMapLinear);
+    bool const nearestMin = min == Filter::Nearest || min == Filter::NearestMipMapNearest || min == Filter::NearestMipMapLinear;
     bool const nearestMip = min == Filter::NearestMipMapNearest || min == Filter::LinearMipMapNearest;
 
     return {
@@ -216,7 +214,7 @@ auto ReadSampler(fastgltf::Sampler const& tSampler) -> rendering::SamplerDetails
     };
 }
 
-auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId const> tMaterials, Model& tModel) -> bool
+auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId const> tMaterials, LoadedModel& tModel) -> bool
 {
     for (std::size_t i{0U}; i < tMaterials.size(); ++i)
     {
@@ -231,13 +229,12 @@ auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId co
         }
 
         auto const& texture = tAsset.textures[baseColor->textureIndex];
-        if ((texture.imageIndex && *texture.imageIndex >= tAsset.images.size()) ||
-            (texture.samplerIndex && *texture.samplerIndex >= tAsset.samplers.size()))
+        if ((texture.imageIndex && *texture.imageIndex >= tAsset.images.size()) || (texture.samplerIndex && *texture.samplerIndex >= tAsset.samplers.size()))
         {
             return false;
         }
 
-        material::MaterialTexture binding;
+        LoadedModel::MaterialTexture binding{.image = 0, .sampler = rendering::SamplerDetails{}};
         if (texture.imageIndex)
         {
             auto const& image = tAsset.images[*texture.imageIndex];
@@ -245,12 +242,12 @@ auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId co
             {
                 // The preprocessor uses the image file stem for the catalog ID.
                 auto const name = std::filesystem::path(std::string_view(uri->uri->path())).stem().string();
-                binding.img     = utils::StrHash64Runtime("texture." + name);
+                binding.image   = utils::StrHash64Runtime("texture." + name);
             }
         }
         if (texture.samplerIndex)
         {
-            binding.textureDetails = ReadSampler(tAsset.samplers[*texture.samplerIndex]);
+            binding.sampler = ReadSampler(tAsset.samplers[*texture.samplerIndex]);
         }
         tModel.materialTextures.emplace(tMaterials[i], binding);
     }
@@ -260,6 +257,8 @@ auto ReadMaterialTextures(fastgltf::Asset const& tAsset, std::span<ResourceId co
 auto ProcessMesh(
     fastgltf::Asset const&      tAsset,
     Mesh&                       tTarget,
+    std::string_view            tMeshId,
+    LoadedModel&                tModel,
     fastgltf::Mesh const&       tInput,
     std::span<ResourceId const> tMaterials) -> bool
 {
@@ -268,13 +267,15 @@ auto ProcessMesh(
         return false;
     }
 
-    tTarget.primitives.resize(tInput.primitives.size());
+    tTarget.primitives.reserve(tInput.primitives.size());
     tTarget.bounds.min = glm::vec3(std::numeric_limits<float>::infinity());
     tTarget.bounds.max = -tTarget.bounds.min;
 
     for (size_t i{0U}; i < tInput.primitives.size(); ++i)
     {
-        MeshPrimitive&             meshPrim  = tTarget.primitives[i];
+        MeshPrimitiveData meshPrim{
+            .name = tTarget.name + "." + std::to_string(i),
+        };
         fastgltf::Primitive const& primitive = tInput.primitives[i];
 
         if (primitive.type != fastgltf::PrimitiveType::Triangles)
@@ -303,8 +304,6 @@ auto ProcessMesh(
             return false;
         }
 
-        meshPrim.name     = tTarget.name + "." + std::to_string(i);
-        meshPrim.material = rendering::kDefaultMaterial;
         if (primitive.materialIndex)
         {
             if (*primitive.materialIndex >= tMaterials.size())
@@ -358,13 +357,17 @@ auto ProcessMesh(
         };
         tTarget.bounds.min = glm::min(tTarget.bounds.min, meshPrim.bounds->min);
         tTarget.bounds.max = glm::max(tTarget.bounds.max, meshPrim.bounds->max);
+
+        auto const id = utils::StrHash64Runtime(std::format("{}.{}", tMeshId, i));
+        tTarget.primitives.push_back(id);
+        tModel.primitives.push_back({.first = id, .second = std::move(meshPrim)});
     }
 
     return true;
 }
 }// namespace
 
-auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
+auto LoadGltf(std::filesystem::path const& tPath, std::string_view tId) -> std::unique_ptr<LoadedModel>
 {
     std::ifstream file(tPath);
     if (!file)
@@ -389,8 +392,7 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
 
     auto assetRes = gParser.loadGltf(
         data.get(), path.parent_path(),
-        fastgltf::Options::LoadExternalBuffers | fastgltf::Options::GenerateMeshIndices |
-            fastgltf::Options::DecomposeNodeMatrices);
+        fastgltf::Options::LoadExternalBuffers | fastgltf::Options::GenerateMeshIndices | fastgltf::Options::DecomposeNodeMatrices);
     if (assetRes.has_error())
     {
         LogError("Could not parse model file {}: {}", path.string(), fastgltf::getErrorMessage(assetRes.error()));
@@ -418,40 +420,42 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         }
     }
 
-    auto model  = std::make_unique<Model>();
-    model->name = modelName;
-    if (materials.size() > asset.materials.size() || !ReadMaterialTextures(asset, materials, *model))
+    auto  loaded = std::make_unique<LoadedModel>();
+    auto& model  = loaded->model;
+    model.name   = modelName;
+    if (materials.size() > asset.materials.size() || !ReadMaterialTextures(asset, materials, *loaded))
     {
         LogError("Invalid material texture references in {}", modelName);
         return nullptr;
     }
-    model->meshes.resize(asset.meshes.size());
+    model.meshes.resize(asset.meshes.size());
 
     for (size_t i{0U}; i < asset.meshes.size(); ++i)
     {
         auto const& input = asset.meshes[i];
-        auto&       mesh  = model->meshes[i];
-        mesh.name = input.name.empty() ? "mesh." + modelName + std::to_string(i) : "mesh." + std::string(input.name);
+        auto&       mesh  = model.meshes[i];
+        mesh.name         = input.name.empty() ? "mesh." + modelName + std::to_string(i) : "mesh." + std::string(input.name);
 
-        if (!ProcessMesh(asset, mesh, input, materials))
+        auto const meshId = std::format("{}.mesh.{}", tId.empty() ? std::string_view(id) : tId, i);
+        if (!ProcessMesh(asset, mesh, meshId, *loaded, input, materials))
         {
             LogError("Could not process mesh {} in {}", mesh.name, modelName);
             return nullptr;
         }
     }
 
-    model->nodes.reserve(asset.nodes.size());
+    model.nodes.reserve(asset.nodes.size());
     std::vector<bool> hasParent(asset.nodes.size(), false);
     for (auto const& input : asset.nodes)
     {
         auto const& trs = std::get<fastgltf::TRS>(input.transform);
         Node        node{
-            .name     = input.name,
-            .position = {trs.translation[0], trs.translation[1], trs.translation[2]},
-            .rotation = {trs.rotation[3], trs.rotation[0], trs.rotation[1], trs.rotation[2]},
-            .scale    = trs.scale[0],
+            .name      = input.name,
+            .position  = {trs.translation[0], trs.translation[1], trs.translation[2]},
+            .rotation  = {trs.rotation[3], trs.rotation[0], trs.rotation[1], trs.rotation[2]},
+            .scale     = trs.scale[0],
             .meshIndex = std::nullopt,
-            .children = input.children,
+            .children  = input.children,
         };
         if (input.meshIndex)
         {
@@ -461,13 +465,13 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         {
             hasParent[child] = true;
         }
-        model->nodes.push_back(std::move(node));
+        model.nodes.push_back(std::move(node));
     }
 
     if (!asset.scenes.empty())
     {
         auto const sceneIndex = asset.defaultScene.value_or(0U);
-        model->rootNodes      = asset.scenes[sceneIndex].nodeIndices;
+        model.rootNodes       = asset.scenes[sceneIndex].nodeIndices;
     }
     else
     {
@@ -475,12 +479,12 @@ auto LoadGltf(std::filesystem::path const& tPath) -> std::unique_ptr<Model>
         {
             if (!hasParent[i])
             {
-                model->rootNodes.push_back(i);
+                model.rootNodes.push_back(i);
             }
         }
     }
 
-    return model;
+    return loaded;
 }
 
 }// namespace polos::resource::model

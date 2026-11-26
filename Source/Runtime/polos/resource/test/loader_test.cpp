@@ -1,4 +1,4 @@
-#include "polos/resource/image.hpp"
+#include "polos/rendering/resources/image_data.hpp"
 #include "polos/resource/image/image_loader.hpp"
 #include "polos/resource/storage.hpp"
 
@@ -24,8 +24,7 @@ protected:
     {
         static std::atomic<unsigned> serial{};
         directory = std::filesystem::temp_directory_path() /
-                    ("polos-image-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
-                     "-" + std::to_string(serial++));
+                    ("polos-image-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(serial++));
         std::filesystem::create_directory(directory);
     }
 
@@ -122,9 +121,7 @@ TEST_F(ImageLoaderTest, ExpandsRgbAndGrayscaleInputsToCompleteRgbaBuffers)
         {
             std::ofstream file(path, std::ios::binary);
             file.write(reinterpret_cast<char const*>(header.data()), static_cast<std::streamsize>(header.size()));
-            file.write(
-                reinterpret_cast<char const*>(fixture.source.data()),
-                static_cast<std::streamsize>(fixture.source.size()));
+            file.write(reinterpret_cast<char const*>(fixture.source.data()), static_cast<std::streamsize>(fixture.source.size()));
         }
 
         auto const image = polos::resource::image::LoadImage(path);

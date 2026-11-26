@@ -1,6 +1,6 @@
 # Resource loading
 
-Polos reads `Resources/resources.yaml` beside the executable and preloads cataloged textures, materials, and models before rendering starts. Package the catalog and its files together, keeping their paths relative to `Resources/`.
+Polos reads `Resources/resources.yaml` beside the executable after the rendering caches are initialized. Before application scene creation, it loads models, mesh primitives, materials, and the textures referenced by those materials. Package the catalog and its files together, keeping their paths relative to `Resources/`.
 
 ## Prepare a project
 
@@ -36,22 +36,37 @@ resources:
 
 Use `texture.`, `material.`, and `model.` prefixes for those asset types. Generated texture and model IDs use the file stem, so use unique stems within each type. Material IDs come from glTF material names when present, so keep those names unique across the project. In a hand-edited catalog, keep the ID when moving a file and update only its path.
 
-The runtime rejects duplicate IDs and stops startup if it cannot read the catalog or preload a listed texture, material, or model. See the [Tetris catalog](../../../../Examples/Tetris/Resources/resources.yaml) for a texture-only example.
+The runtime rejects duplicate IDs and stops startup if it cannot read the catalog or load a model, material, or referenced texture. Texture catalog entries provide paths for material loading. Tetris registers its materials in C++ using those paths. [Tetris catalog](../../../../Examples/Tetris/Resources/resources.yaml)
 
 ## Use resources from C++
 
 Look up resources by ID. Use `_sid` for string literals and `polos::utils::StrHash64(id)` when the ID is known at runtime.
 
 ```cpp
-#include <polos/resource/resource_manager.hpp>
-#include <polos/utils/string_id.hpp>
+#include <polos/rendering/cache/material_cache.hpp>
+#include <polos/rendering/cache/mesh_cache.hpp>
+#include <polos/rendering/cache/model_cache.hpp>
+#include <polos/rendering/cache/texture_cache.hpp>
 
-auto const& resources = polos::resource::ResourceManager::Get();
-auto image = resources.GetImage("texture.checker"_sid);
-auto material = resources.GetMaterial("material.checker"_sid);
-auto model = resources.GetModel("model.tile"_sid);
+using namespace polos::rendering;
+
+auto const* model = ModelCache::Get().GetModel("model.tile"_sid);
+auto const* material = MaterialCache::Get().GetMaterial("material.checker"_sid);
+auto const* texture = TextureCache::Get().GetTexture("texture.checker"_sid);
+
+if (model != nullptr)
+{
+    for (auto const& mesh : model->meshes)
+    {
+        for (ResourceId id : mesh.primitives)
+        {
+            auto const* primitive = MeshCache::Get().GetMesh(id);
+            // Use id and primitive->material when creating a mesh renderer component.
+        }
+    }
+}
 ```
 
-The getters return cached shared pointers, or `nullptr` when the requested ID and type are absent. Use `LoadImage(id, path)` or `LoadFile(id, path)` to load additional images or raw files explicitly. Relative paths passed to these functions are resolved from the working directory. After loading a raw file, retrieve it with `GetFile(id)`. The resource cache holds CPU data. The renderer manages GPU uploads separately.
+Cache lookups return `nullptr` when an ID is absent. A model keeps its node hierarchy, transforms, and mesh bounds. Its meshes reference uploaded primitives by ID, and materials reference cached textures by ID.
 
-`ClearCache()` releases the manager's references while existing shared pointers remain valid. Reloading the catalog replaces the manager's caches.
+For a material defined in C++, use `ResourceManager::LoadMaterial(id, material, sampler)`. It uploads the referenced texture before adding the material to the cache. The render context owns the rendering caches and the lifetime of their entries.

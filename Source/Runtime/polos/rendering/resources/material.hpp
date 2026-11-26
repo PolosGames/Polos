@@ -8,7 +8,6 @@
 
 #include "polos/polos_api.hpp"
 #include "polos/rendering/common.hpp"
-#include "polos/resource/material.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,11 +15,9 @@ namespace polos::rendering
 {
 struct POLOS_API Material
 {
-    glm::vec4    baseColorFactor{1.0F};
-    TextureIndex baseColorTexture{kDefaultTextureIndex};
-    float        tilingFactor{kDefaultTilingFactor};
-
-    [[nodiscard]] static auto Create(resource::material::Material const& tMat) -> Material;
+    glm::vec4  baseColorFactor{1.0F};
+    ResourceId baseColorTexture{kDefaultTexture};
+    float      tilingFactor{kDefaultTilingFactor};
 };
 }// namespace polos::rendering
 

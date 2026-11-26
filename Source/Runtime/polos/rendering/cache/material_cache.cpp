@@ -6,7 +6,6 @@
 #include "polos/rendering/cache/material_cache.hpp"
 
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/cache/texture_cache.hpp"
 
 namespace polos::rendering
 {
@@ -32,28 +31,17 @@ auto MaterialCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
     mMaterials.try_emplace(kDefaultMaterial, Material{});
 
-    std::vector<std::weak_ptr<resource::material::Material>> materials =
-        resource::ResourceManager::Get().FetchMaterials();
-
-    for (auto& material : materials)
-    {
-        auto matPtr = material.lock();
-
-        mMaterials.try_emplace(matPtr->name, Material::Create(*matPtr));
-    }
-
     return {};
 }
 
 auto MaterialCache::Destroy() -> void
 {
     mMaterials.clear();
-    mNextSuffix = 1U;
 }
 
-auto MaterialCache::AddMaterial(resource::ResourceId tName, Material const& tMat) -> MaterialHandle
+auto MaterialCache::AddMaterial(ResourceId tId, Material const& tMat) -> ResourceId
 {
-    auto const [itr, success] = mMaterials.try_emplace(tName, tMat);
+    auto const [itr, success] = mMaterials.try_emplace(tId, tMat);
 
     if (!success)
     {
@@ -63,9 +51,9 @@ auto MaterialCache::AddMaterial(resource::ResourceId tName, Material const& tMat
     return itr->first;
 }
 
-auto MaterialCache::GetMaterial(MaterialHandle const tHandle) const -> Material const*
+auto MaterialCache::GetMaterial(ResourceId const tId) const -> Material const*
 {
-    auto const found = mMaterials.find(tHandle);
+    auto const found = mMaterials.find(tId);
     return found != mMaterials.end() ? &found->second : nullptr;
 }
 

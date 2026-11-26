@@ -6,9 +6,7 @@
 #include "polos/rendering/cache/mesh_cache.hpp"
 
 #include "polos/logging/log_macros.hpp"
-#include "polos/rendering/resources/material.hpp"
 #include "polos/rendering/vk/vulkan_utils.hpp"
-#include "polos/resource/resource_manager.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/profiling.hpp"
 #include "polos/utils/string_map.hpp"
@@ -34,10 +32,10 @@ struct alignas(16) GpuMeshBounds
     glm::vec4 max;
 };
 
-auto ComputeBounds(std::span<MeshVertex const> tVertices) -> resource::model::AABB
+auto ComputeBounds(std::span<MeshVertex const> tVertices) -> AABB
 {
-    auto const            initial = tVertices.front().position;
-    resource::model::AABB bounds{.max = initial, .min = initial};
+    auto const initial = tVertices.front().position;
+    AABB       bounds{.max = initial, .min = initial};
     for (auto const& vertex : tVertices.subspan(1))
     {
         bounds.max = glm::max(bounds.max, vertex.position);
@@ -179,25 +177,24 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
     }
 
     {
-        resource::model::MeshPrimitive cubeMesh;
-
-        cubeMesh.name              = "mesh.DefaultCube";
-        cubeMesh.material          = kDefaultMaterial;
-        cubeMesh.primitiveVertices = CreateCubeVertices();
+        MeshPrimitiveData cubeMesh{
+            .name              = "mesh.DefaultCube",
+            .primitiveVertices = CreateCubeVertices(),
+        };
         // The generated vertices are already in triangle order.
         cubeMesh.primitiveIndices.resize(cubeMesh.primitiveVertices.size());
         cubeMesh.bounds = ComputeBounds(cubeMesh.primitiveVertices);
         std::ranges::iota(cubeMesh.primitiveIndices, std::uint32_t{0});
 
-        std::ignore = AddMesh(cubeMesh);
+        std::ignore = AddMesh(kDefaultCube, cubeMesh);
     }
 
     {
-        resource::model::MeshPrimitive quadMesh{
+        MeshPrimitiveData quadMesh{
             .name              = "mesh.DefaultQuad",
             .primitiveVertices = {},
             .primitiveIndices  = {0U, 1U, 2U, 2U, 3U, 0U},
-            .material          = {},
+            .material          = kDefaultMaterial,
             .bounds            = {},
         };
         constexpr std::array corners{
@@ -217,19 +214,7 @@ auto MeshCache::Create(CreationDetails const&) -> Result<void>
             });
         }
         quadMesh.bounds = ComputeBounds(quadMesh.primitiveVertices);
-        std::ignore     = AddMesh(quadMesh);
-    }
-
-    for (auto const& model : resource::ResourceManager::Get().FetchModels())
-    {
-        auto modelPtr = model.lock();
-        for (auto const& mesh : modelPtr->meshes)
-        {
-            for (auto const& meshPrim : mesh.primitives)
-            {
-                std::ignore = AddMesh(meshPrim);
-            }
-        }
+        std::ignore     = AddMesh(kDefaultQuad, quadMesh);
     }
 
     return {};
@@ -248,28 +233,24 @@ auto MeshCache::Destroy() -> void
     mMeshInfos.clear();
     mMeshUses.clear();
     mMeshes.clear();
+    mMeshAliases.clear();
     mVertexHead = 0U;
     mIndexHead  = 0U;
     mMeshCount  = 0U;
 }
 
-auto MeshCache::AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHandle
+auto MeshCache::AddMesh(ResourceId const tId, MeshPrimitiveData const& tMesh) -> ResourceId
 {
-    LogDebug("Adding to mesh cache: {}", tMesh.name);
-
-    auto meshId = utils::StrHash64Runtime(tMesh.name);
-    if (mMeshes.contains(meshId))
+    if (mMeshes.contains(tId))
     {
-        return meshId;
+        return tId;
     }
+
+    LogDebug("Adding to mesh cache: {}", tMesh.name);
 
     auto const vertData = std::span(tMesh.primitiveVertices);
     auto const indData  = std::span(tMesh.primitiveIndices);
     PL_ASSERT(!vertData.empty() && !indData.empty(), "MeshPrimitive must contain non-empty vertices and indices");
-
-    Entry entry;
-
-    entry.name = meshId;
 
     while (mVertexHead + vertData.size_bytes() > mVertexBuffer->size)
     {
@@ -281,71 +262,68 @@ auto MeshCache::AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHand
         PL_ASSERT(mIndexBuffer->Resize(mIndexBuffer->size + kGrowthAmount), "Unable to resize mesh indices");
     }
 
-    entry.vertexOffset = mVertexHead;
-    entry.indexOffset  = mIndexHead;
-
-    PL_ASSERT(mVertexBuffer->Upload(std::as_bytes(vertData), entry.vertexOffset), "Unable to upload mesh vertices to mega buffer");
-    PL_ASSERT(mIndexBuffer->Upload(std::as_bytes(indData), entry.indexOffset), "Unable to upload mesh indices to mega buffer");
-
-    mVertexHead += vertData.size_bytes();
-    mIndexHead += indData.size_bytes();
-
-    entry.vertexCount = ToVkSize(tMesh.primitiveVertices.size());
-    entry.indexCount  = ToVkSize(tMesh.primitiveIndices.size());
+    PL_ASSERT(mVertexBuffer->Upload(std::as_bytes(vertData), mVertexHead), "Unable to upload mesh vertices to mega buffer");
+    PL_ASSERT(mIndexBuffer->Upload(std::as_bytes(indData), mIndexHead), "Unable to upload mesh indices to mega buffer");
 
     mMeshInfos.push_back(
         VkDrawIndexedIndirectCommand{
-            .indexCount    = ToVkSize(entry.indexCount),
+            .indexCount    = ToVkSize(indData.size()),
             .instanceCount = 0U,
-            .firstIndex    = ToVkSize(entry.indexOffset / sizeof(uint32_t)),
-            .vertexOffset  = static_cast<int32_t>(entry.vertexOffset / sizeof(MeshVertex)),
+            .firstIndex    = ToVkSize(mIndexHead / sizeof(uint32_t)),
+            .vertexOffset  = static_cast<int32_t>(mVertexHead / sizeof(MeshVertex)),
             .firstInstance = 0U,
         });
 
+    mVertexHead += vertData.size_bytes();
+    mIndexHead += indData.size_bytes();
     mMeshInstances.push_back(0U);
 
     auto const          bounds = tMesh.bounds ? *tMesh.bounds : ComputeBounds(vertData);
     GpuMeshBounds const gpuBounds{.min = glm::vec4(bounds.min, 0.0F), .max = glm::vec4(bounds.max, 0.0F)};
-
-    entry.meshIndex = mMeshCount++;
-    entry.material  = tMesh.material;
-
-    auto const boundsOffset = entry.meshIndex * sizeof(GpuMeshBounds);
+    auto const          boundsOffset = mMeshCount * sizeof(GpuMeshBounds);
     while (boundsOffset + sizeof(GpuMeshBounds) > mMeshBoundsBuffer->size)
     {
         PL_ASSERT(mMeshBoundsBuffer->Resize(mMeshBoundsBuffer->size * 2ULL), "Unable to resize mesh bounds buffer");
     }
     mMeshBoundsBuffer->Write(&gpuBounds, sizeof(GpuMeshBounds), boundsOffset);
-    mMeshes[meshId] = entry;
 
-    return entry.name;
-}
-
-auto MeshCache::HasMesh(MeshHandle const tHandle) -> bool
-{
-    return mMeshes.contains(tHandle);
-}
-
-auto MeshCache::GetMeshIndexByHandle(MeshHandle const tHandle) -> MeshIndex
-{
-    if (!HasMesh(tHandle))
+    auto const name = tMesh.name.empty() ? tId : utils::StrHash64Runtime(tMesh.name);
+    mMeshes.emplace(tId, MeshPrimitive{.name = name, .index = mMeshCount++, .material = tMesh.material, .bounds = bounds});
+    if (name != tId)
     {
-        LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tHandle));
-        return std::numeric_limits<uint32_t>::max();
+        // Existing scenes may refer to imported primitives by their unqualified names.
+        mMeshAliases.try_emplace(name, tId);
     }
 
-    return mMeshes[tHandle].meshIndex;
+    return tId;
 }
 
-auto MeshCache::GetMaterialByHandle(MeshHandle tHandle) -> MaterialHandle
+auto MeshCache::GetMesh(ResourceId const tId) const -> MeshPrimitive const*
 {
-    if (!HasMesh(tHandle))
+    auto const found = mMeshes.find(tId);
+    if (found != mMeshes.end())
     {
-        LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tHandle));
-        return std::numeric_limits<uint32_t>::max();
+        return &found->second;
     }
 
-    return mMeshes[tHandle].material;
+    auto const previousId = mMeshAliases.find(tId);
+    return previousId != mMeshAliases.end() ? &mMeshes.at(previousId->second) : nullptr;
+}
+
+auto MeshCache::HasMesh(ResourceId const tId) const -> bool
+{
+    return GetMesh(tId) != nullptr;
+}
+
+auto MeshCache::GetMeshIndex(ResourceId const tId) const -> MeshIndex
+{
+    if (auto const* mesh = GetMesh(tId))
+    {
+        return mesh->index;
+    }
+
+    LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tId));
+    return kInvalidMeshId;
 }
 
 auto MeshCache::GetVertexBuffer() -> VkBuffer
@@ -378,26 +356,14 @@ auto MeshCache::GetIndirectCommandBufferByFrameSlot(uint32_t const tFrameSlot) -
     return mMeshInfoBuffer[tFrameSlot]->buffer;
 }
 
-auto MeshCache::IncreaseMeshUse(MeshHandle const tHandle) -> void
+auto MeshCache::IncreaseMeshUse(ResourceId const tId) -> void
 {
-    if (!HasMesh(tHandle))
-    {
-        LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tHandle));
-        return;
-    }
-
-    IncreaseMeshUseByIndex(mMeshes[tHandle].meshIndex);
+    IncreaseMeshUseByIndex(GetMeshIndex(tId));
 }
 
-auto MeshCache::DecreaseMeshUse(MeshHandle const tHandle) -> void
+auto MeshCache::DecreaseMeshUse(ResourceId const tId) -> void
 {
-    if (!HasMesh(tHandle))
-    {
-        LogError("Mesh doesn't exist with name {}", utils::GetStringFromID(tHandle));
-        return;
-    }
-
-    DecreaseMeshUseByIndex(mMeshes[tHandle].meshIndex);
+    DecreaseMeshUseByIndex(GetMeshIndex(tId));
 }
 
 auto MeshCache::IncreaseMeshUseByIndex(MeshIndex const tMeshIndex) -> void

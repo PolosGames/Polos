@@ -11,12 +11,7 @@
 #include "polos/rendering/resources/image.hpp"
 #include "polos/rendering/vk/descriptor_pool_builder.hpp"
 #include "polos/rendering/vk/vulkan_device.hpp"
-#include "polos/resource/image.hpp"
-#include "polos/resource/resource_manager.hpp"
 
-#include <algorithm>
-#include <limits>
-#include <tuple>
 #include <utility>
 
 namespace polos::rendering
@@ -48,8 +43,7 @@ TextureCache::~TextureCache()
 auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
 {
     {
-        VkDescriptorBindingFlags const bindingFlags =
-            VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+        VkDescriptorBindingFlags const bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 
         VkDescriptorSetLayoutBindingFlagsCreateInfo const bindingFlagsInfo{
             .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
@@ -77,154 +71,67 @@ auto TextureCache::Create(CreationDetails const& /*tDetails*/) -> Result<void>
         mBindlessPool = builder.Finalize();
     }
 
-    // Source-style magenta fallback.
-    auto image = Image::Create(
-        ImageDescription{
-            .extent      = VkExtent3D{.width = 1U, .height = 1U, .depth = 1U},
-            .format      = VK_FORMAT_R8G8B8A8_SRGB,
-            .usage       = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-            .mipLevels   = 1U,
-            .arrayLayers = 1U,
-            .samples     = VK_SAMPLE_COUNT_1_BIT,
-        },
-        VK_FORMAT_R8G8B8A8_SRGB, kDefaultTextureRgba);
-
-    if (nullptr == image)
+    if (!AddTexture(kDefaultTexture, {.width = 1U, .height = 1U}, kDefaultTextureRgba, SamplerDetails{}))
     {
         return ErrorType{RenderingErrc::kFailedCreateDefaultTexture};
-    }
-
-    auto texture = Texture::Create(kDefaultTexture, std::move(image), {});
-    if (nullptr == texture)
-    {
-        return ErrorType{RenderingErrc::kFailedCreateDefaultTexture};
-    }
-    mTextures.push_back(std::move(texture));
-    writeBindlessDescriptor(kDefaultTextureIndex, *mTextures.front());
-
-    for (auto const& material : resource::ResourceManager::Get().FetchMaterials())
-    {
-        if (auto source = material.lock())
-        {
-            auto const& baseColor = source->baseColorTexture;
-            std::ignore = GetOrCreateTextureIndex(baseColor.img, baseColor.textureDetails);
-        }
     }
 
     return {};
 }
 
-auto TextureCache::CreateTexture(resource::ResourceId const tResource, SamplerDetails const& tDetails) -> uint32_t
+auto TextureCache::AddTexture(ResourceId const tId, VkExtent2D const tExtent, std::span<std::uint8_t const> tPixels, SamplerDetails const& tDetails) -> bool
 {
-    auto& textures = mTextures;
-    if (textures.size() >= kMaxBindlessTextures)
+    if (auto const* texture = GetTexture(tId))
+    {
+        return texture->details == tDetails;
+    }
+
+    if (mTextures.size() >= kMaxBindlessTextures)
     {
         LogError("Bindless texture cache capacity ({}) exceeded", kMaxBindlessTextures);
-        return std::numeric_limits<uint32_t>::max();
+        return false;
     }
 
-    auto image = resource::ResourceManager::Get().GetImage(tResource);
-    if (image == nullptr)
-    {
-        LogError("Texture image '{}' is missing from the resource catalog.", tResource);
-        return std::numeric_limits<std::uint32_t>::max();
-    }
-
-    auto const         width  = static_cast<std::uint32_t>(image->width);
-    auto const         height = static_cast<std::uint32_t>(image->height);
     constexpr VkFormat format{VK_FORMAT_R8G8B8A8_SRGB};
-
-    auto gpuImage = Image::Create(
+    auto               image = Image::Create(
         ImageDescription{
-            .extent      = VkExtent3D{.width = width, .height = height, .depth = 1U},
+            .extent      = VkExtent3D{.width = tExtent.width, .height = tExtent.height, .depth = 1U},
             .format      = format,
             .usage       = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
             .mipLevels   = 1U,
             .arrayLayers = 1U,
             .samples     = VK_SAMPLE_COUNT_1_BIT,
         },
-        format, image->data);
-
-    if (gpuImage == nullptr)
+        format, tPixels);
+    if (image == nullptr)
     {
-        LogError("Could not create a GPU image for texture '{}'.", tResource);
-        return std::numeric_limits<std::uint32_t>::max();
+        LogError("Could not create a GPU image for texture '{}'.", tId);
+        return false;
     }
 
-    auto const index   = static_cast<uint32_t>(textures.size());
-    auto       texture = Texture::Create(tResource, std::move(gpuImage), tDetails);
-    if (nullptr == texture)
+    auto texture = Texture::Create(tId, std::move(image), tDetails);
+    if (texture == nullptr)
     {
-        LogError("Texture could not be created from the image");
-        return std::numeric_limits<uint32_t>::max();
+        return false;
     }
 
-    textures.push_back(std::move(texture));
-    writeBindlessDescriptor(static_cast<TextureIndex>(index), *textures.back());
-
-    return index;
+    texture->index   = static_cast<TextureIndex>(mTextures.size());
+    auto const entry = mTextures.emplace(tId, std::move(texture)).first;
+    writeBindlessDescriptor(entry->second->index, *entry->second);
+    return true;
 }
 
-auto TextureCache::GetOrCreateTextureIndex(resource::ResourceId const tResource, SamplerDetails const& tDetails)
-    -> TextureIndex
+auto TextureCache::GetTexture(ResourceId const tId) const -> Texture const*
 {
-    if (tResource == 0 || tResource == kDefaultTexture)
-    {
-        return kDefaultTextureIndex;
-    }
-
-    auto const index = GetTextureIndex(tResource, tDetails);
-    if (index != kDefaultTextureIndex)
-    {
-        return index;
-    }
-
-    auto const created = CreateTexture(tResource, tDetails);
-    if (created == std::numeric_limits<uint32_t>::max())
-    {
-        return kDefaultTextureIndex;
-    }
-
-    return static_cast<TextureIndex>(created);
+    auto const found = mTextures.find(tId);
+    return found != mTextures.end() ? found->second.get() : nullptr;
 }
 
-auto TextureCache::GetTextureIndex(resource::ResourceId tResource, SamplerDetails const& tDetails) const
-    -> TextureIndex
+auto TextureCache::GetTextureIndex(ResourceId const tId) const -> TextureIndex
 {
-    for (std::size_t i{1U}; i < mTextures.size(); ++i)
-    {
-        if (mTextures[i]->name == tResource && mTextures[i]->details == tDetails)
-        {
-            return static_cast<TextureIndex>(i);
-        }
-    }
-    return kDefaultTextureIndex;
+    auto const* texture = GetTexture(tId);
+    return texture != nullptr ? texture->index : kDefaultTextureIndex;
 }
-
-auto TextureCache::GetTexture(resource::ResourceId const tResource) -> Texture const*
-{
-    auto const itr = std::ranges::find_if(mTextures, [&tResource](std::unique_ptr<Texture>& tTexture) {
-        return tTexture->name == tResource;
-    });
-
-    if (itr == mTextures.end())
-    {
-        return nullptr;
-    }
-
-    return itr->get();
-}
-
-auto TextureCache::GetTextureAtIndex(std::size_t tIndex) -> Texture const*
-{
-    if (tIndex >= mTextures.size())
-    {
-        return nullptr;
-    }
-
-    return mTextures[tIndex].get();
-}
-
 
 auto TextureCache::GetBindlessSetLayout() -> VkDescriptorSetLayout
 {
@@ -252,10 +159,10 @@ auto TextureCache::Destroy() -> void
     mBindlessPool = DescriptorPool{};
 
     VkDevice device = VulkanDevice::Get().logiDevice;
-    for (std::size_t i{0U}; i < mTextures.size(); ++i)
+    for (auto const& [_, texture] : mTextures)
     {
-        vkDestroyImageView(device, mTextures[i]->view, nullptr);
-        vkDestroySampler(device, mTextures[i]->sampler, nullptr);
+        vkDestroyImageView(device, texture->view, nullptr);
+        vkDestroySampler(device, texture->sampler, nullptr);
     }
     mTextures.clear();
 }

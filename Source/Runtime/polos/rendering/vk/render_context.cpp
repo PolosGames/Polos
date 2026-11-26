@@ -11,6 +11,7 @@
 #include "polos/platform/events/window_framebuffer_resize.hpp"
 #include "polos/rendering/cache/material_cache.hpp"
 #include "polos/rendering/cache/mesh_cache.hpp"
+#include "polos/rendering/cache/model_cache.hpp"
 #include "polos/rendering/cache/texture_cache.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/compositor/render_compositor.hpp"
@@ -74,6 +75,7 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
     mRenderCompositor = std::make_unique<RenderCompositor>();
     mMeshCache        = std::make_unique<MeshCache>();
     mMaterialCache    = std::make_unique<MaterialCache>();
+    mModelCache       = std::make_unique<ModelCache>();
 
     // Supporting resources share the lifecycle order of the subsystems that use them.
     mSubsystems = {
@@ -115,6 +117,11 @@ auto RenderContext::Initialize(platform::IWindowSurface& tSurface) -> Result<voi
             *mMeshCache,
             [] {
                 return MeshCache::CreationDetails{};
+            }),
+        RegisterSubsystem(
+            *mModelCache,
+            [] {
+                return ModelCache::CreationDetails{};
             }),
         SubsystemEntry{
             .createFunc =
@@ -207,7 +214,7 @@ auto RenderContext::createSwapchain(platform::FramebufferSize const& tFbSize) ->
 auto RenderContext::destroySwapchain() -> void
 {
     mSwapchain->Destroy();
-    for (auto semaphore : mSubmitSemaphores)
+    for (VkSemaphore semaphore : mSubmitSemaphores)
     {
         vkDestroySemaphore(mDevice->logiDevice, semaphore, nullptr);
     }
@@ -534,6 +541,7 @@ auto RenderContext::Shutdown() -> Result<void>
     mSubsystems = {};
 
     mRenderCompositor.reset();
+    mModelCache.reset();
     mMaterialCache.reset();
     mTextureCache.reset();
     mMeshCache.reset();

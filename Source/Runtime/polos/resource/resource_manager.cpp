@@ -7,19 +7,27 @@
 
 #include "polos/filesystem/file_manip.hpp"
 #include "polos/logging/log_macros.hpp"
+#include "polos/rendering/cache/material_cache.hpp"
+#include "polos/rendering/cache/mesh_cache.hpp"
+#include "polos/rendering/cache/model_cache.hpp"
+#include "polos/rendering/cache/texture_cache.hpp"
+#include "polos/rendering/resources/image_data.hpp"
 #include "polos/resource/gltf/gltf_loader.hpp"
 #include "polos/resource/image/image_loader.hpp"
 #include "polos/resource/material/material_loader.hpp"
-#include "polos/resource/model.hpp"
 #include "polos/utils/assert.hpp"
 #include "polos/utils/string_map.hpp"
-
 #include "polos/utils/yaml_read.hpp"
 
 #include <cstdlib>
+#include <format>
 #include <fstream>
+#include <string>
 #include <system_error>
+#include <tuple>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 #if defined(_WIN32)
 #    ifndef NOMINMAX
@@ -88,65 +96,151 @@ auto ResourceManager::LoadCatalog() -> void
 {
     PL_ASSERT(!mRoot.empty(), "Resources directory is unavailable.");
 
-    enum class ResourceType : uint8_t
-    {
-        kTexture,
-        kMaterial,
-        kModel,
-    };
+    auto const    catalog = mRoot / "resources.yaml";
+    std::ifstream file(catalog);
+    PL_ASSERT(file.is_open(), "Could not open resource catalog: {}", catalog.string());
+    auto const resources = utils::yaml::Parse(file);
+    auto const entries   = utils::yaml::Find(resources.crootref(), "resources");
+    PL_ASSERT(entries.readable() && entries.is_seq(), "Missing resource sequence in {}", catalog.string());
 
-    ResourceManager staged(mRoot);
-    {
-        auto const path = mRoot / "resources.yaml";
-        std::ifstream file(path);
-        PL_ASSERT(file.is_open(), "Could not open resource catalog: {}", path.string());
-        auto const resources = utils::yaml::Parse(file);
+    std::unordered_set<ResourceId>             ids;
+    std::unordered_map<ResourceId, path>       texturePaths;
+    std::vector<utils::Pair<ResourceId, path>> materials;
+    std::vector<utils::Pair<ResourceId, path>> models;
 
-        auto const resSeq = utils::yaml::Find(resources.crootref(), "resources");
-        PL_ASSERT(resSeq.readable() && resSeq.is_seq(), "Missing resource sequence in {}", path.string());
-        for (auto resource : resSeq.children())
+    for (auto entry : entries.children())
+    {
+        auto const name         = utils::yaml::Scalar(utils::yaml::Find(entry, "id"));
+        auto const relativePath = utils::yaml::Scalar(utils::yaml::Find(entry, "path"));
+        PL_ASSERT(!name.empty() && !relativePath.empty(), "Missing ID or path in {}", catalog.string());
+        auto const id = utils::StrHash64Runtime(name);
+        PL_ASSERT(ids.insert(id).second, "Duplicate resource ID or ID hash collision: {}", name);
+        auto resourcePath = mRoot / path(relativePath).lexically_normal();
+
+        if (name.starts_with("texture."))
         {
-            auto const resStr = utils::yaml::Scalar(utils::yaml::Find(resource, "id"));
-            ResourceId resId  = staged.registerResource(resStr, utils::yaml::Scalar(utils::yaml::Find(resource, "path")));
-
-            if (resStr.contains("texture."))
-            {
-                staged.loadImage(resId);
-            }
-            if (resStr.contains("material."))
-            {
-                staged.loadMaterial(resId);
-            }
-            if (resStr.contains("model."))
-            {
-                staged.loadModel(resId);
-            }
+            texturePaths.emplace(id, std::move(resourcePath));
+        }
+        else if (name.starts_with("material."))
+        {
+            materials.push_back({.first = id, .second = std::move(resourcePath)});
+        }
+        else if (name.starts_with("model."))
+        {
+            models.push_back({.first = id, .second = std::move(resourcePath)});
         }
     }
-    // Resolve model sampler settings after all material descriptors have been loaded.
-    for (auto const& [_, model] : staged.mModels.mResources)
+    mTexturePaths = std::move(texturePaths);
+
+    // Model descriptors supply sampler settings for their cataloged materials.
+    std::unordered_map<ResourceId, model::LoadedModel::MaterialTexture> materialTextures;
+    for (auto const& [id, modelPath] : models)
     {
-        for (auto const& [id, texture] : model->materialTextures)
+        auto& modelsCache = rendering::ModelCache::Get();
+        if (modelsCache.GetModel(id) != nullptr)
         {
-            auto material = staged.mMaterials.Get(id);
-            if (material != nullptr)
+            continue;
+        }
+
+        auto const name   = utils::GetStringFromID(id);
+        auto       loaded = model::LoadGltf(modelPath, name);
+        PL_ASSERT(loaded != nullptr, "Failed to load model '{}'.", name);
+        for (auto const& [materialId, texture] : loaded->materialTextures)
+        {
+            materialTextures.insert_or_assign(materialId, texture);
+        }
+        for (auto const& [primitiveId, primitive] : loaded->primitives)
+        {
+            std::ignore = rendering::MeshCache::Get().AddMesh(primitiveId, primitive);
+        }
+        modelsCache.AddModel(id, std::move(loaded->model));
+    }
+
+    for (auto const& [id, materialPath] : materials)
+    {
+        if (rendering::MaterialCache::Get().GetMaterial(id) != nullptr)
+        {
+            continue;
+        }
+
+        auto material = material::LoadMaterial(materialPath);
+        PL_ASSERT(material.has_value(), "Failed to load material '{}'.", materialPath.string());
+        rendering::SamplerDetails sampler{};
+        if (auto const found = materialTextures.find(id); found != materialTextures.end())
+        {
+            sampler = found->second.sampler;
+            if (material->baseColorTexture == rendering::kDefaultTexture && found->second.image != 0)
             {
-                material->baseColorTexture.textureDetails = texture.textureDetails;
-                if (material->baseColorTexture.img == 0)
-                {
-                    material->baseColorTexture.img = texture.img;
-                }
+                material->baseColorTexture = found->second.image;
             }
         }
+        PL_ASSERT(LoadMaterial(id, *material, sampler) != 0, "Failed to load material '{}'.", materialPath.string());
     }
-    mResources = std::move(staged.mResources);
-    mImages.Swap(staged.mImages);
-    mMaterials.Swap(staged.mMaterials);
-    mModels.Swap(staged.mModels);
-    mFiles.Swap(staged.mFiles);
 }
 
-auto ResourceManager::LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<image::Image>
+auto ResourceManager::LoadMaterial(ResourceId tId, rendering::Material tMaterial, rendering::SamplerDetails const& tSampler) -> ResourceId
+{
+    auto& materials = rendering::MaterialCache::Get();
+    if (materials.GetMaterial(tId) != nullptr)
+    {
+        return tId;
+    }
+    tMaterial.baseColorTexture = loadTexture(tMaterial.baseColorTexture, tSampler);
+    if (tMaterial.baseColorTexture == 0)
+    {
+        return 0;
+    }
+    return materials.AddMaterial(tId, tMaterial);
+}
+
+auto ResourceManager::loadTexture(ResourceId tId, rendering::SamplerDetails const& tSampler) -> ResourceId
+{
+    if (tId == 0 || tId == rendering::kDefaultTexture)
+    {
+        return rendering::kDefaultTexture;
+    }
+
+    auto& textures  = rendering::TextureCache::Get();
+    auto  textureId = tId;
+    if (auto const* texture = textures.GetTexture(tId))
+    {
+        if (texture->details == tSampler)
+        {
+            return tId;
+        }
+
+        // A second sampler for the same image needs its own bindless descriptor.
+        textureId = utils::StrHash64Runtime(
+            std::format(
+                "texture-sampler.{}.{}.{}.{}.{}.{}", tId, static_cast<int>(tSampler.minFilter), static_cast<int>(tSampler.magFilter),
+                static_cast<int>(tSampler.mipmap), static_cast<int>(tSampler.addressModeU), static_cast<int>(tSampler.addressModeV)));
+        if (textures.GetTexture(textureId) != nullptr)
+        {
+            return textureId;
+        }
+    }
+
+    auto const found = mTexturePaths.find(tId);
+    if (found == mTexturePaths.end())
+    {
+        LogError("Texture '{}' is missing from the resource catalog.", utils::GetStringFromID(tId));
+        return 0;
+    }
+
+    auto const image = image::LoadImage(found->second);
+    if (image == nullptr)
+    {
+        return 0;
+    }
+
+    VkExtent2D const extent{
+        .width  = static_cast<std::uint32_t>(image->width),
+        .height = static_cast<std::uint32_t>(image->height),
+    };
+    return textures.AddTexture(textureId, extent, image->data, tSampler) ? textureId : 0;
+}
+
+auto ResourceManager::LoadImage(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<rendering::ImageData>
 {
     if (auto cached = mImages.Get(tId))
     {
@@ -156,17 +250,6 @@ auto ResourceManager::LoadImage(ResourceId tId, std::filesystem::path const& tPa
     auto loaded = image::LoadImage(tPath);
     return mImages.Add(tId, loaded) ? loaded : nullptr;
 }
-
-// auto ResourceManager::LoadImage(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<image::Image>
-// {
-//     if (auto cached = mImages.Get(tId))
-//     {
-//         return cached;
-//     }
-
-//     auto loaded = image::LoadImage(tData);
-//     return mImages.Add(tId, loaded) ? loaded : nullptr;
-// }
 
 auto ResourceManager::LoadFile(ResourceId tId, std::filesystem::path const& tPath) -> std::shared_ptr<fs::File>
 {
@@ -185,33 +268,9 @@ auto ResourceManager::LoadFile(ResourceId tId, std::filesystem::path const& tPat
     return mFiles.Add(tId, loaded) ? loaded : nullptr;
 }
 
-// auto ResourceManager::LoadFile(ResourceId tId, std::span<std::byte const> tData) -> std::shared_ptr<fs::File>
-// {
-//     if (auto cached = mFiles.Get(tId))
-//     {
-//         return cached;
-//     }
-
-//     auto loaded              = std::make_shared<fs::File>();
-//     loaded->uncompressedSize = tData.size();
-//     loaded->size             = tData.size();
-//     loaded->data.assign(tData.begin(), tData.end());
-//     return mFiles.Add(tId, loaded) ? loaded : nullptr;
-// }
-
-auto ResourceManager::GetImage(ResourceId const tId) const -> std::shared_ptr<image::Image>
+auto ResourceManager::GetImage(ResourceId const tId) const -> std::shared_ptr<rendering::ImageData>
 {
     return mImages.Get(tId);
-}
-
-auto ResourceManager::GetModel(ResourceId const tId) const -> std::shared_ptr<model::Model>
-{
-    return mModels.Get(tId);
-}
-
-auto ResourceManager::GetMaterial(ResourceId const tId) const -> std::shared_ptr<material::Material>
-{
-    return mMaterials.Get(tId);
 }
 
 auto ResourceManager::GetFile(ResourceId const tId) const -> std::shared_ptr<fs::File>
@@ -219,86 +278,11 @@ auto ResourceManager::GetFile(ResourceId const tId) const -> std::shared_ptr<fs:
     return mFiles.Get(tId);
 }
 
-auto ResourceManager::FetchMaterials() -> std::vector<std::weak_ptr<material::Material>>
-{
-    std::vector<std::weak_ptr<material::Material>> mats;
-    mats.reserve(mMaterials.mResources.size());
-    for (auto const& [_, mat] : mMaterials.mResources)
-    {
-        mats.push_back(mat);
-    }
-
-    return mats;
-}
-
-auto ResourceManager::FetchModels() -> std::vector<std::weak_ptr<model::Model>>
-{
-    std::vector<std::weak_ptr<model::Model>> models;
-    models.reserve(mModels.mResources.size());
-    for (auto const& [_, model] : mModels.mResources)
-    {
-        models.push_back(model);
-    }
-
-    return models;
-}
-
 auto ResourceManager::ClearCache() -> void
 {
+    mTexturePaths.clear();
     mImages.Clear();
-    mModels.Clear();
-    mMaterials.Clear();
     mFiles.Clear();
 }
-
-auto ResourceManager::registerResource(std::string_view tId, std::filesystem::path const& tPath) -> ResourceId
-{
-    auto const resourceId = utils::StrHash64Runtime(tId);
-    PL_ASSERT(!mResources.contains(resourceId), "Duplicate resource ID or ID hash collision: {}", tId);
-
-    std::filesystem::path const path = tPath.lexically_normal();
-
-    mResources.emplace(resourceId, Resource{.path = mRoot / path});
-
-    return resourceId;
-}
-
-
-void ResourceManager::loadImage(ResourceId const tResource)
-{
-    if (mImages.Exists(tResource))
-    {
-        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
-        return;
-    }
-
-    auto loaded = image::LoadImage(mResources[tResource].path);
-    PL_ASSERT(mImages.Add(tResource, loaded), "Failed to load image.");
-}
-
-void ResourceManager::loadMaterial(ResourceId const tResource)
-{
-    if (mMaterials.Exists(tResource))
-    {
-        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
-        return;
-    }
-
-    auto loaded = material::LoadMaterial(mResources[tResource].path);
-    PL_ASSERT(mMaterials.Add(tResource, loaded), "Failed to load material.");
-}
-
-void ResourceManager::loadModel(ResourceId const tResource)
-{
-    if (mModels.Exists(tResource))
-    {
-        LogInfo("Image: {} already exists in storage", utils::GetStringFromID(tResource));
-        return;
-    }
-
-    auto loaded = model::LoadGltf(mResources[tResource].path);
-    PL_ASSERT(mModels.Add(tResource, std::move(loaded)), "Failed to load model.");
-}
-
 
 }// namespace polos::resource

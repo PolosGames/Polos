@@ -6,8 +6,8 @@
 #ifndef POLOS_RENDERING_COMMON_HPP
 #define POLOS_RENDERING_COMMON_HPP
 
+#include "polos/resource/common.hpp"
 #include "polos/utils/error_code.hpp"
-#include "polos/utils/string_id.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -24,17 +24,15 @@
 namespace polos::rendering
 {
 
-using MeshHandle     = utils::string_id;
-using TextureHandle  = utils::string_id;
-using MaterialHandle = utils::string_id;
+using resource::ResourceId;
 
 using MeshIndex    = std::uint32_t;
 using TextureIndex = std::uint32_t;
 
-inline constexpr MeshHandle                   kDefaultCube     = "mesh.DefaultCube"_sid;
-inline constexpr MeshHandle                   kDefaultQuad     = "mesh.DefaultQuad"_sid;
-inline constexpr MaterialHandle               kDefaultMaterial = "material.Default"_sid;
-inline constexpr TextureHandle                kDefaultTexture  = "texture.Default"_sid;
+inline constexpr ResourceId                   kDefaultCube     = "mesh.DefaultCube"_sid;
+inline constexpr ResourceId                   kDefaultQuad     = "mesh.DefaultQuad"_sid;
+inline constexpr ResourceId                   kDefaultMaterial = "material.Default"_sid;
+inline constexpr ResourceId                   kDefaultTexture  = "texture.Default"_sid;
 inline constexpr TextureIndex                 kDefaultTextureIndex{0U};
 inline constexpr std::uint32_t                kRootParentId{0U};
 inline constexpr MeshIndex                    kInvalidMeshId{std::numeric_limits<MeshIndex>::max()};

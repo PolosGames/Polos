@@ -78,56 +78,53 @@ public:
         auto const camera          = scene->activeCamera;
         auto*      cameraTransform = scene->GetMutableComponent<ecs::TransformComponent>(camera);
         auto const cube            = scene->NewEntity(scene->sceneRoot, "SmokeCube"_sid);
-        auto const meshIndex       = rendering::MeshCache::Get().GetMeshIndexByHandle(rendering::kDefaultCube);
+        auto const meshIndex       = rendering::MeshCache::Get().GetMeshIndex(rendering::kDefaultCube);
 
         if (cameraTransform == nullptr || !scene->HasComponent(camera, ecs::CameraComponent::kType) ||
-            !scene->HasComponent(camera, ecs::EditorCameraControllerComponent::kType) ||
-            meshIndex == rendering::kInvalidMeshId || scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
-            scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kDefaultCube}) == nullptr)
+            !scene->HasComponent(camera, ecs::EditorCameraControllerComponent::kType) || meshIndex == rendering::kInvalidMeshId ||
+            scene->AddComponent(cube, ecs::TransformComponent{}) == nullptr ||
+            scene->AddComponent(cube, ecs::MeshRendererComponent{.meshId = rendering::kDefaultCube}) == nullptr)
         {
             throw std::runtime_error{"Could not create the integration-test scene"};
         }
         cameraTransform->position = {0.0F, 0.0F, 2.0F};
 
-        communication::Subscribe<EngineUpdate>(
-            [&state = mState, scene, cube](EngineUpdate&) {
-                ++state.updates;
-                if (state.updates == 1U)
-                {
-                    communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
-                    communication::DispatchNow<input::KeyPress>(GLFW_KEY_W);
-                    communication::DispatchDefer<input::KeyPress>(GLFW_KEY_RIGHT);
-                    communication::DispatchDefer<input::KeyRelease>(GLFW_KEY_RIGHT);
-                }
-                if (state.updates == 2U)
-                {
-                    EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_RIGHT));
-                    EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_RIGHT));
-                    EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_RIGHT));
-                }
-                if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
-                {
-                    EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
-                }
-                if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
-                {
-                    EXPECT_NE(scene->AddComponent(cube, ecs::MeshRendererComponent{rendering::kDefaultCube}), nullptr);
-                }
-                if (state.updates == 3U)
-                {
-                    communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
-                    communication::DispatchNow<input::KeyRelease>(GLFW_KEY_W);
-                }
-                if (state.updates >= 120U)
-                {
-                    communication::DispatchNow<EngineTerminate>();
-                }
-            });
-        communication::Subscribe<rendering::RenderUpdate>([&state = mState, scene, cube, meshIndex, cameraTransform](
-                                                              rendering::RenderUpdate&) {
+        communication::Subscribe<EngineUpdate>([&state = mState, scene, cube](EngineUpdate&) {
+            ++state.updates;
+            if (state.updates == 1U)
+            {
+                communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS);
+                communication::DispatchNow<input::KeyPress>(GLFW_KEY_W);
+                communication::DispatchDefer<input::KeyPress>(GLFW_KEY_RIGHT);
+                communication::DispatchDefer<input::KeyRelease>(GLFW_KEY_RIGHT);
+            }
+            if (state.updates == 2U)
+            {
+                EXPECT_TRUE(input::IsKeyPressed(GLFW_KEY_RIGHT));
+                EXPECT_TRUE(input::IsKeyReleased(GLFW_KEY_RIGHT));
+                EXPECT_FALSE(input::IsKeyDown(GLFW_KEY_RIGHT));
+            }
+            if (state.completedFrames == 1U && scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            {
+                EXPECT_TRUE(scene->RemoveComponent(cube, ecs::ComponentType::kMeshRenderer));
+            }
+            if (state.completedFrames == 2U && !scene->HasComponent(cube, ecs::ComponentType::kMeshRenderer))
+            {
+                EXPECT_NE(scene->AddComponent(cube, ecs::MeshRendererComponent{.meshId = rendering::kDefaultCube}), nullptr);
+            }
+            if (state.updates == 3U)
+            {
+                communication::DispatchNow<input::MouseInput>(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE);
+                communication::DispatchNow<input::KeyRelease>(GLFW_KEY_W);
+            }
+            if (state.updates >= 120U)
+            {
+                communication::DispatchNow<EngineTerminate>();
+            }
+        });
+        communication::Subscribe<rendering::RenderUpdate>([&state = mState, scene, cube, meshIndex, cameraTransform](rendering::RenderUpdate&) {
             auto const expectedMesh = state.completedFrames == 1U ? rendering::kInvalidMeshId : meshIndex;
-            EXPECT_EQ(scene->GetRenderData().meshInstances[cube.index].meshId, expectedMesh)
-                << "Frame " << state.completedFrames;
+            EXPECT_EQ(scene->GetRenderData().meshInstances[cube.index].meshId, expectedMesh) << "Frame " << state.completedFrames;
             ++state.renderUpdates;
             state.lifecycle.push_back("render");
             state.cameraMoved     = state.cameraMoved || cameraTransform->position.z < 2.0F;

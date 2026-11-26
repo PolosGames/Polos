@@ -41,8 +41,7 @@ protected:
         // These fixtures build their own camera and hierarchy, including root-only scenes.
         ASSERT_TRUE(scene->RetireEntity(scene->activeCamera));
 
-        directory = std::filesystem::temp_directory_path() /
-                    ("polos-save-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        directory = std::filesystem::temp_directory_path() / ("polos-save-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         std::filesystem::create_directory(directory);
     }
 
@@ -111,19 +110,16 @@ auto ExpectComponentEqual(ecs::TransformComponent const& tExpected, ecs::Transfo
     EXPECT_FLOAT_EQ(tActual.scale, tExpected.scale);
 }
 
-auto ExpectComponentEqual(
-    ecs::EditorCameraControllerComponent const& tExpected,
-    ecs::EditorCameraControllerComponent const& tActual) -> void
+auto ExpectComponentEqual(ecs::EditorCameraControllerComponent const& tExpected, ecs::EditorCameraControllerComponent const& tActual) -> void
 {
     EXPECT_FLOAT_EQ(tActual.moveSpeed, tExpected.moveSpeed);
     EXPECT_FLOAT_EQ(tActual.lookSensitivity, tExpected.lookSensitivity);
 }
 
-auto ExpectComponentEqual(ecs::MeshRendererComponent const& tExpected, ecs::MeshRendererComponent const& tActual)
-    -> void
+auto ExpectComponentEqual(ecs::MeshRendererComponent const& tExpected, ecs::MeshRendererComponent const& tActual) -> void
 {
-    EXPECT_EQ(tActual.meshHandle, tExpected.meshHandle);
-    EXPECT_EQ(tActual.matHandle, tExpected.matHandle);
+    EXPECT_EQ(tActual.meshId, tExpected.meshId);
+    EXPECT_EQ(tActual.materialId, tExpected.materialId);
 }
 
 auto ExpectComponentEqual(ecs::LightComponent const& tExpected, ecs::LightComponent const& tActual) -> void
@@ -134,11 +130,7 @@ auto ExpectComponentEqual(ecs::LightComponent const& tExpected, ecs::LightCompon
 }
 
 template<ecs::Component T>
-auto ExpectRestoredComponent(
-    Scene&            tOriginalScene,
-    ecs::EntityHandle tOriginalEntity,
-    Scene&            tLoadedScene,
-    ecs::EntityHandle tLoadedEntity) -> void
+auto ExpectRestoredComponent(Scene& tOriginalScene, ecs::EntityHandle tOriginalEntity, Scene& tLoadedScene, ecs::EntityHandle tLoadedEntity) -> void
 {
     if (!tOriginalScene.HasComponent(tOriginalEntity, T::kType))
     {
@@ -177,20 +169,16 @@ TEST_F(SceneSerializationTest, WritesEntityOrderAndRemapsChildrenAcrossRetiredSl
     ASSERT_TRUE(Save(path));
 
     std::ifstream file(path);
-    auto const tree = utils::yaml::Parse(file);
-    auto const document = tree.crootref();
-    auto const entities = document["scene"];
+    auto const    tree     = utils::yaml::Parse(file);
+    auto const    document = tree.crootref();
+    auto const    entities = document["scene"];
     ASSERT_EQ(entities.num_children(), 3U);
-    EXPECT_EQ(
-        (utils::yaml::ReadArray<ecs::EntityIndex, 1>(entities[0]["info"]["children"])),
-        (std::array<ecs::EntityIndex, 1>{2U}));
+    EXPECT_EQ((utils::yaml::ReadArray<ecs::EntityIndex, 1>(entities[0]["info"]["children"])), (std::array<ecs::EntityIndex, 1>{2U}));
     EXPECT_EQ(utils::yaml::Scalar(entities[1]["info"]["debugName"]), "Child");
     EXPECT_FALSE(entities[1]["info"].find_child("graphHandle").readable());
     EXPECT_EQ((utils::yaml::ReadArray<float, 3>(entities[1]["transform"]["position"])), (std::array{42.0F, 3.0F, -1.0F}));
     EXPECT_EQ(utils::yaml::Scalar(entities[2]["info"]["debugName"]), "Parent");
-    EXPECT_EQ(
-        (utils::yaml::ReadArray<ecs::EntityIndex, 1>(entities[2]["info"]["children"])),
-        (std::array<ecs::EntityIndex, 1>{1U}));
+    EXPECT_EQ((utils::yaml::ReadArray<ecs::EntityIndex, 1>(entities[2]["info"]["children"])), (std::array<ecs::EntityIndex, 1>{1U}));
     EXPECT_EQ(utils::yaml::Read<ecs::EntityIndex>(document["activeCamera"]), 1U);
 
     auto* loaded = manager->LoadScene(path.string());
@@ -213,9 +201,9 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
     ASSERT_TRUE(Save(path));
 
     std::ifstream file(path);
-    auto const tree = utils::yaml::Parse(file);
-    auto const document = tree.crootref();
-    auto const entities = document["scene"];
+    auto const    tree     = utils::yaml::Parse(file);
+    auto const    document = tree.crootref();
+    auto const    entities = document["scene"];
     ASSERT_EQ(entities.num_children(), 1U);
     EXPECT_EQ(utils::yaml::Scalar(entities[0]["info"]["debugName"]), "SceneRoot");
     EXPECT_EQ(entities[0]["info"]["children"].num_children(), 0U);
@@ -226,7 +214,7 @@ TEST_F(SceneSerializationTest, WritesRootOnlyAndTruncatesExistingFile)
 TEST_F(SceneSerializationTest, ReportsMissingSceneAndOpenFailure)
 {
     SceneManager emptyManager;
-    auto const missing = emptyManager.SaveCurrentScene();
+    auto const   missing = emptyManager.SaveCurrentScene();
     ASSERT_FALSE(missing);
     EXPECT_EQ(missing.error(), MakeErrorCode(SceneErrc::kNoCurrentScene));
     EXPECT_FALSE(std::filesystem::exists(directory / "missing.yaml"));
@@ -237,8 +225,8 @@ TEST_F(SceneSerializationTest, ReportsMissingSceneAndOpenFailure)
 
 TEST_F(SceneSerializationTest, WorkerSavesCapturedSceneAfterLiveSceneChanges)
 {
-    auto const path = directory / "snapshot.yaml";
-    scene->name = utils::RegisterString(path.string());
+    auto const path   = directory / "snapshot.yaml";
+    scene->name       = utils::RegisterString(path.string());
     auto const entity = scene->NewEntity();
     ASSERT_NE(scene->AddComponent(entity, ecs::TransformComponent{.position = {3.0F, 0.0F, 0.0F}}), nullptr);
 
@@ -255,9 +243,9 @@ TEST_F(SceneSerializationTest, WorkerSavesCapturedSceneAfterLiveSceneChanges)
     EXPECT_FALSE(std::filesystem::exists(directory / "renamed.yaml"));
 
     std::ifstream file(path);
-    auto const tree = utils::yaml::Parse(file);
-    auto const document = tree.crootref();
-    auto const entities = document["scene"];
+    auto const    tree     = utils::yaml::Parse(file);
+    auto const    document = tree.crootref();
+    auto const    entities = document["scene"];
     ASSERT_EQ(entities.num_children(), 2U);
     EXPECT_FLOAT_EQ(utils::yaml::Read<float>(entities[1]["transform"]["position"][0]), 3.0F);
 }
@@ -379,8 +367,8 @@ TEST_F(SceneSerializationTest, LoadRestoresEveryImplementedComponentInEntityOrde
 
     ecs::EditorCameraControllerComponent const controllerC{.moveSpeed = 17.0F, .lookSensitivity = 0.75F};
 
-    ecs::MeshRendererComponent const meshB{rendering::kDefaultQuad, utils::RegisterString("material.Suzanne")};
-    ecs::MeshRendererComponent const meshC{rendering::kDefaultCube};
+    ecs::MeshRendererComponent const meshB{.meshId = rendering::kDefaultQuad, .materialId = utils::RegisterString("material.Suzanne")};
+    ecs::MeshRendererComponent const meshC{.meshId = rendering::kDefaultCube};
 
     ASSERT_NE(scene->AddComponent(a, ecs::VisibilityComponent{.isVisible = false}), nullptr);
     ASSERT_NE(scene->AddComponent(c, ecs::VisibilityComponent{.isVisible = true}), nullptr);
@@ -441,12 +429,12 @@ TEST_F(SceneSerializationTest, LoadsNamedMeshAndMaterialFromYaml)
 
     auto* loaded = manager->LoadScene(path.string());
     ASSERT_NE(loaded, nullptr);
-    auto const handle = loaded->GetEntityAtIndex(1U);
+    auto const  handle = loaded->GetEntityAtIndex(1U);
     auto const* mesh   = loaded->GetComponent<ecs::MeshRendererComponent>(handle);
     ASSERT_NE(mesh, nullptr);
-    EXPECT_EQ(mesh->meshHandle, "mesh.Suzanne"_sid);
-    EXPECT_EQ(mesh->matHandle, "material.Suzanne"_sid);
-    EXPECT_EQ(utils::GetStringFromID(mesh->meshHandle), "mesh.Suzanne");
+    EXPECT_EQ(mesh->meshId, "mesh.Suzanne"_sid);
+    EXPECT_EQ(mesh->materialId, "material.Suzanne"_sid);
+    EXPECT_EQ(utils::GetStringFromID(mesh->meshId), "mesh.Suzanne");
     auto const* transform = loaded->GetComponent<ecs::TransformComponent>(handle);
     ASSERT_NE(transform, nullptr);
     EXPECT_EQ(transform->position, glm::vec3(0.33F, 22.222F, 4.1254F));
@@ -472,9 +460,9 @@ TEST_F(SceneSerializationTest, InvalidSceneShapeOrHierarchyLeavesCurrentSceneUnc
 
 TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
 {
-    auto const               branch   = scene->NewEntity(scene->sceneRoot, "Branch"_sid);
-    auto const               camera   = scene->NewEntity(branch, "Camera"_sid);
-    auto const               survivor = scene->NewEntity(scene->sceneRoot, "Survivor"_sid);
+    auto const                    branch   = scene->NewEntity(scene->sceneRoot, "Branch"_sid);
+    auto const                    camera   = scene->NewEntity(branch, "Camera"_sid);
+    auto const                    survivor = scene->NewEntity(scene->sceneRoot, "Survivor"_sid);
     ecs::CameraComponent const    branchCamera{.fov = 75.0F};
     ecs::CameraComponent const    survivorCamera{.fov = 65.0F};
     ecs::TransformComponent const transform{.position = {10.0F, 0.0F, 0.0F}};
@@ -493,8 +481,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
     auto const         oldCamera      = loaded->activeCamera;
     std::vector<float> observedFovs;
 
-    for (auto [cameraComponent, transformComponent] :
-        ecs::View<ecs::Read<ecs::CameraComponent>, ecs::Write<ecs::TransformComponent>>{loaded})
+    for (auto [cameraComponent, transformComponent] : ecs::View<ecs::Read<ecs::CameraComponent>, ecs::Write<ecs::TransformComponent>>{loaded})
     {
         observedFovs.push_back(cameraComponent->fov);
         transformComponent->position.x += cameraComponent->fov;
@@ -507,8 +494,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
 
     ASSERT_TRUE(loaded->RetireEntity(loadedBranch));
     observedFovs.clear();
-    for (auto [cameraComponent, transformComponent] :
-        ecs::View<ecs::Read<ecs::CameraComponent, ecs::TransformComponent>>{loaded})
+    for (auto [cameraComponent, transformComponent] : ecs::View<ecs::Read<ecs::CameraComponent, ecs::TransformComponent>>{loaded})
     {
         observedFovs.push_back(cameraComponent->fov);
         EXPECT_FLOAT_EQ(transformComponent->position.x, 75.0F);
@@ -539,7 +525,7 @@ TEST_F(SceneSerializationTest, LoadedViewsFollowSubtreeRetirementAndEntityReuse)
 
 TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
 {
-    auto const               camera = scene->NewEntity(scene->sceneRoot, "Camera"_sid);
+    auto const                    camera = scene->NewEntity(scene->sceneRoot, "Camera"_sid);
     ecs::CameraComponent const    originalCamera{.fov = 31.0F};
     ecs::TransformComponent const originalTransform{.position = {3.0F, 0.0F, 0.0F}};
     ASSERT_NE(scene->AddComponent(camera, originalCamera), nullptr);
@@ -553,8 +539,8 @@ TEST_F(SceneSerializationTest, EditedLoadedScenesCanBeSavedAndLoadedAgain)
     auto const loadedCamera    = loaded->activeCamera;
     auto*      cameraComponent = loaded->GetMutableComponent<ecs::CameraComponent>(loadedCamera);
     ASSERT_NE(cameraComponent, nullptr);
-    cameraComponent->fov           = 48.0F;
-    auto const               child = loaded->NewEntity(loadedCamera, "CreatedAfterLoad"_sid);
+    cameraComponent->fov                = 48.0F;
+    auto const                    child = loaded->NewEntity(loadedCamera, "CreatedAfterLoad"_sid);
     ecs::TransformComponent const childTransform{.position = {17.0F, 0.0F, 0.0F}};
     ASSERT_NE(loaded->AddComponent(child, childTransform), nullptr);
     for (auto [transform] : ecs::View<ecs::Write<ecs::TransformComponent>>{loaded})

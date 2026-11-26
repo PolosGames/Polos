@@ -6,14 +6,14 @@
 #ifndef POLOS_RESOURCE_MATERIAL_MATERIAL_LOADER_HPP
 #define POLOS_RESOURCE_MATERIAL_MATERIAL_LOADER_HPP
 
-#include "polos/resource/material.hpp"
+#include "polos/rendering/resources/material.hpp"
 
 #include <filesystem>
-#include <memory>
+#include <optional>
 
 namespace polos::resource::material
 {
-[[nodiscard]] auto LoadMaterial(std::filesystem::path const& tPath) -> std::shared_ptr<Material>;
+[[nodiscard]] auto LoadMaterial(std::filesystem::path const& tPath) -> std::optional<rendering::Material>;
 }// namespace polos::resource::material
 
 #endif// POLOS_RESOURCE_MATERIAL_MATERIAL_LOADER_HPP

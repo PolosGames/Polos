@@ -101,39 +101,30 @@ auto ExpectedRollbackEvents(std::size_t tFailureIndex) -> std::vector<int>
     return events;
 }
 
-TEST(MaterialCacheTest, StoresMaterialPropertiesAndUsesDefaultTextureForMissingSlots)
+TEST(MaterialCacheTest, StoresMaterialByResourceId)
 {
     MaterialCache cache;
     ASSERT_TRUE(cache.Create({}).has_value());
 
     auto const* defaultMaterial = cache.GetMaterial(kDefaultMaterial);
     ASSERT_NE(defaultMaterial, nullptr);
-    EXPECT_EQ(defaultMaterial->name, kDefaultMaterial);
-    EXPECT_EQ(defaultMaterial->baseColorTexture, kDefaultTextureIndex);
+    EXPECT_EQ(defaultMaterial->baseColorTexture, kDefaultTexture);
 
-    resource::model::Material input{
-        .name = "test.material",
-        .alphaMode = resource::model::AlphaMode::kMask,
-        .alphaCutoff = 0.25F,
-        .baseColorTexture = 4U,
+    Material const input{
+        .baseColorFactor  = glm::vec4(0.5F, 1.0F, 1.0F, 1.0F),
+        .baseColorTexture = "texture.test"_sid,
+        .tilingFactor     = 2.0F,
     };
 
-    auto const handle = cache.CreateMaterial(input);
-    auto const* material = cache.GetMaterial(handle);
+    auto const  id       = cache.AddMaterial("material.test"_sid, input);
+    auto const* material = cache.GetMaterial(id);
     ASSERT_NE(material, nullptr);
-    EXPECT_EQ(material->name, handle);
-    EXPECT_EQ(material->alphaMode, AlphaMode::kMask);
-    EXPECT_FLOAT_EQ(material->alphaCutoff, 0.25F);
-    EXPECT_EQ(material->baseColorTexture, kDefaultTextureIndex);
-    EXPECT_EQ(material->normalTexture, kDefaultTextureIndex);
-    EXPECT_EQ(cache.CreateMaterial(input), handle);
-
-    input.alphaCutoff = 0.75F;
-    EXPECT_NE(cache.CreateMaterial(input), handle);
-    EXPECT_FLOAT_EQ(material->alphaCutoff, 0.25F);
+    EXPECT_EQ(material->baseColorFactor, input.baseColorFactor);
+    EXPECT_EQ(material->baseColorTexture, input.baseColorTexture);
+    EXPECT_FLOAT_EQ(material->tilingFactor, input.tilingFactor);
 
     cache.Destroy();
-    EXPECT_EQ(cache.GetMaterial(handle), nullptr);
+    EXPECT_EQ(cache.GetMaterial(id), nullptr);
 }
 
 TEST(RenderSubsystemTest, DetailsAreBuiltWhenDependenciesAreReady)

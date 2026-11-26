@@ -29,16 +29,15 @@ struct SamplerDetails
 
 struct Texture
 {
-    TextureHandle  name;// Also the ResourceId
+    ResourceId     name;
     SamplerDetails details;
+    TextureIndex   index{kDefaultTextureIndex};
 
     std::unique_ptr<Image> image;
     VkImageView            view{VK_NULL_HANDLE};
     VkSampler              sampler{VK_NULL_HANDLE};
 
-    [[nodiscard]] static auto
-    Create(TextureHandle tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails)
-        -> std::unique_ptr<Texture>;
+    [[nodiscard]] static auto Create(ResourceId tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails) -> std::unique_ptr<Texture>;
 };
 
 }// namespace polos::rendering

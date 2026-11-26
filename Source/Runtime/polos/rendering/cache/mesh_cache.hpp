@@ -9,8 +9,8 @@
 #include "polos/polos_api.hpp"
 #include "polos/rendering/common.hpp"
 #include "polos/rendering/resources/buffer.hpp"
+#include "polos/rendering/resources/mesh.hpp"
 #include "polos/rendering/settings.hpp"
-#include "polos/resource/model.hpp"
 #include "polos/utils/error_code.hpp"
 #include "polos/utils/pair.hpp"
 
@@ -36,13 +36,12 @@ public:
     auto Create(CreationDetails const& tDetails) -> Result<void>;
     auto Destroy() -> void;
 
-    [[nodiscard]] auto AddMesh(resource::model::MeshPrimitive const& tMesh) -> MeshHandle;
+    [[nodiscard]] auto AddMesh(ResourceId tId, MeshPrimitiveData const& tMesh) -> ResourceId;
 
-    /// @brief Check if we have a mesh with the handle
-    [[nodiscard]] auto HasMesh(MeshHandle tHandle) -> bool;
+    [[nodiscard]] auto GetMesh(ResourceId tId) const -> MeshPrimitive const*;
+    [[nodiscard]] auto HasMesh(ResourceId tId) const -> bool;
 
-    [[nodiscard]] auto GetMeshIndexByHandle(MeshHandle tHandle) -> MeshIndex;
-    [[nodiscard]] auto GetMaterialByHandle(MeshHandle tHandle) -> MaterialHandle;
+    [[nodiscard]] auto GetMeshIndex(ResourceId tId) const -> MeshIndex;
 
     [[nodiscard]] auto GetVertexBuffer() -> VkBuffer;
     [[nodiscard]] auto GetIndexBuffer() -> VkBuffer;
@@ -51,24 +50,13 @@ public:
     [[nodiscard]] auto GetMeshCount() -> uint32_t;
     [[nodiscard]] auto GetIndirectCommandBufferByFrameSlot(uint32_t tFrameSlot) -> VkBuffer;
 
-    auto IncreaseMeshUse(MeshHandle tHandle) -> void;
-    auto DecreaseMeshUse(MeshHandle tHandle) -> void;
+    auto IncreaseMeshUse(ResourceId tId) -> void;
+    auto DecreaseMeshUse(ResourceId tId) -> void;
     auto IncreaseMeshUseByIndex(MeshIndex tMeshIndex) -> void;
     auto DecreaseMeshUseByIndex(MeshIndex tMeshIndex) -> void;
     auto FlushMeshUses(uint32_t tFrameSlot) -> void;
 private:
     static MeshCache* sInstance;
-
-    struct Entry
-    {
-        utils::string_id name{0};
-        VkDeviceSize     vertexOffset{0U};
-        VkDeviceSize     indexOffset{0U};
-        uint32_t         vertexCount{0};
-        uint32_t         indexCount{0};
-        MeshIndex        meshIndex{0U};
-        MaterialHandle   material{kDefaultMaterial};
-    };
 
     std::unique_ptr<Buffer> mVertexBuffer;
     std::unique_ptr<Buffer> mIndexBuffer;
@@ -84,8 +72,9 @@ private:
     VkDeviceSize mVertexHead{0U};
     VkDeviceSize mIndexHead{0U};
 
-    std::map<MeshHandle, Entry> mMeshes;
-    uint32_t                    mMeshCount{0U};
+    std::map<ResourceId, MeshPrimitive> mMeshes;
+    std::map<ResourceId, ResourceId>    mMeshAliases;
+    uint32_t                            mMeshCount{0U};
 };
 }// namespace polos::rendering
 

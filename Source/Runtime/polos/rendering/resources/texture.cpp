@@ -11,8 +11,7 @@
 namespace polos::rendering
 {
 
-auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails)
-    -> std::unique_ptr<Texture>
+auto Texture::Create(ResourceId const tName, std::unique_ptr<rendering::Image> tImg, SamplerDetails const& tDetails) -> std::unique_ptr<Texture>
 {
     // VkPhysicalDeviceProperties phys_dev_props{};
     // vkGetPhysicalDeviceProperties(VulkanDevice::Get().physDevice, &phys_dev_props);
@@ -64,7 +63,13 @@ auto Texture::Create(TextureHandle const tName, std::unique_ptr<rendering::Image
         return nullptr;
     }
 
-    return std::make_unique<Texture>(tName, tDetails, std::move(tImg), view, sampler);
+    return std::make_unique<Texture>(Texture{
+        .name    = tName,
+        .details = tDetails,
+        .image   = std::move(tImg),
+        .view    = view,
+        .sampler = sampler,
+    });
 }
 
 }// namespace polos::rendering
