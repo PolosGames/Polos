@@ -28,8 +28,6 @@ constexpr ConstexprMap kKnownStrings{std::array{
     StringEntry("New Entity"),
     StringEntry("Editor Camera"),
 
-    StringEntry("mesh.DefaultCube"),
-    StringEntry("mesh.DefaultQuad"),
     StringEntry("texture.Default"),
     StringEntry("material.Default"),
     StringEntry("pipeline.cube"),

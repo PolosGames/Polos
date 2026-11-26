@@ -85,7 +85,7 @@ auto EventBus::Subscribe(std::function<void(EventType&)> tCallback) -> std::int6
 {
     LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Subscribe]");
 
-    std::int64_t const event_hash = EventHash<EventType>();
+    std::int64_t const event_hash = EventType().Hash();
     LogDebugCtx(LOG_CTX_POLOS, "Subscribing to: EventHash: {}, Name: {}", event_hash, EventType::Name());
 
     // Give each subscriber of any event a unique id.
@@ -101,7 +101,7 @@ auto EventBus::Subscribe(std::function<void(EventType&)> tCallback) -> std::int6
 template<PolosEvent EventType, typename... Args>
 auto EventBus::Dispatch(EventDeferOptions const tDefer, Args&&... tArgs) -> std::size_t
 {
-    auto const itr = mCallbacks.find(EventHash<EventType>());
+    auto const itr = mCallbacks.find(EventType().Hash());
     if (itr == mCallbacks.end())
     {
         LogTraceCtx(LOG_CTX_POLOS, "[EventBus::Dispatch] No subscribers found for type {}", EventType::Name());

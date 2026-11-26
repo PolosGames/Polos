@@ -187,7 +187,7 @@ auto CreateYamlFiles() -> bool
 {
     constexpr std::string_view entry = "  - id: {}\n    path: {}";
 
-    constexpr std::string_view materialFile  = "id: {}\nbaseColorFactor: [{}, {}, {}, {}]\nbaseColorTexture: {}\n";
+    constexpr std::string_view materialFile  = "id: {}\nbaseColorFactor: [{}, {}, {}, {}]\nbaseColorTexture: {}\ntilingFactor: 1.0\n";
     constexpr std::string_view materialEntry = "  - id: {}";
     constexpr std::string_view modelFile     = "id: {}\npath: {}\nmaterials:\n{}";
 

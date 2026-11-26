@@ -14,11 +14,11 @@
 
 namespace polos::scene
 {
-using SceneGraphHandle                                     = std::uint64_t;
+using SceneGraphHandle = std::uint64_t;
+
 inline constexpr SceneGraphHandle kInvalidSceneGraphHandle = std::numeric_limits<SceneGraphHandle>::max();
 
-[[nodiscard]] inline constexpr auto
-PackSceneGraphHandle(std::uint32_t const tIndex, std::uint32_t const tGeneration) noexcept -> SceneGraphHandle
+[[nodiscard]] inline constexpr auto PackSceneGraphHandle(std::uint32_t const tIndex, std::uint32_t const tGeneration) noexcept -> SceneGraphHandle
 {
     return (static_cast<SceneGraphHandle>(tGeneration) << 32U) | tIndex;
 }
@@ -68,12 +68,12 @@ private:
     struct alignas(32) Node
     {
         ecs::EntityHandle entity;
-        Index         parent{kInvalidIndex};
-        Index         leftChild{kInvalidIndex};
-        Index         rightSibling{kInvalidIndex};
-        Index         previousSibling{kInvalidIndex};
-        std::uint32_t generation{0U};
-        int32_t       layer{-1};// sceneRoot is an invalid layer
+        Index             parent{kInvalidIndex};
+        Index             leftChild{kInvalidIndex};
+        Index             rightSibling{kInvalidIndex};
+        Index             previousSibling{kInvalidIndex};
+        std::uint32_t     generation{0U};
+        int32_t           layer{-1};// sceneRoot is an invalid layer
     };
 
     [[nodiscard]] auto isValid(SceneGraphHandle tHandle) const -> bool;

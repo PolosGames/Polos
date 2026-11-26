@@ -32,14 +32,18 @@ Run the commands below from the repository root.
 **Linux**
 
 ```bash
-bash Scripts/Linux/run_project.sh Tetris
+bash Scripts/Linux/run_example.sh --example Tetris
 ```
 
 **Windows**
 
 ```powershell
-./Scripts/Windows/run_project.ps1 -Project Tetris
+./Scripts/Windows/run_example.ps1 --example Tetris
 ```
+
+Use `--preset <name>` to select a CMake preset. The default is `debug-runtime`. Add `--preprocess` to regenerate the resource catalog before building.
+
+On Linux, `bash Scripts/Linux/debug_example.sh --example Tetris` runs the example in LLDB with the same options.
 
 ## Export the SDK to another project
 

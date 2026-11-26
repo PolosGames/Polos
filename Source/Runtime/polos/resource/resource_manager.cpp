@@ -113,7 +113,7 @@ auto ResourceManager::LoadCatalog() -> void
         auto const name         = utils::yaml::Scalar(utils::yaml::Find(entry, "id"));
         auto const relativePath = utils::yaml::Scalar(utils::yaml::Find(entry, "path"));
         PL_ASSERT(!name.empty() && !relativePath.empty(), "Missing ID or path in {}", catalog.string());
-        auto const id = utils::StrHash64Runtime(name);
+        auto const id = utils::RegisterString(name);
         PL_ASSERT(ids.insert(id).second, "Duplicate resource ID or ID hash collision: {}", name);
         auto resourcePath = mRoot / path(relativePath).lexically_normal();
 
@@ -210,7 +210,7 @@ auto ResourceManager::loadTexture(ResourceId tId, rendering::SamplerDetails cons
         }
 
         // A second sampler for the same image needs its own bindless descriptor.
-        textureId = utils::StrHash64Runtime(
+        textureId = utils::RegisterString(
             std::format(
                 "texture-sampler.{}.{}.{}.{}.{}.{}", tId, static_cast<int>(tSampler.minFilter), static_cast<int>(tSampler.magFilter),
                 static_cast<int>(tSampler.mipmap), static_cast<int>(tSampler.addressModeU), static_cast<int>(tSampler.addressModeV)));

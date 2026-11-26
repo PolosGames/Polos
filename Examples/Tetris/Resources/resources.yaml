@@ -23,3 +23,23 @@ resources:
     path: Textures/tetris_grid_border.png
   - id: texture.tetris_grid_cell
     path: Textures/tetris_grid_cell.png
+  - id: material.Aurora_Backdrop
+    path: Materials/Aurora_Backdrop.yaml
+  - id: material.BlueRicky
+    path: Materials/BlueRicky.yaml
+  - id: material.ClevelandZ
+    path: Materials/ClevelandZ.yaml
+  - id: material.GridBorder
+    path: Materials/GridBorder.yaml
+  - id: material.GridCell
+    path: Materials/GridCell.yaml
+  - id: material.Hero
+    path: Materials/Hero.yaml
+  - id: material.OrangeRicky
+    path: Materials/OrangeRicky.yaml
+  - id: material.RhodeIslandZ
+    path: Materials/RhodeIslandZ.yaml
+  - id: material.Smashboy
+    path: Materials/Smashboy.yaml
+  - id: material.Teewee
+    path: Materials/Teewee.yaml

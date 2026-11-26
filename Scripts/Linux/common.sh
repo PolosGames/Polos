@@ -71,13 +71,62 @@ preprocess_polos_project() {
     "$build_dir/Tools/ResourcePreprocessor/ResourcePreprocessor" "$project_dir"
 }
 
-build_polos_project() {
-    local project=$1 preset=$2
-    local build_dir="$polos_root/out/build/projects/$preset/$project"
-    local bin_dir="$polos_root/out/bin/$preset/$project"
+polos_example_usage() {
+    printf 'Usage: bash %s --example <name> [--preset <name>] [--preprocess]\n' "$0"
+    printf 'The preset defaults to debug-runtime. Use --preprocess to regenerate the resource catalog.\n'
+}
 
-    validate_polos_example "$project"
-    configure_polos "$preset" "$build_dir" "$bin_dir" ON "$project"
-    preprocess_polos_project "$build_dir" "$polos_root/Examples/$project"
+parse_polos_example_args() {
+    example=
+    preset=debug-runtime
+    preprocess=OFF
+
+    while (( $# )); do
+        case $1 in
+            --example|--preset)
+                if [[ -z ${2:-} || $2 == -* ]]; then
+                    printf '%s requires a name.\n' "$1" >&2
+                    exit 1
+                fi
+                if [[ $1 == --example ]]; then
+                    example=$2
+                else
+                    preset=$2
+                fi
+                shift 2
+                ;;
+            --preprocess)
+                preprocess=ON
+                shift
+                ;;
+            --help|-h)
+                polos_example_usage
+                exit 0
+                ;;
+            *)
+                printf 'Unknown option: %s\n' "$1" >&2
+                polos_example_usage >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ -z $example ]]; then
+        printf 'Missing required --example <name>.\n' >&2
+        polos_example_usage >&2
+        exit 1
+    fi
+}
+
+build_polos_example() {
+    local example=$1 preset=$2 preprocess=$3
+    local build_dir="$polos_root/out/build/projects/$preset/$example"
+    local bin_dir="$polos_root/out/bin/$preset/$example"
+
+    validate_polos_example "$example"
+    configure_polos "$preset" "$build_dir" "$bin_dir" ON "$example"
+    if [[ $preprocess == ON ]]; then
+        preprocess_polos_project "$build_dir" "$polos_root/Examples/$example"
+    fi
     cmake --build "$build_dir" --target install-runtime
 }

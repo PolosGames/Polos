@@ -43,46 +43,47 @@ auto EventHash() -> utils::string_id
 /// Define the default constructor, event name, and hash inside an event declaration.
 /// @param EventName name of the event
 #define DECLARE_POLOS_EVENT(EventName)                           \
-private:                                                         \
+                                                                 \
+    EventName() = default;                                       \
+    [[nodiscard]] static constexpr auto Name() -> char const*    \
+    {                                                            \
+        return #EventName;                                       \
+    }                                                            \
     [[nodiscard]] auto Hash() const -> utils::string_id override \
     {                                                            \
         static constexpr utils::string_id kHash = []() {         \
             return polos::utils::StrHash64(#EventName);          \
         }();                                                     \
         return kHash;                                            \
-    }                                                            \
-public:                                                          \
-    EventName() = default;                                       \
-    [[nodiscard]] static constexpr auto Name() -> char const*    \
-    { return #EventName; }
+    }
 
 
 /// Define the event formatter after the event declaration. Refer to fields through tEvent.
-#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                                                    \
-    template<>                                                                                         \
-    struct std::formatter<EventName> : std::formatter<std::string_view>                                 \
-    {                                                                                                  \
-        auto format(EventName const& tEvent, std::format_context& tCtx) const                           \
-        {                                                                                              \
-            return std::formatter<std::string_view>::format(std::format(Fmt, __VA_ARGS__), tCtx);       \
-        }                                                                                              \
+#define DEFINE_EVENT_LOG_FORMAT(EventName, Fmt, ...)                                              \
+    template<>                                                                                    \
+    struct std::formatter<EventName> : std::formatter<std::string_view>                           \
+    {                                                                                             \
+        auto format(EventName const& tEvent, std::format_context& tCtx) const                     \
+        {                                                                                         \
+            return std::formatter<std::string_view>::format(std::format(Fmt, __VA_ARGS__), tCtx); \
+        }                                                                                         \
     }
 
 /// Define stream insertion and formatting for an event.
-#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                                                         \
-    inline std::ostream& operator<<(std::ostream& tOs, EventName const& tEvent)                         \
-    {                                                                                                  \
-        return tOs << __VA_ARGS__;                                                                     \
-    }                                                                                                  \
-    template<>                                                                                         \
-    struct std::formatter<EventName> : std::formatter<std::string_view>                                 \
-    {                                                                                                  \
-        auto format(EventName const& tEvent, std::format_context& tCtx) const                           \
-        {                                                                                              \
-            std::ostringstream output;                                                                 \
-            operator<<(output, tEvent);                                                                \
-            return std::formatter<std::string_view>::format(output.str(), tCtx);                       \
-        }                                                                                              \
+#define DEFINE_EVENT_LOG_OSTREAM(EventName, ...)                                 \
+    inline std::ostream& operator<<(std::ostream& tOs, EventName const& tEvent)  \
+    {                                                                            \
+        return tOs << __VA_ARGS__;                                               \
+    }                                                                            \
+    template<>                                                                   \
+    struct std::formatter<EventName> : std::formatter<std::string_view>          \
+    {                                                                            \
+        auto format(EventName const& tEvent, std::format_context& tCtx) const    \
+        {                                                                        \
+            std::ostringstream output;                                           \
+            operator<<(output, tEvent);                                          \
+            return std::formatter<std::string_view>::format(output.str(), tCtx); \
+        }                                                                        \
     }
 
 #endif// POLOS_COMMUNICATION_EVENT_HPP

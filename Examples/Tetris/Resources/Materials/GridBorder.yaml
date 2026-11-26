@@ -1,0 +1,3 @@
+id: material.GridBorder
+baseColorFactor: [1.0, 1.0, 1.0, 1.0]
+baseColorTexture: texture.tetris_grid_border

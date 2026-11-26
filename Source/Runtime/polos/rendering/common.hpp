@@ -29,8 +29,6 @@ using resource::ResourceId;
 using MeshIndex    = std::uint32_t;
 using TextureIndex = std::uint32_t;
 
-inline constexpr ResourceId                   kDefaultCube     = "mesh.DefaultCube"_sid;
-inline constexpr ResourceId                   kDefaultQuad     = "mesh.DefaultQuad"_sid;
 inline constexpr ResourceId                   kDefaultMaterial = "material.Default"_sid;
 inline constexpr ResourceId                   kDefaultTexture  = "texture.Default"_sid;
 inline constexpr TextureIndex                 kDefaultTextureIndex{0U};

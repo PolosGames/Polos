@@ -5,7 +5,7 @@
 
 #include "tetro.hpp"
 
-#include "helpers.hpp"
+#include "polos/scene/scene_util.hpp"
 
 #include <string>
 
@@ -22,7 +22,7 @@ auto CreateHero(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{1.5F, 0.5F},
     };
     auto const center = tSpawn - glm::vec2{0.5F, 0.5F};
-    return {.type = PieceType::kHero, .center = center, .offsets = pieceLocalPos, .material = "Material_Hero"_sid, .name = "Hero"};
+    return {.type = PieceType::kHero, .center = center, .offsets = pieceLocalPos, .material = "material.Hero"_sid, .name = "Hero"};
 }
 
 auto CreateSmashboy(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -34,7 +34,7 @@ auto CreateSmashboy(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{0.5F, -0.5F},
     };
     auto const center = tSpawn - glm::vec2{0.5F, 0.5F};
-    return {.type = PieceType::kSmashboy, .center = center, .offsets = pieceLocalPos, .material = "Material_Smashboy"_sid, .name = "Smashboy"};
+    return {.type = PieceType::kSmashboy, .center = center, .offsets = pieceLocalPos, .material = "material.Smashboy"_sid, .name = "Smashboy"};
 }
 
 auto CreateBlueRicky(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -46,7 +46,7 @@ auto CreateBlueRicky(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{1.0F, 0.0F},
     };
     auto const center = tSpawn - glm::vec2{0.0F, 1.0F};
-    return {.type = PieceType::kBlueRicky, .center = center, .offsets = pieceLocalPos, .material = "Material_BlueRicky"_sid, .name = "BlueRicky"};
+    return {.type = PieceType::kBlueRicky, .center = center, .offsets = pieceLocalPos, .material = "material.BlueRicky"_sid, .name = "BlueRicky"};
 }
 
 auto CreateOrangeRicky(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -58,7 +58,7 @@ auto CreateOrangeRicky(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{1.0F, 0.0F},
     };
     auto const center = tSpawn - glm::vec2{0.0F, 1.0F};
-    return {.type = PieceType::kOrangeRicky, .center = center, .offsets = pieceLocalPos, .material = "Material_OrangeRicky"_sid, .name = "OrangeRicky"};
+    return {.type = PieceType::kOrangeRicky, .center = center, .offsets = pieceLocalPos, .material = "material.OrangeRicky"_sid, .name = "OrangeRicky"};
 }
 
 auto CreateRhodeIslandZ(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -70,7 +70,7 @@ auto CreateRhodeIslandZ(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{1.0F, 0.0F},
     };
     auto const center = tSpawn - glm::vec2{0.0F, 1.0F};
-    return {.type = PieceType::kRhodeIslandZ, .center = center, .offsets = pieceLocalPos, .material = "Material_RhodeIslandZ"_sid, .name = "RhodeIslandZ"};
+    return {.type = PieceType::kRhodeIslandZ, .center = center, .offsets = pieceLocalPos, .material = "material.RhodeIslandZ"_sid, .name = "RhodeIslandZ"};
 }
 
 auto CreateTeewee(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -82,7 +82,7 @@ auto CreateTeewee(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{1.0F, 0.0F},
     };
     auto const center = tSpawn - glm::vec2{0.0F, 1.0F};
-    return {.type = PieceType::kTeewee, .center = center, .offsets = pieceLocalPos, .material = "Material_Teewee"_sid, .name = "Teewee"};
+    return {.type = PieceType::kTeewee, .center = center, .offsets = pieceLocalPos, .material = "material.Teewee"_sid, .name = "Teewee"};
 }
 
 auto CreateClevelandZ(glm::vec2 const tSpawn) -> TetrominoDefinition
@@ -94,16 +94,21 @@ auto CreateClevelandZ(glm::vec2 const tSpawn) -> TetrominoDefinition
         glm::vec2{0.0F, 0.0F},
     };
     auto const center = tSpawn - glm::vec2{0.0F, 1.0F};
-    return {.type = PieceType::kClevelandZ, .center = center, .offsets = pieceLocalPos, .material = "Material_ClevelandZ"_sid, .name = "ClevelandZ"};
+    return {.type = PieceType::kClevelandZ, .center = center, .offsets = pieceLocalPos, .material = "material.ClevelandZ"_sid, .name = "ClevelandZ"};
 }
 
-auto CreateTetromino(scene::Scene* tScene, TetrominoDefinition const& tPiece, float const tZ) -> Tetromino
+auto CreateTetromino(TetrominoDefinition const& tPiece, float const tZ) -> Tetromino
 {
     Tetromino tetro{.type = tPiece.type, .center = tPiece.center, .offsets = tPiece.offsets};
     for (std::size_t i{0}; i < tPiece.offsets.size(); ++i)
     {
         auto const position = glm::vec3{tPiece.center + tPiece.offsets[i], tZ};
-        tetro.entities[i]   = CreateCube(tScene, ecs::TransformComponent{.position = position}, tPiece.material, std::string{tPiece.name} + std::to_string(i));
+        tetro.entities[i]   = scene::Create_TexturedCuboid(
+            scene::CuboidDetails{
+                .name     = std::string{tPiece.name} + std::to_string(i),
+                .position = position,
+                .material = tPiece.material,
+            });
     }
 
     return tetro;

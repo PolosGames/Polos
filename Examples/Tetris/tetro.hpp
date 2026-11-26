@@ -61,7 +61,7 @@ auto CreateRhodeIslandZ(glm::vec2 tSpawn) -> TetrominoDefinition;
 auto CreateTeewee(glm::vec2 tSpawn) -> TetrominoDefinition;
 auto CreateClevelandZ(glm::vec2 tSpawn) -> TetrominoDefinition;
 
-auto CreateTetromino(polos::scene::Scene* tScene, TetrominoDefinition const& tPiece, float tZ) -> Tetromino;
+auto CreateTetromino(TetrominoDefinition const& tPiece, float tZ) -> Tetromino;
 
 }// namespace ctc
 

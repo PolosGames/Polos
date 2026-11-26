@@ -1,0 +1,3 @@
+id: material.Smashboy
+baseColorFactor: [1.0, 1.0, 1.0, 1.0]
+baseColorTexture: texture.tetris_block_yellow

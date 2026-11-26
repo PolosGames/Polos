@@ -190,8 +190,9 @@ TEST_F(ResourceManagerTest, ExplicitLoadsCanCacheBothRepresentationsUnderOneId)
 TEST_F(ResourceManagerTest, CatalogPreloadsModelsAndMaterialsIntoTheirCaches)
 {
     WriteModel("Models/test.yaml");
-    Write("Materials/test.yaml", "baseColorFactor: [0.1, 0.2, 0.3, 1.0]\n");
-    Catalog({{"model.test", "Models/test.yaml"}, {"material.test", "Materials/test.yaml"}});
+    Write("Materials/test.yaml", "baseColorFactor: [0.1, 0.2, 0.3, 1.0]\ntilingFactor: 2.5\n");
+    Write("Materials/untiled.yaml", "id: material.untiled\n");
+    Catalog({{"model.test", "Models/test.yaml"}, {"material.test", "Materials/test.yaml"}, {"material.untiled", "Materials/untiled.yaml"}});
 
     std::filesystem::remove_all(directory / "Resources");
     auto const* model = models.GetModel("model.test"_sid);
@@ -204,6 +205,11 @@ TEST_F(ResourceManagerTest, CatalogPreloadsModelsAndMaterialsIntoTheirCaches)
     ASSERT_NE(material, nullptr);
     EXPECT_EQ(material->baseColorFactor, glm::vec4(0.1F, 0.2F, 0.3F, 1.0F));
     EXPECT_EQ(material->baseColorTexture, polos::rendering::kDefaultTexture);
+    EXPECT_FLOAT_EQ(material->tilingFactor, 2.5F);
+
+    auto const* untiled = materials.GetMaterial("material.untiled"_sid);
+    ASSERT_NE(untiled, nullptr);
+    EXPECT_FLOAT_EQ(untiled->tilingFactor, 1.0F);
 }
 
 TEST_F(ResourceManagerTest, RegistersTexturePathsWithoutDecodingUnreferencedImages)

@@ -4,7 +4,7 @@ Polos reads `Resources/resources.yaml` beside the executable after the rendering
 
 ## Prepare a project
 
-Place assets under the project's `Resources/` directory. The example runners generate the catalog before building. For a project using an exported SDK, pass the **project root** to `ResourcePreprocessor`.
+Place assets under the project's `Resources/` directory. Pass `--preprocess` to an example launcher to regenerate its catalog before building. For a project using an exported SDK, pass the **project root** to `ResourcePreprocessor`.
 
 **Linux**
 
@@ -20,9 +20,11 @@ Place assets under the project's `Resources/` directory. The example runners gen
 
 The tool scans for PNG and JPEG textures and `.gltf` models. It rewrites `Resources/resources.yaml` and generates YAML descriptors under `Resources/Models/` and `Resources/Materials/`. Keep a model's external buffers and images in the locations referenced by its glTF file. The tool expects base-color images referenced by models to be external files.
 
-## Catalog entries
+## YAML file structure
 
-Each entry has a resource ID and a path. The ID tells Polos which loader to use. Model and material entries point to their YAML descriptors, and a model descriptor points to its glTF source and lists its material IDs in glTF order.
+### `Resources/resources.yaml`
+
+The top-level `resources` key contains a list. Each entry has a unique `id` and a `path` relative to `Resources/`. Texture entries point to image files. Model and material entries point to YAML descriptors.
 
 ```yaml
 resources:
@@ -37,6 +39,34 @@ resources:
 Use `texture.`, `material.`, and `model.` prefixes for those asset types. Generated texture and model IDs use the file stem, so use unique stems within each type. Material IDs come from glTF material names when present, so keep those names unique across the project. In a hand-edited catalog, keep the ID when moving a file and update only its path.
 
 The runtime rejects duplicate IDs and stops startup if it cannot read the catalog or load a model, material, or referenced texture. Texture catalog entries provide paths for material loading. Tetris registers its materials in C++ using those paths. [Tetris catalog](../../../../Examples/Tetris/Resources/resources.yaml)
+
+### `Resources/Models/tile.yaml`
+
+```yaml
+id: model.tile
+path: Models/tile/tile.gltf
+materials:
+  - id: material.checker
+```
+
+Keep model descriptors directly under `Resources/Models/`. The `path` points to the glTF file relative to `Resources/`. In this example, the source file is `Resources/Models/tile/tile.gltf`.
+
+Use the same model ID as in the catalog. List the cataloged material IDs in the order of the glTF file’s `materials` array, since glTF primitives refer to materials by index. Use `materials: []` for a model with no material assignments.
+
+### `Resources/Materials/checker.yaml`
+
+```yaml
+id: material.checker
+baseColorFactor: [1.0, 1.0, 1.0, 1.0]
+baseColorTexture: texture.checker
+tilingFactor: 2.0
+```
+
+Use the same material ID as in the catalog. `baseColorFactor` contains four numbers in red, green, blue, alpha order and defaults to `[1.0, 1.0, 1.0, 1.0]`.
+
+`baseColorTexture` is the texture's catalog ID. When it is empty or omitted, Polos uses the corresponding glTF material's external base-color image if one is specified. It looks up that image as `texture.<file-stem>`. Without an external image, Polos uses the built-in default texture. Sampler settings for glTF materials come from the glTF file.
+
+Set the optional `tilingFactor` in material YAML to scale both U and V texture coordinates. The loader defaults to `1.0` when the field is omitted. `ResourcePreprocessor` writes `tilingFactor: 1.0` in every generated material descriptor.
 
 ## Use resources from C++
 
