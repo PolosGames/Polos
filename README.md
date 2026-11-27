@@ -58,3 +58,39 @@ bash Scripts/Linux/export_sdk.sh /path/to/project
 ```powershell
 ./Scripts/Windows/export_sdk.ps1 -Destination C:/path/to/project
 ```
+
+The export places a relocatable CMake package in `sdk/lib/cmake/Polos`. Use an
+SDK built for your target platform, compiler ABI, and build configuration.
+
+Add this to your game's `CMakeLists.txt`.
+
+```cmake
+cmake_minimum_required(VERSION 3.25)
+project(MyGame LANGUAGES CXX)
+
+find_package(Polos CONFIG REQUIRED)
+
+polos_app(
+    NAME MyGame
+    SOURCES app.cpp
+)
+```
+
+Configure and build from the game’s project directory.
+
+```bash
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$PWD/sdk" -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+cmake --install build --prefix dist
+```
+
+`polos_app` links `polos::polos`, stages the engine libraries beside the
+executable, and copies a local `Resources/` directory when present. If it
+contains shader sources, make `glslang` or `glslangValidator` available to
+the build. The install places the executable, engine runtime, and resources
+in `bin/` by default. To manage the application target yourself, link
+`polos::polos` directly with `target_link_libraries`.
+
+The SDK's entity capacity is available as `Polos_ENTITY_CAPACITY`. Omit
+`ENTITY_CAPACITY` when using an SDK, or pass the SDK's value. Set a different
+capacity when building Polos and the application together from source.

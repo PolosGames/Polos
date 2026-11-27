@@ -29,16 +29,23 @@ target_sources(
 target_link_libraries(
     polos
         PUBLIC
-            glfw::glfw
-            glm::glm
-            Vulkan::Vulkan
-            GPUOpen::VulkanMemoryAllocator
-            stb_image::stb_image
-            fastgltf::fastgltf
+            "$<BUILD_INTERFACE:glfw::glfw>"
+            "$<BUILD_INTERFACE:glm::glm>"
+            "$<BUILD_INTERFACE:Vulkan::Vulkan>"
+            "$<BUILD_INTERFACE:GPUOpen::VulkanMemoryAllocator>"
+            "$<BUILD_INTERFACE:stb_image::stb_image>"
+            "$<BUILD_INTERFACE:fastgltf::fastgltf>"
         PRIVATE
             ryml::ryml
             quill::quill
 )
+get_target_property(glfw_type glfw TYPE)
+if (glfw_type STREQUAL "SHARED_LIBRARY")
+    target_link_libraries(
+        polos
+            INTERFACE "$<INSTALL_INTERFACE:glfw>"
+    )
+endif()
 if (ENABLE_PROFILING)
     target_link_libraries(
         polos
@@ -92,6 +99,7 @@ add_dependencies(
         compile_shaders
 )
 install(TARGETS polos
+    EXPORT PolosTargets
     LIBRARY DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime NAMELINK_COMPONENT SDK
     ARCHIVE DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT SDK
     RUNTIME DESTINATION "${POLOS_INSTALL_LIB_DIR}" COMPONENT Runtime

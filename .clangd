@@ -21,4 +21,4 @@ Diagnostics:
     ClangTidy:
         Remove: '*'
 
-HeaderFilterRegex: ^(?!.*(ThirdParty|vulkan|vk_mem_alloc)).*$
+IgnoreHeader: ^(?!.*(ThirdParty|vulkan|vk_mem_alloc)).*$
