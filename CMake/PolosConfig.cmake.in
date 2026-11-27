@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+
+if (@ENABLE_PROFILING@)
+    include(CMakeFindDependencyMacro)
+    find_dependency(Threads)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/PolosTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/PolosApp.cmake")
+get_target_property(Polos_ENTITY_CAPACITY polos::polos POLOS_ENTITY_CAPACITY)
+
+check_required_components(Polos)

@@ -9,5 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     polos
-        PUBLIC polos::imgui
+        PUBLIC "$<BUILD_INTERFACE:polos::imgui>"
 )
