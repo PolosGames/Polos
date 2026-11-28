@@ -19,6 +19,8 @@
 #include "polos/utils/string_map.hpp"
 #include "polos/utils/triplet.hpp"
 
+#include <imgui.h>
+
 #include <array>
 #include <cstdint>
 #include <format>
@@ -166,7 +168,7 @@ auto Create_TexturedCuboid(CuboidDetails const& tDetails, ecs::EntityHandle cons
                     .position = corners[face[i]] * dimensions,
                     .normal   = normal,
                     .tangent  = glm::vec4(tangent, 1.0F),
-                    .texCoord = texCoords[i],
+                    .texCoord = texCoords[i] * tDetails.tilingFactor,
                 });
             }
 
@@ -400,6 +402,76 @@ auto EntityDataAtIndex(ecs::EntityIndex const tIndex) -> ecs::Entity const*
 {
     auto* scene = SceneManager::Get().GetCurrentScene();
     return scene->GetEntityDataByIndex(tIndex);
+}
+
+auto DebugWalkEntityTree(ecs::EntityHandle const tRoot, ecs::EntityHandle* tSelectedEntity) -> void
+{
+    auto* scene = SceneManager::Get().GetCurrentScene();
+    if (scene == nullptr || !ecs::IsEntityValid(tRoot) || scene->GetEntityAtIndex(tRoot.index) != tRoot)
+    {
+        return;
+    }
+
+    ImGui::SetNextWindowSize(ImVec2{360.0F, 420.0F}, ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Entity Tree", nullptr, ImGuiWindowFlags_NoTitleBar))
+    {
+        auto entity = tRoot;
+        while (ecs::IsEntityValid(entity))
+        {
+            auto const* info = scene->GetComponent<ecs::InfoComponent>(entity);
+            auto const  name = utils::GetStringFromID(info->debugName);
+
+            ImGui::PushID(static_cast<int>(entity.index));
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+            if (tSelectedEntity != nullptr && entity == *tSelectedEntity)
+            {
+                flags |= ImGuiTreeNodeFlags_Selected;
+            }
+
+            auto const isOpen = name.empty() ? ImGui::TreeNodeEx("entity", flags, "Entity %u", entity.index)
+                                             : ImGui::TreeNodeEx("entity", flags, "%.*s", static_cast<int>(name.size()), name.data());
+            if (tSelectedEntity != nullptr && ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+            {
+                *tSelectedEntity = entity;
+            }
+            if (info->isTreeOpen != isOpen)
+            {
+                scene->GetMutableComponent<ecs::InfoComponent>(entity)->isTreeOpen = isOpen;
+            }
+
+            auto const child = scene->GetChild(entity);
+            if (isOpen && ecs::IsEntityValid(child))
+            {
+                entity = child;
+                continue;
+            }
+
+            while (ecs::IsEntityValid(entity))
+            {
+                if (scene->GetComponent<ecs::InfoComponent>(entity)->isTreeOpen)
+                {
+                    ImGui::TreePop();
+                }
+                ImGui::PopID();
+
+                if (entity == tRoot)
+                {
+                    entity = ecs::kInvalidEntityHandle;
+                    break;
+                }
+
+                auto const sibling = scene->GetNextSibling(entity);
+                if (ecs::IsEntityValid(sibling))
+                {
+                    entity = sibling;
+                    break;
+                }
+
+                entity = scene->GetParent(entity);
+            }
+        }
+    }
+    ImGui::End();
 }
 
 }// namespace polos::scene
