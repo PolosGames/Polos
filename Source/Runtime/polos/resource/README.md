@@ -66,7 +66,7 @@ Use the same material ID as in the catalog. `baseColorFactor` contains four numb
 
 `baseColorTexture` is the texture's catalog ID. When it is empty or omitted, Polos uses the corresponding glTF material's external base-color image if one is specified. It looks up that image as `texture.<file-stem>`. Without an external image, Polos uses the built-in default texture. Sampler settings for glTF materials come from the glTF file.
 
-Set the optional `tilingFactor` in material YAML to scale both U and V texture coordinates. The loader defaults to `1.0` when the field is omitted. `ResourcePreprocessor` writes `tilingFactor: 1.0` in every generated material descriptor.
+Set the optional `tilingFactor` in material YAML to scale both U and V texture coordinates independently of the entity's scale. The loader defaults to `1.0` when the field is omitted. `ResourcePreprocessor` writes `tilingFactor: 1.0` in every generated material descriptor.
 
 ## Use resources from C++
 

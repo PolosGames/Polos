@@ -1,4 +1,4 @@
 id: material.Aurora_Backdrop
 baseColorFactor: [1.0, 1.0, 1.0, 1.0]
 baseColorTexture: texture.tetris_aurora
-tilingFactor: 0.010417
+tilingFactor: 1.0

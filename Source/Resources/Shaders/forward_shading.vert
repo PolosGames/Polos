@@ -60,7 +60,5 @@ void main()
     oVertOut.texCoord = iTexCoord;
     oNormal           = iNormal;
     oTexIndex         = inst.textureIdx;
-
-    float worldSize = length(worldMatrix[0].xyz);
-    oRepeat         = worldSize * inst.tilingFactor;
+    oRepeat           = inst.tilingFactor;
 }
