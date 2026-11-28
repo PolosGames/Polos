@@ -54,6 +54,7 @@ struct CuboidDetails
     glm::vec3             rotation{0.0F};
     float                 scale{1.0F};
     rendering::ResourceId material{rendering::kDefaultMaterial};
+    glm::vec2             tilingFactor{1.0F};
 };
 auto POLOS_API Create_TexturedCuboid(CuboidDetails const& tDetails = {}, ecs::EntityHandle tParent = ecs::EntityHandle{.index = 0U, .version = 0U})
     -> ecs::EntityHandle;
@@ -117,6 +118,10 @@ auto POLOS_API GetConstComponent_Light(ecs::EntityHandle tEntity) -> ecs::LightC
 
 auto POLOS_API EntityAtIndex(ecs::EntityIndex tIndex) -> ecs::EntityHandle;
 auto POLOS_API EntityDataAtIndex(ecs::EntityIndex tIndex) -> ecs::Entity const*;
+
+/// Draws tRoot and its descendants from the current scene in an active ImGui frame.
+/// Pass tSelectedEntity to highlight the selection and update it on click.
+auto POLOS_API DebugWalkEntityTree(ecs::EntityHandle tRoot, ecs::EntityHandle* tSelectedEntity = nullptr) -> void;
 }// namespace polos::scene
 
 #endif// POLOS_SCENE_SCENE_UTIL_HPP
